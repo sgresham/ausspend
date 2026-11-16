@@ -17,6 +17,15 @@ import { chromium } from '@playwright/test';
 const WEB_URL = (process.env.AUDIT_WEB_URL ?? 'http://localhost:5173').replace(/\/+$/, '');
 const API_URL = (process.env.AUDIT_API_URL ?? 'http://localhost:3001').replace(/\/+$/, '');
 
+/** Every source id the live UI may legitimately render in a provenance cell. */
+const KNOWN_SOURCE_IDS = [
+  'synthetic-seed',
+  'aus-tender',
+  'data-gov-au-pbs',
+  'nsw-budget',
+  'data-nsw-ckan',
+];
+
 const results = [];
 
 function pass(name, detail = '') {
@@ -147,8 +156,8 @@ async function apiChecks() {
       const { status, body } = await getJson('/api/meta/coverage');
       assert(status === 200, `expected 200, got ${status}`);
       assert(
-        Array.isArray(body?.connectors) && body.connectors.length === 11,
-        `expected 11 connectors, got ${body?.connectors?.length}`,
+        Array.isArray(body?.connectors) && body.connectors.length === 12,
+        `expected 12 connectors, got ${body?.connectors?.length}`,
       );
       const connectorIds = body.connectors.map((connector) => connector.id);
       const ausTender = body.connectors.find((entry) => entry.id === 'aus-tender');
@@ -162,6 +171,18 @@ async function apiChecks() {
       assert(
         pbs.status === 'active' || pbs.status === 'degraded',
         `expected data-gov-au-pbs active/degraded, got ${pbs.status}`,
+      );
+      const nswBudget = body.connectors.find((entry) => entry.id === 'nsw-budget');
+      assert(nswBudget, 'missing state connector nsw-budget');
+      assert(
+        nswBudget.status === 'active' || nswBudget.status === 'degraded',
+        `expected nsw-budget active/degraded, got ${nswBudget.status}`,
+      );
+      const nswCkan = body.connectors.find((entry) => entry.id === 'data-nsw-ckan');
+      assert(nswCkan, 'missing state connector data-nsw-ckan');
+      assert(
+        nswCkan.status === 'active' || nswCkan.status === 'degraded',
+        `expected data-nsw-ckan active/degraded, got ${nswCkan.status}`,
       );
       const grantconnect = body.connectors.find((entry) => entry.id === 'grantconnect');
       assert(grantconnect, 'missing federal connector grantconnect');
@@ -183,6 +204,12 @@ async function apiChecks() {
       assert(
         /does not equal the Budget Paper 1/.test(body?.federal_ingestion?.pbs_caveat ?? ''),
         'meta/coverage does not carry the PBS caveat',
+      );
+      assert(
+        Array.isArray(body?.state_ingestion?.live) &&
+          body.state_ingestion.live.includes('nsw-budget') &&
+          body.state_ingestion.live.includes('data-nsw-ckan'),
+        'meta/coverage state_ingestion.live must include nsw-budget and data-nsw-ckan',
       );
       assert(connectorIds.length === new Set(connectorIds).size, 'connector ids must be unique');
       assert(body.counts?.data_sources > 0, 'counts.data_sources must be > 0');
@@ -226,7 +253,7 @@ async function assertRowProvenance(locator, label) {
   for (let index = 0; index < count; index += 1) {
     const text = (await locator.nth(index).innerText()).replace(/\s+/g, ' ');
     assert(
-      /synthetic-seed|data-gov-au-pbs|aus-tender|nsw-budget/.test(text),
+      KNOWN_SOURCE_IDS.some((sourceId) => text.includes(sourceId)),
       `${label} row ${index + 1} has no source id`,
     );
     assert(/Unverified/.test(text), `${label} row ${index + 1} has no verification status`);
@@ -440,17 +467,21 @@ async function uiChecks(page, regionId) {
       );
       const activeCount = await stubs.getByText('active', { exact: true }).count();
       assert(
-        activeCount >= 3,
-        `expected AusTender, PBS and NSW Budget active, got ${activeCount} active connector(s)`,
+        activeCount >= 4,
+        `expected AusTender, PBS, NSW Budget and data.nsw.gov.au CKAN active, got ${activeCount} active connector(s)`,
       );
       const activeIds = (coverage?.connectors ?? [])
         .filter((connector) => connector.status === 'active' || connector.status === 'degraded')
         .map((connector) => connector.id);
-      for (const id of ['aus-tender', 'data-gov-au-pbs', 'nsw-budget']) {
+      for (const id of ['aus-tender', 'data-gov-au-pbs', 'nsw-budget', 'data-nsw-ckan']) {
         assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
       }
       const connectorText = await stubs.innerText();
       assert(/nsw-budget/.test(connectorText), 'NSW Budget connector is not shown in the UI');
+      assert(
+        /data-nsw-ckan/.test(connectorText),
+        'data.nsw.gov.au CKAN connector is not shown in the UI',
+      );
       const pbsCard = page.getByTestId('source-data-gov-au-pbs');
       await pbsCard.waitFor({ state: 'visible', timeout: 20_000 });
       assert(
