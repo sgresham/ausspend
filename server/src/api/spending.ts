@@ -34,16 +34,28 @@ interface Lookups {
 }
 
 async function loadLookups(measures: readonly LeanMeasure[]): Promise<Lookups> {
-  const functionCodes = [...new Set(measures.map((measure) => measure.function_code))];
+  const functionCodes = [
+    ...new Set(
+      measures
+        .map((measure) => measure.function_code)
+        .filter((code): code is string => Boolean(code)),
+    ),
+  ];
   const regionIds = [
     ...new Map(
-      measures.map((measure) => [measure.region_id.toString(), measure.region_id]),
+      measures
+        .filter((measure) => Boolean(measure.region_id))
+        .map((measure) => [measure.region_id!.toString(), measure.region_id!]),
     ).values(),
   ];
 
   const [functions, regions] = await Promise.all([
-    FunctionModel.find({ code: { $in: functionCodes } }).lean<LeanFunction[]>(),
-    RegionModel.find({ _id: { $in: regionIds } }).lean<LeanRegion[]>(),
+    functionCodes.length > 0
+      ? FunctionModel.find({ code: { $in: functionCodes } }).lean<LeanFunction[]>()
+      : Promise.resolve([] as LeanFunction[]),
+    regionIds.length > 0
+      ? RegionModel.find({ _id: { $in: regionIds } }).lean<LeanRegion[]>()
+      : Promise.resolve([] as LeanRegion[]),
   ]);
 
   return {
@@ -53,13 +65,13 @@ async function loadLookups(measures: readonly LeanMeasure[]): Promise<Lookups> {
 }
 
 function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingMeasureRow {
-  const fn = lookups.functions.get(measure.function_code);
-  const region = lookups.regions.get(measure.region_id.toString());
+  const fn = measure.function_code ? lookups.functions.get(measure.function_code) : undefined;
+  const region = measure.region_id ? lookups.regions.get(measure.region_id.toString()) : undefined;
 
   return {
     id: measure._id.toString(),
-    region_id: measure.region_id.toString(),
-    function_code: measure.function_code,
+    region_id: measure.region_id ? measure.region_id.toString() : null,
+    function_code: measure.function_code ?? null,
     amount_cents: measure.amount_cents,
     measure_type: measure.measure_type,
     fiscal_year: measure.fiscal_year,
@@ -67,12 +79,24 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     source_url: measure.source_url,
     verified: measure.verified,
     ...(measure.notes ? { notes: measure.notes } : {}),
-    function_name: fn?.name ?? measure.function_code,
-    function_level: fn?.level ?? 'division',
+    ...(measure.natural_key ? { natural_key: measure.natural_key } : {}),
+    ...(measure.project_name ? { project_name: measure.project_name } : {}),
+    ...(measure.description ? { description: measure.description } : {}),
+    ...(measure.jurisdiction_level ? { jurisdiction_level: measure.jurisdiction_level } : {}),
+    ...(measure.jurisdiction ? { jurisdiction: measure.jurisdiction } : {}),
+    ...(measure.delivery_entity ? { delivery_entity: measure.delivery_entity } : {}),
+    ...(measure.funding_source ? { funding_source: measure.funding_source } : {}),
+    ...(measure.source_dataset ? { source_dataset: measure.source_dataset } : {}),
+    ...(measure.source_date ? { source_date: measure.source_date } : {}),
+    ...(measure.data_quality_flag ? { data_quality_flag: measure.data_quality_flag } : {}),
+    ...(measure.location ? { location: measure.location } : {}),
+    ...(measure.unspsc ? { unspsc: measure.unspsc } : {}),
+    function_name: fn?.name ?? null,
+    function_level: fn?.level ?? null,
     ...(fn?.parent_code ? { function_parent_code: fn.parent_code } : {}),
-    region_code: region?.code ?? measure.region_id.toString(),
-    region_name: region?.name ?? 'Unknown region',
-    region_level: region?.level ?? 'region',
+    region_code: region?.code ?? null,
+    region_name: region?.name ?? null,
+    region_level: region?.level ?? null,
     provenance: {
       source_id: measure.source_id,
       source_url: measure.source_url,
@@ -80,10 +104,6 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
       ...(measure.notes ? { notes: measure.notes } : {}),
     },
   };
-}
-
-function groupMixed(measureTypes: readonly string[], summaryMixed: boolean): boolean {
-  return summaryMixed || measureTypes.length > 1;
 }
 
 function sortedTypes(measures: readonly LeanMeasure[]): LeanMeasure['measure_type'][] {
@@ -97,6 +117,7 @@ function breakdownByFunction(
 ): SpendingByFunction[] {
   const groups = new Map<string, LeanMeasure[]>();
   for (const measure of measures) {
+    if (!measure.function_code) continue;
     const group = groups.get(measure.function_code) ?? [];
     group.push(measure);
     groups.set(measure.function_code, group);
@@ -106,7 +127,7 @@ function breakdownByFunction(
     .map(([code, rows]) => {
       const fn = lookups.functions.get(code);
       const measureTypes = sortedTypes(rows);
-      const mixed = groupMixed(measureTypes, summaryMixed);
+      const mixed = summaryMixed || measureTypes.length > 1;
       return {
         function: {
           code,
@@ -131,6 +152,7 @@ function breakdownByRegion(
 ): SpendingByRegion[] {
   const groups = new Map<string, LeanMeasure[]>();
   for (const measure of measures) {
+    if (!measure.region_id) continue;
     const key = measure.region_id.toString();
     const group = groups.get(key) ?? [];
     group.push(measure);
@@ -141,7 +163,7 @@ function breakdownByRegion(
     .map(([regionId, rows]) => {
       const region = lookups.regions.get(regionId);
       const measureTypes = sortedTypes(rows);
-      const mixed = groupMixed(measureTypes, summaryMixed);
+      const mixed = summaryMixed || measureTypes.length > 1;
       return {
         region: region
           ? {
@@ -203,7 +225,9 @@ function buildSummary(
  * computed over the whole filtered set (not just the requested page), so the
  * client can render headline/per-type totals and breakdowns without extra
  * requests. Mixed responses keep `total_cents: null` and only expose per-type
- * totals; no total is ever summed across measure types.
+ * totals; no total is ever summed across measure types. Rows without a curated
+ * region/function are returned with those fields null and omitted from the
+ * region/function breakdowns rather than assigned invented codes.
  */
 export const listSpending: RequestHandler = async (req, res) => {
   const parsed = SpendingQuerySchema.safeParse(req.query);
@@ -227,6 +251,7 @@ export const listSpending: RequestHandler = async (req, res) => {
   const mongoQuery: Record<string, unknown> = {};
   if (query.fiscal_year) mongoQuery.fiscal_year = query.fiscal_year;
   if (query.measure_type) mongoQuery.measure_type = query.measure_type;
+  if (query.jurisdiction_level) mongoQuery.jurisdiction_level = query.jurisdiction_level;
   if (query.function) mongoQuery.function_code = query.function;
   if (regionId) mongoQuery.region_id = regionId;
   if (query.min_amount !== undefined || query.max_amount !== undefined) {
@@ -254,6 +279,7 @@ export const listSpending: RequestHandler = async (req, res) => {
   const applied_filters: SpendingAppliedFilters = {
     fiscal_year: query.fiscal_year ?? null,
     measure_type: query.measure_type ?? null,
+    jurisdiction_level: query.jurisdiction_level ?? null,
     function: query.function ?? null,
     region: query.region ?? null,
     min_amount: query.min_amount ?? null,

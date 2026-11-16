@@ -24,7 +24,7 @@ npm run build
 npm run test:e2e
 ```
 
-Expected: all green. `npm test` runs the shared + server Vitest suites (63 tests at M4).
+Expected: all green. `npm test` runs the shared + server Vitest suites (73 tests at M4 + F1).
 `npm run test:e2e` runs the mocked UI specs (20 tests at M4) with `page.route`; it needs no
 database. The audit below is the only live check.
 
@@ -37,6 +37,8 @@ docker compose ps
 curl -s http://localhost:3001/api/health
 curl -s http://localhost:3001/api/data-sources
 curl -s 'http://localhost:3001/api/spending?function=07'
+curl -s 'http://localhost:3001/api/v1/spending?jurisdiction_level=federal'
+curl -s 'http://localhost:3001/api/v1/ingestion-logs'
 npm run audit
 docker compose down -v
 ```
@@ -99,11 +101,11 @@ The full list is in `scripts/audit.mjs`. In brief:
    one measure type shows a headline total.
 3. Row tables (search, function, region/state) and summary/headline footers show the source
    id/link and Unverified status.
-4. `/data-sources#synthetic-seed` shows the synthetic source Unverified, all eight connector stubs
+4. `/data-sources#synthetic-seed` shows the synthetic source Unverified, all eleven connector stubs
    marked **stub — not wired**, and the coverage limitations.
 5. API invariants: `function=07` mixed/null/per-type; `measure_type=actual` numeric total;
    `region=NSW` 400; unknown measure id 404; `/api/meta/coverage` synthetic, no live ingestion,
-   8 stubs, nonzero counts.
+   11 stubs, nonzero counts.
 
 Acceptance evidence shape: paste the commands and their real output for each section above,
 including the audit summary line, the compose `ps` state, `docker compose down -v` output, and the

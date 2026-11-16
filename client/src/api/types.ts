@@ -5,7 +5,11 @@
  * contracts.
  */
 
-export type MeasureType = 'actual' | 'budget' | 'estimate';
+export type MeasureType = 'actual' | 'budget' | 'estimate' | 'contract' | 'grant_award';
+
+export type JurisdictionLevel = 'federal' | 'state' | 'territory' | 'local' | 'other';
+
+export type DataSourceStatus = 'stub' | 'active' | 'degraded';
 
 export type RegionLevel = 'national' | 'state' | 'region';
 
@@ -20,6 +24,10 @@ export interface DataSource {
   license: string;
   verified: boolean;
   notes?: string;
+  status: DataSourceStatus;
+  last_ingested_at: string | null;
+  records_ingested: number;
+  errors: string[];
 }
 
 export interface DataSourcesResponse {
@@ -31,7 +39,11 @@ export interface ConnectorMetadata {
   name: string;
   publisher: string;
   source_url: string;
-  status: 'stub';
+  status: DataSourceStatus;
+  jurisdiction_level: JurisdictionLevel;
+  last_fetched_at: string | null;
+  records_ingested: number;
+  errors: string[];
 }
 
 export interface CoverageCounts {
@@ -50,8 +62,11 @@ export interface CoverageResponse {
   counts: CoverageCounts;
   fiscal_years: string[];
   measure_types: MeasureType[];
+  supported_measure_types?: MeasureType[];
   region_levels: RegionLevel[];
   connectors: ConnectorMetadata[];
+  connector_status_counts?: Record<DataSourceStatus, number>;
+  ingestion?: { latest_logs: IngestionLog[] };
   limitations: string[];
   note: string;
 }
@@ -87,8 +102,8 @@ export interface RegionsResponse {
 
 export interface MeasureRow {
   id: string;
-  region_id: string;
-  function_code: string;
+  region_id: string | null;
+  function_code: string | null;
   amount_cents: number;
   measure_type: MeasureType;
   fiscal_year: string;
@@ -96,6 +111,18 @@ export interface MeasureRow {
   source_url: string;
   verified: boolean;
   notes?: string;
+  natural_key?: string;
+  project_name?: string;
+  description?: string;
+  jurisdiction_level?: JurisdictionLevel;
+  jurisdiction?: string;
+  delivery_entity?: string;
+  funding_source?: string;
+  source_dataset?: string;
+  source_date?: string;
+  data_quality_flag?: string;
+  location?: { state?: string; lga_name?: string };
+  unspsc?: string;
 }
 
 /** Per-measure-type count and sum. The API never sums across types. */
@@ -176,6 +203,18 @@ export interface SearchResponse {
   count: number;
 }
 
+export interface IngestionLog {
+  id?: string;
+  source_id: string;
+  started_at: string;
+  finished_at: string;
+  status: 'success' | 'partial' | 'error' | 'skipped';
+  records_fetched: number;
+  records_upserted: number;
+  errors: string[];
+  message?: string;
+}
+
 export interface HealthResponse {
   ok: boolean;
   db: 'connected' | 'unavailable';
@@ -188,12 +227,12 @@ export type SpendingSort = 'amount_desc' | 'amount_asc' | 'fiscal_year_desc' | '
  * display names and provenance the API resolves server-side.
  */
 export interface SpendingMeasureRow extends MeasureRow {
-  function_name: string;
-  function_level: FunctionLevel;
+  function_name: string | null;
+  function_level: FunctionLevel | null;
   function_parent_code?: string;
-  region_code: string;
-  region_name: string;
-  region_level: RegionLevel;
+  region_code: string | null;
+  region_name: string | null;
+  region_level: RegionLevel | null;
   provenance: {
     source_id: string;
     source_url: string;
@@ -241,6 +280,7 @@ export interface SpendingPagination {
 export interface SpendingAppliedFilters {
   fiscal_year: string | null;
   measure_type: MeasureType | null;
+  jurisdiction_level: JurisdictionLevel | null;
   function: string | null;
   region: string | null;
   min_amount: number | null;

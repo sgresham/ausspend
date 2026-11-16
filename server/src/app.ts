@@ -28,7 +28,12 @@ export function createApp(options: AppOptions = {}): express.Express {
   };
 
   app.get('/api/health', healthHandler);
-  app.use('/api', createApiRouter({ pingDb: options.pingDb }));
+  app.get('/api/v1/health', healthHandler);
+  // One router, two mounts: the UI keeps using /api and task/API consumers get
+  // the versioned /api/v1 aliases.
+  const apiRouter = createApiRouter({ pingDb: options.pingDb });
+  app.use('/api', apiRouter);
+  app.use('/api/v1', apiRouter);
 
   app.use((req, res) => {
     res.status(404).json({ ok: false, error: 'Not found', path: req.path });

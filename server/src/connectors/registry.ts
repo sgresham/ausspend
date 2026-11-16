@@ -1,16 +1,20 @@
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
-function stub(metadata: ConnectorMetadata): Connector {
+function stub(metadata: Omit<ConnectorMetadata, 'status'>): Connector {
   return {
     ...metadata,
+    status: 'stub',
     fetch: () => notImplemented(metadata),
+    transform: () => [],
+    metadata: { lastFetchedAt: null, recordsIngested: 0, errors: [] },
   };
 }
 
 /**
- * Eight plausible Australian public-spending sources. None is wired: each
- * `fetch` rejects with a clear "not implemented" error and no request leaves
- * the process. TODO (later milestone): implement the named endpoint/format.
+ * The registered Australian public-spending sources. None is live in F1: every
+ * `fetch` rejects with a clear "not implemented" error, no request leaves the
+ * process, and `transform` returns no records. The three federal source ids
+ * (aus-tender, data-gov-au-pbs, grantconnect) are the F2/PBS/GrantConnect stubs.
  */
 export const CONNECTORS: readonly Connector[] = [
   stub({
@@ -18,7 +22,7 @@ export const CONNECTORS: readonly Connector[] = [
     name: 'Australian Government Budget Portal',
     publisher: 'Australian Government Department of Finance',
     source_url: 'https://budget.gov.au/',
-    status: 'stub',
+    jurisdiction_level: 'federal',
     // TODO: ingest Portfolio Budget Statements (PDF/XLSX) via budget.gov.au.
   }),
   stub({
@@ -27,7 +31,7 @@ export const CONNECTORS: readonly Connector[] = [
     publisher: 'Australian Bureau of Statistics',
     source_url:
       'https://www.abs.gov.au/statistics/economy/government/government-finance-statistics',
-    status: 'stub',
+    jurisdiction_level: 'federal',
     // TODO: ingest ABS GFS catalogue tables (XLSX) by release.
   }),
   stub({
@@ -35,7 +39,7 @@ export const CONNECTORS: readonly Connector[] = [
     name: 'Health Expenditure Australia',
     publisher: 'Australian Institute of Health and Welfare',
     source_url: 'https://www.aihw.gov.au/reports-data/health-welfare-overview/health-expenditure',
-    status: 'stub',
+    jurisdiction_level: 'federal',
     // TODO: ingest AIHW health-expenditure data tables (XLSX) by year.
   }),
   stub({
@@ -43,15 +47,39 @@ export const CONNECTORS: readonly Connector[] = [
     name: 'Australian Office of Financial Management',
     publisher: 'Australian Office of Financial Management',
     source_url: 'https://www.aofm.gov.au/',
-    status: 'stub',
+    jurisdiction_level: 'federal',
     // TODO: ingest AOFM debt/portfolio datasets (CSV) for debt transactions.
+  }),
+  stub({
+    id: 'aus-tender',
+    name: 'AusTender — Australian Government contracts',
+    publisher: 'Australian Government Department of Finance',
+    source_url: 'https://www.tenders.gov.au/',
+    jurisdiction_level: 'federal',
+    // F2: ingest published AusTender contract notices (contract-shaped records).
+  }),
+  stub({
+    id: 'data-gov-au-pbs',
+    name: 'Portfolio Budget Statements (data.gov.au)',
+    publisher: 'Australian Government Department of Finance',
+    source_url: 'https://www.budget.gov.au/',
+    jurisdiction_level: 'federal',
+    // PBS: ingest Portfolio Budget Statements once the release format is pinned.
+  }),
+  stub({
+    id: 'grantconnect',
+    name: 'GrantConnect — Australian Government grants',
+    publisher: 'Australian Government Department of Finance',
+    source_url: 'https://www.grants.gov.au/',
+    jurisdiction_level: 'federal',
+    // GrantConnect: ingest published grant award records.
   }),
   stub({
     id: 'nsw-budget',
     name: 'NSW Budget',
     publisher: 'NSW Treasury',
     source_url: 'https://www.treasury.nsw.gov.au/budget',
-    status: 'stub',
+    jurisdiction_level: 'state',
     // TODO: ingest NSW Budget papers and agency financial statements (PDF/XLSX).
   }),
   stub({
@@ -59,7 +87,7 @@ export const CONNECTORS: readonly Connector[] = [
     name: 'Victorian State Budget',
     publisher: 'Victorian Department of Treasury and Finance',
     source_url: 'https://www.dtf.vic.gov.au/state-budget',
-    status: 'stub',
+    jurisdiction_level: 'state',
     // TODO: ingest Victorian Budget papers and DTF data tables (XLSX).
   }),
   stub({
@@ -67,7 +95,7 @@ export const CONNECTORS: readonly Connector[] = [
     name: 'Queensland Budget',
     publisher: 'Queensland Treasury',
     source_url: 'https://budget.qld.gov.au/',
-    status: 'stub',
+    jurisdiction_level: 'state',
     // TODO: ingest Queensland Budget datasets (CSV/XLSX) per portfolio.
   }),
   stub({
@@ -75,7 +103,7 @@ export const CONNECTORS: readonly Connector[] = [
     name: 'Western Australian Budget',
     publisher: 'Western Australian Department of Treasury',
     source_url: 'https://www.wa.gov.au/organisation/department-of-treasury/budget',
-    status: 'stub',
+    jurisdiction_level: 'state',
     // TODO: ingest WA Budget papers and Treasury data tables (XLSX).
   }),
 ];

@@ -12,8 +12,8 @@ export type LeanMeasure = MeasureDocument & { _id: mongoose.Types.ObjectId };
 
 export interface MeasureRow {
   id: string;
-  region_id: string;
-  function_code: string;
+  region_id: string | null;
+  function_code: string | null;
   amount_cents: number;
   measure_type: MeasureDocument['measure_type'];
   fiscal_year: string;
@@ -21,6 +21,18 @@ export interface MeasureRow {
   source_url: string;
   verified: boolean;
   notes?: string;
+  natural_key?: string;
+  project_name?: string;
+  description?: string;
+  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'other';
+  jurisdiction?: string;
+  delivery_entity?: string;
+  funding_source?: string;
+  source_dataset?: string;
+  source_date?: string;
+  data_quality_flag?: string;
+  location?: { state?: string; lga_name?: string };
+  unspsc?: string;
 }
 
 export interface MeasureSummary {
@@ -61,8 +73,8 @@ export function serializeRegion(region: LeanRegion): RegionPayload {
 export function serializeMeasure(measure: LeanMeasure): MeasureRow {
   return {
     id: measure._id.toString(),
-    region_id: measure.region_id.toString(),
-    function_code: measure.function_code,
+    region_id: measure.region_id ? measure.region_id.toString() : null,
+    function_code: measure.function_code ?? null,
     amount_cents: measure.amount_cents,
     measure_type: measure.measure_type,
     fiscal_year: measure.fiscal_year,
@@ -70,6 +82,18 @@ export function serializeMeasure(measure: LeanMeasure): MeasureRow {
     source_url: measure.source_url,
     verified: measure.verified,
     ...(measure.notes ? { notes: measure.notes } : {}),
+    ...(measure.natural_key ? { natural_key: measure.natural_key } : {}),
+    ...(measure.project_name ? { project_name: measure.project_name } : {}),
+    ...(measure.description ? { description: measure.description } : {}),
+    ...(measure.jurisdiction_level ? { jurisdiction_level: measure.jurisdiction_level } : {}),
+    ...(measure.jurisdiction ? { jurisdiction: measure.jurisdiction } : {}),
+    ...(measure.delivery_entity ? { delivery_entity: measure.delivery_entity } : {}),
+    ...(measure.funding_source ? { funding_source: measure.funding_source } : {}),
+    ...(measure.source_dataset ? { source_dataset: measure.source_dataset } : {}),
+    ...(measure.source_date ? { source_date: measure.source_date } : {}),
+    ...(measure.data_quality_flag ? { data_quality_flag: measure.data_quality_flag } : {}),
+    ...(measure.location ? { location: measure.location } : {}),
+    ...(measure.unspsc ? { unspsc: measure.unspsc } : {}),
   };
 }
 
@@ -153,14 +177,18 @@ export async function groupByRegion(
     measures: MeasureRow[];
   }>
 > {
+  const withRegion = measures.filter(
+    (measure): measure is LeanMeasure & { region_id: mongoose.Types.ObjectId } =>
+      Boolean(measure.region_id),
+  );
   const regions = await loadRegions([
     ...new Map(
-      measures.map((measure) => [measure.region_id.toString(), measure.region_id]),
+      withRegion.map((measure) => [measure.region_id.toString(), measure.region_id]),
     ).values(),
   ]);
 
   const groups = new Map<string, LeanMeasure[]>();
-  for (const measure of measures) {
+  for (const measure of withRegion) {
     const key = measure.region_id.toString();
     const group = groups.get(key) ?? [];
     group.push(measure);

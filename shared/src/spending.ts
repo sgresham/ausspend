@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { FunctionLevelSchema } from './cofog.js';
 import { MeasureTypeSchema } from './measure.js';
+import { JurisdictionLevelSchema, SpendingLocationSchema } from './measure-record.js';
 import { REGION_LEVELS, RegionLevelSchema } from './regions.js';
 import { SourceUrlSchema } from './source.js';
 
@@ -41,6 +42,7 @@ export const SpendingQuerySchema = z
       .regex(/^\d{4}-\d{2}$/, 'fiscal_year must look like YYYY-YY')
       .optional(),
     measure_type: MeasureTypeSchema.optional(),
+    jurisdiction_level: JurisdictionLevelSchema.optional(),
     function: SpendingFunctionCodeSchema.optional(),
     region: SpendingRegionIdSchema.optional(),
     min_amount: z.coerce
@@ -90,8 +92,9 @@ export type PerMeasureTypeTotal = z.infer<typeof PerMeasureTypeTotalSchema>;
  */
 export const SpendingMeasureRowSchema = z.object({
   id: z.string().min(1),
-  region_id: z.string().min(1),
-  function_code: z.string().min(2),
+  // Source records may have neither a COFOG function nor a curated region.
+  region_id: z.string().min(1).nullable(),
+  function_code: z.string().min(2).nullable(),
   amount_cents: z.number().int().nonnegative(),
   measure_type: MeasureTypeSchema,
   fiscal_year: z.string().regex(/^\d{4}-\d{2}$/),
@@ -99,12 +102,24 @@ export const SpendingMeasureRowSchema = z.object({
   source_url: SourceUrlSchema,
   verified: z.boolean(),
   notes: z.string().optional(),
-  function_name: z.string().min(1),
-  function_level: FunctionLevelSchema,
+  natural_key: z.string().min(1).nullable().optional(),
+  project_name: z.string().min(1).optional(),
+  description: z.string().min(1).optional(),
+  jurisdiction_level: JurisdictionLevelSchema.optional(),
+  jurisdiction: z.string().min(1).optional(),
+  delivery_entity: z.string().min(1).optional(),
+  funding_source: z.string().min(1).optional(),
+  source_dataset: z.string().min(1).optional(),
+  source_date: z.string().min(1).optional(),
+  data_quality_flag: z.string().min(1).optional(),
+  location: SpendingLocationSchema.optional(),
+  unspsc: z.string().min(1).optional(),
+  function_name: z.string().min(1).nullable(),
+  function_level: FunctionLevelSchema.nullable(),
   function_parent_code: z.string().min(2).optional(),
-  region_code: z.string().min(2),
-  region_name: z.string().min(1),
-  region_level: RegionLevelSchema,
+  region_code: z.string().min(2).nullable(),
+  region_name: z.string().min(1).nullable(),
+  region_level: RegionLevelSchema.nullable(),
   provenance: z.object({
     source_id: z.string().min(1),
     source_url: SourceUrlSchema,
@@ -181,6 +196,7 @@ export type SpendingPagination = z.infer<typeof SpendingPaginationSchema>;
 export const SpendingAppliedFiltersSchema = z.object({
   fiscal_year: z.string().nullable(),
   measure_type: MeasureTypeSchema.nullable(),
+  jurisdiction_level: JurisdictionLevelSchema.nullable(),
   function: z.string().nullable(),
   region: z.string().nullable(),
   min_amount: z.number().int().nonnegative().nullable(),

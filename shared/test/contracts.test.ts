@@ -22,8 +22,8 @@ describe('MoneyCents', () => {
 });
 
 describe('MeasureType', () => {
-  it('exposes actual, budget and estimate', () => {
-    expect(MEASURE_TYPES).toEqual(['actual', 'budget', 'estimate']);
+  it('exposes budget measures and federal record measures', () => {
+    expect(MEASURE_TYPES).toEqual(['actual', 'budget', 'estimate', 'contract', 'grant_award']);
     for (const measure of MEASURE_TYPES) {
       expect(MeasureTypeSchema.parse(measure)).toBe(measure);
     }

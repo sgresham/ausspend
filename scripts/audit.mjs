@@ -141,7 +141,7 @@ async function apiChecks() {
     return body.error;
   });
 
-  await check('API meta/coverage reports synthetic, no live ingestion, 8 stubs', async () => {
+  await check('API meta/coverage reports synthetic, no live ingestion, 11 stubs', async () => {
     const { status, body } = await getJson('/api/meta/coverage');
     assert(status === 200, `expected 200, got ${status}`);
     assert(body?.synthetic === true, `expected synthetic:true, got ${body?.synthetic}`);
@@ -329,7 +329,7 @@ async function uiChecks(page, regionId) {
     return `${rows}; ${functionRows}`;
   });
 
-  await check('/data-sources#synthetic-seed shows the synthetic source and 8 stubs', async () => {
+  await check('/data-sources#synthetic-seed shows the synthetic source and 11 stubs', async () => {
     pageErrors.length = 0;
     await page.goto(`${WEB_URL}/data-sources#synthetic-seed`, { waitUntil: 'domcontentloaded' });
     const source = page.getByTestId('source-synthetic-seed');
@@ -349,7 +349,7 @@ async function uiChecks(page, regionId) {
     const stubs = page.getByTestId('connector-stubs');
     await stubs.waitFor({ state: 'visible', timeout: 20_000 });
     const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
-    assert(stubCount === 8, `expected 8 connector stubs marked not wired, got ${stubCount}`);
+    assert(stubCount === 11, `expected 11 connector stubs marked not wired, got ${stubCount}`);
 
     const limitations = page.getByTestId('coverage-limitations');
     await limitations.waitFor({ state: 'visible', timeout: 20_000 });
@@ -360,7 +360,7 @@ async function uiChecks(page, regionId) {
     );
     assert(/No live ingestion/.test(limitationText), 'coverage limitations omit live ingestion');
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
-    return 'source Unverified, 8 stubs not wired, limitations present';
+    return 'source Unverified, 11 stubs not wired, limitations present';
   });
 }
 

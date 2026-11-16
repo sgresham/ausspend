@@ -21,7 +21,8 @@ export function DataSourcesPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         The registered sources behind every figure. Phase 1 has a single synthetic seed source, and
         it is explicitly unverified. The anchor <code>#synthetic-seed</code> resolves to that source
-        below. The eight ingestion connectors are stubs — no live data has been ingested.
+        below. The registered ingestion connectors are listed with their real status; no federal
+        connector is live in F1.
       </Typography>
 
       {state.loading ? <LoadingState label="Loading source register…" /> : null}
@@ -92,6 +93,15 @@ export function DataSourcesPage() {
                         ? 'Verified source'
                         : 'Unverified — not a published government figure'}
                     </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Ingestion status
+                    </Typography>
+                    <Typography variant="body2">
+                      {source.status} · {source.records_ingested} record(s)
+                      {source.last_ingested_at
+                        ? ` · last ingested ${formatDate(source.last_ingested_at)}`
+                        : ' · never ingested'}
+                    </Typography>
                   </Box>
 
                   {source.notes ? (
@@ -112,12 +122,13 @@ export function DataSourcesPage() {
       ) : null}
 
       <Typography variant="h5" component="h2" sx={{ mt: 4 }} gutterBottom>
-        Ingestion connector stubs
+        Ingestion connectors
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        These eight connectors are registered for later milestones but are not wired. Each is
-        <strong> status “stub — not wired”</strong>: there are no network calls, credentials or
-        ingested records in Phase 1.
+        {connectors.length} connectors are registered. A <strong>stub</strong> makes no network call
+        and ingests no records; an <strong>active</strong> connector has ingested and a{' '}
+        <strong>degraded</strong> connector reports errors. The three federal source ids
+        (aus-tender, data-gov-au-pbs, grantconnect) are stubs until F2/PBS/GrantConnect.
       </Typography>
 
       {!coverage.data && coverage.error ? (
@@ -140,11 +151,15 @@ export function DataSourcesPage() {
                       size="small"
                       color="default"
                       variant="outlined"
-                      label="stub — not wired"
+                      label={connector.status === 'stub' ? 'stub — not wired' : connector.status}
                     />
+                    <Chip size="small" variant="outlined" label={connector.jurisdiction_level} />
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    {connector.publisher}
+                    {connector.publisher} · {connector.records_ingested} record(s)
+                    {connector.last_fetched_at
+                      ? ` · last fetched ${formatDate(connector.last_fetched_at)}`
+                      : ' · never fetched'}
                   </Typography>
                   <Typography variant="body2" component="div">
                     <SourceLink

@@ -122,7 +122,10 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
       `${group.function.code} — ${group.function.name}`,
     ]),
   );
-  const labelFor = (row: MeasureRow) => functionNames.get(row.function_code) ?? row.function_code;
+  const labelFor = (row: MeasureRow) =>
+    (row.function_code ? functionNames.get(row.function_code) : undefined) ??
+    row.function_code ??
+    'No COFOG function';
   const singleFunctionGroups = detail.by_function.filter((group) => group.total_cents !== null);
   const functionBarData: BarDatum[] = singleFunctionGroups.map((group) => ({
     label: `${group.function.code} — ${group.function.name}`,

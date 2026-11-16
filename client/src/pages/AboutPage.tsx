@@ -33,7 +33,9 @@ export function AboutPage() {
               <code>verified: false</code>.
             </Typography>
             <Typography component="li" variant="body2">
-              No live ingestion: all eight connectors are stubs and no request leaves the API.
+              No live ingestion: the registered connectors are stubs and no request leaves the API.
+              The three federal ids (aus-tender, data-gov-au-pbs, grantconnect) are reserved for
+              later milestones.
             </Typography>
             <Typography component="li" variant="body2">
               Curated COFOG subset: ten divisions with curated subdivisions, not an exhaustive
@@ -62,7 +64,7 @@ export function AboutPage() {
             <Link component={RouterLink} to="/data-sources#synthetic-seed">
               Data sources
             </Link>{' '}
-            page, together with the eight connector stubs and the coverage limitations.
+            page, together with every connector's status and the coverage limitations.
           </Typography>
         </CardContent>
       </Card>

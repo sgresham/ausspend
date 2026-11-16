@@ -39,7 +39,7 @@ const SORT_LABELS: Record<SpendingSort, string> = {
   fiscal_year_asc: 'Fiscal year, oldest first',
 };
 
-const MEASURE_TYPES: MeasureType[] = ['actual', 'budget', 'estimate'];
+const MEASURE_TYPES: MeasureType[] = ['actual', 'budget', 'estimate', 'contract', 'grant_award'];
 const PAGE_SIZES = [10, 20, 50, 100];
 
 function positiveInt(raw: string | null, fallback: number): number {

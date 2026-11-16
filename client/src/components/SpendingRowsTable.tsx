@@ -15,7 +15,9 @@ import type { SpendingMeasureRow } from '../api/types';
 import { Amount, FiscalYearChip, MeasureTypeChip, SourceCell } from './Provenance';
 
 function regionHref(row: SpendingMeasureRow): string {
-  return row.region_level === 'state' ? `/states/${row.region_code}` : `/regions/${row.region_id}`;
+  return row.region_level === 'state'
+    ? `/states/${row.region_code ?? ''}`
+    : `/regions/${row.region_id ?? ''}`;
 }
 
 /** One page of `/api/spending` rows, each with its own source and verification. */
@@ -46,14 +48,26 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
               {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
-                    <Link component={RouterLink} to={`/functions/${row.function_code}`}>
-                      {row.function_code} — {row.function_name}
-                    </Link>
+                    {row.function_code ? (
+                      <Link component={RouterLink} to={`/functions/${row.function_code}`}>
+                        {row.function_code} — {row.function_name}
+                      </Link>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        No COFOG function
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell>
-                    <Link component={RouterLink} to={regionHref(row)}>
-                      {row.region_code} — {row.region_name}
-                    </Link>
+                    {row.region_code ? (
+                      <Link component={RouterLink} to={regionHref(row)}>
+                        {row.region_code} — {row.region_name}
+                      </Link>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        No curated region
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell>
                     <FiscalYearChip year={row.fiscal_year} />

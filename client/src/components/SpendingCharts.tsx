@@ -23,6 +23,8 @@ const MEASURE_FILLS: Record<MeasureType, string> = {
   actual: '#1f5c8b',
   budget: '#b35c00',
   estimate: '#5f6b76',
+  contract: '#2e7d32',
+  grant_award: '#6a1b9a',
 };
 
 /** A single-series horizontal bar chart for one measure type. */

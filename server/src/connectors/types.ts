@@ -1,38 +1,62 @@
-/**
- * Phase 1 ingestion connectors are deliberately inert: there is no network
- * access, no credentials and no ingestion pipeline yet. Each connector carries
- * the metadata the coverage endpoint publishes and a `fetch` that always throws
- * "not implemented". The TODO comments name the real endpoint/format to wire up
- * in a later milestone.
- */
-export type ConnectorStatus = 'stub';
+import type { SpendingRecord } from '@ausspend/shared';
 
+export type ConnectorStatus = 'stub' | 'active' | 'degraded';
+
+export type ConnectorJurisdictionLevel = 'federal' | 'state' | 'territory' | 'local' | 'other';
+
+/** A source-native record before transformation. Connectors decide the shape. */
+export type RawRecord = Record<string, unknown>;
+
+/** The coverage metadata preserved from the stub registry. */
 export interface ConnectorMetadata {
   id: string;
   name: string;
   publisher: string;
   source_url: string;
   status: ConnectorStatus;
+  jurisdiction_level: ConnectorJurisdictionLevel;
 }
 
+export interface ConnectorRunMetadata {
+  lastFetchedAt: string | null;
+  recordsIngested: number;
+  errors: string[];
+}
+
+/**
+ * Ingestion connector contract. Stubs never leave the process: `fetch` rejects
+ * with "not implemented", `transform` returns no records, and the runner logs a
+ * skipped source rather than aborting.
+ */
 export interface Connector extends ConnectorMetadata {
-  /** Always rejects; connectors are not wired to any network in Phase 1. */
-  fetch(): Promise<never>;
+  fetch(): Promise<RawRecord[]>;
+  transform(raw: readonly RawRecord[]): SpendingRecord[];
+  metadata: ConnectorRunMetadata;
 }
 
-export function notImplemented(connector: ConnectorMetadata): never {
+/** Serialisable coverage shape for `/api/meta/coverage`; never includes fetch/transform. */
+export interface ConnectorSummary extends ConnectorMetadata {
+  last_fetched_at: string | null;
+  records_ingested: number;
+  errors: string[];
+}
+
+export function notImplemented(connector: Pick<ConnectorMetadata, 'id' | 'name'>): never {
   throw new Error(
-    `Connector "${connector.id}" (${connector.name}) is not implemented: no live ingestion in Phase 1`,
+    `Connector "${connector.id}" (${connector.name}) is not implemented: no live ingestion in F1`,
   );
 }
 
-/** Serialisable summary for `/api/meta/coverage`; never includes `fetch`. */
-export function connectorSummary(connector: Connector): ConnectorMetadata {
+export function connectorSummary(connector: Connector): ConnectorSummary {
   return {
     id: connector.id,
     name: connector.name,
     publisher: connector.publisher,
     source_url: connector.source_url,
     status: connector.status,
+    jurisdiction_level: connector.jurisdiction_level,
+    last_fetched_at: connector.metadata.lastFetchedAt,
+    records_ingested: connector.metadata.recordsIngested,
+    errors: [...connector.metadata.errors],
   };
 }
