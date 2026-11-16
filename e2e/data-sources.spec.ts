@@ -22,3 +22,18 @@ test('data sources shows the synthetic source, Unverified badge and anchor targe
   await expect(anchor.getByRole('link', { name: '/data-sources#synthetic-seed' })).toBeVisible();
   await expect(page.getByText('Provenance:').first()).toBeVisible();
 });
+
+test('data sources lists the eight connector stubs and coverage limitations', async ({ page }) => {
+  await page.goto('/data-sources');
+
+  const stubs = page.getByTestId('connector-stubs');
+  await expect(stubs).toBeVisible();
+  await expect(stubs.getByText('stub — not wired')).toHaveCount(8);
+  await expect(stubs).toContainText('Australian Government Budget Portal');
+  await expect(stubs).toContainText('Western Australian Budget');
+
+  await expect(page.getByTestId('coverage-limitations')).toContainText(
+    'No live ingestion: all eight connectors are stubs',
+  );
+  await expect(page.getByTestId('coverage-limitations')).toContainText('never calls them');
+});

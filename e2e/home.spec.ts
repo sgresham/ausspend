@@ -22,4 +22,31 @@ test('home renders the shell, coverage banner and provenance', async ({ page }) 
   await expect(page.getByRole('link', { name: '07 — Health' })).toBeVisible();
   await expect(page.getByText('Unverified').first()).toBeVisible();
   await expect(page.getByTestId('headline-total')).toHaveCount(0);
+  await expect(page.getByTestId('coverage-limitations')).toContainText(
+    'Synthetic development seed',
+  );
+  await expect(page.getByTestId('connector-status')).toContainText('stub — not wired');
+});
+
+test('home autocomplete links regions by _id/state and functions by code', async ({ page }) => {
+  await page.goto('/');
+
+  const search = page.getByTestId('home-autocomplete');
+  await search.getByLabel('Search regions and functions').fill('New');
+
+  const nsw = search
+    .getByTestId('quick-region-result')
+    .filter({ hasText: 'NSW — New South Wales' })
+    .first();
+  await expect(nsw).toBeVisible();
+  await expect(nsw).toHaveAttribute('href', '/states/NSW');
+
+  await search.getByLabel('Search regions and functions').fill('health');
+
+  const health = search
+    .getByTestId('quick-function-result')
+    .filter({ hasText: '07 — Health' })
+    .first();
+  await expect(health).toBeVisible();
+  await expect(health).toHaveAttribute('href', '/functions/07');
 });

@@ -15,6 +15,7 @@ import type {
   FunctionGroup,
   MeasureRow,
   MeasureType,
+  PerMeasureTypeTotal,
   RankedState,
   RegionGroup,
 } from '../api/types';
@@ -202,29 +203,28 @@ export function RankedStatesTable({
   );
 }
 
-/** Mixed response: per-measure-type totals computed from the measure rows. */
+/**
+ * Per-measure-type totals. Every number comes from the API's
+ * `total_by_measure_type`; rows are used only to attach provenance links.
+ */
 export function MeasureTypeBreakdownTable({
-  measureTypes,
+  totals,
   rows,
-  limit,
 }: {
-  measureTypes: MeasureType[];
+  totals: PerMeasureTypeTotal[];
   rows: MeasureRow[];
-  limit: number;
 }) {
-  const totals = new Map<MeasureType, MeasureRow[]>();
+  const rowsByType = new Map<MeasureType, MeasureRow[]>();
   for (const row of rows) {
-    const group = totals.get(row.measure_type) ?? [];
+    const group = rowsByType.get(row.measure_type) ?? [];
     group.push(row);
-    totals.set(row.measure_type, group);
+    rowsByType.set(row.measure_type, group);
   }
 
   return (
-    <Card variant="outlined" sx={{ mb: 3 }}>
+    <Card variant="outlined" sx={{ mb: 3 }} data-testid="per-measure-type-table">
       <CardContent>
-        <TableTitle
-          caption={`Computed from the ${rows.length} measure rows returned with limit=${limit}; sums are per measure type only.`}
-        >
+        <TableTitle caption="Totals as returned by the API's total_by_measure_type; no client-side summing. Sums are per measure type only.">
           Per-measure-type breakdown
         </TableTitle>
         <TableContainer>
@@ -238,31 +238,32 @@ export function MeasureTypeBreakdownTable({
               </TableRow>
             </TableHead>
             <TableBody>
-              {measureTypes.map((type) => {
-                const group = totals.get(type) ?? [];
-                const total = group.reduce((sum, row) => sum + row.amount_cents, 0);
-                return (
-                  <TableRow key={type}>
-                    <TableCell>
-                      <MeasureTypeChip type={type} />
-                    </TableCell>
-                    <TableCell align="right">{group.length}</TableCell>
-                    <TableCell align="right">
-                      <Amount cents={total} />
-                    </TableCell>
-                    <TableCell>
-                      <SourceCell sources={group} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {totals.map((entry) => (
+                <TableRow key={entry.measure_type}>
+                  <TableCell>
+                    <MeasureTypeChip type={entry.measure_type} />
+                  </TableCell>
+                  <TableCell align="right">{entry.count}</TableCell>
+                  <TableCell align="right">
+                    <Amount cents={entry.total_cents} />
+                  </TableCell>
+                  <TableCell>
+                    <SourceCell sources={rowsByType.get(entry.measure_type) ?? []} />
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TableContainer>
         <Stack direction="row" spacing={1} sx={{ mt: 2 }} flexWrap="wrap" useFlexGap>
           <Chip size="small" label={`${uniqueSources(rows).length} source(s)`} variant="outlined" />
-          {measureTypes.map((type) => (
-            <Chip key={type} size="small" label={titleCase(type)} variant="outlined" />
+          {totals.map((entry) => (
+            <Chip
+              key={entry.measure_type}
+              size="small"
+              label={titleCase(entry.measure_type)}
+              variant="outlined"
+            />
           ))}
         </Stack>
       </CardContent>
