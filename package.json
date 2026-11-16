@@ -2,7 +2,7 @@
   "name": "ausspend",
   "version": "0.1.0",
   "private": true,
-  "description": "Australian government spending explorer \u2014 Phase 1 monorepo foundation",
+  "description": "Australian government spending explorer — Phase 1 monorepo foundation",
   "type": "module",
   "packageManager": "npm@11.11.0",
   "engines": {

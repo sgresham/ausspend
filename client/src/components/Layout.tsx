@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DatasetIcon from '@mui/icons-material/Dataset';
+import { CoverageBanner } from './CoverageBanner';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import HomeIcon from '@mui/icons-material/Home';
 import MapIcon from '@mui/icons-material/Map';
@@ -144,12 +145,8 @@ export function Layout() {
       >
         <Toolbar />
         <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
+          <CoverageBanner />
           <Outlet />
-          <Divider sx={{ my: 4 }} />
-          <Typography variant="caption" color="text.secondary">
-            Phase 1 foundation build. Data pages are placeholders until the verified dataset is
-            loaded.
-          </Typography>
         </Box>
       </Box>
     </Box>
