@@ -72,6 +72,8 @@ export interface CoverageResponse {
     pending: string[];
     stubs: string[];
     aus_tender_last_ingested_at: string | null;
+    pbs_last_ingested_at?: string | null;
+    pbs_caveat?: string;
     note: string;
   };
   ingestion?: { latest_logs: IngestionLog[] };

@@ -1,9 +1,17 @@
-# Federal ingestion — AusTender (F2)
+# Federal ingestion — AusTender (F2) and data.gov.au PBS (F3)
 
-This milestone makes **one** federal source live: **AusTender** contract notices from the
-Australian Government's public OCDS API. It deliberately does **not** implement the data.gov.au
-Portfolio Budget Statements (PBS) feed or GrantConnect; both remain pending stubs. The state and
-territory connectors remain stubs too.
+Two federal sources are live:
+
+1. **AusTender** contract notices from the Australian Government's public OCDS API (F2).
+2. **Portfolio Budget Statements (PBS)** budget line items from the data.gov.au CKAN dataset,
+   streamed from the 2025-26 program-expense CSV (F3).
+
+Both are unverified (`verified: false`) and neither is a single government total. GrantConnect and
+the state/territory connectors remain pending stubs.
+
+> **PBS caveat.** The PBS CSV is built from individual entity program-expense tables. Its line
+> items do **not** sum to the Budget Paper 1 "Estimates of General Government Expenses" total.
+> Never present a PBS sum as the federal total.
 
 ## Source and endpoint
 
@@ -105,6 +113,94 @@ in `notes`. ausspend never invents an LGA, SA2 or coordinate:
 same window updates the same documents: counts stay stable and there are no duplicate natural keys.
 Releases sharing an `ocid` within one batch are de-duplicated, keeping the newest `source_date`.
 
+## PBS (data.gov.au) — source, CSV and streaming parse
+
+- CKAN API base: <https://data.gov.au/data/api/3/action/>. Read-only, no API key.
+- Dataset id: `4f025f38-0c70-45e2-8106-4c29a5e48637`
+  (<https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637>).
+- The connector calls `package_show?id=...`, then selects the CSV resource named
+  **"2025-26 PBS Program Expenses Line Items"** (resource id
+  `7cc8640f-b5d4-41de-a665-3197739b965f`). The ZIP/Excel bundles and the Budget Paper 1/4
+  resources are ignored.
+- The CSV is decoded as **Windows-1252** (the source has 0x92 curly quotes, not valid UTF-8) and
+  parsed with a **streaming CSV parser** (`csv-parse`, pinned exactly). Chunks are fed straight
+  from the HTTP body; the file is never loaded as a single string.
+- CKAN and download calls are 500 ms apart. A `429` honours `Retry-After` (seconds or HTTP date,
+  capped at 60 s) with bounded exponential backoff.
+
+### PBS row mapping
+
+| Target field         | Source / rule                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `source_id`          | literal `"data-gov-au-pbs"`                                                                                          |
+| `source_dataset`     | literal `"2025-26 Portfolio Budget Statements (data.gov.au)"`                                                        |
+| `measure_type`       | literal `"budget"`                                                                                                   |
+| `jurisdiction_level` | literal `"federal"`; `jurisdiction` literal `"Commonwealth"`                                                         |
+| `project_name`       | `Program` (whitespace/NBSP-normalised)                                                                               |
+| `description`        | `Outcome`                                                                                                            |
+| `delivery_entity`    | `Department/Agency`                                                                                                  |
+| `funding_source`     | `Portfolio`                                                                                                          |
+| `amount_cents`       | `2025-26` column × 1,000 (published `$'000`) × 100, safe integer; `nfp`, blank, negative or invalid rows are skipped |
+| `fiscal_year`        | literal `"2025-26"`                                                                                                  |
+| `source_url`         | the data.gov.au resource page URL                                                                                    |
+| `source_date`        | resource `last_modified` / release date (`2025-03-26`)                                                               |
+| `function_code`      | COFOG-A division only where the portfolio has one defensible functional area (see below)                             |
+| `data_quality_flag`  | `statewide_only` when a COFOG division is mapped; `provisional` when it is not                                       |
+| `location`           | `{ state: "Commonwealth" }` only; PBS is not geographically tagged                                                   |
+| `natural_key`        | `4f025f38-...:<stable row hash>`; exact duplicate rows add an occurrence suffix                                      |
+| `verified`           | `false`                                                                                                              |
+| `notes`              | expense/appropriation/source table, the `$'000` unit rule, the CSV download URL and the caveat                       |
+
+**Units.** The CSV has bare integers and no unit column. The referenced PBS program tables publish
+`$'000`, so the raw value is thousands of dollars: `2,500` → `$2,500,000` → `250,000,000` cents.
+The mapping is documented in every record's `notes`; other amount columns (`2024-25`, `2026-27`,
+etc.) are ignored and not comparable across years in this ingestion.
+
+**COFOG mapping is conservative.** Only portfolios with a single defensible functional area are
+mapped (for example Health and Aged Care → `07`, Defence → `02`, Education → `09`, Social Services
+and Veterans' Affairs → `10`, Attorney-General's and Home Affairs → `03`, Agriculture/Industry/
+Employment → `04`, Treasury/Finance/PM&C/Parliament/Foreign Affairs → `01`). Mixed portfolios
+such as Infrastructure/Transport/Communications/Arts and Climate/Energy/Environment are left
+`function_code: null` and flagged `provisional`; no function is invented. The row's location is
+never an LGA, SA2 or coordinate.
+
+### PBS natural key and idempotency
+
+`natural_key = dataset_id + SHA-256 of the canonical source row` (field names sorted; whitespace
+normalised). Exact duplicate source rows in the published file get a stable `-1`, `-2`, … occurrence
+suffix so they are not silently collapsed and re-runs stay byte-identical. The runner upserts on
+`natural_key`, so re-running the PBS connector updates the same documents and never duplicates.
+
+### PBS caveat in the app
+
+`/api/v1/spending?...&measure_type=budget`, `/api/v1/meta/coverage` and both `/search` and
+`/data-sources` state the caveat. The budget per-measure-type total is the PBS line-item sum only,
+not a federal total. The coverage API exposes `federal_ingestion.pbs_caveat` and
+`pbs_last_ingested_at`.
+
+### PBS tests and live smoke
+
+`server/test/data-gov-au-pbs.test.ts` covers CKAN resource selection, chunked Windows-1252 parsing,
+mapping/row hash/idempotency, unmappable COFOG → provisional, integer amounts, `nfp`/negative skips,
+duplicate occurrence keys and the connector fetch/transform. The opt-in live smoke runs the real
+CKAN call and CSV stream:
+
+```bash
+PBS_LIVE_TEST=1 npx vitest run server/test/data-gov-au-pbs.test.ts
+```
+
+### PBS live run
+
+```bash
+INGEST_SOURCES=data-gov-au-pbs \
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+npm run ingest:federal
+```
+
+The runner writes `ingestion_logs`, updates `data_sources` (`active`/`degraded`,
+`last_ingested_at`, `records_ingested`, `errors`) and continues with the next source on failure.
+A PBS failure marks the source `degraded` and logs an `error`; it never aborts the run.
+
 ## Narrow live run
 
 The acceptance run ingests **one recent full week** into
@@ -136,8 +232,19 @@ curl -s 'http://localhost:3101/api/v1/data-sources'
 curl -s 'http://localhost:3101/api/v1/meta/coverage'
 ```
 
+For PBS, run `INGEST_SOURCES=data-gov-au-pbs` (no date window) and check:
+
+```bash
+mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+  db.measures.countDocuments({source_id:"data-gov-au-pbs"}),
+  db.measures.distinct("natural_key", {source_id:"data-gov-au-pbs"}).length,
+  db.measures.countDocuments({source_id:"synthetic-seed"}),
+  db.measures.countDocuments({source_id:"aus-tender"})
+'
+```
+
 Re-run the ingestion command and compare the counts: they should not grow except for genuinely new
-`ocid`s in the same window.
+`ocid`s in the same window, and PBS natural keys stay stable.
 
 ## Restart safety (seed vs live ingestion)
 
@@ -185,9 +292,12 @@ data_sources: synthetic-seed active, aus-tender active
 
 ## Remaining caveats
 
-- **PBS (data.gov.au) is pending.** Portfolio Budget Statements are budget/actual measures, not
-  contracts; the budget-total and PDF/XLSX-format questions are unresolved. This milestone does
-  not implement them.
+- **PBS is not a federal total.** The CSV line items come from entity program tables and do not
+  sum to the Budget Paper 1 total general government expense. The app shows the PBS sum only as a
+  per-measure-type line-item total.
+- **PBS units are `$'000`.** The raw CSV value is multiplied by 1,000 to dollars and 100 to cents.
+- **PBS has no geography.** `location.state` is literally `"Commonwealth"`; COFOG is mapped only
+  where the portfolio is defensible, otherwise the row is `provisional` with no function.
 - **GrantConnect is pending.** No grant feed is implemented.
 - **State/territory connectors are stubs.** NSW/VIC/QLD/WA remain uningested.
 - **No human verification.** Both the synthetic seed and AusTender rows carry `verified: false`.

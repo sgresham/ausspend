@@ -16,6 +16,7 @@ import { useApi } from '../hooks/useApi';
 import { useCoverage } from '../coverage';
 import { formatDate } from '../format';
 import { ProvenanceFooter, SourceLink, VerifiedBadge } from '../components/Provenance';
+import { PBS_CAVEAT } from '../provenance';
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 
 export function DataSourcesPage() {
@@ -32,10 +33,14 @@ export function DataSourcesPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         The registered sources behind every figure. The synthetic development seed is explicitly
         unverified; the anchor <code>#synthetic-seed</code> resolves to it below. AusTender is a
-        live federal source as of F2 — its ingested contract records and last-ingested time appear
-        here with their provenance. Portfolio Budget Statements (data.gov.au) and GrantConnect
-        remain pending stubs, as do the state/territory connectors.
+        live federal source as of F2 and data.gov.au PBS budget line items are live as of F3 — their
+        ingested records and last-ingested times appear here with their provenance. GrantConnect
+        remains a pending stub, as do the state/territory connectors.
       </Typography>
+
+      <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
+        <strong>PBS budget caveat.</strong> {PBS_CAVEAT}
+      </Alert>
 
       {state.loading ? <LoadingState label="Loading source register…" /> : null}
       {state.error ? <ApiErrorState error={state.error} /> : null}
@@ -135,6 +140,17 @@ export function DataSourcesPage() {
                     </Typography>
                   ) : null}
 
+                  {source.source_id === 'data-gov-au-pbs' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link
+                        component={RouterLink}
+                        to="/search?measure_type=budget&jurisdiction_level=federal"
+                      >
+                        Browse ingested PBS budget line items with provenance →
+                      </Link>
+                    </Typography>
+                  ) : null}
+
                   <ProvenanceFooter
                     sources={[source]}
                     note="Every measure row in the API repeats this source reference."
@@ -153,8 +169,9 @@ export function DataSourcesPage() {
         {connectors.length} connectors are registered. A <strong>stub</strong> makes no network call
         and ingests no records; an <strong>active</strong> connector has ingested, and a{' '}
         <strong>degraded</strong> connector reports errors. <code>aus-tender</code> is live from the
-        AusTender OCDS contractPublished feed. <code>data-gov-au-pbs</code> and{' '}
-        <code>grantconnect</code> remain pending, and the other eight connectors are stubs.
+        AusTender OCDS contractPublished feed and <code>data-gov-au-pbs</code> is live from the
+        data.gov.au CKAN PBS CSV. <code>grantconnect</code> remains pending and the other eight
+        connectors are stubs.
       </Typography>
 
       {!coverage.data && coverage.error ? (

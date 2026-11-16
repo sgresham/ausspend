@@ -14,3 +14,11 @@ export function uniqueSources(rows: readonly ProvenanceSourceRef[]): ProvenanceS
   }
   return [...byId.values()];
 }
+
+/**
+ * The PBS caveat shown wherever PBS budget figures appear. The published CSV is
+ * built from individual entity program tables; its total is not the Budget
+ * Paper 1 general government expense total.
+ */
+export const PBS_CAVEAT =
+  'PBS CSV line items are entity program tables; their sum does not equal the Budget Paper 1 total general government expense, so it is not the federal total.';

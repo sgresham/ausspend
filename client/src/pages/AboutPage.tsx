@@ -18,8 +18,9 @@ export function AboutPage() {
       </Typography>
 
       <Alert severity="warning" sx={{ mb: 3 }} data-testid="about-unverified">
-        Phase 1 uses a synthetic development seed. Every figure is unverified and is not a published
-        Australian government figure. There is no live ingestion and no claim of real data.
+        Synthetic development seed rows sit beside live AusTender contracts and data.gov.au PBS
+        budget line items. Every figure is unverified; the synthetic rows are not published
+        government figures, and PBS line items do not sum to the federal total.
       </Alert>
 
       <Card variant="outlined" sx={{ mb: 3 }}>
@@ -33,9 +34,9 @@ export function AboutPage() {
               <code>verified: false</code>.
             </Typography>
             <Typography component="li" variant="body2">
-              No live ingestion: the registered connectors are stubs and no request leaves the API.
-              The three federal ids (aus-tender, data-gov-au-pbs, grantconnect) are reserved for
-              later milestones.
+              F2/F3 live ingestion: AusTender contracts and data.gov.au PBS budget line items are
+              ingested with provenance; GrantConnect and the state/territory sources remain stubs.
+              PBS line items do not sum to the Budget Paper 1 total general government expense.
             </Typography>
             <Typography component="li" variant="body2">
               Curated COFOG subset: ten divisions with curated subdivisions, not an exhaustive
