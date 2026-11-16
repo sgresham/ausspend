@@ -141,20 +141,21 @@ async function apiChecks() {
     return body.error;
   });
 
-  await check('API meta/coverage reports synthetic, no live ingestion, 11 stubs', async () => {
+  await check('API meta/coverage reports AusTender live, PBS/GrantConnect pending', async () => {
     const { status, body } = await getJson('/api/meta/coverage');
     assert(status === 200, `expected 200, got ${status}`);
-    assert(body?.synthetic === true, `expected synthetic:true, got ${body?.synthetic}`);
-    assert(
-      body?.live_ingestion === false,
-      `expected live_ingestion:false, got ${body?.live_ingestion}`,
-    );
     assert(
       Array.isArray(body?.connectors) && body.connectors.length === 11,
       `expected 11 connectors, got ${body?.connectors?.length}`,
     );
     const connectorIds = body.connectors.map((connector) => connector.id);
-    for (const federalId of ['aus-tender', 'data-gov-au-pbs', 'grantconnect']) {
+    const ausTender = body.connectors.find((entry) => entry.id === 'aus-tender');
+    assert(ausTender, 'missing federal connector aus-tender');
+    assert(
+      ausTender.status === 'active' || ausTender.status === 'degraded',
+      `expected aus-tender active/degraded, got ${ausTender.status}`,
+    );
+    for (const federalId of ['data-gov-au-pbs', 'grantconnect']) {
       const connector = body.connectors.find((entry) => entry.id === federalId);
       assert(connector, `missing federal connector ${federalId}`);
       assert(
@@ -162,12 +163,41 @@ async function apiChecks() {
         `expected ${federalId} to be a stub, got ${connector.status}`,
       );
     }
+    assert(
+      body?.federal_ingestion?.live?.includes('aus-tender'),
+      'meta/coverage does not list aus-tender as live',
+    );
+    assert(
+      Array.isArray(body?.federal_ingestion?.pending) &&
+        body.federal_ingestion.pending.includes('data-gov-au-pbs') &&
+        body.federal_ingestion.pending.includes('grantconnect'),
+      'meta/coverage does not list PBS/GrantConnect as pending',
+    );
     assert(connectorIds.length === new Set(connectorIds).size, 'connector ids must be unique');
     assert(body.counts?.data_sources > 0, 'counts.data_sources must be > 0');
     assert(body.counts?.regions > 0, 'counts.regions must be > 0');
     assert(body.counts?.functions > 0, 'counts.functions must be > 0');
     assert(body.counts?.measures > 0, 'counts.measures must be > 0');
     return `counts=${body.counts.data_sources}/${body.counts.regions}/${body.counts.functions}/${body.counts.measures}`;
+  });
+
+  await check('API federal contracts carry provenance and integer cents', async () => {
+    const { status, body } = await getJson(
+      '/api/v1/spending?jurisdiction_level=federal&measure_type=contract&page_size=10',
+    );
+    assert(status === 200, `expected 200, got ${status}`);
+    assert(body?.data?.length > 0, 'no federal contract rows returned');
+    for (const row of body.data) {
+      assert(row.jurisdiction_level === 'federal', `row ${row.id} is not federal`);
+      assert(row.natural_key, `row ${row.id} has no natural_key`);
+      assert(Number.isInteger(row.amount_cents), `row ${row.id} amount is not integer cents`);
+      assert(row.source_dataset, `row ${row.id} has no source_dataset`);
+      assert(row.source_date, `row ${row.id} has no source_date`);
+      assert(row.data_quality_flag, `row ${row.id} has no data_quality_flag`);
+      assert(/^https:\/\//.test(row.source_url), `row ${row.id} source_url is not a URL`);
+      assert(row.provenance?.source_id === 'aus-tender', `row ${row.id} provenance is wrong`);
+    }
+    return `${body.data.length} federal contract rows, ${body.summary.total_by_measure_type[0]?.total_cents ?? 0} cents`;
   });
 
   return regionId;
@@ -339,39 +369,49 @@ async function uiChecks(page, regionId) {
     return `${rows}; ${functionRows}`;
   });
 
-  await check('/data-sources#synthetic-seed shows the synthetic source and 11 stubs', async () => {
-    pageErrors.length = 0;
-    await page.goto(`${WEB_URL}/data-sources#synthetic-seed`, { waitUntil: 'domcontentloaded' });
-    const source = page.getByTestId('source-synthetic-seed');
-    await source.waitFor({ state: 'visible', timeout: 20_000 });
-    const sourceText = (await source.innerText()).replace(/\s+/g, ' ');
-    assert(/Unverified/.test(sourceText), 'source is not marked Unverified');
-    assert(/synthetic-seed/.test(sourceText), 'source id is missing');
-    assert(
-      /verification status|Verification/i.test(sourceText) || sourceText.length > 0,
-      'source card is empty',
-    );
-    assert(
-      (await source.locator('a[href="/data-sources#synthetic-seed"]').count()) > 0,
-      'synthetic source anchor link is missing',
-    );
+  await check(
+    '/data-sources#synthetic-seed shows the synthetic source and connector statuses',
+    async () => {
+      pageErrors.length = 0;
+      await page.goto(`${WEB_URL}/data-sources#synthetic-seed`, { waitUntil: 'domcontentloaded' });
+      const source = page.getByTestId('source-synthetic-seed');
+      await source.waitFor({ state: 'visible', timeout: 20_000 });
+      const sourceText = (await source.innerText()).replace(/\s+/g, ' ');
+      assert(/Unverified/.test(sourceText), 'source is not marked Unverified');
+      assert(/synthetic-seed/.test(sourceText), 'source id is missing');
+      assert(
+        /verification status|Verification/i.test(sourceText) || sourceText.length > 0,
+        'source card is empty',
+      );
+      assert(
+        (await source.locator('a[href="/data-sources#synthetic-seed"]').count()) > 0,
+        'synthetic source anchor link is missing',
+      );
 
-    const stubs = page.getByTestId('connector-stubs');
-    await stubs.waitFor({ state: 'visible', timeout: 20_000 });
-    const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
-    assert(stubCount === 11, `expected 11 connector stubs marked not wired, got ${stubCount}`);
+      const stubs = page.getByTestId('connector-stubs');
+      await stubs.waitFor({ state: 'visible', timeout: 20_000 });
+      const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
+      assert(stubCount === 10, `expected 10 connector stubs marked not wired, got ${stubCount}`);
+      assert(
+        (await stubs.getByText('active', { exact: true }).count()) >= 1,
+        'AusTender connector is not shown as active',
+      );
 
-    const limitations = page.getByTestId('coverage-limitations');
-    await limitations.waitFor({ state: 'visible', timeout: 20_000 });
-    const limitationText = (await limitations.innerText()).replace(/\s+/g, ' ');
-    assert(
-      /Synthetic development seed only/.test(limitationText),
-      'coverage limitations do not mention the synthetic seed',
-    );
-    assert(/No live ingestion/.test(limitationText), 'coverage limitations omit live ingestion');
-    assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
-    return 'source Unverified, 11 stubs not wired, limitations present';
-  });
+      const limitations = page.getByTestId('coverage-limitations');
+      await limitations.waitFor({ state: 'visible', timeout: 20_000 });
+      const limitationText = (await limitations.innerText()).replace(/\s+/g, ' ');
+      assert(
+        /AusTender OCDS contractPublished ingestion is live/.test(limitationText),
+        'coverage limitations do not mention live AusTender ingestion',
+      );
+      assert(
+        /Portfolio Budget Statements.*GrantConnect/.test(limitationText),
+        'coverage limitations do not mention pending PBS/GrantConnect',
+      );
+      assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
+      return 'source Unverified, 10 stubs, AusTender active, limitations present';
+    },
+  );
 }
 
 async function main() {

@@ -101,11 +101,13 @@ The full list is in `scripts/audit.mjs`. In brief:
    one measure type shows a headline total.
 3. Row tables (search, function, region/state) and summary/headline footers show the source
    id/link and Unverified status.
-4. `/data-sources#synthetic-seed` shows the synthetic source Unverified, all eleven connector stubs
-   marked **stub — not wired**, and the coverage limitations.
+4. `/data-sources#synthetic-seed` shows the synthetic source Unverified, the live `aus-tender`
+   source active with a last-ingested time, the ten remaining connectors marked **stub — not
+   wired**, and the coverage limitations naming AusTender live plus PBS/GrantConnect pending.
 5. API invariants: `function=07` mixed/null/per-type; `measure_type=actual` numeric total;
-   `region=NSW` 400; unknown measure id 404; `/api/meta/coverage` synthetic, no live ingestion,
-   11 stubs, nonzero counts.
+   `region=NSW` 400; unknown measure id 404; `/api/meta/coverage` reports AusTender live,
+   PBS/GrantConnect pending, ten stubs, nonzero counts; `/api/v1/spending?jurisdiction_level=federal`
+   returns contract rows with provenance and integer cents.
 
 Acceptance evidence shape: paste the commands and their real output for each section above,
 including the audit summary line, the compose `ps` state, `docker compose down -v` output, and the

@@ -3,7 +3,12 @@ import mongoose from 'mongoose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app';
 import { DataSourceModel, IngestionLogModel, MeasureModel } from '../src/models/index.js';
-import { getConnector, runIngestion, type Connector } from '../src/connectors/index.js';
+import {
+  createAusTenderConnector,
+  getConnector,
+  runIngestion,
+  type Connector,
+} from '../src/connectors/index.js';
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_f1`;
@@ -65,7 +70,7 @@ const workingConnector = activeConnector(
   async () => [{ id: 'c-1' }],
 );
 
-const ausTenderStub = getConnector('aus-tender')!;
+const pendingFederalStub = getConnector('data-gov-au-pbs')!;
 
 beforeAll(async () => {
   await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
@@ -80,18 +85,18 @@ afterAll(async () => {
 describe('F1 ingestion runner', () => {
   it('logs a skipped stub and an errored source, then continues to a working source', async () => {
     const result = await runIngestion({
-      connectors: [ausTenderStub, failingConnector, workingConnector],
+      connectors: [pendingFederalStub, failingConnector, workingConnector],
     });
 
     expect(result.results.map((entry) => `${entry.source_id}:${entry.log_status}`)).toEqual([
-      'aus-tender:skipped',
+      'data-gov-au-pbs:skipped',
       'fake-failing-source:error',
       'fake-contract-source:success',
     ]);
 
     const logs = await IngestionLogModel.find({}).sort({ source_id: 1 }).lean();
     expect(logs).toHaveLength(3);
-    expect(logs.find((log) => log.source_id === 'aus-tender')).toMatchObject({
+    expect(logs.find((log) => log.source_id === 'data-gov-au-pbs')).toMatchObject({
       status: 'skipped',
       records_fetched: 0,
       records_upserted: 0,
@@ -106,7 +111,7 @@ describe('F1 ingestion runner', () => {
       records_upserted: 1,
     });
 
-    const stubSource = await DataSourceModel.findOne({ source_id: 'aus-tender' }).lean();
+    const stubSource = await DataSourceModel.findOne({ source_id: 'data-gov-au-pbs' }).lean();
     expect(stubSource).toMatchObject({ status: 'stub', records_ingested: 0 });
     const failedSource = await DataSourceModel.findOne({
       source_id: 'fake-failing-source',
@@ -200,8 +205,12 @@ describe('F1 extended measure shape and API', () => {
 
     const coverage = await request(app).get('/api/v1/meta/coverage');
     expect(coverage.status).toBe(200);
-    expect(coverage.body.live_ingestion).toBe(false);
-    expect(coverage.body.connector_status_counts).toMatchObject({ stub: 11 });
+    // The registry has one live connector (AusTender); PBS/GrantConnect stay
+    // stubs until their milestones.
+    expect(coverage.body.live_ingestion).toBe(true);
+    expect(coverage.body.connector_status_counts).toMatchObject({ active: 1, stub: 10 });
+    expect(coverage.body.federal_ingestion.live).toContain('aus-tender');
+    expect(coverage.body.federal_ingestion.pending).toEqual(['data-gov-au-pbs', 'grantconnect']);
     expect(coverage.body.supported_measure_types).toContain('contract');
     expect(coverage.body.supported_measure_types).toContain('grant_award');
 
@@ -209,13 +218,13 @@ describe('F1 extended measure shape and API', () => {
     expect(logs.status).toBe(200);
     expect(logs.body.logs.length).toBeGreaterThanOrEqual(3);
     expect(logs.body.logs.map((log: { source_id: string }) => log.source_id)).toEqual(
-      expect.arrayContaining(['aus-tender', 'fake-failing-source', 'fake-contract-source']),
+      expect.arrayContaining(['data-gov-au-pbs', 'fake-failing-source', 'fake-contract-source']),
     );
 
-    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=aus-tender');
+    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=data-gov-au-pbs');
     expect(legacyLogs.status).toBe(200);
     expect(legacyLogs.body.logs[0]).toMatchObject({
-      source_id: 'aus-tender',
+      source_id: 'data-gov-au-pbs',
       status: 'skipped',
     });
   });
@@ -229,5 +238,35 @@ describe('F1 extended measure shape and API', () => {
     expect(doc.region_id ?? null).toBeNull();
     expect(doc.function_code ?? null).toBeNull();
     expect(doc.natural_key).toBe('fake-contract-source:c-null');
+  });
+});
+
+describe('F2 AusTender runner continue-on-error', () => {
+  it('marks AusTender degraded on failure and still runs the next connector', async () => {
+    const failingAusTender = createAusTenderConnector({
+      fetchImpl: async () => {
+        throw new Error('austender fixture network failure');
+      },
+      sleep: async () => {},
+    });
+
+    const result = await runIngestion({ connectors: [failingAusTender, workingConnector] });
+    expect(result.results.map((entry) => `${entry.source_id}:${entry.log_status}`)).toEqual([
+      'aus-tender:error',
+      'fake-contract-source:success',
+    ]);
+
+    const log = await IngestionLogModel.findOne({ source_id: 'aus-tender' })
+      .sort({ started_at: -1 })
+      .lean();
+    expect(log).toMatchObject({
+      status: 'error',
+      errors: ['austender fixture network failure'],
+      message: 'source failed; run continues with the next connector',
+    });
+
+    const source = await DataSourceModel.findOne({ source_id: 'aus-tender' }).lean();
+    expect(source).toMatchObject({ status: 'degraded', records_ingested: 0 });
+    expect(source?.errors).toEqual(['austender fixture network failure']);
   });
 });

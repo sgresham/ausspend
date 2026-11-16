@@ -4,9 +4,10 @@ An explorer for **published Australian government spending**, organised by COFOG
 and state. This repository is the Phase 1 application: an npm-workspace monorepo with a React
 client, an Express API and shared TypeScript/Zod contracts.
 
-> The app ships a **synthetic development seed** only. It is deterministic placeholder data, marked
-> `verified: false`, and is not sourced from or a substitute for any published Australian
-> government figure. The real/verified dataset is a later milestone.
+> The app ships a **synthetic development seed** plus, as of F2, **live AusTender federal contract
+> records**. Seed values are deterministic placeholders; AusTender rows are real published
+> procurement notices. Neither is human-verified (`verified: false`), and the app never sums across
+> measure types. PBS and GrantConnect are not implemented yet.
 
 ## Stack
 
@@ -204,21 +205,38 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 `null` and are omitted from the function/region breakdowns; no COFOG code or region is invented.
 `GET /api/spending/:id` returns one row in the same shape (`400` invalid id, `404` unknown).
 
-### Ingestion connectors and runner
+### Ingestion connectors and runner (F2 — AusTender live)
 
-`server/src/connectors` registers eleven Australian public-spending sources: federal budget portal,
-ABS government finance statistics, AIHW health expenditure, AOFM, the federal `aus-tender`,
-`data-gov-au-pbs` and `grantconnect` ids, and the NSW/VIC/QLD/WA treasuries. Every connector is a
-stub in F1: `status: "stub"`, `fetch()` rejects with a clear "not implemented" error,
-`transform()` returns no records, and there are no network calls or credentials. Each connector
-also carries `jurisdiction_level` and run metadata (`lastFetchedAt`, `recordsIngested`, `errors`).
+`server/src/connectors` registers eleven Australian public-spending sources. **AusTender
+(`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
+`GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. The other ten connectors are
+still stubs (`status: "stub"`; `fetch()` rejects with "not implemented" and `transform()` returns
+no records). Portfolio Budget Statements (`data-gov-au-pbs`) and GrantConnect (`grantconnect`)
+remain **pending**, as do the NSW/VIC/QLD/WA treasuries.
 
 `npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
-connectors sequentially, writes an `ingestion_logs` row per source, upserts on `natural_key` and
-updates `data_sources` status. A stub is logged as `skipped`; a source error is logged as `error`
-and marked `degraded`, and the runner continues with the next source and exits cleanly. In F1 every
-connector is a stub, so the run logs eleven skipped sources. No live federal source is implemented
-here: AusTender is F2.
+selected connectors sequentially, writes an `ingestion_logs` row per source, upserts on
+`natural_key` and updates `data_sources` status. A stub is logged as `skipped`; a source or
+per-record error is logged as `error`/`partial` and marked `degraded`, and the runner continues
+with the next source. AusTender rows are contract-shaped records: `measure_type: "contract"`,
+`jurisdiction_level: "federal"`, integer `amount_cents`, `natural_key` = `ocid`, and mandatory
+`source_dataset` / `source_url` / `source_date` / `data_quality_flag`. AusTender uses UNSPSC, which
+is stored verbatim and never mapped to COFOG.
+
+Narrow live week (the acceptance run):
+
+```bash
+AUSTENDER_START_DATE=2026-11-02T00:00:00Z \
+AUSTENDER_END_DATE=2026-11-09T00:00:00Z \
+INGEST_SOURCES=aus-tender \
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+npm run ingest:federal
+```
+
+The endpoint, the `contractPublished` nuance, the `contracts[0]`/`parties[]` mapping, the
+July–June FY rule, location quality flags, pagination/rate limits, natural key and the remaining
+PBS/GrantConnect caveats are documented in [FEDERAL_INGESTION.md](./FEDERAL_INGESTION.md). Re-run
+the same command: it upserts on `ocid`, so counts stay stable and no duplicate natural keys appear.
 
 ## Checks
 
@@ -227,9 +245,10 @@ npm ci               # install from the lockfile
 npm run typecheck    # shared build then server + client TypeScript
 npm run lint         # ESLint flat config
 npm run format:check # Prettier
-npm test             # Vitest shared + server suites (73 tests)
+npm test             # Vitest shared + server suites (86 tests + 1 opt-in live smoke)
 npm run build        # shared, server and client production builds
 npm run test:e2e     # Playwright specs with page.route API mocks
+AUSTENDER_LIVE_TEST=1 npx vitest run --project server test/aus-tender.test.ts  # opt-in real-API smoke
 npm run audit        # live audit against an already-running seeded stack (not part of test:e2e)
 ```
 

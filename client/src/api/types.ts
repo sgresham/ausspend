@@ -66,6 +66,14 @@ export interface CoverageResponse {
   region_levels: RegionLevel[];
   connectors: ConnectorMetadata[];
   connector_status_counts?: Record<DataSourceStatus, number>;
+  federal_ingestion?: {
+    live: string[];
+    degraded: string[];
+    pending: string[];
+    stubs: string[];
+    aus_tender_last_ingested_at: string | null;
+    note: string;
+  };
   ingestion?: { latest_logs: IngestionLog[] };
   limitations: string[];
   note: string;
