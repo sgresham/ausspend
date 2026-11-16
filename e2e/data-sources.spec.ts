@@ -34,6 +34,9 @@ test('data sources lists live connectors, open stubs and coverage limitations', 
   await expect(stubs.getByText('active', { exact: true })).toHaveCount(2);
   await expect(stubs).toContainText('Australian Government Budget Portal');
   await expect(stubs).toContainText('Western Australian Budget');
+  await expect(stubs).toContainText('grantconnect');
+  await expect(page.getByText('GrantConnect').first()).toBeVisible();
+  await expect(page.getByText(/no public award API|blocked/i).first()).toBeVisible();
 
   await expect(page.getByTestId('coverage-limitations')).toContainText(
     'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live',

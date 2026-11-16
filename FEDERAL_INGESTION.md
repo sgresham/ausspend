@@ -6,8 +6,10 @@ Two federal sources are live:
 2. **Portfolio Budget Statements (PBS)** budget line items from the data.gov.au CKAN dataset,
    streamed from the 2025-26 program-expense CSV (F3).
 
-Both are unverified (`verified: false`) and neither is a single government total. GrantConnect and
-the state/territory connectors remain pending stubs.
+Both are unverified (`verified: false`) and neither is a single government total. GrantConnect
+remains a blocked stub (F4: the cited Track A adaptor does not exist and the only public Apify
+alternative needs a paid token; see [GrantConnect (F4)](#grantconnect-f4--track-a-adaptor-blocked)),
+as do the state/territory connectors.
 
 > **PBS caveat.** The PBS CSV is built from individual entity program-expense tables. Its line
 > items do **not** sum to the Budget Paper 1 "Estimates of General Government Expenses" total.
@@ -201,6 +203,61 @@ The runner writes `ingestion_logs`, updates `data_sources` (`active`/`degraded`,
 `last_ingested_at`, `records_ingested`, `errors`) and continues with the next source on failure.
 A PBS failure marks the source `degraded` and logs an `error`; it never aborts the run.
 
+## GrantConnect (F4) — Track A adaptor: **BLOCKED**
+
+GrantConnect has **no public award API and no CSV/RSS/JSON feed**. F4 therefore considered only
+Track A, a third-party adaptor, and explicitly did **not** build Track B (a direct scraper of
+`grants.gov.au`). Track A is blocked: the adaptor cited by the task does not exist, and the only
+public Apify alternative requires an Apify token and per-event payment. `grantconnect` therefore
+remains a **stub** — no live records, no fake records, no scraper.
+
+### Verification (2026-11-16, public HTTP, no credentials)
+
+| Check                                          | Request                                                                    | Result                                                                                                                                            |
+| ---------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cited actor store page                         | `GET https://apify.com/australia-grantconnect-monitor`                     | **HTTP 404**                                                                                                                                      |
+| Cited actor API                                | `GET https://api.apify.com/v2/acts/australia-grantconnect-monitor`         | **HTTP 404**                                                                                                                                      |
+| Store search                                   | `GET https://api.apify.com/v2/store?search=grantconnect&limit=20`          | `total: 1`, only `tacps126/grants-radar`                                                                                                          |
+| Run the only related actor without credentials | `POST https://api.apify.com/v2/acts/tacps126~grants-radar/runs` (no token) | **HTTP 402** `x402-payment-required`: "Request not authenticated. Add your Apify API token, or a PAYMENT-SIGNATURE header for x402 payment."      |
+| Pricing of the only related actor              | store item `currentPricingInfo`                                            | `PAY_PER_EVENT`: grant call **$0.003 each** on FREE tier (≈ **$3 per 1,000 calls**), plus actor-start `$0.001`/GB and optional AI insight `$0.01` |
+
+Two further disqualifiers for the one surviving actor:
+
+1. **Credential/paid access.** Every Apify actor run needs an Apify API token (and credits); the
+   unauthenticated run above is rejected with `402`. Billing is per delivered call, not free.
+2. **Wrong shape.** "Grants Radar" advertises _open and upcoming funding calls/opportunities_ from
+   several jurisdictions, not published GrantConnect **award** records. Mapping calls to
+   `measure_type: "grant_award"` (recipient, awarded value, award date) would invent an award that
+   the source does not supply.
+
+The cited actor's claimed features (server-side filters, delta mode, normalised ABN/date/AUD
+fields) could not be verified because no actor with that name is publicly listed.
+
+### Decision recorded
+
+- `source_id: "grantconnect"` stays registered as `status: "stub"`; `fetch()` rejects with
+  "not implemented", `transform()` returns `[]`, and no request leaves the process.
+- An `INGEST_SOURCES=grantconnect` run logs `status: "skipped"` (0 fetched, 0 upserted) and writes
+  `data_sources.status: "stub"`, `records_ingested: 0`, `errors: []`. It does not abort the rest of
+  the run. A future wired adaptor whose token is missing is exercised as `error`/`degraded` with
+  zero records (see `server/test/f4-grantconnect-blocked.test.ts`).
+- `/api/v1/meta/coverage` keeps `grantconnect` in `federal_ingestion.pending`; `/api/v1/spending`
+  can be filtered by `measure_type=grant_award` but returns an honest empty set (no grant rows).
+- `/search` and `/data-sources` state that GrantConnect is blocked pending a usable adaptor and that
+  no direct scraper is built. No grant provenance is claimed anywhere.
+
+### Unblock conditions (for a future item)
+
+Track A can only be implemented if **one** of these becomes true:
+
+1. GrantConnect publishes a documented award API/feed with no paid third-party dependency (then map
+   awards directly), **or**
+2. the user explicitly approves a paid Apify plan/token (for example `APIFY_TOKEN` plus credits)
+   **and** accepts that the available actor delivers funding _calls_ rather than award records, with
+   a separately agreed `measure_type` and mapping.
+
+Until then the backfill (separate p70 item) must not run GrantConnect and no grant rows are seeded.
+
 ## Narrow live run
 
 The acceptance run ingests **one recent full week** into
@@ -387,7 +444,10 @@ journalctl --user -u ausspend-db-backup.service -n 20
 - **PBS units are `$'000`.** The raw CSV value is multiplied by 1,000 to dollars and 100 to cents.
 - **PBS has no geography.** `location.state` is literally `"Commonwealth"`; COFOG is mapped only
   where the portfolio is defensible, otherwise the row is `provisional` with no function.
-- **GrantConnect is pending.** No grant feed is implemented.
+- **GrantConnect is blocked, not merely pending.** GrantConnect has no public award API/feed. The
+  cited Track A Apify actor `australia-grantconnect-monitor` does not exist (HTTP 404) and the only
+  public Apify alternative requires a paid token (`402` unauthenticated) and delivers funding calls,
+  not awards. No direct scraper (Track B) was built; `grantconnect` stays a stub with zero records.
 - **State/territory connectors are stubs.** NSW/VIC/QLD/WA remain uningested.
 - **No human verification.** Both the synthetic seed and AusTender rows carry `verified: false`.
 - **No cross-measure totals.** Contract and budget/actual/estimate rows are never summed together;
