@@ -161,7 +161,7 @@ describe('GET /api/meta/coverage', () => {
       region_levels: ['national', 'state'],
     });
     expect(new Date(response.body.generated_at).toString()).not.toBe('Invalid Date');
-    expect(response.body.connectors).toHaveLength(8);
+    expect(response.body.connectors).toHaveLength(11);
     for (const connector of response.body.connectors) {
       expect(connector).toMatchObject({ status: 'stub' });
       expect(connector.id).toBeTruthy();
@@ -303,6 +303,7 @@ describe('GET /api/spending', () => {
     expect(response.body.applied_filters).toEqual({
       fiscal_year: null,
       measure_type: null,
+      jurisdiction_level: null,
       function: null,
       region: null,
       min_amount: null,
@@ -376,6 +377,7 @@ describe('GET /api/spending', () => {
     expect(response.body.applied_filters).toEqual({
       fiscal_year: '2024-25',
       measure_type: 'actual',
+      jurisdiction_level: null,
       function: null,
       region: null,
       min_amount: null,

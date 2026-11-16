@@ -4,6 +4,8 @@ const EMPTY_TOTALS: Record<MeasureType, number> = {
   actual: 0,
   budget: 0,
   estimate: 0,
+  contract: 0,
+  grant_award: 0,
 };
 
 /**

@@ -53,6 +53,8 @@ const MEASURE_COLORS: Record<MeasureType, 'primary' | 'secondary' | 'default'> =
   actual: 'primary',
   budget: 'secondary',
   estimate: 'default',
+  contract: 'primary',
+  grant_award: 'secondary',
 };
 
 export function MeasureTypeChip({ type }: { type: MeasureType }) {

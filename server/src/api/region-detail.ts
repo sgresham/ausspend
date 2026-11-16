@@ -26,13 +26,16 @@ async function loadRegionMeasures(
 }
 
 async function groupByFunction(measures: readonly LeanMeasure[], mixed: boolean) {
+  const withFunction = measures.filter(
+    (measure): measure is LeanMeasure & { function_code: string } => Boolean(measure.function_code),
+  );
   const functions = await FunctionModel.find({
-    code: { $in: [...new Set(measures.map((measure) => measure.function_code))] },
+    code: { $in: [...new Set(withFunction.map((measure) => measure.function_code))] },
   }).lean<Array<FunctionDocument & { _id: mongoose.Types.ObjectId }>>();
   const byCode = new Map(functions.map((fn) => [fn.code, fn]));
 
   const groups = new Map<string, LeanMeasure[]>();
-  for (const measure of measures) {
+  for (const measure of withFunction) {
     const group = groups.get(measure.function_code) ?? [];
     group.push(measure);
     groups.set(measure.function_code, group);

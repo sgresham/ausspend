@@ -105,7 +105,10 @@ export function FunctionDetailView() {
       `${group.region.code} — ${group.region.name}`,
     ]),
   );
-  const labelFor = (row: MeasureRow) => regionNames.get(row.region_id) ?? row.region_id;
+  const labelFor = (row: MeasureRow) =>
+    (row.region_id ? regionNames.get(row.region_id) : undefined) ??
+    row.region_id ??
+    'No curated region';
   const scopeLabel = `${detail.function.name} (${detail.function.code})`;
   const ranked = detail.ranked_states ?? [];
   const rankedRegionIds = new Set(ranked.map((entry) => entry.region._id));

@@ -4,6 +4,10 @@ import { SourceUrlSchema } from './source.js';
 /**
  * The provenance fields shared by every data source record.
  */
+export const DataSourceStatusSchema = z.enum(['stub', 'active', 'degraded']);
+
+export type DataSourceStatus = z.infer<typeof DataSourceStatusSchema>;
+
 export const DataSourceSchema = z.object({
   source_id: z.string().min(1),
   name: z.string().min(1),
@@ -13,6 +17,10 @@ export const DataSourceSchema = z.object({
   license: z.string().min(1),
   verified: z.boolean(),
   notes: z.string().optional(),
+  status: DataSourceStatusSchema.optional(),
+  last_ingested_at: z.string().nullable().optional(),
+  records_ingested: z.number().int().nonnegative().optional(),
+  errors: z.array(z.string()).optional(),
 });
 
 export type DataSourceRecord = z.infer<typeof DataSourceSchema>;
@@ -29,6 +37,10 @@ export const SYNTHETIC_SOURCE = {
   retrieved_at: '2026-11-16T00:00:00.000Z',
   license: 'Synthetic data — no reuse rights implied',
   verified: false,
+  status: 'active',
+  last_ingested_at: null,
+  records_ingested: 0,
+  errors: [],
   notes:
     'Deterministic placeholder values generated for development. Not sourced from, and not a substitute for, any published Australian government figure.',
 } as const;

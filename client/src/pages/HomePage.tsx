@@ -209,8 +209,10 @@ export function HomePage() {
         Ingestion connectors
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        All {connectors.length} connectors are stubs: no network request leaves the API and no live
-        data has been ingested.
+        {connectors.length} connectors are registered;{' '}
+        {coverage.data?.connector_status_counts?.stub ??
+          connectors.filter((connector) => connector.status === 'stub').length}{' '}
+        are stubs. No network request leaves the API and no live data has been ingested.
       </Typography>
       {coverage.data ? (
         <Card variant="outlined" data-testid="connector-status">
@@ -220,11 +222,16 @@ export function HomePage() {
                 <Box key={connector.id}>
                   <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                     <Typography variant="subtitle1">{connector.name}</Typography>
-                    <Chip size="small" variant="outlined" label={connector.status} />
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={connector.status === 'stub' ? 'stub — not wired' : connector.status}
+                    />
                     <Chip size="small" variant="outlined" label={connector.id} />
                   </Stack>
                   <Typography variant="caption" component="div" color="text.secondary">
-                    {connector.publisher} · status “stub — not wired” ·{' '}
+                    {connector.publisher} · status “
+                    {connector.status === 'stub' ? 'stub — not wired' : connector.status}” ·{' '}
                     <SourceLink
                       sourceId={connector.id}
                       sourceUrl={connector.source_url}

@@ -141,7 +141,7 @@ async function apiChecks() {
     return body.error;
   });
 
-  await check('API meta/coverage reports synthetic, no live ingestion, 8 stubs', async () => {
+  await check('API meta/coverage reports synthetic, no live ingestion, 11 stubs', async () => {
     const { status, body } = await getJson('/api/meta/coverage');
     assert(status === 200, `expected 200, got ${status}`);
     assert(body?.synthetic === true, `expected synthetic:true, got ${body?.synthetic}`);
@@ -150,9 +150,19 @@ async function apiChecks() {
       `expected live_ingestion:false, got ${body?.live_ingestion}`,
     );
     assert(
-      Array.isArray(body?.connectors) && body.connectors.length === 8,
-      'expected 8 connectors',
+      Array.isArray(body?.connectors) && body.connectors.length === 11,
+      `expected 11 connectors, got ${body?.connectors?.length}`,
     );
+    const connectorIds = body.connectors.map((connector) => connector.id);
+    for (const federalId of ['aus-tender', 'data-gov-au-pbs', 'grantconnect']) {
+      const connector = body.connectors.find((entry) => entry.id === federalId);
+      assert(connector, `missing federal connector ${federalId}`);
+      assert(
+        connector.status === 'stub',
+        `expected ${federalId} to be a stub, got ${connector.status}`,
+      );
+    }
+    assert(connectorIds.length === new Set(connectorIds).size, 'connector ids must be unique');
     assert(body.counts?.data_sources > 0, 'counts.data_sources must be > 0');
     assert(body.counts?.regions > 0, 'counts.regions must be > 0');
     assert(body.counts?.functions > 0, 'counts.functions must be > 0');
@@ -329,7 +339,7 @@ async function uiChecks(page, regionId) {
     return `${rows}; ${functionRows}`;
   });
 
-  await check('/data-sources#synthetic-seed shows the synthetic source and 8 stubs', async () => {
+  await check('/data-sources#synthetic-seed shows the synthetic source and 11 stubs', async () => {
     pageErrors.length = 0;
     await page.goto(`${WEB_URL}/data-sources#synthetic-seed`, { waitUntil: 'domcontentloaded' });
     const source = page.getByTestId('source-synthetic-seed');
@@ -349,7 +359,7 @@ async function uiChecks(page, regionId) {
     const stubs = page.getByTestId('connector-stubs');
     await stubs.waitFor({ state: 'visible', timeout: 20_000 });
     const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
-    assert(stubCount === 8, `expected 8 connector stubs marked not wired, got ${stubCount}`);
+    assert(stubCount === 11, `expected 11 connector stubs marked not wired, got ${stubCount}`);
 
     const limitations = page.getByTestId('coverage-limitations');
     await limitations.waitFor({ state: 'visible', timeout: 20_000 });
@@ -360,7 +370,7 @@ async function uiChecks(page, regionId) {
     );
     assert(/No live ingestion/.test(limitationText), 'coverage limitations omit live ingestion');
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
-    return 'source Unverified, 8 stubs not wired, limitations present';
+    return 'source Unverified, 11 stubs not wired, limitations present';
   });
 }
 

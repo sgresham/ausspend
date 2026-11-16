@@ -14,6 +14,10 @@ export const listDataSources: RequestHandler = async (_req, res) => {
       license: source.license,
       verified: source.verified,
       ...(source.notes ? { notes: source.notes } : {}),
+      status: source.status,
+      last_ingested_at: source.last_ingested_at ?? null,
+      records_ingested: source.records_ingested ?? 0,
+      errors: source.errors ?? [],
     })),
   });
 };

@@ -103,7 +103,8 @@ The seed resets only the `ausspend_dev` database on host `q`. It refuses to run 
 database name, so a stray `MONGO_URL` cannot wipe unrelated data. It writes one clearly-marked
 synthetic source (`source_id: synthetic-seed`, `source_url: /data-sources#synthetic-seed`,
 `verified: false`), the national row plus the eight states/territories, the ten COFOG divisions
-with curated subdivisions, and actual/budget/estimate measures for three fiscal years.
+with curated subdivisions, and actual/budget/estimate measures for three fiscal years. Seeded
+rows deliberately have no `natural_key`: the sparse unique index only applies to ingested records.
 
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
@@ -124,8 +125,9 @@ All amounts are integer cents and every measure row carries `source_id`, `source
 | Route                        | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
 | `GET /api/health`            | Liveness and database status                                       |
-| `GET /api/meta/coverage`     | Coverage banner: synthetic flag, counts, years, connector stubs    |
-| `GET /api/data-sources`      | Source register with provenance                                    |
+| `GET /api/meta/coverage`     | Coverage banner: counts, connector/ingestion status                |
+| `GET /api/data-sources`      | Source register with provenance and ingestion status               |
+| `GET /api/ingestion-logs`    | Newest-first ingestion run history                                 |
 | `GET /api/functions`         | COFOG divisions with nested subdivisions                           |
 | `GET /api/functions/:code`   | Function detail, measures by region/state, ranked state list       |
 | `GET /api/regions`           | Bounded region list for directory/autocomplete (national first)    |
@@ -134,6 +136,10 @@ All amounts are integer cents and every measure row carries `source_id`, `source
 | `GET /api/spending`          | Filtered, sorted, paginated spending search with whole-set summary |
 | `GET /api/spending/:id`      | One measure row in the same shape as a search data row             |
 | `GET /api/search?q=`         | Bounded search over region and function names/codes                |
+
+Every route is mounted at both `/api` (the UI) and `/api/v1` (versioned consumers), including
+`/api/v1/spending?jurisdiction_level=federal`, `/api/v1/data-sources`, `/api/v1/ingestion-logs` and
+`/api/v1/meta/coverage`.
 
 `/api/functions/:code` accepts `fiscal_year`, `measure_type`, `region` and `limit`. `region` is a
 region `_id` (not a code) and anything else is a `400`. When the response contains more than one
@@ -144,12 +150,15 @@ invalid query parameters return JSON `400`.
 ### Coverage metadata
 
 `GET /api/meta/coverage` returns the Phase 1 banner from the database plus the connector registry:
-`phase`, `synthetic: true`, `live_ingestion: false`, `generated_at`, `counts {data_sources,
-regions, functions, measures}`, distinct sorted `fiscal_years`, `measure_types`, `region_levels`,
-the eight `connectors` (id/name/publisher/source_url/status `stub` only), and `limitations`/`note`
-stating that the seed is synthetic, nothing is verified, there is no live ingestion, the COFOG set
-is curated and regions stop at state/territory granularity. The response is generated per request
-and sent with `Cache-Control: no-store`. If the database is unavailable it returns `503`.
+`phase`, `synthetic: true`, `live_ingestion` (derived from real connector status, currently
+`false`), `generated_at`, `counts {data_sources, regions, functions, measures}`, distinct sorted
+`fiscal_years`, supported/observed `measure_types`, `region_levels`, the eleven `connectors`
+(id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
+`connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
+`limitations`/`note` stating that the seed is synthetic, nothing is verified, no federal connector
+is live yet, the COFOG set is curated and regions stop at state/territory granularity. The response
+is generated per request and sent with `Cache-Control: no-store`. If the database is unavailable it
+returns `503`.
 
 ### Region list
 
@@ -168,7 +177,8 @@ states by code. Bad parameters are `400`.
 | Parameter                 | Values / constraints                                                         |
 | ------------------------- | ---------------------------------------------------------------------------- |
 | `fiscal_year`             | `YYYY-YY`, e.g. `2024-25`                                                    |
-| `measure_type`            | `actual`, `budget` or `estimate`                                             |
+| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                  |
+| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                          |
 | `function`                | two-digit division (`07`) or three-digit subdivision (`074`)                 |
 | `region`                  | a 24-character hex region `_id` (never a code)                               |
 | `min_amount`/`max_amount` | non-negative integer cents, inclusive; `min <= max`                          |
@@ -185,20 +195,30 @@ normalised query (absent filters as `null`).
 `total_cents` (null when mixed), `total_measure_type` (null when mixed), `total_by_measure_type`,
 `measure_types`, `mixed`, `breakdown_by_function` and `breakdown_by_region`. Each breakdown entry
 carries the function/region reference, `count`, `measure_types`, `mixed`, `total_cents` and
-`total_by_measure_type`. Each data row holds the measure fields plus `function_name`,
-`function_level`, `function_parent_code?`, `region_code`, `region_name`, `region_level` and a
-`provenance` object (`source_id`, `source_url`, `verified`, `notes?`), so the client needs no N+1
-lookups. `GET /api/spending/:id` returns one row in the same shape (`400` invalid id, `404`
-unknown).
+`total_by_measure_type`. Each data row holds the measure fields plus optional source fields
+(`natural_key`, `project_name`, `description`, `jurisdiction_level`, `jurisdiction`,
+`delivery_entity`, `funding_source`, `source_dataset`, `source_date`, `data_quality_flag`,
+`location`, `unspsc`), the resolved `function_name`/`function_level`/`function_parent_code?`,
+`region_code`/`region_name`/`region_level`, and a `provenance` object (`source_id`, `source_url`,
+`verified`, `notes?`). Source records without a curated function or region return those fields as
+`null` and are omitted from the function/region breakdowns; no COFOG code or region is invented.
+`GET /api/spending/:id` returns one row in the same shape (`400` invalid id, `404` unknown).
 
-### Ingestion connector stubs
+### Ingestion connectors and runner
 
-`server/src/connectors` registers eight plausible Australian public-spending sources (federal budget
-portal, ABS government finance statistics, AIHW health expenditure, AOFM, and the NSW/VIC/QLD/WA
-treasuries). Every connector is a stub: `status: "stub"`, `fetch()` throws a clear "not implemented"
-error, and there are no network calls or credentials. The API never calls them — only
-`/api/meta/coverage` lists their metadata. TODO comments name the real endpoint/format each will use
-in a later milestone.
+`server/src/connectors` registers eleven Australian public-spending sources: federal budget portal,
+ABS government finance statistics, AIHW health expenditure, AOFM, the federal `aus-tender`,
+`data-gov-au-pbs` and `grantconnect` ids, and the NSW/VIC/QLD/WA treasuries. Every connector is a
+stub in F1: `status: "stub"`, `fetch()` rejects with a clear "not implemented" error,
+`transform()` returns no records, and there are no network calls or credentials. Each connector
+also carries `jurisdiction_level` and run metadata (`lastFetchedAt`, `recordsIngested`, `errors`).
+
+`npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
+connectors sequentially, writes an `ingestion_logs` row per source, upserts on `natural_key` and
+updates `data_sources` status. A stub is logged as `skipped`; a source error is logged as `error`
+and marked `degraded`, and the runner continues with the next source and exits cleanly. In F1 every
+connector is a stub, so the run logs eleven skipped sources. No live federal source is implemented
+here: AusTender is F2.
 
 ## Checks
 
@@ -207,7 +227,7 @@ npm ci               # install from the lockfile
 npm run typecheck    # shared build then server + client TypeScript
 npm run lint         # ESLint flat config
 npm run format:check # Prettier
-npm test             # Vitest shared + server suites
+npm test             # Vitest shared + server suites (73 tests)
 npm run build        # shared, server and client production builds
 npm run test:e2e     # Playwright specs with page.route API mocks
 npm run audit        # live audit against an already-running seeded stack (not part of test:e2e)
@@ -239,11 +259,11 @@ It proves:
 - Mixed measure types show the warning and **no headline total** on `/search` and `/functions/07`;
   a single measure type shows a headline total.
 - Rendered row tables and summary/headline footers carry the source id/link and Unverified status.
-- `/data-sources#synthetic-seed` shows the synthetic source Unverified, all eight connector stubs
+- `/data-sources#synthetic-seed` shows the synthetic source Unverified, all eleven connector stubs
   marked **stub — not wired**, and the coverage limitations.
 - API invariants: `function=07` is mixed with `total_cents: null` and per-type totals;
   `measure_type=actual` has a numeric total; `region=NSW` is `400`; an unknown measure id is `404`;
-  `/api/meta/coverage` reports synthetic, no live ingestion, eight stubs and nonzero counts.
+  `/api/meta/coverage` reports synthetic, no live ingestion, eleven stubs and nonzero counts.
 
 The mocked `npm run test:e2e` run stays database-free; the audit script is not a Playwright spec.
 
@@ -261,7 +281,7 @@ banner falls back to the same static synthetic-data warning rather than disappea
 | `/functions/:code?`   | COFOG division index and detail with fiscal-year/measure-type filters        |
 | `/regions/:regionId?` | Region directory from `GET /api/regions` and detail by region `_id`          |
 | `/states/:code?`      | State/territory directory and detail by abbreviation                         |
-| `/data-sources`       | Source register, Unverified badge, eight connector stubs and limitations     |
+| `/data-sources`       | Source register, connector status/last-ingested and limitations              |
 | `/about`              | What ausspend is, Phase 1 scope, provenance and mixed-measure rules          |
 
 The client has a small typed API layer in `client/src/api` (fetch + error normalisation), a shared
@@ -287,7 +307,8 @@ view. Every filter change resets `page` to 1; pagination and page size preserve 
 | `function`                | two- or three-digit COFOG code from `GET /api/functions`                     |
 | `region`                  | region `_id` chosen from autocomplete over `GET /api/regions`                |
 | `fiscal_year`             | one of the coverage metadata's distinct fiscal years                         |
-| `measure_type`            | `actual`, `budget` or `estimate`                                             |
+| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                  |
+| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                          |
 | `min_amount`/`max_amount` | dollars in the URL/UI; converted to integer cents on the wire                |
 | `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc` |
 | `page`/`page_size`        | pagination; page size is one of 10/20/50/100                                 |
@@ -301,8 +322,9 @@ in the spending search” link that prefills the relevant filters.
 ### Coverage, connectors and the about page
 
 `/data-sources` keeps the synthetic source card and its `#synthetic-seed` anchor with the Unverified
-badge, and adds the eight connector stubs from coverage metadata (id, name, publisher, source URL
-and `status: "stub"`) marked **stub — not wired**, plus the API's coverage `limitations`. The
+badge, and lists every connector from coverage metadata with id, name, publisher, source URL,
+status, jurisdiction level, last fetch and records ingested; stubs are marked **stub — not
+wired**. It also shows the API's coverage `limitations`. The
 `/about` page explains the Phase 1 scope (synthetic seed, no live ingestion, curated COFOG subset,
 state/territory granularity), how provenance is attached, and why mixed measures never get a
 headline total. It makes no real-data claims.

@@ -23,17 +23,17 @@ test('data sources shows the synthetic source, Unverified badge and anchor targe
   await expect(page.getByText('Provenance:').first()).toBeVisible();
 });
 
-test('data sources lists the eight connector stubs and coverage limitations', async ({ page }) => {
+test('data sources lists the eleven connector stubs and coverage limitations', async ({ page }) => {
   await page.goto('/data-sources');
 
   const stubs = page.getByTestId('connector-stubs');
   await expect(stubs).toBeVisible();
-  await expect(stubs.getByText('stub — not wired')).toHaveCount(8);
+  await expect(stubs.getByText('stub — not wired')).toHaveCount(11);
   await expect(stubs).toContainText('Australian Government Budget Portal');
   await expect(stubs).toContainText('Western Australian Budget');
 
   await expect(page.getByTestId('coverage-limitations')).toContainText(
-    'No live ingestion: all eight connectors are stubs',
+    'No live ingestion yet: the three federal source connectors',
   );
-  await expect(page.getByTestId('coverage-limitations')).toContainText('never calls them');
+  await expect(page.getByTestId('coverage-limitations')).toContainText('no request leaves the API');
 });
