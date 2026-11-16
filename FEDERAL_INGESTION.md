@@ -1,15 +1,18 @@
 # Federal ingestion — AusTender (F2) and data.gov.au PBS (F3)
 
-Two federal sources are live:
+Three federal sources are wired:
 
 1. **AusTender** contract notices from the Australian Government's public OCDS API (F2).
 2. **Portfolio Budget Statements (PBS)** budget line items from the data.gov.au CKAN dataset,
    streamed from the 2025-26 program-expense CSV (F3).
+3. **GrantConnect** grant awards from a human-downloaded, SHA-256-archived `DownloadResult` XLSX
+   export, imported in cap-safe date chunks (manual file import; no API and no scraper).
 
-Both are unverified (`verified: false`) and neither is a single government total. GrantConnect
-remains a blocked stub (F4: the cited Track A adaptor does not exist and the only public Apify
-alternative needs a paid token; see [GrantConnect (F4)](#grantconnect-f4--track-a-adaptor-blocked)),
-as do the state/territory connectors.
+All are unverified (`verified: false`) and none is a single government total. GrantConnect's wide
+exports exceed a 50,000-result cap and are rejected; the source is reported **partial** until
+complete date-range chunks cover the period (see
+[GrantConnect](#grantconnect--manual-chunked-and-cap-safe-import-no-scraper)). The
+state/territory connectors other than NSW remain stubs.
 
 > **PBS caveat.** The PBS CSV is built from individual entity program-expense tables. Its line
 > items do **not** sum to the Budget Paper 1 "Estimates of General Government Expenses" total.
@@ -209,60 +212,130 @@ The runner writes `ingestion_logs`, updates `data_sources` (`active`/`degraded`,
 `last_ingested_at`, `records_ingested`, `errors`) and continues with the next source on failure.
 A PBS failure marks the source `degraded` and logs an `error`; it never aborts the run.
 
-## GrantConnect (F4) — Track A adaptor: **BLOCKED**
+## GrantConnect — manual, chunked and cap-safe import (no scraper)
 
-GrantConnect has **no public award API and no CSV/RSS/JSON feed**. F4 therefore considered only
-Track A, a third-party adaptor, and explicitly did **not** build Track B (a direct scraper of
-`grants.gov.au`). Track A is blocked: the adaptor cited by the task does not exist, and the only
-public Apify alternative requires an Apify token and per-event payment. `grantconnect` therefore
-remains a **stub** — no live records, no fake records, no scraper.
+GrantConnect has no public award API and no CSV/RSS/JSON feed. F4's paid Track A adaptor remains
+**blocked** and is not used. The implemented path is **manual file import only**:
 
-### Verification (2026-11-16, public HTTP, no credentials)
+1. a human downloads public `DownloadResult` XLSX exports from
+   <https://www.grants.gov.au/Ga/ListResult?Type=Ga&AgencyStatus=-1&KeywordTypeSearch=AllWord&DateType=Publish%20Date>
+   (no auth, small date ranges),
+2. the files are dropped in `~/ausspend-source-archive/grantconnect/` (bytes stay **outside** the
+   repo) or passed via `GRANTCONNECT_XLSX_DIR` / `GRANTCONNECT_XLSX`,
+3. `INGEST_SOURCES=grantconnect npm run ingest:federal` reads every `.xlsx`, archives each with its
+   SHA-256, rejects capped/unbounded files, maps the rest to `grant_award` measures, and reports
+   coverage honestly.
 
-| Check                                          | Request                                                                    | Result                                                                                                                                            |
-| ---------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Cited actor store page                         | `GET https://apify.com/australia-grantconnect-monitor`                     | **HTTP 404**                                                                                                                                      |
-| Cited actor API                                | `GET https://api.apify.com/v2/acts/australia-grantconnect-monitor`         | **HTTP 404**                                                                                                                                      |
-| Store search                                   | `GET https://api.apify.com/v2/store?search=grantconnect&limit=20`          | `total: 1`, only `tacps126/grants-radar`                                                                                                          |
-| Run the only related actor without credentials | `POST https://api.apify.com/v2/acts/tacps126~grants-radar/runs` (no token) | **HTTP 402** `x402-payment-required`: "Request not authenticated. Add your Apify API token, or a PAYMENT-SIGNATURE header for x402 payment."      |
-| Pricing of the only related actor              | store item `currentPricingInfo`                                            | `PAY_PER_EVENT`: grant call **$0.003 each** on FREE tier (≈ **$3 per 1,000 calls**), plus actor-start `$0.001`/GB and optional AI insight `$0.01` |
+There is **no scraper** in the connector. The only networked code is the optional manual helper
+`scripts/grantconnect-chunks.ts`, which a human runs to fetch the public `DownloadResult` URL for
+small date chunks; it is never invoked by ingestion.
 
-Two further disqualifiers for the one surviving actor:
+### The 50,000-result cap is real
 
-1. **Credential/paid access.** Every Apify actor run needs an Apify API token (and credits); the
-   unauthenticated run above is rejected with `402`. Billing is per delivered call, not free.
-2. **Wrong shape.** "Grants Radar" advertises _open and upcoming funding calls/opportunities_ from
-   several jurisdictions, not published GrantConnect **award** records. Mapping calls to
-   `measure_type: "grant_award"` (recipient, awarded value, award date) would invent an award that
-   the source does not supply.
+A wide export's criteria block contains:
 
-The cited actor's claimed features (server-side filters, delta mode, normalised ABN/date/AUD
-fields) could not be verified because no actor with that name is publicly listed.
+> Your search returned more than 50000 results. Please narrow the date range and run multiple
+> searches to return all records.
 
-### Decision recorded
+Such a file is **incomplete** and is **rejected**: none of its rows are imported. The supplied
+archives are both capped and are kept only as superseded evidence:
 
-- `source_id: "grantconnect"` stays registered as `status: "stub"`; `fetch()` rejects with
-  "not implemented", `transform()` returns `[]`, and no request leaves the process.
-- An `INGEST_SOURCES=grantconnect` run logs `status: "skipped"` (0 fetched, 0 upserted) and writes
-  `data_sources.status: "stub"`, `records_ingested: 0`, `errors: []`. It does not abort the rest of
-  the run. A future wired adaptor whose token is missing is exercised as `error`/`degraded` with
-  zero records (see `server/test/f4-grantconnect-blocked.test.ts`).
-- `/api/v1/meta/coverage` keeps `grantconnect` in `federal_ingestion.pending`; `/api/v1/spending`
-  can be filtered by `measure_type=grant_award` but returns an honest empty set (no grant rows).
-- `/search` and `/data-sources` state that GrantConnect is blocked pending a usable adaptor and that
-  no direct scraper is built. No grant provenance is claimed anywhere.
+| File                                                         | SHA-256 (prefix) | Bytes     | Rows   | Date Range             | Cap warning | Treatment              |
+| ------------------------------------------------------------ | ---------------- | --------- | ------ | ---------------------- | ----------- | ---------------------- |
+| `GrantConnect-Grant-Award-List_2025-26_20261117_093500.xlsx` | `49177468…`      | 1,008,451 | 10,021 | 1-Jul-2025–30-Jun-2026 | **yes**     | rejected; not imported |
+| `GrantConnect-Grant-Award-List_20261117_092623.xlsx`         | `7dc89599…`      | 3,776,146 | 40,021 | All                    | **yes**     | rejected; not imported |
 
-### Unblock conditions (for a future item)
+To ingest a period, download smaller ranges (monthly/weekly) so each export is below the cap and
+carries no warning. The importer accepts the whole directory as a set and combines complete chunks.
 
-Track A can only be implemented if **one** of these becomes true:
+### Actual file layout and columns (verified 2026-11-17)
 
-1. GrantConnect publishes a documented award API/feed with no paid third-party dependency (then map
-   awards directly), **or**
-2. the user explicitly approves a paid Apify plan/token (for example `APIFY_TOKEN` plus credits)
-   **and** accepts that the available actor delivers funding _calls_ rather than award records, with
-   a separately agreed `measure_type` and mapping.
+The workbook has one sheet, `GrantConnect-Grant-Award-List`. Rows 1–20 are a title and criteria
+summary; the real header is row 21, with 15 columns:
 
-Until then the backfill (separate p70 item) must not run GrantConnect and no grant rows are seeded.
+`GA ID`, `Grant Activity`, `Agency`, `Publish Date`, `Category`, `Start Date`, `End Date`,
+`Value (AUD)`, `GO ID`, `Recipient Name`, `One-off/Ad hoc`, `Aggregate Grant Award`,
+`Aggregate Reason`, `Number of Awards Aggregated`, `Last Updated`.
+
+The amount column is explicitly `Value (AUD)` in **decimal dollars** (`1104`, `1975.92`). An
+unmarked amount column is treated as an ambiguity and the file is rejected, never guessed.
+
+### Mapping
+
+| Target field         | Source                                                                                    |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| `project_name`       | `Grant Activity` (the program title)                                                      |
+| `description`        | `Grant Activity`                                                                          |
+| `jurisdiction_level` | literal `"federal"`                                                                       |
+| `jurisdiction`       | literal `"Commonwealth"`                                                                  |
+| `delivery_entity`    | `Recipient Name`                                                                          |
+| `funding_source`     | `Agency` (the granting agency)                                                            |
+| `amount_cents`       | `Value (AUD)` dollars × 100, rounded to a safe integer                                    |
+| `measure_type`       | literal `"grant_award"`                                                                   |
+| `fiscal_year`        | Australian FY of `Publish Date` (award publish date)                                      |
+| `source_dataset`     | literal `"GrantConnect — manual grant award export"`                                      |
+| `source_date`        | `Publish Date` (`YYYY-MM-DD`)                                                             |
+| `source_url`         | an explicit award-page column when present, else the public list query + `GAID=<GA ID>`   |
+| `location`           | omitted — the export supplies no recipient state/LGA (never invented)                     |
+| `data_quality_flag`  | `provisional`                                                                             |
+| `natural_key`        | `grantconnect:<GA ID>`, else a stable hash of agency/recipient/activity/date/value        |
+| `verified`           | `false`                                                                                   |
+| `notes`              | archive filename + SHA-256, export date range, GO ID, category, activity dates, aggregate |
+
+Rows with a missing activity/recipient/agency, an invalid/negative amount or an unparseable publish
+date are **skipped** with a logged reason, not zero-filled. Duplicate `GA ID`s across chunk
+boundaries are de-duplicated by `natural_key`, so re-running an overlapping set is idempotent.
+
+### Coverage: partial vs complete
+
+`coverageOf(targetFY, acceptedChunkRanges)` merges the accepted chunks' `Date Range` intervals and
+subtracts them from the target FY (`2025-26` = 2025-07-01..2026-06-30 by default, override with
+`GRANTCONNECT_FY`).
+
+- **Complete** (no gaps, no cap-rejected file needed): `data_sources.status = "active"`.
+- **Partial** (any missing period or only rejected/superseded files): `status = "degraded"`, an
+  `ingestion_logs` `partial` entry records the missing ranges and the rejected filenames, and the
+  `data_sources.notes` / `/api/meta/coverage` / `/search` / `/data-sources` show the cap caveat.
+  Existing rows are **never deleted**; a missing/corrupt directory logs an `error` and marks the
+  source `degraded` while preserving earlier grant rows.
+
+With only the two capped files present today, coverage is **partial 0/365 days** and **zero grant
+rows** are written — the honest result, not a fabricated FY.
+
+### Archive record
+
+Every scanned file (accepted or rejected) becomes a `source_documents` record and an on-disk
+metadata sidecar: `source_id: "grantconnect"`, `archived_from: "direct"`, `original_url` /
+`retrieved_from` (the DownloadResult query or list page), `fetched_at`, `local_path`, `sha256`,
+`bytes`, `content_type`, plus a note recording the range, row count, cap check and rejection reason.
+The XLSX bytes are not copied into the repo.
+
+### Manual commands
+
+```bash
+# Plan monthly chunks for the target FY and print their public DownloadResult URLs.
+npm run grantconnect:chunks -- plan --fy=2025-26 --chunk-days=31
+
+# Fetch each chunk politely, archive it with SHA-256 and report the cap check.
+npm run grantconnect:chunks -- fetch --fy=2025-26 --chunk-days=31 --delay-ms=1000
+
+# Audit a directory: list ranges, cap warnings, rejections and coverage.
+npm run grantconnect:chunks -- audit --fy=2025-26 --dir=~/ausspend-source-archive/grantconnect
+
+# Import the complete chunk set (pull requests: no rows are ever fabricated).
+INGEST_SOURCES=grantconnect MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev   npm run ingest:federal
+```
+
+`GRANTCONNECT_DOWNLOAD_URL_TEMPLATE` overrides the `DownloadResult` URL shape (`{start}`/`{end}`
+tokens) without a code change. The helper never authenticates and backs off `--delay-ms` between
+requests.
+
+### Tests
+
+`server/test/grantconnect.test.ts` covers the criteria `Date Range` parser, contiguous chunk
+planning, complete/partial coverage, cap-warning rejection, header/unit detection, dollars→cents,
+natural keys, multi-file de-duplication and idempotent re-runs, archive SHA-256 registration, and
+the missing-directory error path (existing rows preserved).
 
 ## Narrow live run
 
@@ -548,10 +621,11 @@ journalctl --user -u ausspend-db-backup.service -n 20
 - **PBS units are `$'000`.** The raw CSV value is multiplied by 1,000 to dollars and 100 to cents.
 - **PBS has no geography.** `location.state` is literally `"Commonwealth"`; COFOG is mapped only
   where the portfolio is defensible, otherwise the row is `provisional` with no function.
-- **GrantConnect is blocked, not merely pending.** GrantConnect has no public award API/feed. The
-  cited Track A Apify actor `australia-grantconnect-monitor` does not exist (HTTP 404) and the only
-  public Apify alternative requires a paid token (`402` unauthenticated) and delivers funding calls,
-  not awards. No direct scraper (Track B) was built; `grantconnect` stays a stub with zero records.
+- **GrantConnect is a manual export, not live data.** No public award API/feed exists and no
+  scraper or paid adaptor is used. A human downloads public `DownloadResult` XLSX files; the
+  importer archives each with SHA-256, rejects any file carrying the >50,000-result cap warning,
+  and reports partial coverage until complete date-range chunks cover the period. Wide exports are
+  never presented as a complete FY, and missing location is left absent rather than invented.
 - **State/territory connectors are stubs.** NSW/VIC/QLD/WA remain uningested.
 - **No human verification.** Both the synthetic seed and AusTender rows carry `verified: false`.
 - **No cross-measure totals.** Contract and budget/actual/estimate rows are never summed together;

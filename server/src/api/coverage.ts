@@ -1,6 +1,11 @@
 import type { RequestHandler } from 'express';
 import { MEASURE_TYPES, REGION_LEVELS } from '@ausspend/shared';
-import { CONNECTORS, PBS_CAVEAT, connectorSummary } from '../connectors/index.js';
+import {
+  CONNECTORS,
+  GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
+  PBS_CAVEAT,
+  connectorSummary,
+} from '../connectors/index.js';
 import { pingDatabase, type DbStatus } from '../db.js';
 import {
   DataSourceModel,
@@ -13,7 +18,7 @@ import { HttpError } from './errors.js';
 import { AREA_NOT_COVERED } from './area-profile.js';
 
 /** Federal sources that are registered but still waiting on a live connector. */
-export const PENDING_FEDERAL_SOURCES = ['grantconnect'] as const;
+export const PENDING_FEDERAL_SOURCES = [] as const;
 
 function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
   return [
@@ -22,7 +27,7 @@ function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
       : 'Synthetic development seed only: every value is a deterministic placeholder, not published Australian government spending.',
     'No records are human-verified: seeded measures, ingested AusTender contracts and ingested PBS budget rows all carry verified: false.',
     liveFederal
-      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is not implemented (pending stub); the eight other registered connectors are stubs and make no network call.'
+      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. The eight other registered connectors are stubs and make no network call.'
       : 'No live ingestion has run yet: aus-tender, data-gov-au-pbs and grantconnect plus the eight other registered connectors are stubs; no request leaves the API until the runner runs.',
     pbsLive
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
@@ -32,6 +37,7 @@ function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
     'NSW Budget 2025-26 rows come from the 12 official XLSX workbooks in the 14 November 2025 Wayback snapshot plus the ArcGIS Treasury_Project_Data_20260609_gdb layer. Financial/HFI values are $m/$b statement line items; capital projects are $000 Budgeted amounts. Negative net/deficit lines are skipped, not sign-flipped, and missing LGAs are left absent (statewide_only), never inferred.',
     "data.nsw.gov.au CKAN ingestion is targeted: nine discovery searches and a small selected dataset set, never the whole ~16,907-dataset portal. CSV/XLSX downloads and DataStore pages are archived with SHA-256. PDF/DOC/DOCX resources are deferred to the separate PDF foundation and are listed on the source. Units are explicit where CKAN states one; NSW Budget Paper 2 capital allocations are provisionally treated as $'000 and fleet spend as $, and measure types are never summed.",
     "S3 covers exactly one council: Dubbo Regional Council's adopted 2026/27 budget PDF (archived with SHA-256). Summary tables use the printed ($000's) unit and reconcile their column totals; the capital program is dollars only after magnitude reconciliation against the explicit summary, and is rejected if category/group/grand totals disagree. Every local row is provisional and unverified. Area panels (local, NSW-wide state, NSW-tagged federal, Commonwealth-wide PBS) are never added together. All other councils and states/territories are not covered.",
+    "GrantConnect is a manual file import only: the public DownloadResult XLSX is downloaded by a human, archived with SHA-256, and parsed from the 'Value (AUD)' dollars column. No API, no live scraper and no paid adaptor is used. The export caps a wide search at 'more than 50000 results'; any file carrying that warning is rejected (never partially imported), and the source is partial until complete date-range chunks cover the target period. Rows carry verified:false and provisional data-quality flags; the export supplies no recipient location.",
   ];
 }
 
@@ -121,6 +127,7 @@ export function createCoverageHandler(
     const pending: string[] = [...PENDING_FEDERAL_SOURCES];
     const ausTender = dataSourceById.get('aus-tender');
     const pbs = dataSourceById.get('data-gov-au-pbs');
+    const grantconnect = dataSourceById.get('grantconnect');
     const nswCkan = dataSourceById.get('data-nsw-ckan');
     const stateLive = stateConnectors.some((connector) => connector.status === 'active');
     const localConnectors = connectors.filter(
@@ -175,8 +182,14 @@ export function createCoverageHandler(
           ? new Date(pbs.last_ingested_at).toISOString()
           : null,
         pbs_caveat: PBS_CAVEAT,
+        grantconnect_last_ingested_at: grantconnect?.last_ingested_at
+          ? new Date(grantconnect.last_ingested_at).toISOString()
+          : null,
+        grantconnect_records: grantconnect?.records_ingested ?? 0,
+        grantconnect_caveat: GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
+        grantconnect_note: grantconnect?.notes ?? GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
         note: liveIngestion
-          ? 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect remains pending; every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.'
+          ? 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. Every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.'
           : 'No federal source is live yet. AusTender, PBS and GrantConnect are pending.',
       },
       state_ingestion: {

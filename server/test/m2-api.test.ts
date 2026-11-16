@@ -166,6 +166,7 @@ describe('GET /api/meta/coverage', () => {
       expect(connector.status).toBe(
         connector.id === 'aus-tender' ||
           connector.id === 'data-gov-au-pbs' ||
+          connector.id === 'grantconnect' ||
           connector.id === 'nsw-budget' ||
           connector.id === 'data-nsw-ckan' ||
           connector.id === 'dubbo-council'
@@ -182,7 +183,7 @@ describe('GET /api/meta/coverage', () => {
     expect(response.body.state_ingestion.stubs).toEqual(
       expect.arrayContaining(['vic-budget', 'qld-budget', 'wa-budget']),
     );
-    expect(response.body.federal_ingestion.pending).toEqual(['grantconnect']);
+    expect(response.body.federal_ingestion.pending).toEqual([]);
     expect(response.body.limitations.join(' ')).toMatch(/synthetic/i);
     expect(response.body.limitations.join(' ')).toMatch(/verified/i);
     expect(response.body.limitations.join(' ')).toMatch(/AusTender/i);

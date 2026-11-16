@@ -30,7 +30,7 @@ test('data sources lists live connectors, open stubs and coverage limitations', 
 
   const stubs = page.getByTestId('connector-stubs');
   await expect(stubs).toBeVisible();
-  await expect(stubs.getByText('stub — not wired')).toHaveCount(8);
+  await expect(stubs.getByText('stub — not wired')).toHaveCount(7);
   await expect(stubs.getByText('active', { exact: true })).toHaveCount(5);
   await expect(stubs).toContainText('Australian Government Budget Portal');
   await expect(stubs).toContainText('Western Australian Budget');
@@ -38,8 +38,19 @@ test('data sources lists live connectors, open stubs and coverage limitations', 
   await expect(stubs).toContainText('data.nsw.gov.au CKAN');
   await expect(stubs).toContainText('Dubbo Regional Council');
   await expect(stubs).toContainText('grantconnect');
+  await expect(stubs.getByText('degraded', { exact: true })).toHaveCount(1);
   await expect(page.getByText('GrantConnect').first()).toBeVisible();
-  await expect(page.getByText(/no public award API|blocked/i).first()).toBeVisible();
+  await expect(page.getByText(/manual export|50,000-result cap/i).first()).toBeVisible();
+
+  const grantconnect = page.getByTestId('source-grantconnect');
+  await expect(grantconnect).toBeVisible();
+  await expect(grantconnect).toContainText('manual export');
+  await expect(grantconnect.getByTestId('grantconnect-manual-caveat')).toContainText(
+    'not an API and not a live scraper',
+  );
+  await expect(
+    grantconnect.getByRole('link', { name: /Browse ingested grant awards/ }),
+  ).toBeVisible();
 
   await expect(page.getByTestId('coverage-limitations')).toContainText(
     'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live',

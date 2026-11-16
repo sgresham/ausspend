@@ -6,7 +6,14 @@ import {
   getConnector,
 } from '../src/connectors/index.js';
 
-const LIVE_IDS = ['aus-tender', 'data-gov-au-pbs', 'nsw-budget', 'data-nsw-ckan', 'dubbo-council'];
+const LIVE_IDS = [
+  'aus-tender',
+  'data-gov-au-pbs',
+  'grantconnect',
+  'nsw-budget',
+  'data-nsw-ckan',
+  'dubbo-council',
+];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
@@ -19,7 +26,7 @@ describe('federal connector registry', () => {
     );
   });
 
-  it('registers AusTender, PBS, NSW Budget, CKAN and Dubbo as live and the other eight as stubs', () => {
+  it('registers AusTender, PBS, GrantConnect, NSW Budget, CKAN and Dubbo as live and the other seven as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -65,13 +72,16 @@ describe('federal connector registry', () => {
     }
   });
 
-  it('looks connectors up by id and keeps GrantConnect pending', () => {
+  it('looks connectors up by id and marks GrantConnect as a manual-export connector', () => {
     expect(getConnector('federal-budget-portal')?.publisher).toMatch(/Finance/);
     expect(getConnector('aus-tender')?.jurisdiction_level).toBe('federal');
     expect(getConnector('aus-tender')?.publisher).toMatch(/Finance/);
     expect(getConnector('data-gov-au-pbs')?.status).toBe('active');
     expect(getConnector('data-gov-au-pbs')?.source_url).toContain('data.gov.au');
-    expect(getConnector('grantconnect')?.status).toBe('stub');
+    expect(getConnector('grantconnect')?.status).toBe('active');
+    expect(getConnector('grantconnect')?.jurisdiction_level).toBe('federal');
+    expect(getConnector('grantconnect')?.source_url).toContain('grants.gov.au');
+    expect(getConnector('grantconnect')?.notes).toMatch(/manual export/i);
     expect(getConnector('nsw-budget')?.status).toBe('active');
     expect(getConnector('nsw-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('nsw-budget')?.source_url).toContain('budget.nsw.gov.au');

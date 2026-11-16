@@ -46,6 +46,25 @@ const PBS_SOURCE = {
   notes: '2025-26 PBS program-expense CSV from data.gov.au; unverified budget line items.',
 };
 
+const GRANTCONNECT_SOURCE = {
+  source_id: 'grantconnect',
+  name: 'GrantConnect — Australian Government grants (manual export)',
+  publisher: 'Australian Government Department of Finance',
+  source_url: 'https://www.grants.gov.au/',
+  retrieved_at: '2026-11-17T00:10:00.000Z',
+  license:
+    'Creative Commons Attribution 4.0 International (Commonwealth of Australia, GrantConnect)',
+  verified: false,
+  status: 'degraded',
+  last_ingested_at: '2026-11-17T00:10:00.000Z',
+  records_ingested: 0,
+  errors: [
+    'partial GrantConnect coverage: 0/365 days of 2025-07-01..2026-06-30; 2 file(s) rejected/superseded',
+  ],
+  notes:
+    'GrantConnect manual export (file archived SHA-256; not an API, no live scraper). Coverage partial 0/365 days of 2025-07-01..2026-06-30: the supplied wide exports carried the >50,000-result cap warning and were rejected, never partially imported.',
+};
+
 const NSW_BUDGET_SOURCE = {
   source_id: 'nsw-budget',
   name: 'NSW Budget 2025-26 Open Data',
@@ -230,14 +249,16 @@ const COVERAGE = {
     },
     {
       id: 'grantconnect',
-      name: 'GrantConnect — Australian Government grants',
+      name: 'GrantConnect — Australian Government grants (manual export)',
       publisher: 'Australian Government Department of Finance',
       source_url: 'https://www.grants.gov.au/',
-      status: 'stub',
+      status: 'degraded',
       jurisdiction_level: 'federal',
-      last_fetched_at: null,
+      last_fetched_at: '2026-11-17T00:10:00.000Z',
       records_ingested: 0,
-      errors: [],
+      errors: [
+        'partial GrantConnect coverage: 0/365 days of 2025-07-01..2026-06-30; 2 file(s) rejected/superseded',
+      ],
     },
     {
       id: 'nsw-budget',
@@ -308,7 +329,7 @@ const COVERAGE = {
       errors: [],
     },
   ],
-  connector_status_counts: { active: 5, degraded: 0, stub: 8 },
+  connector_status_counts: { active: 5, degraded: 1, stub: 7 },
   supported_measure_types: ['actual', 'budget', 'estimate', 'contract', 'grant_award'],
   state_ingestion: {
     live: ['nsw-budget', 'data-nsw-ckan'],
@@ -344,19 +365,23 @@ const COVERAGE = {
   },
   federal_ingestion: {
     live: ['aus-tender', 'data-gov-au-pbs'],
-    degraded: [],
-    pending: ['grantconnect'],
+    degraded: ['grantconnect'],
+    pending: [],
     stubs: ['federal-budget-portal', 'abs-government-finance', 'aihw-health-expenditure', 'aofm'],
     aus_tender_last_ingested_at: '2026-11-16T00:05:00.000Z',
     pbs_last_ingested_at: '2026-11-16T00:06:00.000Z',
+    grantconnect_last_ingested_at: '2026-11-17T00:10:00.000Z',
+    grantconnect_records: 0,
+    grantconnect_caveat:
+      'GrantConnect is a manual file export, not an API and not a live scraper. The archived XLSX is fingerprinted with SHA-256. Exports above the 50,000-result cap are rejected, so grant coverage is partial until complete date-range chunks cover the period.',
     pbs_caveat:
       'PBS CSV line items are entity program tables; their sum does not equal the Budget Paper 1 total general government expense, so it is not the federal total.',
-    note: 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect remains pending; every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.',
+    note: 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. Every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.',
   },
   limitations: [
     'Mixed data: live AusTender contract rows and PBS budget line items sit alongside the synthetic development seed. The seed values remain deterministic placeholders, not published Australian government spending.',
     'No records are human-verified: seeded measures, ingested AusTender contracts and ingested PBS budget rows all carry verified: false.',
-    'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is not implemented (pending stub); the other registered federal connectors are stubs and make no network call.',
+    'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. The other registered federal connectors are stubs and make no network call.',
     'PBS CSV line items are entity program tables; their sum does not equal the Budget Paper 1 total general government expense, so it is not the federal total.',
     'data.nsw.gov.au CKAN ingestion is targeted (selected datasets, not the whole portal). CKAN CSV/XLSX downloads and DataStore pages are archived with SHA-256; PDF/DOCX resources are deferred, and some units are provisional.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
@@ -1181,6 +1206,7 @@ export async function mockApi(page: Page) {
             NSW_BUDGET_SOURCE,
             NSW_CKAN_SOURCE,
             DUBBO_SOURCE,
+            GRANTCONNECT_SOURCE,
           ],
         });
         return;

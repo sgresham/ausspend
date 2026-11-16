@@ -101,13 +101,16 @@ The full list is in `scripts/audit.mjs`. In brief:
    one measure type shows a headline total.
 3. Row tables (search, function, region/state) and summary/headline footers show the source
    id/link and Unverified status.
-4. `/data-sources#synthetic-seed` shows the synthetic source Unverified, the live `aus-tender`
-   source active with a last-ingested time, the ten remaining connectors marked **stub — not
-   wired**, and the coverage limitations naming AusTender live plus PBS/GrantConnect pending.
+4. `/data-sources#synthetic-seed` shows the synthetic source Unverified, the live
+   `aus-tender`/`data-gov-au-pbs`/`nsw-budget`/`data-nsw-ckan`/`dubbo-council` sources active,
+   GrantConnect degraded/partial with its manual-export caveat, and the seven remaining
+   connectors marked **stub — not wired**.
 5. API invariants: `function=07` mixed/null/per-type; `measure_type=actual` numeric total;
-   `region=NSW` 400; unknown measure id 404; `/api/meta/coverage` reports AusTender live,
-   PBS/GrantConnect pending, ten stubs, nonzero counts; `/api/v1/spending?jurisdiction_level=federal`
-   returns contract rows with provenance and integer cents.
+   `region=NSW` 400; unknown measure id 404; `/api/meta/coverage` reports seven stubs,
+   `pending: []`, a GrantConnect manual-export caveat and nonzero counts;
+   `/api/v1/spending?jurisdiction_level=federal` returns contract rows with provenance and
+   integer cents; `/api/v1/spending?measure_type=grant_award` returns real grant rows when a
+   complete chunk set is present and an honest empty set otherwise.
 
 Acceptance evidence shape: paste the commands and their real output for each section above,
 including the audit summary line, the compose `ps` state, `docker compose down -v` output, and the

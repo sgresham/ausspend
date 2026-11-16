@@ -26,7 +26,7 @@ import type {
 import { useApi } from '../hooks/useApi';
 import { useCoverage } from '../coverage';
 import { titleCase } from '../format';
-import { PBS_CAVEAT, uniqueSources } from '../provenance';
+import { GRANTCONNECT_CAVEAT, PBS_CAVEAT, uniqueSources } from '../provenance';
 import { QuickSearch } from '../components/QuickSearch';
 import { SpendingSummaryPanel } from '../components/SpendingSummaryPanel';
 import { SpendingRowsTable } from '../components/SpendingRowsTable';
@@ -230,7 +230,7 @@ export function SearchPage() {
   const showPbsCaveat =
     (measureType === 'budget' && jurisdictionLevel === 'federal') ||
     pageSources.some((source) => source.source_id === 'data-gov-au-pbs');
-  const showGrantBlocked =
+  const showGrantNote =
     measureType === 'grant_award' ||
     pageSources.some((source) => source.source_id === 'grantconnect');
   const showNswNote =
@@ -247,11 +247,12 @@ export function SearchPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Query every measure through <code>/api/spending</code>: synthetic budget seed rows, live
         AusTender federal contract records, NSW Budget 2025-26 state rows, and selected
-        data.nsw.gov.au CKAN state datasets (CSV/XLSX downloads and DataStore pages). Measure types
-        are never added together, and NSW budget figures are labelled <strong>Budgeted</strong>;
-        some CKAN rows are <strong>provisional</strong> where the source does not state a unit.
-        Filters, sort and pagination live in the URL, so reload and browser back/forward restore the
-        same view. Amounts are entered in dollars and sent to the API as integer cents.
+        data.nsw.gov.au CKAN state datasets (CSV/XLSX downloads and DataStore pages), plus
+        GrantConnect grant awards from an archived manual export. Measure types are never added
+        together, and NSW budget figures are labelled <strong>Budgeted</strong>; some CKAN rows are{' '}
+        <strong>provisional</strong> where the source does not state a unit. Filters, sort and
+        pagination live in the URL, so reload and browser back/forward restore the same view.
+        Amounts are entered in dollars and sent to the API as integer cents.
       </Typography>
 
       <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
@@ -319,12 +320,9 @@ export function SearchPage() {
         </Alert>
       ) : null}
 
-      {showGrantBlocked ? (
-        <Alert severity="info" data-testid="grantconnect-blocked" sx={{ mb: 3 }}>
-          <strong>GrantConnect is blocked.</strong> GrantConnect publishes no public grant award API
-          or feed. The cited Track A third-party adaptor does not exist and the only public
-          alternative requires a paid Apify token. No direct scraper is built, so no{' '}
-          <code>grant_award</code> rows are ingested and none are estimated or zero-filled.
+      {showGrantNote ? (
+        <Alert severity="info" data-testid="grantconnect-partial" sx={{ mb: 3 }}>
+          <strong>GrantConnect is a manual export.</strong> {GRANTCONNECT_CAVEAT}
         </Alert>
       ) : null}
 

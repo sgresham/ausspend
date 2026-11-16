@@ -27,6 +27,7 @@
     "seed": "npm run build -w shared && tsx scripts/seed.ts",
     "ingest:federal": "npm run build -w shared && tsx scripts/ingest-federal.ts",
     "ingest:nsw": "npm run build -w shared && tsx scripts/ingest-nsw.ts",
+    "grantconnect:chunks": "npm run build -w shared && tsx scripts/grantconnect-chunks.ts",
     "archive:nsw": "npm run build -w shared && tsx scripts/nsw-source-archive.ts",
     "archive": "npm run build -w shared && tsx scripts/source-archive.ts",
     "pdf:extract": "npm run build -w shared && tsx scripts/pdf-extract.ts",

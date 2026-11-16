@@ -22,3 +22,11 @@ export function uniqueSources(rows: readonly ProvenanceSourceRef[]): ProvenanceS
  */
 export const PBS_CAVEAT =
   'PBS CSV line items are entity program tables; their sum does not equal the Budget Paper 1 total general government expense, so it is not the federal total.';
+
+/**
+ * GrantConnect caveat shown on /search and /data-sources. The source is a
+ * human-downloaded, SHA-256-archived XLSX export, not an API or a scraper, and
+ * wide exports are capped at 50,000 results (so coverage may be partial).
+ */
+export const GRANTCONNECT_CAVEAT =
+  'GrantConnect is a manual file export, not an API and not a live scraper. The archived XLSX is fingerprinted with SHA-256. Exports above the 50,000-result cap are rejected, so grant coverage is partial until complete date-range chunks cover the period. No grant row is estimated or zero-filled.';
