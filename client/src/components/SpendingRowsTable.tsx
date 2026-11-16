@@ -103,7 +103,10 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                     <FiscalYearChip year={row.fiscal_year} />
                   </TableCell>
                   <TableCell>
-                    <MeasureTypeChip type={row.measure_type} />
+                    <MeasureTypeChip
+                      type={row.measure_type}
+                      budgeted={row.source_id === 'nsw-budget'}
+                    />
                   </TableCell>
                   <TableCell align="right">
                     <Amount cents={row.amount_cents} />

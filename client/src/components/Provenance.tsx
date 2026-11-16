@@ -57,9 +57,21 @@ const MEASURE_COLORS: Record<MeasureType, 'primary' | 'secondary' | 'default'> =
   grant_award: 'secondary',
 };
 
-export function MeasureTypeChip({ type }: { type: MeasureType }) {
+export function MeasureTypeChip({
+  type,
+  budgeted = false,
+}: {
+  type: MeasureType;
+  /** NSW state rows are Budgeted figures, never actual/spent. */
+  budgeted?: boolean;
+}) {
   return (
-    <Chip size="small" variant="outlined" color={MEASURE_COLORS[type]} label={titleCase(type)} />
+    <Chip
+      size="small"
+      variant="outlined"
+      color={MEASURE_COLORS[type]}
+      label={budgeted && type === 'budget' ? 'Budgeted' : titleCase(type)}
+    />
   );
 }
 

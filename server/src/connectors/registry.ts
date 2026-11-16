@@ -1,5 +1,6 @@
 import { createAusTenderConnector } from './aus-tender.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
+import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -84,14 +85,10 @@ export const CONNECTORS: readonly Connector[] = [
     jurisdiction_level: 'federal',
     // GrantConnect: ingest published grant award records.
   }),
-  stub({
-    id: 'nsw-budget',
-    name: 'NSW Budget',
-    publisher: 'NSW Treasury',
-    source_url: 'https://www.treasury.nsw.gov.au/budget',
-    jurisdiction_level: 'state',
-    // TODO: ingest NSW Budget papers and agency financial statements (PDF/XLSX).
-  }),
+  // S1: live official NSW Budget 2025-26 Open Data XLSX (Wayback snapshot) plus
+  // the ArcGIS capital-projects feature layer. Per-run status is recorded on
+  // data_sources/ingestion_logs by the runner.
+  createNswBudgetConnector(),
   stub({
     id: 'vic-budget',
     name: 'Victorian State Budget',

@@ -226,7 +226,7 @@ async function assertRowProvenance(locator, label) {
   for (let index = 0; index < count; index += 1) {
     const text = (await locator.nth(index).innerText()).replace(/\s+/g, ' ');
     assert(
-      /synthetic-seed|data-gov-au-pbs|aus-tender/.test(text),
+      /synthetic-seed|data-gov-au-pbs|aus-tender|nsw-budget/.test(text),
       `${label} row ${index + 1} has no source id`,
     );
     assert(/Unverified/.test(text), `${label} row ${index + 1} has no verification status`);
@@ -425,12 +425,32 @@ async function uiChecks(page, regionId) {
 
       const stubs = page.getByTestId('connector-stubs');
       await stubs.waitFor({ state: 'visible', timeout: 20_000 });
-      const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
-      assert(stubCount === 9, `expected 9 connector stubs marked not wired, got ${stubCount}`);
+      const coverageResponse = await getJson('/api/meta/coverage');
+      assert(coverageResponse.status === 200, 'meta/coverage unavailable for stub expectation');
+      const coverage = coverageResponse.body;
+      const expectedStubs = coverage?.connector_status_counts?.stub;
       assert(
-        (await stubs.getByText('active', { exact: true }).count()) >= 2,
-        'AusTender and PBS connectors are not both shown as active',
+        Number.isInteger(expectedStubs),
+        `coverage connector_status_counts.stub is not an integer: ${expectedStubs}`,
       );
+      const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
+      assert(
+        stubCount === expectedStubs,
+        `expected ${expectedStubs} connector stubs marked not wired (from coverage), got ${stubCount}`,
+      );
+      const activeCount = await stubs.getByText('active', { exact: true }).count();
+      assert(
+        activeCount >= 3,
+        `expected AusTender, PBS and NSW Budget active, got ${activeCount} active connector(s)`,
+      );
+      const activeIds = (coverage?.connectors ?? [])
+        .filter((connector) => connector.status === 'active' || connector.status === 'degraded')
+        .map((connector) => connector.id);
+      for (const id of ['aus-tender', 'data-gov-au-pbs', 'nsw-budget']) {
+        assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
+      }
+      const connectorText = await stubs.innerText();
+      assert(/nsw-budget/.test(connectorText), 'NSW Budget connector is not shown in the UI');
       const pbsCard = page.getByTestId('source-data-gov-au-pbs');
       await pbsCard.waitFor({ state: 'visible', timeout: 20_000 });
       assert(
@@ -458,7 +478,7 @@ async function uiChecks(page, regionId) {
         'coverage limitations do not mention pending GrantConnect',
       );
       assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
-      return 'source Unverified, 9 stubs, AusTender+PBS active, PBS caveat, limitations present';
+      return `source Unverified, ${expectedStubs} stubs, AusTender+PBS+NSW active, PBS caveat, limitations present`;
     },
   );
 }

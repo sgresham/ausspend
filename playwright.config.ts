@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const serverPort = process.env.PW_SERVER_PORT ?? '3001';
+const clientPort = process.env.PW_CLIENT_PORT ?? '5173';
+const baseURL = process.env.PW_BASE_URL ?? `http://localhost:${clientPort}`;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -7,7 +11,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -19,15 +23,20 @@ export default defineConfig({
   webServer: [
     {
       command: 'npm run build -w shared && npm run dev:server',
-      url: 'http://localhost:3001/api/health',
+      url: `http://localhost:${serverPort}/api/health`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
+      env: {
+        PORT: serverPort,
+        ...(process.env.MONGO_URL ? { MONGO_URL: process.env.MONGO_URL } : {}),
+      },
     },
     {
-      command: 'npm run dev:client',
-      url: 'http://localhost:5173',
+      command: `node_modules/.bin/vite client --port ${clientPort} --strictPort`,
+      url: `http://localhost:${clientPort}`,
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
+      env: { VITE_API_PROXY_TARGET: `http://localhost:${serverPort}` },
     },
   ],
 });

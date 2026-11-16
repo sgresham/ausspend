@@ -34,10 +34,12 @@ export function DataSourcesPage() {
         The registered sources behind every figure. The synthetic development seed is explicitly
         unverified; the anchor <code>#synthetic-seed</code> resolves to it below. AusTender is a
         live federal source as of F2 and data.gov.au PBS budget line items are live as of F3 — their
-        ingested records and last-ingested times appear here with their provenance. GrantConnect
-        remains a blocked stub — the Commonwealth publishes no grant award API/feed and the cited
-        Track A adaptor does not exist without a paid token — as do the state/territory connectors.
-        No direct GrantConnect scraper is built and no grant records are claimed.
+        ingested records and last-ingested times appear here with their provenance. NSW Budget
+        2025-26 Open Data is live as of S1 (official Wayback XLSX copy plus the ArcGIS capital
+        projects layer); its rows are Budgeted, never actual/spent. GrantConnect remains a blocked
+        stub — the Commonwealth publishes no grant award API/feed and the cited Track A adaptor does
+        not exist without a paid token — and VIC/QLD/WA remain stubs. No direct GrantConnect scraper
+        is built and no grant records are claimed.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -153,6 +155,14 @@ export function DataSourcesPage() {
                     </Typography>
                   ) : null}
 
+                  {source.source_id === 'nsw-budget' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link component={RouterLink} to="/search?jurisdiction_level=state">
+                        Browse NSW Budgeted state rows with provenance →
+                      </Link>
+                    </Typography>
+                  ) : null}
+
                   <ProvenanceFooter
                     sources={[source]}
                     note="Every measure row in the API repeats this source reference."
@@ -171,9 +181,11 @@ export function DataSourcesPage() {
         {connectors.length} connectors are registered. A <strong>stub</strong> makes no network call
         and ingests no records; an <strong>active</strong> connector has ingested, and a{' '}
         <strong>degraded</strong> connector reports errors. <code>aus-tender</code> is live from the
-        AusTender OCDS contractPublished feed and <code>data-gov-au-pbs</code> is live from the
-        data.gov.au CKAN PBS CSV. <code>grantconnect</code> is blocked pending a usable adaptor (no
-        public award API; no direct scraper) and the other eight connectors are stubs.
+        AusTender OCDS contractPublished feed, <code>data-gov-au-pbs</code> is live from the
+        data.gov.au CKAN PBS CSV, and <code>nsw-budget</code> is live from the NSW 2025-26 open-data
+        XLSX snapshot plus ArcGIS capital projects. <code>grantconnect</code> is blocked pending a
+        usable adaptor (no public award API; no direct scraper) and the remaining seven connectors
+        (four federal and VIC/QLD/WA) are stubs.
       </Typography>
 
       {!coverage.data && coverage.error ? (
