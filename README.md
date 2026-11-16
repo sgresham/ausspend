@@ -140,7 +140,7 @@ therefore yields the same 810 synthetic rows, no duplicates, and the same live c
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run seed
 # [seed] target database: ausspend_dev (safe, preserves ingested rows)
-# [seed] sources=2 regions=9 functions=53 measures=1671 synthetic=810 non_synthetic=861
+# [seed] sources=2 regions=9 functions=53 measures=119935 synthetic=810 non_synthetic=119125
 # [seed] verified measures: 0 (must be 0)
 ```
 
@@ -157,9 +157,11 @@ nonzero before it changes anything.
 
 ## Backup, restore and the AusTender backfill gate
 
-The current live baseline is **810 synthetic seed measures** plus **861 AusTender contract
-measures** (the `measures` collection also contains the PBS line items, so its total is larger).
-Before any historical AusTender backfill, take a verified backup:
+The live baseline is **810 synthetic seed measures**, **1,231 PBS budget measures** and
+**117,894 AusTender contract measures** (119,935 total; 119,125 distinct non-null natural keys).
+The one-week 861-row AusTender run and the historical 2-FY backfill coexist because they cover
+different publication windows. Before any future historical AusTender backfill, take a verified
+backup:
 
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
@@ -195,8 +197,8 @@ explicit approval. Do not use it as a normal test.
 
 ### Historical backfill is gated
 
-The historical AusTender backfill is **not** part of a normal ingestion run and must not be
-started until the user/approver confirms. `npm run ingest:federal` with `--backfill` requires:
+The historical AusTender backfill is **not** part of a normal ingestion run. `npm run
+ingest:federal` with `--backfill` requires:
 
 - `BACKFILL_CONFIRM=yes`;
 - `BACKUP_DIR` (or `--backup-dir`) pointing at a complete, recent, verified `ausspend_dev` backup
@@ -215,7 +217,11 @@ BACKFILL_CONFIRM=yes BACKUP_DIR=/home/steve/backups/ausspend/2026-11-16T11-04-33
 ```
 
 A real backfill additionally records the verified backup path in the `ingestion_logs.backup_path`
-field. Do not run it without explicit approval.
+field and chunks the window (`AUSTENDER_CHUNK_DAYS=7`, `AUSTENDER_PAGE_LIMIT=100`). The historical
+2024-25 + 2025-26 run completed on 2026-11-16 with 105/105 successful chunks, 117,033 historical
+contracts upserted (117,894 AusTender rows including the pre-existing 861), 0 duplicates and 0
+invalid cents; see [FEDERAL_INGESTION.md](FEDERAL_INGESTION.md#historical-austender-backfill-run-2026-11-16).
+Re-running a chunk is idempotent. The gate still applies to every future re-run.
 
 ### Daily backup timer
 

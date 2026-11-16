@@ -21,6 +21,26 @@ import { perMeasureTypeTotals, type LeanMeasure, type LeanRegion } from './measu
 
 type LeanFunction = FunctionDocument & { _id: mongoose.Types.ObjectId };
 
+/**
+ * The summary and both breakdowns only need these fields. Loading the whole
+ * document for 100k+ contracts would materialise hundreds of megabytes per
+ * request, so the whole-set pass is projected; the requested page is fetched
+ * separately with Mongo skip/limit. API semantics are unchanged: the summary
+ * still covers the entire filtered set and per-type totals are never summed
+ * across measure types.
+ */
+type SummaryMeasure = Pick<
+  LeanMeasure,
+  '_id' | 'amount_cents' | 'measure_type' | 'function_code' | 'region_id'
+>;
+
+const SUMMARY_PROJECTION = {
+  amount_cents: 1,
+  measure_type: 1,
+  function_code: 1,
+  region_id: 1,
+} as const;
+
 const SORTS: Record<SpendingSort, Record<string, 1 | -1>> = {
   amount_desc: { amount_cents: -1, _id: 1 },
   amount_asc: { amount_cents: 1, _id: 1 },
@@ -33,7 +53,7 @@ interface Lookups {
   regions: Map<string, LeanRegion>;
 }
 
-async function loadLookups(measures: readonly LeanMeasure[]): Promise<Lookups> {
+async function loadLookups(measures: readonly SummaryMeasure[]): Promise<Lookups> {
   const functionCodes = [
     ...new Set(
       measures
@@ -106,16 +126,16 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
   };
 }
 
-function sortedTypes(measures: readonly LeanMeasure[]): LeanMeasure['measure_type'][] {
+function sortedTypes(measures: readonly SummaryMeasure[]): LeanMeasure['measure_type'][] {
   return [...new Set(measures.map((measure) => measure.measure_type))].sort();
 }
 
 function breakdownByFunction(
-  measures: readonly LeanMeasure[],
+  measures: readonly SummaryMeasure[],
   summaryMixed: boolean,
   lookups: Lookups,
 ): SpendingByFunction[] {
-  const groups = new Map<string, LeanMeasure[]>();
+  const groups = new Map<string, SummaryMeasure[]>();
   for (const measure of measures) {
     if (!measure.function_code) continue;
     const group = groups.get(measure.function_code) ?? [];
@@ -146,11 +166,11 @@ function breakdownByFunction(
 }
 
 function breakdownByRegion(
-  measures: readonly LeanMeasure[],
+  measures: readonly SummaryMeasure[],
   summaryMixed: boolean,
   lookups: Lookups,
 ): SpendingByRegion[] {
-  const groups = new Map<string, LeanMeasure[]>();
+  const groups = new Map<string, SummaryMeasure[]>();
   for (const measure of measures) {
     if (!measure.region_id) continue;
     const key = measure.region_id.toString();
@@ -190,7 +210,7 @@ function breakdownByRegion(
 }
 
 function buildSummary(
-  measures: readonly LeanMeasure[],
+  measures: readonly SummaryMeasure[],
   lookups: Lookups,
 ): {
   count: number;
@@ -261,20 +281,24 @@ export const listSpending: RequestHandler = async (req, res) => {
     };
   }
 
-  // Phase 1 bounds the result set by the dataset itself (hundreds of synthetic
-  // rows). Fetch all matching rows once so the summary covers the whole filtered
-  // set, then slice the requested page in memory.
+  // The summary and breakdowns cover the whole filtered set, so load only the
+  // fields they need. The requested page is a separate Mongo skip/limit query:
+  // loading every full document into memory does not scale to 100k+ contracts.
   const matching = await MeasureModel.find(mongoQuery)
-    .sort(SORTS[query.sort])
-    .lean<LeanMeasure[]>();
+    .select(SUMMARY_PROJECTION)
+    .lean<SummaryMeasure[]>();
 
   const lookups = await loadLookups(matching);
   const summary = buildSummary(matching, lookups);
 
   const total = matching.length;
   const start = (query.page - 1) * query.page_size;
-  const pageRows = matching.slice(start, start + query.page_size);
   const totalPages = total === 0 ? 0 : Math.ceil(total / query.page_size);
+  const pageRows = await MeasureModel.find(mongoQuery)
+    .sort(SORTS[query.sort])
+    .skip(start)
+    .limit(query.page_size)
+    .lean<LeanMeasure[]>();
 
   const applied_filters: SpendingAppliedFilters = {
     fiscal_year: query.fiscal_year ?? null,

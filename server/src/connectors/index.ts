@@ -1,5 +1,11 @@
 export { CONNECTORS, CONNECTOR_IDS, getConnector } from './registry.js';
 export {
+  AUS_TENDER_BACKFILL_CHUNK_DAYS,
+  AUS_TENDER_BACKFILL_PAGE_LIMIT,
+  chunkAusTenderWindow,
+  type AusTenderWindowChunk,
+} from './aus-tender-chunks.js';
+export {
   AUS_TENDER_API_BASE,
   AUS_TENDER_DATASET,
   AUS_TENDER_ID,
