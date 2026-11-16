@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import type { RequestHandler } from 'express';
 import { FunctionModel, RegionModel } from '../models/index.js';
-import { badRequest, notFound } from './errors.js';
+import { notFound } from './errors.js';
 import { measureQuery, parseMeasureFilters, sumCents, type MeasureFilters } from './filters.js';
 import {
   perMeasureTypeTotals,
@@ -14,6 +14,7 @@ import {
 } from './measure-summary.js';
 import { MeasureModel } from '../models/index.js';
 import type { FunctionDocument } from '../models/index.js';
+import { areaQueries, buildAreaProfile, resolveRegion, type AreaProfile } from './area-profile.js';
 
 async function loadRegionMeasures(
   region: LeanRegion,
@@ -84,18 +85,79 @@ async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCo
   };
 }
 
+export interface AreaDetail {
+  region: ReturnType<typeof serializeRegion>;
+  filters: { fiscal_year: string | null; measure_type: string | null; limit: number };
+  count: number;
+  measure_types: LeanMeasure['measure_type'][];
+  mixed: true;
+  total_cents: null;
+  total_measure_type: null;
+  total_by_measure_type: [];
+  by_function: [];
+  measures: ReturnType<typeof serializeMeasure>[];
+  area_profile: AreaProfile | null;
+}
+
+async function areaDetail(region: LeanRegion, filters: MeasureFilters): Promise<AreaDetail> {
+  const queries = areaQueries(region, region.parent_code ?? 'NSW');
+  const base = measureQuery(filters);
+  const [measures, count, profile] = await Promise.all([
+    MeasureModel.find({ ...queries.combined, ...base })
+      .sort({ jurisdiction_level: 1, fiscal_year: 1, measure_type: 1 })
+      .limit(filters.limit)
+      .lean<LeanMeasure[]>(),
+    MeasureModel.countDocuments({ ...queries.combined, ...base }),
+    buildAreaProfile(region),
+  ]);
+  const measureTypes = [...new Set(measures.map((measure) => measure.measure_type))].sort();
+  return {
+    region: serializeRegion(region),
+    filters: {
+      fiscal_year: filters.fiscal_year ?? null,
+      measure_type: filters.measure_type ?? null,
+      limit: filters.limit,
+    },
+    count,
+    measure_types: measureTypes,
+    mixed: true,
+    total_cents: null,
+    total_measure_type: null,
+    total_by_measure_type: [],
+    by_function: [],
+    measures: measures.map(serializeMeasure),
+    area_profile: profile,
+  };
+}
+
+/**
+ * GET /api/regions/:regionId. A 24-character _id is filtered exactly as before;
+ * a slug/name resolves case-insensitively. A sub-state region returns the
+ * shared area profile (contract C); national/state regions keep the existing
+ * region detail shape.
+ */
 export const getRegion: RequestHandler = async (req, res) => {
-  const regionId = req.params.regionId as string;
-  if (!mongoose.isValidObjectId(regionId)) {
-    throw badRequest('regionId must be a region _id (a 24-character hex id), not a code');
-  }
-
-  const region = await RegionModel.findById(regionId).lean<LeanRegion | null>();
+  const raw = req.params.regionId as string;
+  const region = await resolveRegion(raw);
   if (!region) {
-    throw notFound(`Unknown region: ${regionId}`);
+    throw notFound(`Unknown region: ${raw}`);
   }
+  const filters = parseMeasureFilters(req.query);
+  if (region.level === 'region') {
+    res.json(await areaDetail(region, filters));
+    return;
+  }
+  res.json(await regionDetail(region, filters));
+};
 
-  res.json(await regionDetail(region, parseMeasureFilters(req.query)));
+/** GET /api/areas/:slug — the same profile object as /api/regions/<slug>. */
+export const getArea: RequestHandler = async (req, res) => {
+  const slug = req.params.slug as string;
+  const region = await resolveRegion(slug);
+  if (!region || region.level !== 'region') {
+    throw notFound(`Unknown area: ${slug}`);
+  }
+  res.json(await areaDetail(region, parseMeasureFilters(req.query)));
 };
 
 export const getState: RequestHandler = async (req, res) => {

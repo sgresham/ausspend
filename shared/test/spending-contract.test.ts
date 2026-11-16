@@ -36,13 +36,18 @@ describe('SpendingQuery', () => {
     });
   });
 
+  it('accepts a region slug/name and an explicit area slug (contract C)', () => {
+    expect(SpendingQuerySchema.parse({ region: 'Dubbo' }).region).toBe('Dubbo');
+    expect(SpendingQuerySchema.parse({ region: 'dubbo' }).region).toBe('dubbo');
+    expect(SpendingQuerySchema.parse({ area: 'dubbo' }).area).toBe('dubbo');
+  });
+
   it('rejects bad codes, amounts, pages and sorts', () => {
     const bad = [
       { fiscal_year: '2024' },
       { measure_type: 'forecast' },
       { function: '7' },
       { function: '0111' },
-      { region: 'NSW' },
       { min_amount: '-1' },
       { max_amount: '10.5' },
       { page: '0' },

@@ -9,6 +9,8 @@ export type MeasureType = 'actual' | 'budget' | 'estimate' | 'contract' | 'grant
 
 export type JurisdictionLevel = 'federal' | 'state' | 'territory' | 'local' | 'other';
 
+export type ExtractionConfidence = 'low' | 'medium' | 'high';
+
 export type DataSourceStatus = 'stub' | 'active' | 'degraded';
 
 export interface DeferredResource {
@@ -97,6 +99,14 @@ export interface CoverageResponse {
     deferred_resources?: DeferredResource[];
     note: string;
   };
+  local_ingestion?: {
+    live: string[];
+    degraded: string[];
+    stubs: string[];
+    dubbo_last_ingested_at?: string | null;
+    note: string;
+    not_covered?: { councils: string[]; states: string[] };
+  };
   ingestion?: { latest_logs: IngestionLog[] };
   limitations: string[];
   note: string;
@@ -124,6 +134,31 @@ export interface RegionRef {
   name: string;
   level: RegionLevel;
   parent_code?: string;
+  slug?: string;
+}
+
+export interface AreaPanelTypeTotal {
+  measure_type: MeasureType;
+  count: number;
+  total_cents: number;
+}
+
+export interface AreaPanel {
+  key: 'local' | 'state_nsw' | 'federal_nsw_tagged' | 'commonwealth_pbs';
+  label: string;
+  description: string;
+  jurisdiction_level: JurisdictionLevel;
+  count: number;
+  by_measure_type: AreaPanelTypeTotal[];
+  /** Always null: area panels never carry a cross-level/type total. */
+  total_cents: null;
+}
+
+export interface AreaProfile {
+  area: RegionRef & { slug: string };
+  panels: AreaPanel[];
+  caution: string;
+  not_covered: { councils: string[]; states: string[] };
 }
 
 export interface RegionsResponse {
@@ -152,6 +187,7 @@ export interface MeasureRow {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
+  extraction_confidence?: ExtractionConfidence;
   location?: { state?: string; lga_name?: string };
   unspsc?: string;
 }
@@ -221,6 +257,7 @@ export interface RegionDetail extends MeasureSummary {
   filters: RegionFilters;
   by_function: FunctionGroup[];
   measures: MeasureRow[];
+  area_profile?: AreaProfile | null;
 }
 
 export interface StateDetail extends RegionDetail {
@@ -314,6 +351,7 @@ export interface SpendingAppliedFilters {
   jurisdiction_level: JurisdictionLevel | null;
   function: string | null;
   region: string | null;
+  area?: string | null;
   min_amount: number | null;
   max_amount: number | null;
   sort: SpendingSort;
@@ -324,4 +362,5 @@ export interface SpendingResponse {
   summary: SpendingSummary;
   pagination: SpendingPagination;
   applied_filters: SpendingAppliedFilters;
+  area_profile?: AreaProfile;
 }

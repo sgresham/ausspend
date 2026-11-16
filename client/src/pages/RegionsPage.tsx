@@ -20,7 +20,12 @@ import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusVie
 import { ProvenanceFooter } from '../components/Provenance';
 
 function RegionRow({ region }: { region: RegionRef }) {
-  const detailHref = region.level === 'state' ? `/states/${region.code}` : `/regions/${region._id}`;
+  const detailHref =
+    region.level === 'state'
+      ? `/states/${region.code}`
+      : region.level === 'region'
+        ? `/regions/${region.slug ?? region._id}`
+        : `/regions/${region._id}`;
   const linkLabel =
     region.level === 'national'
       ? 'National region page'
@@ -94,9 +99,11 @@ function RegionsIndex() {
         Regions
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        The national row plus the eight states and territories from <code>GET /api/regions</code>.
-        National and any future sub-state rows link to their region page by <code>_id</code>; state
-        rows link to the state page by abbreviation. This page does not invent region ids.
+        The national row, the eight states and territories, and the one S3 sub-state region (Dubbo)
+        from <code>GET /api/regions</code>. National rows link by <code>_id</code>, state rows by
+        abbreviation, and sub-state rows by their slug (for example
+        <code>/regions/dubbo</code>, alias <code>/region/dubbo</code> and
+        <code>/areas/dubbo</code>). This page does not invent region ids.
       </Typography>
       <ProvenanceFooter
         sources={[]}
@@ -134,6 +141,7 @@ function RegionsIndex() {
 }
 
 export function RegionsPage() {
-  const { regionId } = useParams<{ regionId?: string }>();
-  return regionId ? <RegionDetailView regionId={regionId} /> : <RegionsIndex />;
+  const { regionId, slug } = useParams<{ regionId?: string; slug?: string }>();
+  const identifier = regionId ?? slug;
+  return identifier ? <RegionDetailView regionId={identifier} /> : <RegionsIndex />;
 }

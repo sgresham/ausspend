@@ -6,20 +6,20 @@ import {
   getConnector,
 } from '../src/connectors/index.js';
 
-const LIVE_IDS = ['aus-tender', 'data-gov-au-pbs', 'nsw-budget', 'data-nsw-ckan'];
+const LIVE_IDS = ['aus-tender', 'data-gov-au-pbs', 'nsw-budget', 'data-nsw-ckan', 'dubbo-council'];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships twelve connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(12);
-    expect(new Set(CONNECTOR_IDS).size).toBe(12);
+  it('ships thirteen connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(13);
+    expect(new Set(CONNECTOR_IDS).size).toBe(13);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
     );
   });
 
-  it('registers AusTender, PBS, NSW Budget and data.nsw.gov.au CKAN as live and the other eight as stubs', () => {
+  it('registers AusTender, PBS, NSW Budget, CKAN and Dubbo as live and the other eight as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -79,6 +79,9 @@ describe('federal connector registry', () => {
     expect(getConnector('data-nsw-ckan')?.jurisdiction_level).toBe('state');
     expect(getConnector('data-nsw-ckan')?.source_url).toContain('data.nsw.gov.au');
     expect(getConnector('data-nsw-ckan')?.deferredResources).toEqual([]);
+    expect(getConnector('dubbo-council')?.status).toBe('active');
+    expect(getConnector('dubbo-council')?.jurisdiction_level).toBe('local');
+    expect(getConnector('dubbo-council')?.source_url).toContain('dubbo.nsw.gov.au');
     expect(getConnector('nope')).toBeUndefined();
   });
 });

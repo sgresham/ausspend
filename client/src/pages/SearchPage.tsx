@@ -30,6 +30,7 @@ import { PBS_CAVEAT, uniqueSources } from '../provenance';
 import { QuickSearch } from '../components/QuickSearch';
 import { SpendingSummaryPanel } from '../components/SpendingSummaryPanel';
 import { SpendingRowsTable } from '../components/SpendingRowsTable';
+import { AreaPanels } from '../components/AreaPanels';
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 
 const SORTS: SpendingSort[] = ['amount_desc', 'amount_asc', 'fiscal_year_desc', 'fiscal_year_asc'];
@@ -84,6 +85,7 @@ export function SearchPage() {
 
   const functionCode = searchParams.get('function') ?? '';
   const regionId = searchParams.get('region') ?? '';
+  const areaSlug = searchParams.get('area') ?? '';
   const fiscalYear = searchParams.get('fiscal_year') ?? '';
   const rawMeasureType = searchParams.get('measure_type');
   const measureType = isMeasureType(rawMeasureType) ? rawMeasureType : '';
@@ -100,6 +102,7 @@ export function SearchPage() {
   const spendingQuery = buildQuery({
     function: functionCode || undefined,
     region: regionId || undefined,
+    area: areaSlug || undefined,
     fiscal_year: fiscalYear || undefined,
     measure_type: measureType || undefined,
     jurisdiction_level: jurisdictionLevel || undefined,
@@ -216,6 +219,7 @@ export function SearchPage() {
       `Region: ${selectedRegion ? `${selectedRegion.code} — ${selectedRegion.name}` : regionId}`,
     );
   }
+  if (areaSlug) applied.push(`Area: ${areaSlug}`);
   if (fiscalYear) applied.push(`Fiscal year: ${fiscalYear}`);
   if (measureType) applied.push(`Measure type: ${titleCase(measureType)}`);
   if (jurisdictionLevel) applied.push(`Jurisdiction: ${titleCase(jurisdictionLevel)}`);
@@ -334,7 +338,7 @@ export function SearchPage() {
             onPickFunction={(code) => update({ function: code })}
             onPickRegion={(region) => {
               setRegionInput(`${region.code} — ${region.name}`);
-              update({ region: region._id });
+              update({ region: region._id, area: null });
             }}
           />
         </CardContent>
@@ -374,7 +378,7 @@ export function SearchPage() {
             <Autocomplete
               options={regionOptions}
               value={selectedRegion}
-              onChange={(_, value) => update({ region: value?._id ?? null })}
+              onChange={(_, value) => update({ region: value?._id ?? null, area: null })}
               onInputChange={(_, value) => setRegionInput(value)}
               getOptionLabel={(option) => `${option.code} — ${option.name}`}
               isOptionEqualToValue={(option, value) => option._id === value._id}
@@ -506,11 +510,15 @@ export function SearchPage() {
           />
         ) : (
           <>
-            <SpendingSummaryPanel
-              summary={state.data.summary}
-              sources={pageSources}
-              note="Summary provenance is taken from the returned page rows; each row names its own source."
-            />
+            {state.data.area_profile ? (
+              <AreaPanels profile={state.data.area_profile} />
+            ) : (
+              <SpendingSummaryPanel
+                summary={state.data.summary}
+                sources={pageSources}
+                note="Summary provenance is taken from the returned page rows; each row names its own source."
+              />
+            )}
 
             {state.data.data.length === 0 ? (
               <EmptyState

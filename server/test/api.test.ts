@@ -165,10 +165,17 @@ describe('GET /api/regions/:regionId', () => {
     });
   });
 
-  it('rejects a region code where an _id is required', async () => {
+  it('resolves a region code/slug case-insensitively (contract C)', async () => {
     const response = await request(app).get('/api/regions/NSW');
-    expect(response.status).toBe(400);
-    expect(response.body.error).toMatch(/regionId must be a region _id/);
+    expect(response.status).toBe(200);
+    expect(response.body.region).toMatchObject({ code: 'NSW', level: 'state' });
+    expect(response.body.region.slug).toBe('nsw');
+  });
+
+  it('returns 404 for an unknown region slug', async () => {
+    const response = await request(app).get('/api/regions/not-a-region');
+    expect(response.status).toBe(404);
+    expect(response.body.error).toMatch(/Unknown region/);
   });
 
   it('returns 404 for an unknown but well-formed id', async () => {

@@ -102,6 +102,24 @@ const NSW_CKAN_SOURCE = {
   ],
 };
 
+const DUBBO_SOURCE = {
+  source_id: 'dubbo-council',
+  name: 'Dubbo Regional Council — Annual Report / Operational Plan',
+  publisher: 'Dubbo Regional Council',
+  source_url:
+    'https://www.dubbo.nsw.gov.au/ArticleDocuments/290/20262027%20Budget%20and%20Forecasts%20including%20Capital%20-%20Adopted.PDF.aspx',
+  retrieved_at: '2026-11-17T00:00:00.000Z',
+  license:
+    '© Dubbo Regional Council. Published council document, used for public-interest research.',
+  verified: false,
+  status: 'active',
+  last_ingested_at: '2026-11-17T00:09:00.000Z',
+  records_ingested: 245,
+  errors: [],
+  notes:
+    'One local council only (S3). Adopted 2026/27 budget/capital PDF archived with SHA-256; every row provisional and unverified; summary uses explicit ($000) and capital uses magnitude-checked dollars; totals mismatches reject the section.',
+};
+
 const AUS = { _id: '6afaa24c06cd1221b0f07291', code: 'AUS', name: 'Australia', level: 'national' };
 const NSW = {
   _id: '6afaa24c06cd1221b0f07292',
@@ -122,14 +140,23 @@ const QLD = {
   level: 'state',
 };
 
-const ALL_REGIONS = [AUS, NSW, VIC, QLD];
+const DUBBO = {
+  _id: '40d7a238d4b2cef48ae5f267',
+  code: 'NSW-DUBBO',
+  slug: 'dubbo',
+  name: 'Dubbo',
+  level: 'region',
+  parent_code: 'NSW',
+};
+
+const ALL_REGIONS = [AUS, NSW, VIC, QLD, DUBBO];
 
 const COVERAGE = {
-  phase: 'Phase 1 + F2/F3 + S1/S2 (AusTender + PBS + NSW live)',
+  phase: 'Phase 1 + F2/F3 + S1/S2/S3 (AusTender + PBS + NSW + Dubbo live)',
   synthetic: true,
   live_ingestion: true,
   generated_at: '2026-11-16T00:00:00.000Z',
-  counts: { data_sources: 3, regions: ALL_REGIONS.length, functions: 53, measures: 822 },
+  counts: { data_sources: 6, regions: ALL_REGIONS.length, functions: 53, measures: 1067 },
   fiscal_years: ['2022-23', '2023-24', '2024-25', '2025-26'],
   measure_types: ['actual', 'budget', 'estimate'],
   region_levels: ['national', 'state'],
@@ -236,6 +263,18 @@ const COVERAGE = {
       deferred_resources: NSW_CKAN_SOURCE.deferred_resources,
     },
     {
+      id: 'dubbo-council',
+      name: 'Dubbo Regional Council — Annual Report / Operational Plan',
+      publisher: 'Dubbo Regional Council',
+      source_url:
+        'https://www.dubbo.nsw.gov.au/ArticleDocuments/290/20262027%20Budget%20and%20Forecasts%20including%20Capital%20-%20Adopted.PDF.aspx',
+      status: 'active',
+      jurisdiction_level: 'local',
+      last_fetched_at: '2026-11-17T00:09:00.000Z',
+      records_ingested: 245,
+      errors: [],
+    },
+    {
       id: 'vic-budget',
       name: 'Victorian State Budget',
       publisher: 'Victorian Department of Treasury and Finance',
@@ -269,7 +308,7 @@ const COVERAGE = {
       errors: [],
     },
   ],
-  connector_status_counts: { active: 4, degraded: 0, stub: 8 },
+  connector_status_counts: { active: 5, degraded: 0, stub: 8 },
   supported_measure_types: ['actual', 'budget', 'estimate', 'contract', 'grant_award'],
   state_ingestion: {
     live: ['nsw-budget', 'data-nsw-ckan'],
@@ -278,6 +317,30 @@ const COVERAGE = {
     nsw_ckan_last_ingested_at: '2026-11-16T00:08:00.000Z',
     deferred_resources: NSW_CKAN_SOURCE.deferred_resources,
     note: 'NSW Budget 2025-26 Open Data and targeted data.nsw.gov.au CKAN are live; Victoria, Queensland and Western Australia remain stubs. CKAN PDF/DOCX resources are deferred.',
+  },
+  local_ingestion: {
+    live: ['dubbo-council'],
+    degraded: [],
+    stubs: [],
+    dubbo_last_ingested_at: '2026-11-17T00:09:00.000Z',
+    note: 'S3 covers one local council only: Dubbo Regional Council. Area panels are local, NSW-wide state, NSW-tagged federal AusTender and Commonwealth-wide PBS; they are not additive.',
+    not_covered: {
+      councils: [
+        'Bathurst Regional Council — not covered (no connector)',
+        'Orange City Council — not covered (no connector)',
+        'Mid-Western Regional Council — not covered (no connector)',
+        'All other NSW local councils — not covered (no connector)',
+      ],
+      states: [
+        'VIC — not covered (stub)',
+        'QLD — not covered (stub)',
+        'WA — not covered (stub)',
+        'SA — not covered (no connector)',
+        'TAS — not covered (no connector)',
+        'ACT — not covered (no connector)',
+        'NT — not covered (no connector)',
+      ],
+    },
   },
   federal_ingestion: {
     live: ['aus-tender', 'data-gov-au-pbs'],
@@ -528,6 +591,219 @@ const PBS_ROWS = [
   pbsSpendingRow('pbs-12', 300_000_000, 'Program 1.12: Food safety'),
 ];
 
+interface AreaRowSeed {
+  id: string;
+  measureType: MockMeasureType;
+  amountCents: number;
+  sourceId: string;
+  level: 'local' | 'state' | 'federal';
+  location: { state: string; lga_name?: string };
+  region: { _id: string; code: string; name: string; level: string };
+  projectName: string;
+}
+
+function areaRow(seed: AreaRowSeed) {
+  return {
+    id: seed.id,
+    region_id: seed.region._id,
+    function_code: '04',
+    amount_cents: seed.amountCents,
+    measure_type: seed.measureType,
+    fiscal_year: '2026-27',
+    source_id: seed.sourceId,
+    source_url:
+      seed.sourceId === 'dubbo-council'
+        ? DUBBO_SOURCE.source_url
+        : seed.sourceId === 'aus-tender'
+          ? AUS_TENDER_SOURCE.source_url
+          : seed.sourceId === 'data-gov-au-pbs'
+            ? PBS_SOURCE.source_url
+            : NSW_BUDGET_SOURCE.source_url,
+    verified: false,
+    project_name: seed.projectName,
+    description: 'Area fixture row; unverified.',
+    jurisdiction_level: seed.level,
+    jurisdiction: seed.level === 'federal' ? 'Commonwealth' : 'NSW',
+    data_quality_flag: 'provisional',
+    extraction_confidence: seed.sourceId === 'dubbo-council' ? 'high' : undefined,
+    location: seed.location,
+    function_name: 'Economic affairs',
+    function_level: 'division',
+    region_code: seed.region.code,
+    region_name: seed.region.name,
+    region_level: seed.region.level,
+    provenance: {
+      source_id: seed.sourceId,
+      source_url:
+        seed.sourceId === 'dubbo-council'
+          ? DUBBO_SOURCE.source_url
+          : seed.sourceId === 'aus-tender'
+            ? AUS_TENDER_SOURCE.source_url
+            : seed.sourceId === 'data-gov-au-pbs'
+              ? PBS_SOURCE.source_url
+              : NSW_BUDGET_SOURCE.source_url,
+      verified: false,
+      notes: 'Area fixture row; unverified.',
+    },
+  };
+}
+
+const DUBBO_AREA_ROWS = [
+  areaRow({
+    id: 'dubbo-local-1',
+    measureType: 'budget',
+    amountCents: 10_000_000,
+    sourceId: 'dubbo-council',
+    level: 'local',
+    location: { state: 'NSW', lga_name: 'Dubbo' },
+    region: DUBBO,
+    projectName: 'Dubbo Regional Council: Rates and annual charges',
+  }),
+  areaRow({
+    id: 'dubbo-local-2',
+    measureType: 'budget',
+    amountCents: 43_761_600,
+    sourceId: 'dubbo-council',
+    level: 'local',
+    location: { state: 'NSW', lga_name: 'Dubbo' },
+    region: DUBBO,
+    projectName: 'Community Culture and Places — Cemeteries',
+  }),
+  areaRow({
+    id: 'dubbo-state-1',
+    measureType: 'budget',
+    amountCents: 200_000_000,
+    sourceId: 'nsw-budget',
+    level: 'state',
+    location: { state: 'NSW' },
+    region: NSW,
+    projectName: 'NSW-wide state budget line',
+  }),
+  areaRow({
+    id: 'dubbo-federal-nsw-1',
+    measureType: 'contract',
+    amountCents: 300_000_000,
+    sourceId: 'aus-tender',
+    level: 'federal',
+    location: { state: 'NSW' },
+    region: NSW,
+    projectName: 'NSW-tagged federal contract',
+  }),
+  areaRow({
+    id: 'dubbo-federal-vic-1',
+    measureType: 'contract',
+    amountCents: 400_000_000,
+    sourceId: 'aus-tender',
+    level: 'federal',
+    location: { state: 'VIC' },
+    region: VIC,
+    projectName: 'VIC-tagged federal contract (excluded)',
+  }),
+  areaRow({
+    id: 'dubbo-pbs-1',
+    measureType: 'budget',
+    amountCents: 500_000_000,
+    sourceId: 'data-gov-au-pbs',
+    level: 'federal',
+    location: { state: 'Commonwealth' },
+    region: AUS,
+    projectName: 'Commonwealth-wide PBS line',
+  }),
+];
+
+const AREA_COMBINED_ROWS = DUBBO_AREA_ROWS.filter(
+  (row) => row.location.state !== 'VIC' && row.source_id !== 'data-gov-au-pbs',
+);
+
+function panel(
+  key: 'local' | 'state_nsw' | 'federal_nsw_tagged' | 'commonwealth_pbs',
+  label: string,
+  description: string,
+  level: 'local' | 'state' | 'federal',
+  rows: typeof DUBBO_AREA_ROWS,
+) {
+  return {
+    key,
+    label,
+    description,
+    jurisdiction_level: level,
+    count: rows.length,
+    by_measure_type: perTypeTotals(rows),
+    total_cents: null,
+  };
+}
+
+const DUBBO_AREA_PROFILE = {
+  area: { ...DUBBO, slug: 'dubbo' },
+  panels: [
+    panel(
+      'local',
+      'Dubbo — local (Dubbo Regional Council)',
+      'Rows delivered by Dubbo Regional Council with location.lga_name Dubbo or the Dubbo region_id.',
+      'local',
+      DUBBO_AREA_ROWS.filter((row) => row.jurisdiction_level === 'local'),
+    ),
+    panel(
+      'state_nsw',
+      'NSW-wide state rows (not Dubbo-specific)',
+      'Rows with jurisdiction_level state and jurisdiction NSW; not attributable to Dubbo.',
+      'state',
+      DUBBO_AREA_ROWS.filter((row) => row.jurisdiction_level === 'state'),
+    ),
+    panel(
+      'federal_nsw_tagged',
+      'Federal AusTender rows tagged NSW (not Dubbo-specific)',
+      'AusTender rows whose location.state is NSW; NSW-tagged federal procurement.',
+      'federal',
+      DUBBO_AREA_ROWS.filter(
+        (row) => row.source_id === 'aus-tender' && row.location.state === 'NSW',
+      ),
+    ),
+    panel(
+      'commonwealth_pbs',
+      'Commonwealth-wide PBS (separate; not a Dubbo row)',
+      'PBS line items are Commonwealth-wide and shown separately.',
+      'federal',
+      DUBBO_AREA_ROWS.filter((row) => row.source_id === 'data-gov-au-pbs'),
+    ),
+  ],
+  caution:
+    'Local, NSW-wide state, NSW-tagged federal and Commonwealth-wide PBS figures overlap and are NOT additive. Never sum across panels, jurisdiction levels or measure types.',
+  not_covered: {
+    councils: [
+      'Bathurst Regional Council — not covered (no connector)',
+      'Orange City Council — not covered (no connector)',
+      'All other NSW local councils — not covered (no connector)',
+    ],
+    states: [
+      'VIC — not covered (stub)',
+      'QLD — not covered (stub)',
+      'WA — not covered (stub)',
+      'SA — not covered (no connector)',
+      'TAS — not covered (no connector)',
+      'ACT — not covered (no connector)',
+      'NT — not covered (no connector)',
+    ],
+  },
+};
+
+function areaDetail() {
+  const measureTypes = [...new Set(AREA_COMBINED_ROWS.map((row) => row.measure_type))].sort();
+  return {
+    region: DUBBO,
+    filters: { fiscal_year: null, measure_type: null, limit: 500 },
+    count: AREA_COMBINED_ROWS.length,
+    measure_types: measureTypes,
+    mixed: true,
+    total_cents: null,
+    total_measure_type: null,
+    total_by_measure_type: [],
+    by_function: [],
+    measures: AREA_COMBINED_ROWS,
+    area_profile: DUBBO_AREA_PROFILE,
+  };
+}
+
 const MIXED_ROWS = [
   measureRow('m1', NSW._id, 'actual', '2024-25', 200_000_000_000),
   measureRow('m2', NSW._id, 'budget', '2024-25', 210_000_000_000),
@@ -717,6 +993,62 @@ function spendingResponse(url: URL) {
   if (functionCode && !FUNCTION_NAMES[functionCode]) {
     return { status: 404, body: { ok: false, error: `Unknown function code: ${functionCode}` } };
   }
+
+  const areaParam = (url.searchParams.get('area') ?? '').toLowerCase();
+  const areaMode =
+    areaParam === 'dubbo' ||
+    (Boolean(regionId) &&
+      !ALL_REGIONS.some((region) => region._id === regionId) &&
+      ['dubbo', 'nsw-dubbo'].includes((regionId ?? '').toLowerCase()));
+  if (areaMode) {
+    let rows = [...AREA_COMBINED_ROWS];
+    if (fiscalYear) rows = rows.filter((row) => row.fiscal_year === fiscalYear);
+    if (measureType) rows = rows.filter((row) => row.measure_type === measureType);
+    if (minAmount) rows = rows.filter((row) => row.amount_cents >= Number(minAmount));
+    if (maxAmount) rows = rows.filter((row) => row.amount_cents <= Number(maxAmount));
+    rows.sort((a, b) => b.amount_cents - a.amount_cents || a.id.localeCompare(b.id));
+    const total = rows.length;
+    const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
+    const start = (page - 1) * pageSize;
+    const pageRows = rows.slice(start, start + pageSize);
+    return {
+      status: 200,
+      body: {
+        data: pageRows,
+        summary: {
+          count: total,
+          currency: 'AUD',
+          total_cents: null,
+          total_measure_type: null,
+          total_by_measure_type: [],
+          measure_types: [...new Set(rows.map((row) => row.measure_type))].sort(),
+          mixed: true,
+          breakdown_by_function: [],
+          breakdown_by_region: [],
+        },
+        pagination: {
+          page,
+          page_size: pageSize,
+          total,
+          total_pages: totalPages,
+          has_next: page < totalPages,
+        },
+        applied_filters: {
+          fiscal_year: fiscalYear,
+          measure_type: measureType,
+          jurisdiction_level: jurisdictionLevel,
+          function: functionCode,
+          region: regionId,
+          area: 'dubbo',
+          min_amount: minAmount ? Number(minAmount) : null,
+          max_amount: maxAmount ? Number(maxAmount) : null,
+          sort,
+        },
+        area_profile: DUBBO_AREA_PROFILE,
+      },
+    };
+  }
+
   if (regionId && !ALL_REGIONS.some((region) => region._id === regionId)) {
     return { status: 404, body: { ok: false, error: `Unknown region: ${regionId}` } };
   }
@@ -848,6 +1180,7 @@ export async function mockApi(page: Page) {
             PBS_SOURCE,
             NSW_BUDGET_SOURCE,
             NSW_CKAN_SOURCE,
+            DUBBO_SOURCE,
           ],
         });
         return;
@@ -929,6 +1262,15 @@ export async function mockApi(page: Page) {
         return;
       }
 
+      if (
+        path === '/api/regions/dubbo' ||
+        path === '/api/region/dubbo' ||
+        path === '/api/areas/dubbo'
+      ) {
+        await json(route, areaDetail());
+        return;
+      }
+
       if (path === `/api/regions/${AUS._id}`) {
         await json(route, MIXED_REGION);
         return;
@@ -960,4 +1302,4 @@ export async function mockApi(page: Page) {
   );
 }
 
-export const MOCK_IDS = { AUS: AUS._id, NSW: NSW._id, VIC: VIC._id };
+export const MOCK_IDS = { AUS: AUS._id, NSW: NSW._id, VIC: VIC._id, DUBBO: DUBBO._id };

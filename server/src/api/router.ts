@@ -7,7 +7,7 @@ import { listSourceDocuments } from './source-documents.js';
 import { getFunction } from './function-detail.js';
 import { listFunctions } from './functions-list.js';
 import { listRegions } from './regions-list.js';
-import { getRegion, getState } from './region-detail.js';
+import { getArea, getRegion, getState } from './region-detail.js';
 import { search } from './search.js';
 import { getSpending, listSpending } from './spending.js';
 
@@ -26,6 +26,9 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.get('/functions/:code', getFunction);
   router.get('/regions', listRegions);
   router.get('/regions/:regionId', getRegion);
+  // Contract C alias: /api/region/dubbo and /api/areas/dubbo share the profile.
+  router.get('/region/:regionId', getRegion);
+  router.get('/areas/:slug', getArea);
   router.get('/states/:code', getState);
   router.get('/spending', listSpending);
   router.get('/spending/:id', getSpending);

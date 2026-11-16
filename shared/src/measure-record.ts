@@ -13,6 +13,12 @@ export const JurisdictionLevelSchema = z.enum(JURISDICTION_LEVELS);
 
 export type JurisdictionLevel = z.infer<typeof JurisdictionLevelSchema>;
 
+export const EXTRACTION_CONFIDENCES = ['low', 'medium', 'high'] as const;
+
+export const ExtractionConfidenceSchema = z.enum(EXTRACTION_CONFIDENCES);
+
+export type ExtractionConfidence = z.infer<typeof ExtractionConfidenceSchema>;
+
 export const SpendingLocationSchema = z.object({
   state: z.string().min(1).optional(),
   lga_name: z.string().min(1).optional(),
@@ -48,6 +54,7 @@ export const MeasureRecordSchema = z.object({
   source_dataset: z.string().min(1).optional(),
   source_date: z.string().min(1).optional(),
   data_quality_flag: z.string().min(1).optional(),
+  extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
   unspsc: z.string().min(1).optional(),
 });

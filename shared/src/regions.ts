@@ -39,3 +39,24 @@ export const AUSTRALIAN_REGIONS = [
 ] as const;
 
 export type AustralianRegion = (typeof AUSTRALIAN_REGIONS)[number];
+
+/**
+ * The one local-government region added in S3. The `code` is a stable
+ * state-prefixed identifier; `slug` is the short, case-insensitive handle used
+ * by /regions/dubbo, /region/dubbo, /areas/dubbo and ?area=dubbo. The `_id` is
+ * the same deterministic id the Dubbo adapter writes on every local row.
+ */
+export const DUBBO_REGION = {
+  _id: '40d7a238d4b2cef48ae5f267',
+  code: 'NSW-DUBBO',
+  slug: 'dubbo',
+  name: 'Dubbo',
+  level: 'region',
+  parent_code: 'NSW',
+} as const;
+
+/** Lower-case slug used by the area contract; other regions fall back to their code. */
+export function regionSlug(region: { code: string; name: string; level: string }): string {
+  if (region.code.toUpperCase() === DUBBO_REGION.code) return DUBBO_REGION.slug;
+  return region.code.toLowerCase();
+}

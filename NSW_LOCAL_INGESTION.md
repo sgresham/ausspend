@@ -1,11 +1,12 @@
-# NSW / local ingestion — S1 NSW Budget + S2 data.nsw.gov.au CKAN
+# NSW / local ingestion — S1 NSW Budget + S2 data.nsw.gov.au CKAN + S3 Dubbo
 
 **Scope.** S1 ingests the official NSW Budget 2025-26 open-data workbooks and the NSW Treasury
 ArcGIS capital-projects layer (source id `nsw-budget`). S2 adds **targeted**
 `data.nsw.gov.au` CKAN ingestion (source id `data-nsw-ckan`): a small curated set of budget,
-capital and agency-expenditure datasets, never the whole portal. Both phases stop before
-Dubbo/local-government (S3), VIC/QLD/WA, SOC/charity and live PDF/DOCX ingestion. Federal
-statuses and the 121,050 pre-S2 measures are unchanged except for the new S2 rows.
+capital and agency-expenditure datasets, never the whole portal. S3 adds **one** local council,
+Dubbo Regional Council (source id `dubbo-council`), and the area-search contract C. It stops
+before any other council, VIC/QLD/WA/SA/TAS/ACT/NT, SOC/charity and any live state connector.
+Federal statuses and the pre-S3 measure counts are unchanged except for the new Dubbo rows.
 
 ## 1. Source, redirect and snapshot
 
@@ -387,3 +388,143 @@ unit is missing/ambiguous or row/column totals do not reconcile. All PDF rows ar
 and require human review before `verified`. S1 and S2 do not ingest any PDF/DOCX; S2 records those
 resources as deferred, and S3/VIC/QLD/WA/SOC/charity remain out of scope. Details, tests and
 boundaries: [docs/SOURCE_ARCHIVE_AND_PDF.md](./docs/SOURCE_ARCHIVE_AND_PDF.md).
+
+## 13. S3 — Dubbo Regional Council (one council only)
+
+### 13.1 Source discovery and archived copy
+
+S3 covers **exactly one council**. The documents were discovered on the official Dubbo Regional
+Council site:
+
+- Integrated Planning and Reporting page:
+  <https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/Integrated-Planning-and-Reporting>
+  (server-rendered HTML list of council plans and PDFs; observed 2026-11-17).
+- Adopted budget/capital document:
+  <https://www.dubbo.nsw.gov.au/ArticleDocuments/290/20262027%20Budget%20and%20Forecasts%20including%20Capital%20-%20Adopted.PDF.aspx>
+- The Delivery Program / Operational Plan PDF is also listed on that page, but the numeric
+  budget and capital tables live in the adopted budget document above. No headless browser was
+  used: the discovery page is server-rendered and the budget is a first-party PDF.
+
+Archived copy (bytes outside git, metadata under the source archive root):
+
+| Field          | Value                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Document       | `2026/2027 Budget and Forward Forecasts including Capital Expenditure (Adopted)`                                                     |
+| Exact URL      | `https://www.dubbo.nsw.gov.au/ArticleDocuments/290/20262027%20Budget%20and%20Forecasts%20including%20Capital%20-%20Adopted.PDF.aspx` |
+| SHA-256        | `0b527aae6088c850b4ad4307ca9e513d30b9d9e14859503ea61a937e41751123`                                                                   |
+| Bytes          | 615,350                                                                                                                              |
+| Pages          | 14 (2–5 income/expenditure summary; 6–9 function statements; 10–14 capital program)                                                  |
+| Archive path   | `~/ausspend-source-archive/dubbo-council/dubbo-council-budget.pdf`                                                                   |
+| Retrieved from | `direct` (council URL), archived and hash-verified                                                                                   |
+
+The connector calls `archiveSourceDocument()` + `verifySourceDocument()` before extraction. The
+exact URL, archive path and SHA-256 are repeated in every measure's `notes`/`source_detail`, so a
+row can be audited back to the archived bytes. No blob is committed.
+
+### 13.2 Unit and total validation
+
+The adapter (`server/src/connectors/dubbo-council.ts`) uses the shared PDF foundation for text
+position extraction, then a Dubbo-specific layout parser. It never defaults a unit to dollars.
+
+| Section                                                              | Printed unit    | Rule                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Income and Expenditure Summary (Consolidated, General, Sewer, Water) | `($000's)`      | Unit must be explicit. Income/expense rows are converted at 1,000 dollars → 100,000 cents per unit.                                                                                                                                 |
+| Capital Expenditure program                                          | no printed unit | Unit is resolved only by magnitude reconciliation against the explicit `$'000` consolidated summary: 119,744,813 capital dollars vs 214,047 ($'000) total income = 0.56×, so dollars fits; thousands would be 559× and is rejected. |
+
+Totals:
+
+- Summary: each fund's income rows and expense rows are summed per fiscal-year column and
+  compared with the printed total rows. Published `$'000` tables round each line independently,
+  so a difference of at most `rows + 1` units is recorded as a rounding note; anything larger
+  rejects the whole fund section (no rows ingested). The test suite constructs a mismatched
+  column and asserts the section is rejected.
+- Capital: category totals → group totals → grand total are reconciled for all four columns.
+  The parsed program has 32 categories, 5 group totals and a grand total of 119,744,813 for
+  2026/27. A mismatch (including a changed grand total in the unit test) rejects the entire
+  capital section.
+- A missing/ambiguous unit also rejects the section. `server/test/dubbo-council.test.ts`
+  includes the mandatory test that would fail if `($000's)` were read as dollars
+  (`83,735` units must map to 8,373,500,000 cents, not 8,373,500).
+
+### 13.3 Mapping
+
+| Field                   | S3 value                                                                                                                                                                            |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source_id`             | `dubbo-council`                                                                                                                                                                     |
+| `source_dataset`        | `Dubbo Regional Council Annual Report / Operational Plan`                                                                                                                           |
+| `jurisdiction_level`    | `local`                                                                                                                                                                             |
+| `jurisdiction`          | `NSW`                                                                                                                                                                               |
+| `delivery_entity`       | `Dubbo Regional Council`                                                                                                                                                            |
+| `funding_source`        | summary: `Council budget — <fund>`; capital: `Capital works program — council capital expenditure (source table does not itemise funding sources)`                                  |
+| `measure_type`          | summary `Budget` column → `budget`; `Annual Revised`/`Forecast` → `estimate`; capital program → `budget`. No row is `actual` because the document labels no audited actuals.        |
+| `fiscal_year`           | from the document/column: `2025-26` … `2029-30` for summary; `2026-27` budget column for capital                                                                                    |
+| `location`              | `{ state: "NSW", lga_name: "Dubbo" }`                                                                                                                                               |
+| `region_id`             | Dubbo Region `_id` `40d7a238d4b2cef48ae5f267` (code `NSW-DUBBO`, slug `dubbo`, parent `NSW`)                                                                                        |
+| `geo`                   | absent — the source provides no coordinates; none are inferred                                                                                                                      |
+| `function_code`         | only defensible capital categories (roads → `045`, water supply → `063`, sewerage/stormwater → `052`, waste → `051`, parks/culture → `08`); other rows leave it absent              |
+| `source_url`            | the exact adopted-budget URL above                                                                                                                                                  |
+| `natural_key`           | `dubbo-council:` + SHA-256(`document_url + section + table/page + row + fiscal_year`)                                                                                               |
+| `verified`              | `false`                                                                                                                                                                             |
+| `data_quality_flag`     | `provisional`                                                                                                                                                                       |
+| `extraction_confidence` | `medium` for these rows (summary totals reconcile within published rounding; capital unit is magnitude-inferred and totals reconcile). The value is stored and returned by the API. |
+
+A second council must be a separate adapter like `dubbo-council.ts`; the shared runner, archive
+and PDF foundation are unchanged.
+
+### 13.4 Area contract C
+
+Dubbo is a real Region row (level `region`, code `NSW-DUBBO`, slug `dubbo`, parent `NSW`) and
+local rows carry its `region_id`. The existing exact filter still works:
+
+- `GET /api/spending?region=<24-char _id>` — exact region filter (unchanged).
+- `GET /api/spending?region=Dubbo` or `?region=dubbo` — case-insensitive slug/name resolves to
+  the Region and returns the shared area profile.
+- `GET /api/spending?area=dubbo` — explicit alias for the same profile.
+- `GET /api/regions/dubbo`, `GET /api/region/dubbo`, `GET /api/areas/dubbo` — same profile.
+- `GET /api/search?q=dubbo` still returns the region **`_id`** plus its `slug`.
+
+The profile has four panels, each grouped by `measure_type`, and **no total across measure types
+or jurisdiction levels**:
+
+1. **Local** — `region_id` = Dubbo or `location.lga_name` = Dubbo (Dubbo Regional Council rows).
+2. **State NSW-wide** — `jurisdiction_level: state`, `jurisdiction: NSW`, labelled NSW-wide and
+   not Dubbo-specific.
+3. **Federal NSW-tagged** — AusTender rows with `location.state: NSW`, labelled NSW-tagged and
+   not Dubbo-specific.
+4. **Commonwealth PBS** — `source_id: data-gov-au-pbs`, shown separately as Commonwealth-wide;
+   PBS rows are excluded from the Dubbo area data rows.
+
+The response carries `area_profile.panels[].by_measure_type` but no panel total and no
+cross-level summary total (`summary.total_cents` is null and `summary.total_by_measure_type` is
+empty in area mode). The caution text is rendered on `/regions/dubbo`, `/region/dubbo`,
+`/areas/dubbo` and the spending explorer when `area=dubbo`.
+
+Other councils and states are shown as **not covered**, not estimated: Bathurst, Orange,
+Mid-Western and all other NSW councils, plus VIC, QLD, WA, SA, TAS, ACT and NT.
+
+### 13.5 Reproduction and checks
+
+```bash
+# ingest (upserts on natural_key; never deletes other sources)
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev   npm run ingest:nsw -- --source dubbo-council
+
+# unit/total/area tests
+npx vitest run server/test/dubbo-council.test.ts server/test/area-contract.test.ts
+
+# API smoke (alt port, never the user's 3001/5173 stack)
+PORT=3101 MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npx tsx server/src/index.ts
+curl -s 'http://localhost:3101/api/spending?area=dubbo' | jq '.area_profile.panels | map({key,count,total_cents})'
+curl -s 'http://localhost:3101/api/areas/dubbo' | jq '.region'
+```
+
+Observed on 2026-11-17 against `ausspend_dev`:
+
+- `dubbo-council: success fetched=245 upserted=245`; a second run upserted the same 245 and did
+  not add rows (idempotent).
+- Totals: 124,522 → 124,767 measures. Federal counts did not move:
+  `aus-tender` 117,894; `data-gov-au-pbs` 1,231; `nsw-budget` 1,115; `data-nsw-ckan` 3,472;
+  `synthetic-seed` 810; new `dubbo-council` 245.
+- Area panels: local 245, state NSW 4,587, federal NSW-tagged 37,380, Commonwealth PBS 1,231;
+  every `total_cents` is `null`.
+- `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build` pass;
+  Playwright on alt ports (`e2e/playwright.alt.config.ts`, client 5174) passes 29 tests.

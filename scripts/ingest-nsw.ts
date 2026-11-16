@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import { getConnector, runIngestion } from '../server/src/connectors/index.js';
+import { ensureDubboRegion, getConnector, runIngestion } from '../server/src/connectors/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -12,12 +12,14 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * With no `--source`, every registered NSW source runs sequentially:
  *   - nsw-budget      S1: NSW Budget 2025-26 Open Data XLSX + ArcGIS capital
  *   - data-nsw-ckan   S2: targeted data.nsw.gov.au CKAN datasets
+ *   - dubbo-council   S3: one local council (Dubbo Regional Council) budget PDF
  *
- * S2 deliberately stops at data.nsw.gov.au CKAN. Dubbo (S3), VIC/QLD/WA and
- * live PDF/DOCX ingestion are not touched. The runner upserts on natural_key,
- * so re-running is idempotent and never deletes existing federal/synthetic rows.
+ * S3 deliberately covers only Dubbo Regional Council: no other councils,
+ * states/territories, SOC/charity or live state connectors. The runner upserts
+ * on natural_key, so re-running is idempotent and never deletes existing
+ * federal/synthetic rows.
  */
-export const NSW_SOURCE_IDS = ['nsw-budget', 'data-nsw-ckan'] as const;
+export const NSW_SOURCE_IDS = ['nsw-budget', 'data-nsw-ckan', 'dubbo-council'] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
   for (let index = 0; index < argv.length; index += 1) {
@@ -38,8 +40,8 @@ async function main(): Promise<void> {
     if (!connector) {
       throw new Error(`unknown NSW source "${id}"; expected one of ${NSW_SOURCE_IDS.join(', ')}`);
     }
-    if (connector.jurisdiction_level !== 'state') {
-      throw new Error(`${id} is not a state source (${connector.jurisdiction_level})`);
+    if (connector.jurisdiction_level !== 'state' && connector.jurisdiction_level !== 'local') {
+      throw new Error(`${id} is not a state/local source (${connector.jurisdiction_level})`);
     }
     if (connector.status !== 'active') throw new Error(`${id} connector is ${connector.status}`);
     return connector;
@@ -47,6 +49,10 @@ async function main(): Promise<void> {
 
   await mongoose.connect(mongoUrl as string, { serverSelectionTimeoutMS: 5_000 });
   try {
+    if (sourceIds.includes('dubbo-council')) {
+      const regionId = await ensureDubboRegion();
+      console.log(`[ingest:nsw] dubbo region ready ${regionId}`);
+    }
     console.log(
       `[ingest:nsw] target=${databaseName} sources=${connectors.map((entry) => entry.id).join(',')}`,
     );
