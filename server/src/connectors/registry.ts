@@ -1,4 +1,21 @@
+import { createAusTenderConnector } from './aus-tender.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
+
+/**
+ * Configure the narrow AusTender window from the environment so the live run is
+ * reproducible (`AUSTENDER_START_DATE` / `AUSTENDER_END_DATE`). Unset, the
+ * connector uses the seven complete days before today.
+ */
+function ausTenderFromEnv(): Connector {
+  const pageLimit = Number(process.env.AUSTENDER_PAGE_LIMIT);
+  const delayMs = Number(process.env.AUSTENDER_DELAY_MS);
+  return createAusTenderConnector({
+    ...(process.env.AUSTENDER_START_DATE ? { startDate: process.env.AUSTENDER_START_DATE } : {}),
+    ...(process.env.AUSTENDER_END_DATE ? { endDate: process.env.AUSTENDER_END_DATE } : {}),
+    ...(Number.isInteger(pageLimit) && pageLimit > 0 ? { pageLimit } : {}),
+    ...(Number.isFinite(delayMs) && delayMs >= 0 ? { delayMs } : {}),
+  });
+}
 
 function stub(metadata: Omit<ConnectorMetadata, 'status'>): Connector {
   return {
@@ -11,10 +28,11 @@ function stub(metadata: Omit<ConnectorMetadata, 'status'>): Connector {
 }
 
 /**
- * The registered Australian public-spending sources. None is live in F1: every
+ * The registered Australian public-spending sources. AusTender is live as of F2
+ * (contractPublished OCDS feed). Every other connector is still a stub: its
  * `fetch` rejects with a clear "not implemented" error, no request leaves the
- * process, and `transform` returns no records. The three federal source ids
- * (aus-tender, data-gov-au-pbs, grantconnect) are the F2/PBS/GrantConnect stubs.
+ * process, and `transform` returns no records. data-gov-au-pbs (PBS) and
+ * grantconnect remain pending, as do the state/territory sources.
  */
 export const CONNECTORS: readonly Connector[] = [
   stub({
@@ -50,14 +68,9 @@ export const CONNECTORS: readonly Connector[] = [
     jurisdiction_level: 'federal',
     // TODO: ingest AOFM debt/portfolio datasets (CSV) for debt transactions.
   }),
-  stub({
-    id: 'aus-tender',
-    name: 'AusTender — Australian Government contracts',
-    publisher: 'Australian Government Department of Finance',
-    source_url: 'https://www.tenders.gov.au/',
-    jurisdiction_level: 'federal',
-    // F2: ingest published AusTender contract notices (contract-shaped records).
-  }),
+  // F2: live OCDS contractPublished ingestion. The connector is active; each
+  // run's status is recorded by the runner on data_sources/ingestion_logs.
+  ausTenderFromEnv(),
   stub({
     id: 'data-gov-au-pbs',
     name: 'Portfolio Budget Statements (data.gov.au)',

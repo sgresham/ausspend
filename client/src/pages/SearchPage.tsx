@@ -15,6 +15,7 @@ import { useSearchParams } from 'react-router-dom';
 import { apiGet, buildQuery } from '../api';
 import type {
   FunctionsResponse,
+  JurisdictionLevel,
   MeasureType,
   RegionRef,
   RegionsResponse,
@@ -40,6 +41,13 @@ const SORT_LABELS: Record<SpendingSort, string> = {
 };
 
 const MEASURE_TYPES: MeasureType[] = ['actual', 'budget', 'estimate', 'contract', 'grant_award'];
+const JURISDICTION_LEVELS: JurisdictionLevel[] = [
+  'federal',
+  'state',
+  'territory',
+  'local',
+  'other',
+];
 const PAGE_SIZES = [10, 20, 50, 100];
 
 function positiveInt(raw: string | null, fallback: number): number {
@@ -62,6 +70,10 @@ function isMeasureType(raw: string | null): raw is MeasureType {
   return raw !== null && (MEASURE_TYPES as string[]).includes(raw);
 }
 
+function isJurisdictionLevel(raw: string | null): raw is JurisdictionLevel {
+  return raw !== null && (JURISDICTION_LEVELS as string[]).includes(raw);
+}
+
 export function SearchPage() {
   const coverage = useCoverage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -74,6 +86,8 @@ export function SearchPage() {
   const fiscalYear = searchParams.get('fiscal_year') ?? '';
   const rawMeasureType = searchParams.get('measure_type');
   const measureType = isMeasureType(rawMeasureType) ? rawMeasureType : '';
+  const rawJurisdiction = searchParams.get('jurisdiction_level');
+  const jurisdictionLevel = isJurisdictionLevel(rawJurisdiction) ? rawJurisdiction : '';
   const minAmount = dollarValue(searchParams.get('min_amount'));
   const maxAmount = dollarValue(searchParams.get('max_amount'));
   const rawSort = searchParams.get('sort');
@@ -87,6 +101,7 @@ export function SearchPage() {
     region: regionId || undefined,
     fiscal_year: fiscalYear || undefined,
     measure_type: measureType || undefined,
+    jurisdiction_level: jurisdictionLevel || undefined,
     min_amount: minAmount !== null ? Math.round(minAmount * 100) : undefined,
     max_amount: maxAmount !== null ? Math.round(maxAmount * 100) : undefined,
     sort,
@@ -202,6 +217,7 @@ export function SearchPage() {
   }
   if (fiscalYear) applied.push(`Fiscal year: ${fiscalYear}`);
   if (measureType) applied.push(`Measure type: ${titleCase(measureType)}`);
+  if (jurisdictionLevel) applied.push(`Jurisdiction: ${titleCase(jurisdictionLevel)}`);
   if (minAmount !== null) applied.push(`Min amount: $${minAmount.toLocaleString('en-AU')}`);
   if (maxAmount !== null) applied.push(`Max amount: $${maxAmount.toLocaleString('en-AU')}`);
 
@@ -213,10 +229,34 @@ export function SearchPage() {
         Spending explorer
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Query the Phase 1 synthetic spending rows through <code>/api/spending</code>. Filters, sort
-        and pagination live in the URL, so reload and browser back/forward restore the same view.
-        Amounts are entered in dollars and sent to the API as integer cents.
+        Query every measure through <code>/api/spending</code>: synthetic budget seed rows and, once
+        ingested, live AusTender federal contract records. Measure types are never added together.
+        Filters, sort and pagination live in the URL, so reload and browser back/forward restore the
+        same view. Amounts are entered in dollars and sent to the API as integer cents.
       </Typography>
+
+      <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
+        <Button
+          variant="contained"
+          onClick={() =>
+            update({ measure_type: 'contract', jurisdiction_level: 'federal', sort: 'amount_desc' })
+          }
+        >
+          Show federal contracts (AusTender)
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            update({
+              measure_type: 'contract',
+              jurisdiction_level: 'federal',
+              sort: 'fiscal_year_desc',
+            })
+          }
+        >
+          Latest federal contracts
+        </Button>
+      </Stack>
 
       <Card variant="outlined" sx={{ mb: 3 }} data-testid="jump-search">
         <CardContent>
@@ -308,6 +348,21 @@ export function SearchPage() {
             </TextField>
 
             <TextField
+              select
+              size="small"
+              label="Jurisdiction"
+              value={jurisdictionLevel}
+              onChange={(event) => update({ jurisdiction_level: event.target.value })}
+            >
+              <MenuItem value="">All jurisdictions</MenuItem>
+              {JURISDICTION_LEVELS.map((level) => (
+                <MenuItem key={level} value={level}>
+                  {titleCase(level)}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
               size="small"
               type="number"
               label="Min amount (AUD)"
@@ -357,7 +412,8 @@ export function SearchPage() {
           </Typography>
           {applied.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
-              No filters applied — showing the whole synthetic seed dataset.
+              No filters applied — showing every measure in the database (synthetic seed and any
+              live AusTender records).
             </Typography>
           ) : (
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -380,14 +436,14 @@ export function SearchPage() {
         state.data.summary.count === 0 ? (
           <EmptyState
             title="No spending rows match these filters"
-            message="The API returned no rows for this filter combination. Nothing is estimated, zero-filled or invented. Reset the filters to see the whole synthetic seed."
+            message="The API returned no rows for this filter combination. Nothing is estimated, zero-filled or invented. Reset the filters to see the whole database."
           />
         ) : (
           <>
             <SpendingSummaryPanel
               summary={state.data.summary}
               sources={pageSources}
-              note="Summary provenance is taken from the returned page rows; Phase 1 has a single synthetic source."
+              note="Summary provenance is taken from the returned page rows; each row names its own source."
             />
 
             {state.data.data.length === 0 ? (

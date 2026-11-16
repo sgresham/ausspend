@@ -152,9 +152,9 @@ describe('GET /api/meta/coverage', () => {
     expect(response.status).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body).toMatchObject({
-      phase: 'Phase 1',
+      phase: 'Phase 1 + F2 (AusTender live)',
       synthetic: true,
-      live_ingestion: false,
+      live_ingestion: true,
       counts: { data_sources: 1, regions: 3, functions: 4, measures: 8 },
       fiscal_years: ['2023-24', '2024-25'],
       measure_types: ['actual', 'budget', 'estimate'],
@@ -163,15 +163,18 @@ describe('GET /api/meta/coverage', () => {
     expect(new Date(response.body.generated_at).toString()).not.toBe('Invalid Date');
     expect(response.body.connectors).toHaveLength(11);
     for (const connector of response.body.connectors) {
-      expect(connector).toMatchObject({ status: 'stub' });
+      expect(connector.status).toBe(connector.id === 'aus-tender' ? 'active' : 'stub');
       expect(connector.id).toBeTruthy();
       expect(connector.fetch).toBeUndefined();
     }
+    expect(response.body.federal_ingestion.live).toContain('aus-tender');
+    expect(response.body.federal_ingestion.pending).toEqual(['data-gov-au-pbs', 'grantconnect']);
     expect(response.body.limitations.join(' ')).toMatch(/synthetic/i);
     expect(response.body.limitations.join(' ')).toMatch(/verified/i);
-    expect(response.body.limitations.join(' ')).toMatch(/live ingestion/i);
+    expect(response.body.limitations.join(' ')).toMatch(/AusTender/i);
     expect(response.body.limitations.join(' ')).toMatch(/COFOG/i);
-    expect(response.body.note).toMatch(/synthetic and unverified/i);
+    expect(response.body.note).toMatch(/AusTender/i);
+    expect(response.body.note).toMatch(/unverified/i);
   });
 
   it('returns 503 when the database is unavailable', async () => {

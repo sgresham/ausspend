@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import type { SpendingRecord } from '@ausspend/shared';
+import { SpendingRecordSchema, type SpendingRecord } from '@ausspend/shared';
 import { DataSourceModel, IngestionLogModel, MeasureModel } from '../models/index.js';
 import { CONNECTORS } from './registry.js';
 import type { Connector, ConnectorStatus } from './types.js';
@@ -124,12 +124,20 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
       const raw = await connector.fetch();
       const records = connector.transform(raw);
       let upserted = 0;
+      const recordErrors: string[] = [];
       for (const record of records) {
-        await upsertRecord(record);
-        upserted += 1;
+        // One malformed record must not abort the batch or the remaining
+        // sources: skip it, keep the reason, and log a partial run.
+        try {
+          SpendingRecordSchema.parse(record);
+          await upsertRecord(record);
+          upserted += 1;
+        } catch (error) {
+          recordErrors.push(`${record.natural_key ?? '(no natural_key)'}: ${errorMessage(error)}`);
+        }
       }
 
-      const errors = [...connector.metadata.errors];
+      const errors = [...connector.metadata.errors, ...recordErrors];
       const logStatus = errors.length > 0 ? 'partial' : 'success';
       const finishedAt = now();
       connector.metadata.lastFetchedAt = finishedAt.toISOString();

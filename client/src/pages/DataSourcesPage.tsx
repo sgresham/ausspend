@@ -1,4 +1,15 @@
-import { Alert, Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  Link,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { apiGet } from '../api';
 import type { DataSourcesResponse } from '../api/types';
 import { useApi } from '../hooks/useApi';
@@ -19,10 +30,11 @@ export function DataSourcesPage() {
         Data sources
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        The registered sources behind every figure. Phase 1 has a single synthetic seed source, and
-        it is explicitly unverified. The anchor <code>#synthetic-seed</code> resolves to that source
-        below. The registered ingestion connectors are listed with their real status; no federal
-        connector is live in F1.
+        The registered sources behind every figure. The synthetic development seed is explicitly
+        unverified; the anchor <code>#synthetic-seed</code> resolves to it below. AusTender is a
+        live federal source as of F2 — its ingested contract records and last-ingested time appear
+        here with their provenance. Portfolio Budget Statements (data.gov.au) and GrantConnect
+        remain pending stubs, as do the state/territory connectors.
       </Typography>
 
       {state.loading ? <LoadingState label="Loading source register…" /> : null}
@@ -91,7 +103,9 @@ export function DataSourcesPage() {
                     <Typography variant="body2">
                       {source.verified
                         ? 'Verified source'
-                        : 'Unverified — not a published government figure'}
+                        : source.source_id === 'synthetic-seed'
+                          ? 'Unverified — not a published government figure'
+                          : 'Unverified — source link not human-checked'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Ingestion status
@@ -107,6 +121,17 @@ export function DataSourcesPage() {
                   {source.notes ? (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                       {source.notes}
+                    </Typography>
+                  ) : null}
+
+                  {source.source_id === 'aus-tender' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link
+                        component={RouterLink}
+                        to="/search?measure_type=contract&jurisdiction_level=federal"
+                      >
+                        Browse ingested AusTender contracts with provenance →
+                      </Link>
                     </Typography>
                   ) : null}
 
@@ -126,9 +151,10 @@ export function DataSourcesPage() {
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {connectors.length} connectors are registered. A <strong>stub</strong> makes no network call
-        and ingests no records; an <strong>active</strong> connector has ingested and a{' '}
-        <strong>degraded</strong> connector reports errors. The three federal source ids
-        (aus-tender, data-gov-au-pbs, grantconnect) are stubs until F2/PBS/GrantConnect.
+        and ingests no records; an <strong>active</strong> connector has ingested, and a{' '}
+        <strong>degraded</strong> connector reports errors. <code>aus-tender</code> is live from the
+        AusTender OCDS contractPublished feed. <code>data-gov-au-pbs</code> and{' '}
+        <code>grantconnect</code> remain pending, and the other eight connectors are stubs.
       </Typography>
 
       {!coverage.data && coverage.error ? (

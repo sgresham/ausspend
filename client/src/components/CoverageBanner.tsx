@@ -13,8 +13,8 @@ export function CoverageBanner() {
   if (!data) {
     return (
       <Alert severity="warning" sx={{ mb: 3 }} data-testid="coverage-banner">
-        <strong>Phase 1 synthetic seed data only.</strong> No live ingestion — every figure is
-        unverified and is not a published Australian government figure.{' '}
+        <strong>Coverage status unavailable.</strong> Some rows may come from the synthetic
+        development seed and some may be live AusTender records; no figure is verified.{' '}
         {error ? <>Coverage metadata could not be loaded ({error.message}). </> : null}
         <Link component={RouterLink} to="/data-sources">
           Source register
@@ -25,10 +25,11 @@ export function CoverageBanner() {
 
   return (
     <Alert severity="warning" sx={{ mb: 3 }} data-testid="coverage-banner">
-      <strong>{data.phase} synthetic seed data only.</strong>{' '}
-      {data.synthetic ? 'Synthetic development seed — ' : ''}
-      no live ingestion, every figure is unverified and is not a published Australian government
-      figure.{' '}
+      <strong>{data.phase}.</strong>{' '}
+      {data.live_ingestion
+        ? 'Live AusTender federal contract records are included next to the synthetic development seed. Contract rows are real published procurement notices; seed rows remain placeholders. '
+        : 'Synthetic development seed data only; no live ingestion has run. '}
+      No figure is human-verified or a single government total.{' '}
       <Stack component="span" direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
         <span>{data.counts.regions} regions</span>
         <span>{data.counts.functions} COFOG records</span>

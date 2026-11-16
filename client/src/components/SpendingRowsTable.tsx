@@ -36,17 +36,38 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
           <Table size="small" aria-label="Spending rows" data-testid="spending-rows">
             <TableHead>
               <TableRow>
+                <TableCell>Project / description</TableCell>
                 <TableCell>Function</TableCell>
-                <TableCell>Region</TableCell>
+                <TableCell>Location</TableCell>
                 <TableCell>Fiscal year</TableCell>
                 <TableCell>Measure type</TableCell>
                 <TableCell align="right">Amount</TableCell>
-                <TableCell>Source / verification</TableCell>
+                <TableCell>Provenance</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.id}>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {row.project_name ?? row.description ?? (
+                        <Typography component="span" variant="caption" color="text.secondary">
+                          No project title
+                        </Typography>
+                      )}
+                    </Typography>
+                    {row.project_name && row.description ? (
+                      <Typography variant="caption" color="text.secondary" component="div">
+                        {row.description}
+                      </Typography>
+                    ) : null}
+                    {row.funding_source || row.delivery_entity ? (
+                      <Typography variant="caption" color="text.secondary" component="div">
+                        {row.funding_source ? <>Buyer: {row.funding_source}. </> : null}
+                        {row.delivery_entity ? <>Supplier: {row.delivery_entity}.</> : null}
+                      </Typography>
+                    ) : null}
+                  </TableCell>
                   <TableCell>
                     {row.function_code ? (
                       <Link component={RouterLink} to={`/functions/${row.function_code}`}>
@@ -63,6 +84,15 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                       <Link component={RouterLink} to={regionHref(row)}>
                         {row.region_code} — {row.region_name}
                       </Link>
+                    ) : row.location?.state ? (
+                      <Typography variant="body2">
+                        {row.location.state}
+                        {row.data_quality_flag ? (
+                          <Typography variant="caption" color="text.secondary" component="div">
+                            {row.data_quality_flag}
+                          </Typography>
+                        ) : null}
+                      </Typography>
                     ) : (
                       <Typography variant="caption" color="text.secondary">
                         No curated region
@@ -80,6 +110,22 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                   </TableCell>
                   <TableCell>
                     <SourceCell sources={[row.provenance]} />
+                    {row.source_dataset ? (
+                      <Typography variant="caption" color="text.secondary" component="div">
+                        {row.source_dataset}
+                        {row.source_date ? ` · ${row.source_date}` : ''}
+                      </Typography>
+                    ) : null}
+                    {row.data_quality_flag ? (
+                      <Typography variant="caption" color="text.secondary" component="div">
+                        Data quality: {row.data_quality_flag}
+                      </Typography>
+                    ) : null}
+                    {row.unspsc ? (
+                      <Typography variant="caption" color="text.secondary" component="div">
+                        UNSPSC: {row.unspsc}
+                      </Typography>
+                    ) : null}
                   </TableCell>
                 </TableRow>
               ))}
