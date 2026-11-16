@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@ausspend/shared": "0.1.0",
     "cors": "2.8.6",
     "dotenv": "17.4.2",
     "express": "5.3.0",

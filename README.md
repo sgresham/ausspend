@@ -4,9 +4,9 @@ An explorer for **published Australian government spending**, organised by COFOG
 and state. This repository is the Phase 1 application: an npm-workspace monorepo with a React
 client, an Express API and shared TypeScript/Zod contracts.
 
-> This foundation build contains **no spending data**. Data pages are placeholders until the
-> verified dataset and source register land in later milestones. Nothing here should be read as a
-> real spending figure.
+> The app ships a **synthetic development seed** only. It is deterministic placeholder data, marked
+> `verified: false`, and is not sourced from or a substitute for any published Australian
+> government figure. The real/verified dataset is a later milestone.
 
 ## Stack
 
@@ -58,6 +58,44 @@ Or run one side at a time: `npm run dev:server`, `npm run dev:client`.
 
 The Vite dev server proxies `/api` to the API on port 3001.
 
+## Seed data
+
+The seed resets only the `ausspend_dev` database on host `q`. It refuses to run against any other
+database name, so a stray `MONGO_URL` cannot wipe unrelated data. It writes one clearly-marked
+synthetic source (`source_id: synthetic-seed`, `source_url: /data-sources#synthetic-seed`,
+`verified: false`), the national row plus the eight states/territories, the ten COFOG divisions
+with curated subdivisions, and actual/budget/estimate measures for three fiscal years.
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+npm run seed
+# [seed] sources=1 regions=9 functions=53 measures=810
+# [seed] verified measures: 0 (must be 0)
+```
+
+The seed refuses a missing `MONGO_URL` and any database whose name is not exactly `ausspend_dev`.
+
+## API
+
+All amounts are integer cents and every measure row carries `source_id`, `source_url` and
+`verified`.
+
+| Route                        | Purpose                                                      |
+| ---------------------------- | ------------------------------------------------------------ |
+| `GET /api/health`            | Liveness and database status                                 |
+| `GET /api/data-sources`      | Source register with provenance                              |
+| `GET /api/functions`         | COFOG divisions with nested subdivisions                     |
+| `GET /api/functions/:code`   | Function detail, measures by region/state, ranked state list |
+| `GET /api/regions/:regionId` | Region detail by region `_id`                                |
+| `GET /api/states/:code`      | State/territory detail (`NSW`, `VIC`, ...)                   |
+| `GET /api/search?q=`         | Bounded search over region and function names/codes          |
+
+`/api/functions/:code` accepts `fiscal_year`, `measure_type`, `region` and `limit`. `region` is a
+region `_id` (not a code) and anything else is a `400`. When the response contains more than one
+`measure_type` it sets `mixed: true`, returns `total_cents: null` and withholds `ranked_states`;
+a headline total is only returned for a single measure type. Unknown codes/ids return JSON `404`,
+invalid query parameters return JSON `400`.
+
 ## Checks
 
 ```bash
@@ -84,15 +122,16 @@ Six routes are wired in the shell, each rendering a clearly-marked placeholder:
 
 ## Data and provenance
 
-Every spending value will carry a `SourceRef` (`source_id`, `source_url`, `verified`) and be
-expressed as integer `MoneyCents`. The dataset is synthetic/curated for development until verified
-against published sources; placeholders on the pages must never be presented as real data.
+Every spending value carries a `SourceRef` (`source_id`, `source_url`, `verified`) and is expressed
+as integer `MoneyCents`. The development seed is synthetic and every seeded measure is
+`verified: false`; the UI must never present it as real data. The seed also asserts it produced no
+verified measures before reporting success.
 
 ## Docker Compose (development)
 
 `docker-compose.yml` runs the server and client as Node containers, passing `MONGO_URL` from the
-host environment and using host `q`'s Mongo. It deliberately has **no mongo service** and no seed
-service yet (seed arrives in M1b).
+host environment and using host `q`'s Mongo. It deliberately has **no mongo service**; seed with
+`npm run seed` on the host.
 
 ## Repository rule
 
