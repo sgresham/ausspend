@@ -18,6 +18,7 @@ export const listDataSources: RequestHandler = async (_req, res) => {
       last_ingested_at: source.last_ingested_at ?? null,
       records_ingested: source.records_ingested ?? 0,
       errors: source.errors ?? [],
+      deferred_resources: source.deferred_resources ?? [],
     })),
   });
 };

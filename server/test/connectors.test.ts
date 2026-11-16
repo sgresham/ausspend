@@ -6,20 +6,20 @@ import {
   getConnector,
 } from '../src/connectors/index.js';
 
-const LIVE_IDS = ['aus-tender', 'data-gov-au-pbs', 'nsw-budget'];
+const LIVE_IDS = ['aus-tender', 'data-gov-au-pbs', 'nsw-budget', 'data-nsw-ckan'];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships eleven connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(11);
-    expect(new Set(CONNECTOR_IDS).size).toBe(11);
+  it('ships twelve connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(12);
+    expect(new Set(CONNECTOR_IDS).size).toBe(12);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
     );
   });
 
-  it('registers AusTender, PBS and NSW Budget as live and the other eight as stubs', () => {
+  it('registers AusTender, PBS, NSW Budget and data.nsw.gov.au CKAN as live and the other eight as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -40,6 +40,7 @@ describe('federal connector registry', () => {
     expect(JSON.parse(JSON.stringify(summaries))).toEqual(summaries);
     for (const summary of summaries) {
       expect(Object.keys(summary).sort()).toEqual([
+        'deferred_resources',
         'errors',
         'id',
         'jurisdiction_level',
@@ -74,6 +75,10 @@ describe('federal connector registry', () => {
     expect(getConnector('nsw-budget')?.status).toBe('active');
     expect(getConnector('nsw-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('nsw-budget')?.source_url).toContain('budget.nsw.gov.au');
+    expect(getConnector('data-nsw-ckan')?.status).toBe('active');
+    expect(getConnector('data-nsw-ckan')?.jurisdiction_level).toBe('state');
+    expect(getConnector('data-nsw-ckan')?.source_url).toContain('data.nsw.gov.au');
+    expect(getConnector('data-nsw-ckan')?.deferredResources).toEqual([]);
     expect(getConnector('nope')).toBeUndefined();
   });
 });

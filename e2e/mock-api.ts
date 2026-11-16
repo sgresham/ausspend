@@ -62,6 +62,46 @@ const NSW_BUDGET_SOURCE = {
     'Official 2025-26 XLSX Wayback copy plus ArcGIS capital projects; unverified Budgeted rows.',
 };
 
+const NSW_CKAN_SOURCE = {
+  source_id: 'data-nsw-ckan',
+  name: 'data.nsw.gov.au CKAN (NSW Government open data)',
+  publisher: 'NSW Government — data.nsw.gov.au',
+  source_url: 'https://data.nsw.gov.au/data/',
+  retrieved_at: '2026-11-16T00:00:00.000Z',
+  license: 'Creative Commons Attribution (per CKAN dataset metadata)',
+  verified: false,
+  status: 'active',
+  last_ingested_at: '2026-11-16T00:08:00.000Z',
+  records_ingested: 3,
+  errors: [],
+  notes:
+    'Targeted CKAN ingestion of selected budget/capital/expenditure datasets; DataStore paging and archived CSV/XLSX copies. PDF/DOCX resources deferred.',
+  deferred_resources: [
+    {
+      package_id: 'f0f58123-5405-4dd2-87d8-48e319fb84ee',
+      package_name: 'fleet-vehicle-expenditure-data-fy18-19',
+      dataset_title: 'Fleet Vehicle expenditure data FY18-19',
+      resource_id: '00cfd3ab-8192-4d3d-8b09-b09080574b50',
+      name: 'Fleet Vehicle expenditure data FY18-19.pdf',
+      format: 'PDF',
+      url: 'https://data.nsw.gov.au/data/dataset/f0f58123-5405-4dd2-87d8-48e319fb84ee/resource/00cfd3ab-8192-4d3d-8b09-b09080574b50/download/fleet-vehicle-expenditure-data-fy18-19.pdf',
+      reason:
+        'Deferred: PDF/DOC/DOCX extraction belongs to the separate PDF foundation; not ingested in S2.',
+    },
+    {
+      package_id: 'a1a350b5-2c9a-4055-8030-7b570364421d',
+      package_name: 'media-expenditure-by-agency-2024-2025',
+      dataset_title: 'Media Expenditure by Agency 2024/2025',
+      resource_id: 'f6e15e73-e00b-44a1-afea-816fd6e8be9e',
+      name: '202407-202506-q4-expenditure-by-agency.docx',
+      format: 'DOC',
+      url: 'https://data.nsw.gov.au/data/dataset/a1a350b5-2c9a-4055-8030-7b570364421d/resource/f6e15e73-e00b-44a1-afea-816fd6e8be9e/download',
+      reason:
+        'Deferred: PDF/DOC/DOCX extraction belongs to the separate PDF foundation; not ingested in S2.',
+    },
+  ],
+};
+
 const AUS = { _id: '6afaa24c06cd1221b0f07291', code: 'AUS', name: 'Australia', level: 'national' };
 const NSW = {
   _id: '6afaa24c06cd1221b0f07292',
@@ -85,7 +125,7 @@ const QLD = {
 const ALL_REGIONS = [AUS, NSW, VIC, QLD];
 
 const COVERAGE = {
-  phase: 'Phase 1 + F2/F3 (AusTender + PBS live)',
+  phase: 'Phase 1 + F2/F3 + S1/S2 (AusTender + PBS + NSW live)',
   synthetic: true,
   live_ingestion: true,
   generated_at: '2026-11-16T00:00:00.000Z',
@@ -184,6 +224,18 @@ const COVERAGE = {
       errors: [],
     },
     {
+      id: 'data-nsw-ckan',
+      name: 'data.nsw.gov.au CKAN (NSW Government open data)',
+      publisher: 'NSW Government — data.nsw.gov.au',
+      source_url: 'https://data.nsw.gov.au/data/',
+      status: 'active',
+      jurisdiction_level: 'state',
+      last_fetched_at: '2026-11-16T00:08:00.000Z',
+      records_ingested: 3,
+      errors: [],
+      deferred_resources: NSW_CKAN_SOURCE.deferred_resources,
+    },
+    {
       id: 'vic-budget',
       name: 'Victorian State Budget',
       publisher: 'Victorian Department of Treasury and Finance',
@@ -217,13 +269,15 @@ const COVERAGE = {
       errors: [],
     },
   ],
-  connector_status_counts: { active: 3, degraded: 0, stub: 8 },
+  connector_status_counts: { active: 4, degraded: 0, stub: 8 },
   supported_measure_types: ['actual', 'budget', 'estimate', 'contract', 'grant_award'],
   state_ingestion: {
-    live: ['nsw-budget'],
+    live: ['nsw-budget', 'data-nsw-ckan'],
     degraded: [],
     stubs: ['vic-budget', 'qld-budget', 'wa-budget'],
-    note: 'NSW Budget 2025-26 Open Data is live; Victoria, Queensland and Western Australia remain stubs.',
+    nsw_ckan_last_ingested_at: '2026-11-16T00:08:00.000Z',
+    deferred_resources: NSW_CKAN_SOURCE.deferred_resources,
+    note: 'NSW Budget 2025-26 Open Data and targeted data.nsw.gov.au CKAN are live; Victoria, Queensland and Western Australia remain stubs. CKAN PDF/DOCX resources are deferred.',
   },
   federal_ingestion: {
     live: ['aus-tender', 'data-gov-au-pbs'],
@@ -241,6 +295,7 @@ const COVERAGE = {
     'No records are human-verified: seeded measures, ingested AusTender contracts and ingested PBS budget rows all carry verified: false.',
     'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is not implemented (pending stub); the other registered federal connectors are stubs and make no network call.',
     'PBS CSV line items are entity program tables; their sum does not equal the Budget Paper 1 total general government expense, so it is not the federal total.',
+    'data.nsw.gov.au CKAN ingestion is targeted (selected datasets, not the whole portal). CKAN CSV/XLSX downloads and DataStore pages are archived with SHA-256; PDF/DOCX resources are deferred, and some units are provisional.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory only. PBS rows are not geographically tagged (location.state is literally "Commonwealth").',
   ],
@@ -384,6 +439,26 @@ SPENDING_ROWS.push({
     source_url: 'https://www.budget.nsw.gov.au/budget-detail/open-data',
     verified: false,
     notes: 'ArcGIS capital project; Budgeted 2025-26.',
+  },
+});
+
+SPENDING_ROWS.push({
+  ...spendingRow('ckan-ram-1', NSW, '09', 'budget', '2025-26', 32_977_900),
+  id: 'ckan-ram-1',
+  source_id: 'data-nsw-ckan',
+  source_url: 'https://data.nsw.gov.au/data/dataset/nsw-education-resource-allocation-model',
+  project_name: 'Abbotsford Public School',
+  description: '2026 Resource Allocation Model (RAM) funding table',
+  jurisdiction_level: 'state',
+  jurisdiction: 'NSW',
+  source_dataset: 'NSW public schools Resource Allocation Model (RAM) funding by school',
+  data_quality_flag: 'statewide_only',
+  location: { state: 'NSW' },
+  provenance: {
+    source_id: 'data-nsw-ckan',
+    source_url: 'https://data.nsw.gov.au/data/dataset/nsw-education-resource-allocation-model',
+    verified: false,
+    notes: 'CKAN RAM allocation; explicit $ column; unverified.',
   },
 });
 
@@ -767,7 +842,13 @@ export async function mockApi(page: Page) {
 
       if (path === '/api/data-sources') {
         await json(route, {
-          sources: [SYNTHETIC_SOURCE, AUS_TENDER_SOURCE, PBS_SOURCE, NSW_BUDGET_SOURCE],
+          sources: [
+            SYNTHETIC_SOURCE,
+            AUS_TENDER_SOURCE,
+            PBS_SOURCE,
+            NSW_BUDGET_SOURCE,
+            NSW_CKAN_SOURCE,
+          ],
         });
         return;
       }

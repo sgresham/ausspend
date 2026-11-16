@@ -36,10 +36,13 @@ export function DataSourcesPage() {
         live federal source as of F2 and data.gov.au PBS budget line items are live as of F3 — their
         ingested records and last-ingested times appear here with their provenance. NSW Budget
         2025-26 Open Data is live as of S1 (official Wayback XLSX copy plus the ArcGIS capital
-        projects layer); its rows are Budgeted, never actual/spent. GrantConnect remains a blocked
-        stub — the Commonwealth publishes no grant award API/feed and the cited Track A adaptor does
-        not exist without a paid token — and VIC/QLD/WA remain stubs. No direct GrantConnect scraper
-        is built and no grant records are claimed.
+        projects layer); its rows are Budgeted, never actual/spent. Targeted data.nsw.gov.au CKAN
+        ingestion is live as of S2: selected CSV/XLSX and DataStore datasets only, with SHA-256
+        archived copies. PDF/DOCX resources are deliberately deferred and listed on that source —
+        they are not ingested. GrantConnect remains a blocked stub — the Commonwealth publishes no
+        grant award API/feed and the cited Track A adaptor does not exist without a paid token — and
+        VIC/QLD/WA remain stubs. No direct GrantConnect scraper is built and no grant records are
+        claimed.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -163,6 +166,47 @@ export function DataSourcesPage() {
                     </Typography>
                   ) : null}
 
+                  {source.source_id === 'data-nsw-ckan' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link component={RouterLink} to="/search?jurisdiction_level=state">
+                        Browse targeted data.nsw.gov.au CKAN state rows with provenance →
+                      </Link>
+                    </Typography>
+                  ) : null}
+
+                  {source.deferred_resources && source.deferred_resources.length > 0 ? (
+                    <Alert
+                      severity="info"
+                      data-testid={`deferred-${source.source_id}`}
+                      sx={{ mt: 2 }}
+                    >
+                      <Typography variant="subtitle2">
+                        Deferred resources — recorded, not ingested
+                      </Typography>
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        PDF/DOC/DOCX extraction belongs to the separate PDF foundation. These
+                        resources are intentionally skipped in S2 and remain visible for later
+                        manual review.
+                      </Typography>
+                      <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
+                        {source.deferred_resources.map((resource) => (
+                          <Typography
+                            component="li"
+                            variant="body2"
+                            key={`${resource.resource_id}-${resource.format}`}
+                          >
+                            <strong>{resource.format}</strong> · {resource.dataset_title} —{' '}
+                            <Link href={resource.url} target="_blank" rel="noreferrer">
+                              {resource.name}
+                            </Link>
+                            <br />
+                            <span>{resource.reason}</span>
+                          </Typography>
+                        ))}
+                      </Box>
+                    </Alert>
+                  ) : null}
+
                   <ProvenanceFooter
                     sources={[source]}
                     note="Every measure row in the API repeats this source reference."
@@ -182,10 +226,11 @@ export function DataSourcesPage() {
         and ingests no records; an <strong>active</strong> connector has ingested, and a{' '}
         <strong>degraded</strong> connector reports errors. <code>aus-tender</code> is live from the
         AusTender OCDS contractPublished feed, <code>data-gov-au-pbs</code> is live from the
-        data.gov.au CKAN PBS CSV, and <code>nsw-budget</code> is live from the NSW 2025-26 open-data
-        XLSX snapshot plus ArcGIS capital projects. <code>grantconnect</code> is blocked pending a
-        usable adaptor (no public award API; no direct scraper) and the remaining seven connectors
-        (four federal and VIC/QLD/WA) are stubs.
+        data.gov.au CKAN PBS CSV, <code>nsw-budget</code> is live from the NSW 2025-26 open-data
+        XLSX snapshot plus ArcGIS capital projects, and <code>data-nsw-ckan</code> is live from
+        selected data.nsw.gov.au CKAN CSV/XLSX/DataStore resources. <code>grantconnect</code> is
+        blocked pending a usable adaptor (no public award API; no direct scraper) and the remaining
+        seven connectors (four federal and VIC/QLD/WA) are stubs.
       </Typography>
 
       {!coverage.data && coverage.error ? (

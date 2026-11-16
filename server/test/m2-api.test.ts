@@ -152,7 +152,7 @@ describe('GET /api/meta/coverage', () => {
     expect(response.status).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body).toMatchObject({
-      phase: 'Phase 1 + F2/F3 (AusTender + PBS live)',
+      phase: 'Phase 1 + F2/F3 + S1/S2 (AusTender + PBS + NSW live)',
       synthetic: true,
       live_ingestion: true,
       counts: { data_sources: 1, regions: 3, functions: 4, measures: 8 },
@@ -161,12 +161,13 @@ describe('GET /api/meta/coverage', () => {
       region_levels: ['national', 'state'],
     });
     expect(new Date(response.body.generated_at).toString()).not.toBe('Invalid Date');
-    expect(response.body.connectors).toHaveLength(11);
+    expect(response.body.connectors).toHaveLength(12);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'aus-tender' ||
           connector.id === 'data-gov-au-pbs' ||
-          connector.id === 'nsw-budget'
+          connector.id === 'nsw-budget' ||
+          connector.id === 'data-nsw-ckan'
           ? 'active'
           : 'stub',
       );
@@ -176,7 +177,7 @@ describe('GET /api/meta/coverage', () => {
     expect(response.body.federal_ingestion.live).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs']),
     );
-    expect(response.body.state_ingestion.live).toEqual(['nsw-budget']);
+    expect(response.body.state_ingestion.live).toEqual(['nsw-budget', 'data-nsw-ckan']);
     expect(response.body.state_ingestion.stubs).toEqual(
       expect.arrayContaining(['vic-budget', 'qld-budget', 'wa-budget']),
     );
