@@ -28,6 +28,9 @@
     "ingest:federal": "npm run build -w shared && tsx scripts/ingest-federal.ts",
     "ingest:nsw": "npm run build -w shared && tsx scripts/ingest-nsw.ts",
     "archive:nsw": "npm run build -w shared && tsx scripts/nsw-source-archive.ts",
+    "archive": "npm run build -w shared && tsx scripts/source-archive.ts",
+    "pdf:extract": "npm run build -w shared && tsx scripts/pdf-extract.ts",
+    "test:foundation": "node --import tsx --test scripts/source-archive-pdf.test.ts",
     "db:backup": "node scripts/db-backup.mjs",
     "db:restore": "node scripts/db-restore.mjs",
     "db:test-backfill-gate": "node --test scripts/test-backfill-gate.mjs"

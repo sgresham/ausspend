@@ -3,6 +3,7 @@ import type { DbStatus } from '../db.js';
 import { createCoverageHandler } from './coverage.js';
 import { listDataSources } from './data-sources.js';
 import { listIngestionLogs } from './ingestion-logs.js';
+import { listSourceDocuments } from './source-documents.js';
 import { getFunction } from './function-detail.js';
 import { listFunctions } from './functions-list.js';
 import { listRegions } from './regions-list.js';
@@ -19,6 +20,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
 
   router.get('/meta/coverage', createCoverageHandler(options.pingDb));
   router.get('/data-sources', listDataSources);
+  router.get('/source-documents', listSourceDocuments);
   router.get('/ingestion-logs', listIngestionLogs);
   router.get('/functions', listFunctions);
   router.get('/functions/:code', getFunction);

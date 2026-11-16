@@ -252,6 +252,7 @@ All amounts are integer cents and every measure row carries `source_id`, `source
 | `GET /api/health`            | Liveness and database status                                       |
 | `GET /api/meta/coverage`     | Coverage banner: counts, connector/ingestion status                |
 | `GET /api/data-sources`      | Source register with provenance and ingestion status               |
+| `GET /api/source-documents`  | Read-only list of archived documents (path, SHA-256, exact URL)    |
 | `GET /api/ingestion-logs`    | Newest-first ingestion run history                                 |
 | `GET /api/functions`         | COFOG divisions with nested subdivisions                           |
 | `GET /api/functions/:code`   | Function detail, measures by region/state, ranked state list       |
@@ -263,8 +264,8 @@ All amounts are integer cents and every measure row carries `source_id`, `source
 | `GET /api/search?q=`         | Bounded search over region and function names/codes                |
 
 Every route is mounted at both `/api` (the UI) and `/api/v1` (versioned consumers), including
-`/api/v1/spending?jurisdiction_level=federal`, `/api/v1/data-sources`, `/api/v1/ingestion-logs` and
-`/api/v1/meta/coverage`.
+`/api/v1/spending?jurisdiction_level=federal`, `/api/v1/data-sources`,
+`/api/v1/source-documents`, `/api/v1/ingestion-logs` and `/api/v1/meta/coverage`.
 
 `/api/functions/:code` accepts `fiscal_year`, `measure_type`, `region` and `limit`. `region` is a
 region `_id` (not a code) and anything else is a `400`. When the response contains more than one
@@ -400,7 +401,24 @@ NSW financial statements are in `$m`, historical fiscal indicators in `$b` and c
 `$'000`; all are converted to integer cents with explicit, tested multipliers. Budgeted rows are
 labelled **Budgeted**, never actual/spent, and measure types are never summed. Full mapping,
 COFOG decisions and limitations are in [NSW_LOCAL_INGESTION.md](./NSW_LOCAL_INGESTION.md). S1 stops
-before `data.nsw.gov.au` CKAN, Dubbo, VIC/QLD/WA, SOC/charity and the S3 PDF foundation.
+before `data.nsw.gov.au` CKAN, Dubbo, VIC/QLD/WA, SOC/charity and any live PDF ingestion.
+
+### Source archive and PDF foundation
+
+`server/src/connectors/source-archive.ts` and `server/src/models/source-document.ts` provide a
+source-agnostic archive: documents are copied **outside** the repository (default
+`/home/steve/ausspend-source-archive`) and recorded with their exact URL, `sha256`, bytes and
+content type in the `source_documents` collection. `npm run archive -- list|verify|adopt-nsw|fetch`
+manages them; `GET /api/v1/source-documents?source_id=nsw-budget` lists them read-only. S1's
+Wayback XLSX workbooks and ArcGIS JSON are adopted by reference (re-hashed against the committed
+manifest, never copied or mutated).
+
+`server/src/connectors/pdf-extract.ts` is the reusable PDF text/table extractor
+(`npm run pdf:extract -- --file=…`). It detects `$`, `$'000`, `$m` and `$b`, converts to integer
+cents, and refuses to ingest a table when the unit is missing/ambiguous or any row/column total
+does not reconcile. All extracted rows are `provisional`; a human must review before `verified`.
+See [docs/SOURCE_ARCHIVE_AND_PDF.md](./docs/SOURCE_ARCHIVE_AND_PDF.md) for the model, commands,
+proof and boundaries. No CKAN/Dubbo/VIC/QLD/WA source is started by this foundation.
 
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
 not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this
@@ -421,7 +439,8 @@ npm ci               # install from the lockfile
 npm run typecheck    # shared build then server + client TypeScript
 npm run lint         # ESLint flat config
 npm run format:check # Prettier
-npm test             # Vitest shared + server suites (86 tests + 1 opt-in live smoke)
+npm test             # Vitest shared + server suites (122 tests + 2 opt-in/skipped)
+npm run test:foundation # source-archive + PDF extraction tests (no network)
 npm run build        # shared, server and client production builds
 npm run test:e2e     # Playwright specs with page.route API mocks
 AUSTENDER_LIVE_TEST=1 npx vitest run --project server test/aus-tender.test.ts  # opt-in real-API smoke
