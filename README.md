@@ -80,21 +80,84 @@ The seed refuses a missing `MONGO_URL` and any database whose name is not exactl
 All amounts are integer cents and every measure row carries `source_id`, `source_url` and
 `verified`.
 
-| Route                        | Purpose                                                      |
-| ---------------------------- | ------------------------------------------------------------ |
-| `GET /api/health`            | Liveness and database status                                 |
-| `GET /api/data-sources`      | Source register with provenance                              |
-| `GET /api/functions`         | COFOG divisions with nested subdivisions                     |
-| `GET /api/functions/:code`   | Function detail, measures by region/state, ranked state list |
-| `GET /api/regions/:regionId` | Region detail by region `_id`                                |
-| `GET /api/states/:code`      | State/territory detail (`NSW`, `VIC`, ...)                   |
-| `GET /api/search?q=`         | Bounded search over region and function names/codes          |
+| Route                        | Purpose                                                            |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `GET /api/health`            | Liveness and database status                                       |
+| `GET /api/meta/coverage`     | Coverage banner: synthetic flag, counts, years, connector stubs    |
+| `GET /api/data-sources`      | Source register with provenance                                    |
+| `GET /api/functions`         | COFOG divisions with nested subdivisions                           |
+| `GET /api/functions/:code`   | Function detail, measures by region/state, ranked state list       |
+| `GET /api/regions`           | Bounded region list for directory/autocomplete (national first)    |
+| `GET /api/regions/:regionId` | Region detail by region `_id`                                      |
+| `GET /api/states/:code`      | State/territory detail (`NSW`, `VIC`, ...)                         |
+| `GET /api/spending`          | Filtered, sorted, paginated spending search with whole-set summary |
+| `GET /api/spending/:id`      | One measure row in the same shape as a search data row             |
+| `GET /api/search?q=`         | Bounded search over region and function names/codes                |
 
 `/api/functions/:code` accepts `fiscal_year`, `measure_type`, `region` and `limit`. `region` is a
 region `_id` (not a code) and anything else is a `400`. When the response contains more than one
 `measure_type` it sets `mixed: true`, returns `total_cents: null` and withholds `ranked_states`;
 a headline total is only returned for a single measure type. Unknown codes/ids return JSON `404`,
 invalid query parameters return JSON `400`.
+
+### Coverage metadata
+
+`GET /api/meta/coverage` returns the Phase 1 banner from the database plus the connector registry:
+`phase`, `synthetic: true`, `live_ingestion: false`, `generated_at`, `counts {data_sources,
+regions, functions, measures}`, distinct sorted `fiscal_years`, `measure_types`, `region_levels`,
+the eight `connectors` (id/name/publisher/source_url/status `stub` only), and `limitations`/`note`
+stating that the seed is synthetic, nothing is verified, there is no live ingestion, the COFOG set
+is curated and regions stop at state/territory granularity. The response is generated per request
+and sent with `Cache-Control: no-store`. If the database is unavailable it returns `503`.
+
+### Region list
+
+`GET /api/regions` is the directory/autocomplete list and exposes every region `_id`, including the
+national row, so callers no longer have to resolve `AUS` through `/api/search`. Query parameters:
+`q` (case-insensitive name/code match, trimmed, max 100 characters), `type`
+(`national|state|region`), `state` (filters sub-state rows by `parent_code`; the curated seed has no
+sub-state rows, so it currently returns an empty list) and `limit` (default 50, max 200). The
+response is `{ regions: [{_id, code, name, level, parent_code?}], count }`, national first then
+states by code. Bad parameters are `400`.
+
+### Spending search
+
+`GET /api/spending` accepts:
+
+| Parameter                 | Values / constraints                                                         |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `fiscal_year`             | `YYYY-YY`, e.g. `2024-25`                                                    |
+| `measure_type`            | `actual`, `budget` or `estimate`                                             |
+| `function`                | two-digit division (`07`) or three-digit subdivision (`074`)                 |
+| `region`                  | a 24-character hex region `_id` (never a code)                               |
+| `min_amount`/`max_amount` | non-negative integer cents, inclusive; `min <= max`                          |
+| `page`                    | default 1, `>= 1`                                                            |
+| `page_size`               | default 20, `1..100`                                                         |
+| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc` |
+
+Every parameter is validated with Zod; bad values return JSON `400`, an unknown function code or
+region `_id` returns `404`. The envelope is `{ data, summary, pagination, applied_filters }`.
+`pagination` is `{page, page_size, total, total_pages, has_next}` and `applied_filters` echoes the
+normalised query (absent filters as `null`).
+
+`summary` covers the **whole filtered set, not just the page**: `count`, `currency: "AUD"`,
+`total_cents` (null when mixed), `total_measure_type` (null when mixed), `total_by_measure_type`,
+`measure_types`, `mixed`, `breakdown_by_function` and `breakdown_by_region`. Each breakdown entry
+carries the function/region reference, `count`, `measure_types`, `mixed`, `total_cents` and
+`total_by_measure_type`. Each data row holds the measure fields plus `function_name`,
+`function_level`, `function_parent_code?`, `region_code`, `region_name`, `region_level` and a
+`provenance` object (`source_id`, `source_url`, `verified`, `notes?`), so the client needs no N+1
+lookups. `GET /api/spending/:id` returns one row in the same shape (`400` invalid id, `404`
+unknown).
+
+### Ingestion connector stubs
+
+`server/src/connectors` registers eight plausible Australian public-spending sources (federal budget
+portal, ABS government finance statistics, AIHW health expenditure, AOFM, and the NSW/VIC/QLD/WA
+treasuries). Every connector is a stub: `status: "stub"`, `fetch()` throws a clear "not implemented"
+error, and there are no network calls or credentials. The API never calls them — only
+`/api/meta/coverage` lists their metadata. TODO comments name the real endpoint/format each will use
+in a later milestone.
 
 ## Checks
 
@@ -134,8 +197,12 @@ source link and verification badge. There is no map.
 
 A response containing more than one measure type is **mixed**: the API returns `total_cents: null`
 and withholds `ranked_states`, and the UI shows a warning plus a per-measure-type breakdown instead
-of a headline total. Per-type totals computed from rows request `limit=1000` so the sum is not
-truncated. A single measure type may show a headline total, ranked states and a bar.
+of a headline total. Function, region and state detail responses (and their group summaries) now
+include `total_by_measure_type: [{measure_type, count, total_cents}]` at the API level, so callers
+never have to sum rows to get a per-type total. The totals are always present; a single type has one
+entry equal to `total_cents`, while a mixed response has one entry per type and a null headline
+total. Never sum `total_cents` across measure types. A single measure type may show a headline
+total, ranked states and a bar.
 
 ## Data and provenance
 

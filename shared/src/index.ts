@@ -6,3 +6,4 @@ export * from './subdivision.js';
 export * from './regions.js';
 export * from './data-source.js';
 export * from './measure-record.js';
+export * from './spending.js';

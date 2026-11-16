@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import type { PerMeasureTypeTotal } from '@ausspend/shared';
 import {
   MeasureModel,
   RegionModel,
@@ -28,6 +29,7 @@ export interface MeasureSummary {
   mixed: boolean;
   total_cents: number | null;
   total_measure_type: MeasureDocument['measure_type'] | null;
+  total_by_measure_type: PerMeasureTypeTotal[];
 }
 
 export interface LeanRegion {
@@ -82,9 +84,33 @@ export async function loadMeasures(
 }
 
 /**
+ * Count and sum for each measure type present. These per-type totals are always
+ * returned; they are the only totals that are safe to add up, and only within a
+ * single type. Never sum across types.
+ */
+export function perMeasureTypeTotals(measures: readonly LeanMeasure[]): PerMeasureTypeTotal[] {
+  const byType = new Map<MeasureDocument['measure_type'], { count: number; amounts: number[] }>();
+
+  for (const measure of measures) {
+    const entry = byType.get(measure.measure_type) ?? { count: 0, amounts: [] };
+    entry.count += 1;
+    entry.amounts.push(measure.amount_cents);
+    byType.set(measure.measure_type, entry);
+  }
+
+  return [...byType.entries()]
+    .map(([measureType, entry]) => ({
+      measure_type: measureType,
+      count: entry.count,
+      total_cents: sumCents(entry.amounts),
+    }))
+    .sort((a, b) => a.measure_type.localeCompare(b.measure_type));
+}
+
+/**
  * A headline total is only meaningful for a single measure type. When more
  * than one measure type is present the response is marked mixed and the total
- * is null.
+ * is null; the per-type totals are still returned.
  */
 export function summarizeMeasures(measures: readonly LeanMeasure[]): MeasureSummary {
   const measureTypes = [...new Set(measures.map((measure) => measure.measure_type))].sort();
@@ -97,6 +123,7 @@ export function summarizeMeasures(measures: readonly LeanMeasure[]): MeasureSumm
     mixed,
     total_cents: mixed ? null : sumCents(measures.map((measure) => measure.amount_cents)),
     total_measure_type: singleType,
+    total_by_measure_type: perMeasureTypeTotals(measures),
   };
 }
 
@@ -122,6 +149,7 @@ export async function groupByRegion(
     measure_types: Array<MeasureDocument['measure_type']>;
     mixed: boolean;
     total_cents: number | null;
+    total_by_measure_type: PerMeasureTypeTotal[];
     measures: MeasureRow[];
   }>
 > {
@@ -151,6 +179,7 @@ export async function groupByRegion(
         measure_types: measureTypes,
         mixed,
         total_cents: mixed ? null : sumCents(rows.map((row) => row.amount_cents)),
+        total_by_measure_type: perMeasureTypeTotals(rows),
         measures: rows.map(serializeMeasure),
       };
     })

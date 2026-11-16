@@ -28,7 +28,7 @@ export function createApp(options: AppOptions = {}): express.Express {
   };
 
   app.get('/api/health', healthHandler);
-  app.use('/api', createApiRouter());
+  app.use('/api', createApiRouter({ pingDb: options.pingDb }));
 
   app.use((req, res) => {
     res.status(404).json({ ok: false, error: 'Not found', path: req.path });

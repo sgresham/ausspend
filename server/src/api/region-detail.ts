@@ -4,6 +4,7 @@ import { FunctionModel, RegionModel } from '../models/index.js';
 import { badRequest, notFound } from './errors.js';
 import { measureQuery, parseMeasureFilters, sumCents, type MeasureFilters } from './filters.js';
 import {
+  perMeasureTypeTotals,
   serializeMeasure,
   serializeRegion,
   summarizeMeasures,
@@ -52,6 +53,7 @@ async function groupByFunction(measures: readonly LeanMeasure[], mixed: boolean)
         measure_types: measureTypes,
         mixed: groupMixed,
         total_cents: groupMixed ? null : sumCents(rows.map((row) => row.amount_cents)),
+        total_by_measure_type: perMeasureTypeTotals(rows),
         measures: rows.map(serializeMeasure) satisfies MeasureRow[],
       };
     })
