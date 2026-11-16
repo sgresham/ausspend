@@ -106,6 +106,10 @@ in `notes`. ausspend never invents an LGA, SA2 or coordinate:
   connector backs off exponentially (1 s, 2 s, 4 s, …) up to four retries, then fails the source.
 - A bounded page limit (`AUSTENDER_PAGE_LIMIT`, default 25) protects the run. If the limit is hit
   while a cursor remains, the connector reports `page limit N reached; results truncated`.
+- **Historical backfill** raises that bound per chunk: the backfill splits the window into seven-day
+  chunks and uses `AUSTENDER_PAGE_LIMIT=100` (≈100 releases/page × 100 pages ≈ 10,000 releases per
+  week, more than four times the busiest observed week of 2,195 releases / ~22 pages). The 25-page
+  default would truncate a peak week; 100 never did across 105 chunks.
 - The next cursor is rejected if it leaves `api.tenders.gov.au`.
 
 ## Natural key and idempotency
@@ -114,6 +118,8 @@ in `notes`. ausspend never invents an LGA, SA2 or coordinate:
 `MeasureModel.updateOne({ natural_key }, { $set: record }, { upsert: true })`, so re-running the
 same window updates the same documents: counts stay stable and there are no duplicate natural keys.
 Releases sharing an `ocid` within one batch are de-duplicated, keeping the newest `source_date`.
+The chunked historical backfill uses the same path: re-running a chunk is idempotent and never
+deletes an existing row.
 
 ## PBS (data.gov.au) — source, CSV and streaming parse
 
@@ -276,6 +282,10 @@ today (UTC). `INGEST_SOURCES=aus-tender` limits the run to the live connector; w
 registered sources are logged as `skipped`. Per-source status lands in `data_sources` (status,
 `last_ingested_at`, `records_ingested`, `errors`) and each run writes an `ingestion_logs` row.
 
+This one-week acceptance window produced the **861 current-week** rows (FY 2026-27). The later
+historical backfill does not overlap that window, so all 861 rows remain alongside the 117,033
+historical contracts.
+
 To verify:
 
 ```bash
@@ -309,7 +319,7 @@ The development seed is **non-destructive by default**. On a normal run it delet
 whose `source_id` is `synthetic-seed`, upserts the synthetic source/regions/functions, and leaves
 every ingested AusTender contract, every other `data_sources` register entry and every
 `ingestion_logs` document untouched. That is why `docker compose up` (which runs the one-shot
-`seed` service) can be repeated without losing the 861 live contracts.
+`seed` service) can be repeated without losing the 117,894 ingested AusTender contracts.
 
 The only destructive path is explicit and opt-in:
 
@@ -338,20 +348,107 @@ Without Docker, run the same `npm run ingest:federal` command from the previous 
 paths wait for the safe seed and upsert on `natural_key`, so a re-run never duplicates contracts
 and a subsequent seed never removes them.
 
-### Expected coexistence after the narrow run
+### Expected coexistence after the historical backfill
 
 ```text
-810 synthetic measures (source_id: synthetic-seed)
-861 AusTender contract measures (source_id: aus-tender, measure_type: contract)
-861 distinct federal natural_key values
-data_sources: synthetic-seed active, aus-tender active
+810 synthetic measures (source_id: synthetic-seed, no natural_key)
+1,231 PBS budget measures (source_id: data-gov-au-pbs)
+117,894 AusTender contract measures (source_id: aus-tender, measure_type: contract)
+119,935 measures total
+119,125 distinct non-null natural_key values (117,894 AusTender + 1,231 PBS)
+0 duplicate natural_key values, 0 invalid amount_cents
+data_sources: synthetic-seed active, aus-tender active, data-gov-au-pbs active
 ```
+
+AusTender fiscal-year distribution: 2024-25 = 59,688, 2025-26 = 57,345, 2026-27 = 861 (the
+pre-existing one-week run). The 861 current-week rows and all 810 synthetic seed rows are still
+present; the backfill only upserted historical `ocid`s outside that one-week window.
+
+## Historical AusTender backfill run (2026-11-16)
+
+This run was authorised automatically because the data-safety gate was closed and verified. It
+never ran PBS, GrantConnect, state/local/SOC/charity sources, and it never deleted a row.
+
+| Item                      | Value                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| Feed                      | `contractPublished` only, existing F2 connector/mapper                        |
+| Window (publication date) | `2024-07-01T00:00:00Z` .. `2026-07-01T00:00:00Z`                              |
+| Financial years covered   | 2024-25 and 2025-26 (documented equivalent: date-published window)            |
+| Chunking                  | 105 contiguous 7-day chunks (`AUSTENDER_CHUNK_DAYS=7`), no gaps/overlaps      |
+| Page bound per chunk      | `AUSTENDER_PAGE_LIMIT=100` (≈10,000 releases/week); peak observed 2,195       |
+| Rate policy               | 1 s between pages, `Retry-After`/exponential 429 backoff (existing connector) |
+| Pre-run backup            | `/home/steve/backups/ausspend/2026-11-16T11-22-19.156Z`                       |
+| Post-run backup           | `/home/steve/backups/ausspend/2026-11-16T12-30-14.670Z`                       |
+| Fetched / upserted        | 152,616 releases / 117,033 distinct `ocid`s                                   |
+| Result                    | 117,894 AusTender rows (861 pre-existing + 117,033 backfilled)                |
+| Database total            | 119,935 (117,894 AusTender + 1,231 PBS + 810 synthetic)                       |
+| Distinct natural keys     | 119,125 (AusTender + PBS); 0 duplicates                                       |
+| Invalid cents             | 0                                                                             |
+| Chunk failures            | 0 (105/105 `success`)                                                         |
+
+Command (the gate passed and `BACKFILL_CONFIRM=yes` was set only because the data-safety item was
+closed/verified):
+
+```bash
+BACKFILL_CONFIRM=yes \
+BACKUP_DIR=/home/steve/backups/ausspend/2026-11-16T11-22-19.156Z \
+AUSTENDER_START_DATE=2024-07-01T00:00:00Z \
+AUSTENDER_END_DATE=2026-07-01T00:00:00Z \
+INGEST_SOURCES=aus-tender \
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+AUSTENDER_PAGE_LIMIT=100 AUSTENDER_CHUNK_DAYS=7 \
+npm run ingest:federal -- --backfill
+```
+
+Each chunk writes its own `ingestion_logs` row (`message` ends with
+`(chunk N/105 <start>..<end>)`) with the verified `backup_path`; `data_sources` ends with
+`aus-tender` `active`, `records_ingested: 117894` and the final `last_ingested_at`.
+
+### Idempotency proof
+
+Re-running one peak historical chunk (`2025-06-23T00:00:00Z`..`2025-06-30T00:00:00Z`) after the
+backfill produced identical before/after totals:
+
+```text
+before total=119935 by_source={"aus-tender":117894,"data-gov-au-pbs":1231,"synthetic-seed":810}
+       distinct_natural_keys=119125 duplicate_natural_key_groups=0 invalid_amount_cents=0
+chunk 1/1 ... fetched=2195 upserted=1624
+after  total=119935 by_source={"aus-tender":117894,"data-gov-au-pbs":1231,"synthetic-seed":810}
+       distinct_natural_keys=119125 duplicate_natural_key_groups=0 invalid_amount_cents=0
+```
+
+### API performance after the backfill
+
+`GET /api/v1/spending?jurisdiction_level=federal&measure_type=contract` matches 117,894 rows. The
+API used to load every full document and slice the page in Node; at this size that measured about
+3.5 s and ~500–660 MB RSS. `server/src/api/spending.ts` now loads a projected summary document
+(`amount_cents`, `measure_type`, `function_code`, `region_id`) for the whole filtered set and
+fetches only the requested page with Mongo `skip/limit`. Semantics are unchanged: the summary still
+covers the entire filtered set, breakdowns and per-type totals are identical, and a mixed response
+still returns `total_cents: null`. Measured after the change: ~1.9 s and ~306 MB RSS for the same
+117,894-row contract query. The summary pass is still O(n) in the filtered set; a future item can
+move the breakdowns to a Mongo aggregation if the dataset grows materially beyond this.
+
+### Backfill tests and alt-port verification
+
+- `server/test/aus-tender-chunks.test.ts` pins the 105-chunk plan (no gaps/overlaps, FY boundary,
+  monthly option, invalid input, page-bound headroom).
+- `scripts/test-backfill-gate.mjs` (`npm run db:test-backfill-gate`) covers gate success and every
+  refusal path (missing confirm, missing/stale/foreign/tampered backup, missing manifest).
+- `server/test/f1-foundation.test.ts` covers duplicate-`natural_key` upsert idempotency;
+  `server/test/seed-safety.test.ts` proves a safe seed never deletes ingested contracts/logs.
+- Unit/API/e2e: `npm test`, `npm run build`, `npm run typecheck`, `npm run lint`,
+  `npm run format:check`.
+- E2E on alt ports (the user's 3001/5173 stack is never restarted): start the API on `3101` and the
+  Vite client on `5174` (`VITE_API_PROXY_TARGET=http://localhost:3101 npm run dev -w client --
+--port 5174 --strictPort`), then `npx playwright test --config=e2e/playwright.alt.config.ts`.
 
 ## Backup before a historical backfill
 
-**Do not start a historical AusTender backfill until the user/approver explicitly confirms it.**
-The current live baseline is 810 synthetic seed measures plus 861 AusTender contract measures. A
-historical backfill would replace/expand that live data, so it is gated on a verified snapshot.
+The historical backfill has now run, but any future re-run must still take a fresh verified
+snapshot first. The pre-backfill baseline was 810 synthetic seed measures plus 861 AusTender
+contract measures (plus 1,231 PBS rows); the current baseline is 119,935 measures. The gate below
+refuses to fetch anything without a recent verified backup.
 
 ### Take and restore a verified backup
 
@@ -385,9 +482,11 @@ statuses, then prints the target database. A restore into `ausspend_dev` is only
 `--target ausspend_dev --confirm ausspend_dev`, a matching backup, and explicit user/approver
 approval; it is never part of the test routine.
 
-The round trip has been demonstrated on a scratch database: the restored copy had the same 810
-synthetic rows, 861 AusTender contracts, 2,902 total measures and the same 2,092 distinct
-`natural_key` values/checksum as `ausspend_dev`, while the source database was unchanged.
+The round trip was demonstrated on a scratch database during the data-safety item: the restored
+copy had the same 810 synthetic rows, 861 AusTender contracts, 2,902 total measures and the same
+2,092 distinct `natural_key` values/checksum as the then-current `ausspend_dev`, while the source
+database was unchanged. After the historical backfill the same tooling backs up 119,935 measures /
+119,125 distinct keys (see the post-run backup above).
 
 ### Seed restart proof
 
@@ -419,8 +518,13 @@ BACKFILL_CONFIRM=yes BACKUP_DIR=/home/steve/backups/ausspend/<ISO> \
 ```
 
 The dry run validates the backup, logs `backfill gate passed (dry run); no fetch performed`, and
-exits. The real historical backfill has **not** been run in this safety item; only the refusal and
-a fake-backup success were tested.
+exits. The real historical backfill has since run under this gate (see
+[Historical AusTender backfill run](#historical-austender-backfill-run-2026-11-16)); the gate
+refusal paths remain covered by `npm run db:test-backfill-gate`.
+
+A real gated run always chunks: `AUSTENDER_CHUNK_DAYS` (default 7, max 31) and
+`AUSTENDER_PAGE_LIMIT` (default 100 for backfill, max 1,000). A chunk failure stops the run with a
+nonzero exit, records the failing chunk and leaves already-upserted chunks intact.
 
 ### Daily backup timer
 
@@ -452,5 +556,14 @@ journalctl --user -u ausspend-db-backup.service -n 20
 - **No human verification.** Both the synthetic seed and AusTender rows carry `verified: false`.
 - **No cross-measure totals.** Contract and budget/actual/estimate rows are never summed together;
   the API groups by `measure_type` and returns `total_cents: null` for mixed responses.
+- **The historical backfill is date-published, not a financial-year ledger.** It covers
+  `contractPublished` notices published 2024-07-01..2026-07-01, so a contract signed just outside
+  that period can appear (or a contract signed inside it but published outside can be absent). The
+  `fiscal_year` field is derived from the contract/release date, not the fetch window. The larger
+  contract count is contract notices, not a measure of total government spending and not comparable
+  to PBS line items.
+- **Summary queries are O(n) in the filtered set.** The 117,894-row contract query measured ~1.9 s
+  and ~306 MB RSS after the projection + Mongo page change; the whole-set summary pass still scans
+  the matching rows. No API semantics or no-total rule changed.
 - The public `tenders.gov.au` contract page may reject automated requests at the WAF; `source_url`
   is the canonical human-facing contract-notice URL, constructed from the contract id.

@@ -1,8 +1,16 @@
 import 'dotenv/config';
 import path from 'node:path';
 import mongoose from 'mongoose';
-import { CONNECTORS, runIngestion, type Connector } from '../server/src/connectors/index.js';
-import { IngestionLogModel } from '../server/src/models/index.js';
+import {
+  AUS_TENDER_BACKFILL_CHUNK_DAYS,
+  AUS_TENDER_BACKFILL_PAGE_LIMIT,
+  CONNECTORS,
+  chunkAusTenderWindow,
+  createAusTenderConnector,
+  runIngestion,
+  type Connector,
+} from '../server/src/connectors/index.js';
+import { DataSourceModel, IngestionLogModel, MeasureModel } from '../server/src/models/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 import { assertBackfillAllowed, DEFAULT_MAX_AGE_MINUTES } from './lib/backfill-gate.mjs';
 
@@ -86,6 +94,158 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function positiveIntegerEnv(name: string, fallback: number, max: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 1 || value > max) {
+    throw new Error(`${name} must be an integer between 1 and ${max} (got ${raw})`);
+  }
+  return value;
+}
+
+interface MeasureCounts {
+  total: number;
+  by_source: Record<string, number>;
+  distinct_natural_keys: number;
+  duplicate_natural_key_groups: number;
+  invalid_amount_cents: number;
+}
+
+/** Honest before/after counters for a backfill report. */
+async function measureCounts(): Promise<MeasureCounts> {
+  const [total, bySource, distinctKeys, duplicateGroups, invalidAmounts] = await Promise.all([
+    MeasureModel.countDocuments({}),
+    MeasureModel.aggregate<{ _id: string; count: number }>([
+      { $group: { _id: '$source_id', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]),
+    MeasureModel.distinct('natural_key', { natural_key: { $ne: null } }),
+    MeasureModel.aggregate<{ count: number }>([
+      { $match: { natural_key: { $ne: null } } },
+      { $group: { _id: '$natural_key', count: { $sum: 1 } } },
+      { $match: { count: { $gt: 1 } } },
+      { $count: 'count' },
+    ]),
+    MeasureModel.countDocuments({
+      $or: [
+        { amount_cents: { $lt: 0 } },
+        { $expr: { $not: [{ $isNumber: '$amount_cents' }] } },
+        { $expr: { $ne: ['$amount_cents', { $floor: '$amount_cents' }] } },
+        { $expr: { $gt: ['$amount_cents', Number.MAX_SAFE_INTEGER] } },
+      ],
+    }),
+  ]);
+
+  return {
+    total,
+    by_source: Object.fromEntries(bySource.map((entry) => [entry._id, entry.count])),
+    distinct_natural_keys: distinctKeys.length,
+    duplicate_natural_key_groups: duplicateGroups[0]?.count ?? 0,
+    invalid_amount_cents: invalidAmounts,
+  };
+}
+
+function printCounts(label: string, counts: MeasureCounts): void {
+  console.log(
+    `[backfill] ${label} total=${counts.total} ` +
+      `by_source=${JSON.stringify(counts.by_source)} ` +
+      `distinct_natural_keys=${counts.distinct_natural_keys} ` +
+      `duplicate_natural_key_groups=${counts.duplicate_natural_key_groups} ` +
+      `invalid_amount_cents=${counts.invalid_amount_cents}`,
+  );
+}
+
+/**
+ * AusTender historical backfill: chunk the requested window (weekly by
+ * default), raise the page bound per chunk, and run the existing F2 connector
+ * once per chunk. The gate has already proved a fresh verified backup exists.
+ * Every chunk upserts on natural_key, so re-running is idempotent and no
+ * existing row (synthetic seed, the one-week 861, PBS) is ever deleted.
+ */
+async function runAusTenderBackfill(
+  backupPath: string,
+  window: { startDate: string; endDate: string },
+): Promise<void> {
+  const chunkDays = positiveIntegerEnv('AUSTENDER_CHUNK_DAYS', AUS_TENDER_BACKFILL_CHUNK_DAYS, 31);
+  // 100 pages × ~100 releases/page ≈ 10,000 releases per weekly chunk. The
+  // busiest observed week in the backfill window returned 2,195 releases
+  // (~22 pages), so 100 leaves >4× headroom while still bounding every chunk.
+  const pageLimit = positiveIntegerEnv(
+    'AUSTENDER_PAGE_LIMIT',
+    AUS_TENDER_BACKFILL_PAGE_LIMIT,
+    1_000,
+  );
+  const delayMs = positiveIntegerEnv('AUSTENDER_DELAY_MS', 1_000, 60_000);
+  const chunks = chunkAusTenderWindow(window.startDate, window.endDate, chunkDays);
+
+  const before = await measureCounts();
+  printCounts('before', before);
+  console.log(
+    `[backfill] plan chunks=${chunks.length} chunkDays=${chunkDays} pageLimit=${pageLimit} ` +
+      `delayMs=${delayMs} window=${window.startDate}..${window.endDate} backup=${backupPath}`,
+  );
+
+  let fetched = 0;
+  let upserted = 0;
+  const failures: string[] = [];
+
+  for (const chunk of chunks) {
+    const label = `chunk ${chunk.index}/${chunk.total} ${chunk.startDate}..${chunk.endDate}`;
+    const connector = createAusTenderConnector({
+      startDate: chunk.startDate,
+      endDate: chunk.endDate,
+      pageLimit,
+      delayMs,
+    });
+    const result = await runIngestion({
+      connectors: [connector],
+      ausTenderBackfillBackupPath: backupPath,
+      ausTenderBackfillChunk: label,
+    });
+    const entry = result.results[0];
+    if (!entry) throw new Error(`chunk produced no result: ${label}`);
+    fetched += entry.records_fetched;
+    upserted += entry.records_upserted;
+    console.log(
+      `[backfill] ${label} status=${entry.log_status} ` +
+        `fetched=${entry.records_fetched} upserted=${entry.records_upserted}` +
+        (entry.errors.length > 0 ? ` errors=${entry.errors.join('; ')}` : ''),
+    );
+    if (entry.log_status === 'error') {
+      failures.push(`${label}: ${entry.errors.join('; ') || 'unknown error'}`);
+      break;
+    }
+    if (entry.log_status === 'partial') {
+      failures.push(`${label}: partial: ${entry.errors.join('; ')}`);
+    }
+  }
+
+  const ausTenderCount = await MeasureModel.countDocuments({ source_id: 'aus-tender' });
+  await DataSourceModel.updateOne(
+    { source_id: 'aus-tender' },
+    {
+      $set: {
+        status: failures.length > 0 ? 'degraded' : 'active',
+        last_ingested_at: new Date(),
+        // Cumulative total for the source, not just the last chunk.
+        records_ingested: ausTenderCount,
+        errors: failures,
+      },
+    },
+  );
+
+  const after = await measureCounts();
+  printCounts('after', after);
+  console.log(
+    `[backfill] done chunks=${chunks.length} fetched=${fetched} upserted=${upserted} ` +
+      `aus_tender_rows=${ausTenderCount} failures=${failures.length}`,
+  );
+  if (failures.length > 0) {
+    throw new Error(`backfill completed with ${failures.length} chunk problem(s): ${failures[0]}`);
+  }
+}
+
 async function recordRefusal(options: CliOptions, reason: string): Promise<void> {
   const now = new Date();
   try {
@@ -164,6 +324,17 @@ async function main(): Promise<void> {
         await recordRefusal(options, reason);
         throw new Error(reason);
       }
+    }
+
+    if (options.backfill) {
+      // The gate has passed and a fresh verified backup is recorded. Run only
+      // AusTender, one contiguous chunk at a time; never PBS/GrantConnect/etc.
+      await runAusTenderBackfill(backupPath as string, {
+        startDate: process.env.AUSTENDER_START_DATE as string,
+        endDate: process.env.AUSTENDER_END_DATE as string,
+      });
+      console.log(`[ingest] done target=${databaseName} MODE=guarded-backfill`);
+      return;
     }
 
     const connectors = selectConnectors();

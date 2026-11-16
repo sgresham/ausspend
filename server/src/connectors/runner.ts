@@ -25,6 +25,12 @@ export interface RunIngestionOptions {
   now?: () => Date;
   /** Recorded in ingestion_logs when a gated AusTender historical backfill runs. */
   ausTenderBackfillBackupPath?: string;
+  /**
+   * Human-readable chunk label (for example `chunk 12/105 2025-03-24..2025-03-31`)
+   * appended to the AusTender ingestion log message so per-chunk runs are
+   * distinguishable. Never used for anything but logging.
+   */
+  ausTenderBackfillChunk?: string;
 }
 
 function errorMessage(error: unknown): string {
@@ -98,6 +104,8 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
     const startedAt = now();
     const backupPath =
       connector.id === 'aus-tender' ? options.ausTenderBackfillBackupPath : undefined;
+    const chunkLabel = connector.id === 'aus-tender' ? options.ausTenderBackfillChunk : undefined;
+    const withChunk = (message: string) => (chunkLabel ? `${message} (${chunkLabel})` : message);
 
     if (connector.status === 'stub') {
       const message = 'stub — not wired; skipped';
@@ -109,7 +117,7 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         records_fetched: 0,
         records_upserted: 0,
         errors: [],
-        message,
+        message: withChunk(message),
         ...(backupPath ? { backup_path: backupPath } : {}),
       });
       await recordSourceState(connector, 'stub', now(), 0, []);
@@ -159,12 +167,13 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         records_fetched: raw.length,
         records_upserted: upserted,
         errors,
-        message:
+        message: withChunk(
           errors.length > 0
             ? 'completed with errors; other sources continue'
             : warnings.length > 0
               ? `completed with warnings: ${warnings.join('; ')}`
               : 'completed successfully',
+        ),
         ...(backupPath ? { backup_path: backupPath } : {}),
       });
       await recordSourceState(
@@ -197,7 +206,7 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         records_fetched: 0,
         records_upserted: 0,
         errors: [message],
-        message: 'source failed; run continues with the next connector',
+        message: withChunk('source failed; run continues with the next connector'),
         ...(backupPath ? { backup_path: backupPath } : {}),
       });
       await recordSourceState(connector, 'degraded', finishedAt, 0, [message]);

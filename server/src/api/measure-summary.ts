@@ -112,7 +112,9 @@ export async function loadMeasures(
  * returned; they are the only totals that are safe to add up, and only within a
  * single type. Never sum across types.
  */
-export function perMeasureTypeTotals(measures: readonly LeanMeasure[]): PerMeasureTypeTotal[] {
+export function perMeasureTypeTotals(
+  measures: readonly Pick<LeanMeasure, 'amount_cents' | 'measure_type'>[],
+): PerMeasureTypeTotal[] {
   const byType = new Map<MeasureDocument['measure_type'], { count: number; amounts: number[] }>();
 
   for (const measure of measures) {
