@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import type { PerMeasureTypeTotal } from '@ausspend/shared';
+import { regionSlug, type PerMeasureTypeTotal } from '@ausspend/shared';
 import {
   MeasureModel,
   RegionModel,
@@ -31,6 +31,7 @@ export interface MeasureRow {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
+  extraction_confidence?: 'low' | 'medium' | 'high';
   location?: { state?: string; lga_name?: string };
   unspsc?: string;
 }
@@ -58,6 +59,7 @@ export interface RegionPayload {
   name: string;
   level: RegionDocument['level'];
   parent_code?: string;
+  slug: string;
 }
 
 export function serializeRegion(region: LeanRegion): RegionPayload {
@@ -67,6 +69,7 @@ export function serializeRegion(region: LeanRegion): RegionPayload {
     name: region.name,
     level: region.level,
     ...(region.parent_code ? { parent_code: region.parent_code } : {}),
+    slug: regionSlug(region),
   };
 }
 
@@ -92,6 +95,9 @@ export function serializeMeasure(measure: LeanMeasure): MeasureRow {
     ...(measure.source_dataset ? { source_dataset: measure.source_dataset } : {}),
     ...(measure.source_date ? { source_date: measure.source_date } : {}),
     ...(measure.data_quality_flag ? { data_quality_flag: measure.data_quality_flag } : {}),
+    ...(measure.extraction_confidence
+      ? { extraction_confidence: measure.extraction_confidence }
+      : {}),
     ...(measure.location ? { location: measure.location } : {}),
     ...(measure.unspsc ? { unspsc: measure.unspsc } : {}),
   };
@@ -205,7 +211,13 @@ export async function groupByRegion(
       return {
         region: region
           ? serializeRegion(region)
-          : { _id: regionId, code: regionId, name: 'Unknown region', level: 'region' as const },
+          : {
+              _id: regionId,
+              code: regionId,
+              name: 'Unknown region',
+              level: 'region' as const,
+              slug: regionId,
+            },
         measure_types: measureTypes,
         mixed,
         total_cents: mixed ? null : sumCents(rows.map((row) => row.amount_cents)),

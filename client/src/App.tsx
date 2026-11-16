@@ -20,6 +20,9 @@ export function App() {
           <Route path="/functions/:code" element={<FunctionsPage />} />
           <Route path="/regions" element={<RegionsPage />} />
           <Route path="/regions/:regionId" element={<RegionsPage />} />
+          {/* Contract C aliases: one shared area profile. */}
+          <Route path="/region/:regionId" element={<RegionsPage />} />
+          <Route path="/areas/:slug" element={<RegionsPage />} />
           <Route path="/states" element={<StatesPage />} />
           <Route path="/states/:code" element={<StatesPage />} />
           <Route path="/data-sources" element={<DataSourcesPage />} />

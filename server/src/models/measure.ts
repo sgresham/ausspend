@@ -33,6 +33,7 @@ export interface MeasureDocument {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
+  extraction_confidence?: 'low' | 'medium' | 'high';
   location?: SpendingLocationDocument;
   unspsc?: string;
 }
@@ -87,6 +88,7 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     source_dataset: { type: String },
     source_date: { type: String },
     data_quality_flag: { type: String },
+    extraction_confidence: { type: String, enum: ['low', 'medium', 'high'] },
     location: { type: LocationSchema },
     unspsc: { type: String, index: true },
   },

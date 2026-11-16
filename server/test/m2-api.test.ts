@@ -152,7 +152,7 @@ describe('GET /api/meta/coverage', () => {
     expect(response.status).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body).toMatchObject({
-      phase: 'Phase 1 + F2/F3 + S1/S2 (AusTender + PBS + NSW live)',
+      phase: 'Phase 1 + F2/F3 + S1/S2/S3 (AusTender + PBS + NSW + Dubbo live)',
       synthetic: true,
       live_ingestion: true,
       counts: { data_sources: 1, regions: 3, functions: 4, measures: 8 },
@@ -161,13 +161,14 @@ describe('GET /api/meta/coverage', () => {
       region_levels: ['national', 'state'],
     });
     expect(new Date(response.body.generated_at).toString()).not.toBe('Invalid Date');
-    expect(response.body.connectors).toHaveLength(12);
+    expect(response.body.connectors).toHaveLength(13);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'aus-tender' ||
           connector.id === 'data-gov-au-pbs' ||
           connector.id === 'nsw-budget' ||
-          connector.id === 'data-nsw-ckan'
+          connector.id === 'data-nsw-ckan' ||
+          connector.id === 'dubbo-council'
           ? 'active'
           : 'stub',
       );
@@ -322,6 +323,7 @@ describe('GET /api/spending', () => {
       jurisdiction_level: null,
       function: null,
       region: null,
+      area: null,
       min_amount: null,
       max_amount: null,
       sort: 'amount_desc',
@@ -396,6 +398,7 @@ describe('GET /api/spending', () => {
       jurisdiction_level: null,
       function: null,
       region: null,
+      area: null,
       min_amount: null,
       max_amount: null,
       sort: 'amount_desc',
@@ -469,7 +472,6 @@ describe('GET /api/spending', () => {
       'fiscal_year=2024',
       'function=7',
       'function=0111',
-      'region=NSW',
       'min_amount=-1',
       'max_amount=10.5',
       'min_amount=200&max_amount=100',
@@ -493,6 +495,10 @@ describe('GET /api/spending', () => {
     const region = await request(app).get(`/api/spending?region=${new mongoose.Types.ObjectId()}`);
     expect(region.status).toBe(404);
     expect(region.body.error).toMatch(/Unknown region/);
+
+    const slug = await request(app).get('/api/spending?region=not-a-region');
+    expect(slug.status).toBe(404);
+    expect(slug.body.error).toMatch(/Unknown region/);
   });
 });
 

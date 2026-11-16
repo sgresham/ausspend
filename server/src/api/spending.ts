@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import type { RequestHandler } from 'express';
 import {
   SpendingQuerySchema,
+  regionSlug,
   type PerMeasureTypeTotal,
   type SpendingAppliedFilters,
   type SpendingByFunction,
@@ -18,6 +19,7 @@ import {
 import { badRequest, notFound } from './errors.js';
 import { sumCents } from './filters.js';
 import { perMeasureTypeTotals, type LeanMeasure, type LeanRegion } from './measure-summary.js';
+import { areaQueries, buildAreaProfile, resolveRegion, type AreaProfile } from './area-profile.js';
 
 type LeanFunction = FunctionDocument & { _id: mongoose.Types.ObjectId };
 
@@ -109,6 +111,9 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.source_dataset ? { source_dataset: measure.source_dataset } : {}),
     ...(measure.source_date ? { source_date: measure.source_date } : {}),
     ...(measure.data_quality_flag ? { data_quality_flag: measure.data_quality_flag } : {}),
+    ...(measure.extraction_confidence
+      ? { extraction_confidence: measure.extraction_confidence }
+      : {}),
     ...(measure.location ? { location: measure.location } : {}),
     ...(measure.unspsc ? { unspsc: measure.unspsc } : {}),
     function_name: fn?.name ?? null,
@@ -198,6 +203,7 @@ function breakdownByRegion(
               code: regionId,
               name: 'Unknown region',
               level: 'region' as const,
+              slug: regionId,
             },
         count: rows.length,
         measure_types: measureTypes,
@@ -261,11 +267,27 @@ export const listSpending: RequestHandler = async (req, res) => {
     if (!exists) throw notFound(`Unknown function code: ${query.function}`);
   }
 
+  // Contract C: a 24-character _id filters exactly; a slug/name resolves to a
+  // Region. A sub-state region (including Dubbo) switches to the shared area
+  // profile and a multi-level row set. `area=<slug>` is an explicit alias.
   let regionId: mongoose.Types.ObjectId | undefined;
-  if (query.region) {
-    regionId = new mongoose.Types.ObjectId(query.region);
-    const exists = await RegionModel.exists({ _id: regionId });
-    if (!exists) throw notFound(`Unknown region: ${query.region}`);
+  let areaRegion: LeanRegion | null = null;
+  if (query.area) {
+    areaRegion = await resolveRegion(query.area);
+    if (!areaRegion || areaRegion.level !== 'region') {
+      throw notFound(`Unknown area: ${query.area}`);
+    }
+  } else if (query.region) {
+    if (mongoose.isValidObjectId(query.region)) {
+      regionId = new mongoose.Types.ObjectId(query.region);
+      const exists = await RegionModel.exists({ _id: regionId });
+      if (!exists) throw notFound(`Unknown region: ${query.region}`);
+    } else {
+      const resolved = await resolveRegion(query.region);
+      if (!resolved) throw notFound(`Unknown region: ${query.region}`);
+      if (resolved.level === 'region') areaRegion = resolved;
+      else regionId = resolved._id;
+    }
   }
 
   const mongoQuery: Record<string, unknown> = {};
@@ -274,6 +296,8 @@ export const listSpending: RequestHandler = async (req, res) => {
   if (query.jurisdiction_level) mongoQuery.jurisdiction_level = query.jurisdiction_level;
   if (query.function) mongoQuery.function_code = query.function;
   if (regionId) mongoQuery.region_id = regionId;
+  if (areaRegion)
+    Object.assign(mongoQuery, areaQueries(areaRegion, areaRegion.parent_code ?? 'NSW').combined);
   if (query.min_amount !== undefined || query.max_amount !== undefined) {
     mongoQuery.amount_cents = {
       ...(query.min_amount !== undefined ? { $gte: query.min_amount } : {}),
@@ -289,7 +313,38 @@ export const listSpending: RequestHandler = async (req, res) => {
     .lean<SummaryMeasure[]>();
 
   const lookups = await loadLookups(matching);
-  const summary = buildSummary(matching, lookups);
+
+  let summary:
+    | ReturnType<typeof buildSummary>
+    | {
+        count: number;
+        currency: 'AUD';
+        total_cents: null;
+        total_measure_type: null;
+        total_by_measure_type: PerMeasureTypeTotal[];
+        measure_types: LeanMeasure['measure_type'][];
+        mixed: true;
+        breakdown_by_function: [];
+        breakdown_by_region: [];
+      };
+  let areaProfile: AreaProfile | null = null;
+  if (areaRegion) {
+    // Never emit a cross-level or cross-type total in area mode.
+    areaProfile = await buildAreaProfile(areaRegion);
+    summary = {
+      count: matching.length,
+      currency: 'AUD',
+      total_cents: null,
+      total_measure_type: null,
+      total_by_measure_type: [],
+      measure_types: sortedTypes(matching),
+      mixed: true,
+      breakdown_by_function: [],
+      breakdown_by_region: [],
+    };
+  } else {
+    summary = buildSummary(matching, lookups);
+  }
 
   const total = matching.length;
   const start = (query.page - 1) * query.page_size;
@@ -306,6 +361,7 @@ export const listSpending: RequestHandler = async (req, res) => {
     jurisdiction_level: query.jurisdiction_level ?? null,
     function: query.function ?? null,
     region: query.region ?? null,
+    area: areaRegion ? regionSlug(areaRegion) : (query.area ?? null),
     min_amount: query.min_amount ?? null,
     max_amount: query.max_amount ?? null,
     sort: query.sort,
@@ -322,6 +378,7 @@ export const listSpending: RequestHandler = async (req, res) => {
       has_next: query.page < totalPages,
     },
     applied_filters,
+    ...(areaProfile ? { area_profile: areaProfile } : {}),
   });
 };
 

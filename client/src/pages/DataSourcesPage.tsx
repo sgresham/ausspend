@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   Alert,
   Box,
@@ -25,6 +26,16 @@ export function DataSourcesPage() {
   const sources = state.data?.sources ?? [];
   const connectors = coverage.data?.connectors ?? [];
 
+  // The page's source cards render after the API responds, so the browser's
+  // initial hash scroll happens too early. Re-apply the anchor once loaded.
+  useEffect(() => {
+    if (!state.data) return;
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    const target = document.getElementById(hash);
+    if (target) target.scrollIntoView({ block: 'start' });
+  }, [state.data]);
+
   return (
     <Box>
       <Typography variant="h1" gutterBottom>
@@ -39,10 +50,12 @@ export function DataSourcesPage() {
         projects layer); its rows are Budgeted, never actual/spent. Targeted data.nsw.gov.au CKAN
         ingestion is live as of S2: selected CSV/XLSX and DataStore datasets only, with SHA-256
         archived copies. PDF/DOCX resources are deliberately deferred and listed on that source —
-        they are not ingested. GrantConnect remains a blocked stub — the Commonwealth publishes no
-        grant award API/feed and the cited Track A adaptor does not exist without a paid token — and
-        VIC/QLD/WA remain stubs. No direct GrantConnect scraper is built and no grant records are
-        claimed.
+        they are not ingested. S3 adds exactly one local council, Dubbo Regional Council (
+        <code>dubbo-council</code>): its adopted 2026/27 budget PDF is archived with SHA-256 and
+        every local row is provisional and unverified. No other council is covered. GrantConnect
+        remains a blocked stub — the Commonwealth publishes no grant award API/feed and the cited
+        Track A adaptor does not exist without a paid token — and VIC/QLD/WA remain stubs. No direct
+        GrantConnect scraper is built and no grant records are claimed.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -174,6 +187,14 @@ export function DataSourcesPage() {
                     </Typography>
                   ) : null}
 
+                  {source.source_id === 'dubbo-council' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link component={RouterLink} to="/areas/dubbo">
+                        Open the Dubbo area profile (local + NSW-wide + NSW-tagged federal + PBS) →
+                      </Link>
+                    </Typography>
+                  ) : null}
+
                   {source.deferred_resources && source.deferred_resources.length > 0 ? (
                     <Alert
                       severity="info"
@@ -228,9 +249,10 @@ export function DataSourcesPage() {
         AusTender OCDS contractPublished feed, <code>data-gov-au-pbs</code> is live from the
         data.gov.au CKAN PBS CSV, <code>nsw-budget</code> is live from the NSW 2025-26 open-data
         XLSX snapshot plus ArcGIS capital projects, and <code>data-nsw-ckan</code> is live from
-        selected data.nsw.gov.au CKAN CSV/XLSX/DataStore resources. <code>grantconnect</code> is
+        selected data.nsw.gov.au CKAN CSV/XLSX/DataStore resources, and <code>dubbo-council</code>
+        is live for one local council only (Dubbo Regional Council). <code>grantconnect</code> is
         blocked pending a usable adaptor (no public award API; no direct scraper) and the remaining
-        seven connectors (four federal and VIC/QLD/WA) are stubs.
+        seven connectors (four federal and VIC/QLD/WA) are stubs. No other council is covered.
       </Typography>
 
       {!coverage.data && coverage.error ? (

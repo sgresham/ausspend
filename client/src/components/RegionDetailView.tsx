@@ -18,6 +18,7 @@ import {
 } from './SpendingTables';
 import { ApiErrorState, EmptyState, LoadingState } from './StatusViews';
 import { TotalsPanel } from './TotalsPanel';
+import { AreaPanels } from './AreaPanels';
 
 interface RegionDetailViewProps {
   regionId?: string;
@@ -114,6 +115,7 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
   }
 
   const region = detail.region;
+  const areaProfile = detail.area_profile ?? null;
   const sources = uniqueSources(detail.measures);
   const totals = typeTotalsFromApi(detail.total_by_measure_type);
   const functionNames = new Map(
@@ -133,7 +135,9 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
   }));
   const functionBarSources = uniqueSources(singleFunctionGroups.flatMap((group) => group.measures));
 
-  const exploreParams = new URLSearchParams({ region: region._id });
+  const exploreParams = new URLSearchParams(
+    areaProfile ? { area: areaProfile.area.slug } : { region: region._id },
+  );
   if (detail.filters.fiscal_year) exploreParams.set('fiscal_year', detail.filters.fiscal_year);
   if (detail.filters.measure_type) exploreParams.set('measure_type', detail.filters.measure_type);
   const exploreUrl = `/search?${exploreParams.toString()}`;
@@ -148,9 +152,9 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
         {region.name} ({region.code})
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Spending recorded for this region in the Phase 1 synthetic seed. Region detail is fetched by
-        the region&apos;s <code>_id</code>; state pages use the state/territory abbreviation. Group
-        totals and per-type totals come from the API.
+        {areaProfile
+          ? 'Area profile: local Dubbo rows, NSW-wide state rows, NSW-tagged federal AusTender rows and a separate Commonwealth-wide PBS panel. These levels overlap and are never added together.'
+          : 'Spending recorded for this region in the Phase 1 synthetic seed. Region detail is fetched by the region _id or a case-insensitive slug/name; state pages use the state/territory abbreviation. Group totals and per-type totals come from the API.'}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
         <Button
@@ -176,6 +180,16 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
           title="No measures for this view"
           message={`No measure rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. Nothing is being estimated or filled in.`}
         />
+      ) : areaProfile ? (
+        <>
+          <AreaPanels profile={areaProfile} />
+          <MeasureRowsTable
+            rows={detail.measures}
+            labelFor={labelFor}
+            caption="Local, state and NSW-tagged federal rows keep their own jurisdiction level, measure type, source id and source URL. Panels are not additive."
+            testId="region-measure-rows"
+          />
+        </>
       ) : (
         <>
           <TotalsPanel

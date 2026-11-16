@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { FunctionLevelSchema } from './cofog.js';
 import { MeasureTypeSchema } from './measure.js';
-import { JurisdictionLevelSchema, SpendingLocationSchema } from './measure-record.js';
+import {
+  ExtractionConfidenceSchema,
+  JurisdictionLevelSchema,
+  SpendingLocationSchema,
+} from './measure-record.js';
 import { REGION_LEVELS, RegionLevelSchema } from './regions.js';
 import { SourceUrlSchema } from './source.js';
 
@@ -44,7 +48,10 @@ export const SpendingQuerySchema = z
     measure_type: MeasureTypeSchema.optional(),
     jurisdiction_level: JurisdictionLevelSchema.optional(),
     function: SpendingFunctionCodeSchema.optional(),
-    region: SpendingRegionIdSchema.optional(),
+    // A 24-character region _id (exact filter) or a case-insensitive slug/name.
+    region: z.string().trim().min(1).max(100).optional(),
+    // Explicit area slug; resolves to the same area profile as a region slug.
+    area: z.string().trim().min(1).max(100).optional(),
     min_amount: z.coerce
       .number()
       .int()
@@ -112,6 +119,7 @@ export const SpendingMeasureRowSchema = z.object({
   source_dataset: z.string().min(1).optional(),
   source_date: z.string().min(1).optional(),
   data_quality_flag: z.string().min(1).optional(),
+  extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
   unspsc: z.string().min(1).optional(),
   function_name: z.string().min(1).nullable(),
@@ -145,6 +153,7 @@ export const SpendingRegionRefSchema = z.object({
   name: z.string().min(1),
   level: RegionLevelSchema,
   parent_code: z.string().min(2).optional(),
+  slug: z.string().min(1).optional(),
 });
 
 export type SpendingRegionRef = z.infer<typeof SpendingRegionRefSchema>;
@@ -199,6 +208,7 @@ export const SpendingAppliedFiltersSchema = z.object({
   jurisdiction_level: JurisdictionLevelSchema.nullable(),
   function: z.string().nullable(),
   region: z.string().nullable(),
+  area: z.string().nullable().optional(),
   min_amount: z.number().int().nonnegative().nullable(),
   max_amount: z.number().int().nonnegative().nullable(),
   sort: SpendingSortSchema,

@@ -10,6 +10,7 @@ import {
   RegionModel,
 } from '../models/index.js';
 import { HttpError } from './errors.js';
+import { AREA_NOT_COVERED } from './area-profile.js';
 
 /** Federal sources that are registered but still waiting on a live connector. */
 export const PENDING_FEDERAL_SOURCES = ['grantconnect'] as const;
@@ -27,9 +28,10 @@ function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
-    'Region granularity is national plus state/territory only. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
+    'Region granularity is national plus state/territory plus one S3 sub-state region (Dubbo, level "region", parent NSW). No other local council or other state has a connector. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
     'NSW Budget 2025-26 rows come from the 12 official XLSX workbooks in the 14 November 2025 Wayback snapshot plus the ArcGIS Treasury_Project_Data_20260609_gdb layer. Financial/HFI values are $m/$b statement line items; capital projects are $000 Budgeted amounts. Negative net/deficit lines are skipped, not sign-flipped, and missing LGAs are left absent (statewide_only), never inferred.',
     "data.nsw.gov.au CKAN ingestion is targeted: nine discovery searches and a small selected dataset set, never the whole ~16,907-dataset portal. CSV/XLSX downloads and DataStore pages are archived with SHA-256. PDF/DOC/DOCX resources are deferred to the separate PDF foundation and are listed on the source. Units are explicit where CKAN states one; NSW Budget Paper 2 capital allocations are provisionally treated as $'000 and fleet spend as $, and measure types are never summed.",
+    "S3 covers exactly one council: Dubbo Regional Council's adopted 2026/27 budget PDF (archived with SHA-256). Summary tables use the printed ($000's) unit and reconcile their column totals; the capital program is dollars only after magnitude reconciliation against the explicit summary, and is rejected if category/group/grand totals disagree. Every local row is provisional and unverified. Area panels (local, NSW-wide state, NSW-tagged federal, Commonwealth-wide PBS) are never added together. All other councils and states/territories are not covered.",
   ];
 }
 
@@ -121,13 +123,20 @@ export function createCoverageHandler(
     const pbs = dataSourceById.get('data-gov-au-pbs');
     const nswCkan = dataSourceById.get('data-nsw-ckan');
     const stateLive = stateConnectors.some((connector) => connector.status === 'active');
+    const localConnectors = connectors.filter(
+      (connector) => connector.jurisdiction_level === 'local',
+    );
+    const dubbo = dataSourceById.get('dubbo-council');
+    const localLive = localConnectors.some((connector) => connector.status === 'active');
 
     res.set('Cache-Control', 'no-store');
     res.json({
       phase: liveIngestion
         ? pbsLive
           ? stateLive
-            ? 'Phase 1 + F2/F3 + S1/S2 (AusTender + PBS + NSW live)'
+            ? localLive
+              ? 'Phase 1 + F2/F3 + S1/S2/S3 (AusTender + PBS + NSW + Dubbo live)'
+              : 'Phase 1 + F2/F3 + S1/S2 (AusTender + PBS + NSW live)'
             : 'Phase 1 + F2/F3 (AusTender + PBS live)'
           : 'Phase 1 + F2 (AusTender live)'
         : 'Phase 1',
@@ -185,6 +194,22 @@ export function createCoverageHandler(
           : null,
         deferred_resources: nswCkan?.deferred_resources ?? [],
         note: 'NSW Budget 2025-26 Open Data (official Wayback XLSX copy + ArcGIS capital projects) and targeted data.nsw.gov.au CKAN datasets are live. CKAN CSV/XLSX downloads and DataStore pages are archived with SHA-256; PDF/DOCX resources are deferred and listed here, not ingested. Victoria, Queensland and Western Australia remain stubs. NSW Budget rows are Budgeted/estimate/actual statement line items, never spent amounts, and measure types are never summed.',
+      },
+      local_ingestion: {
+        live: localConnectors
+          .filter((connector) => connector.status === 'active')
+          .map((connector) => connector.id),
+        degraded: localConnectors
+          .filter((connector) => connector.status === 'degraded')
+          .map((connector) => connector.id),
+        stubs: localConnectors
+          .filter((connector) => connector.status === 'stub')
+          .map((connector) => connector.id),
+        dubbo_last_ingested_at: dubbo?.last_ingested_at
+          ? new Date(dubbo.last_ingested_at).toISOString()
+          : null,
+        note: 'S3 covers one local council only: Dubbo Regional Council (source dubbo-council). Its adopted budget/capital PDF is archived and every row is provisional and unverified. Area panels are local, NSW-wide state, NSW-tagged federal AusTender and Commonwealth-wide PBS; they are not additive. No other council is covered.',
+        not_covered: AREA_NOT_COVERED,
       },
       ingestion: {
         latest_logs: latestLogs.map((log) => ({

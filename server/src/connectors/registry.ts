@@ -1,5 +1,6 @@
 import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
+import { createDubboConnector } from './dubbo-council.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
@@ -98,6 +99,10 @@ export const CONNECTORS: readonly Connector[] = [
       ? { manifestPath: process.env.NSW_CKAN_MANIFEST_PATH }
       : {}),
   }),
+  // S3: one local council only (Dubbo Regional Council). The adopted budget
+  // PDF is archived and parsed by a Dubbo-specific adapter on top of the shared
+  // PDF foundation. Other councils are not covered.
+  createDubboConnector(),
   stub({
     id: 'vic-budget',
     name: 'Victorian State Budget',
