@@ -150,9 +150,19 @@ async function apiChecks() {
       `expected live_ingestion:false, got ${body?.live_ingestion}`,
     );
     assert(
-      Array.isArray(body?.connectors) && body.connectors.length === 8,
-      'expected 8 connectors',
+      Array.isArray(body?.connectors) && body.connectors.length === 11,
+      `expected 11 connectors, got ${body?.connectors?.length}`,
     );
+    const connectorIds = body.connectors.map((connector) => connector.id);
+    for (const federalId of ['aus-tender', 'data-gov-au-pbs', 'grantconnect']) {
+      const connector = body.connectors.find((entry) => entry.id === federalId);
+      assert(connector, `missing federal connector ${federalId}`);
+      assert(
+        connector.status === 'stub',
+        `expected ${federalId} to be a stub, got ${connector.status}`,
+      );
+    }
+    assert(connectorIds.length === new Set(connectorIds).size, 'connector ids must be unique');
     assert(body.counts?.data_sources > 0, 'counts.data_sources must be > 0');
     assert(body.counts?.regions > 0, 'counts.regions must be > 0');
     assert(body.counts?.functions > 0, 'counts.functions must be > 0');
