@@ -59,10 +59,32 @@ docker compose up --build
 
 This starts three containers from the `node:24-alpine` image:
 
-1. `seed` — one-shot: `npm ci`, builds `shared`, then `npm run seed`. It exits nonzero if the seed
-   guard refuses the database, and `server`/`client` do not start unless it completes successfully.
+1. `seed` — one-shot: `npm ci`, builds `shared`, then `npm run seed`. The seed is **safe by
+   default**: it replaces only rows owned by `synthetic-seed`, so live AusTender contracts, other
+   data sources and `ingestion_logs` survive every restart. It exits nonzero if the guard refuses
+   the database, and `server`/`client` do not start unless it completes successfully.
 2. `server` — API on <http://localhost:3001>, waiting for `seed` to finish.
 3. `client` — Vite dev server on <http://localhost:5173>, waiting for the API healthcheck.
+
+Restarting with `docker compose up` is therefore **non-destructive**. The destructive reset is
+opt-in only: `docker compose run --rm seed sh -c "npm ci && npm run seed -- --reset"` (or
+`npm run seed -- --reset` locally). Never run it against a database whose ingested rows you want
+to keep.
+
+To re-ingest AusTender into the running stack, use the opt-in `ingest` profile (it waits for the
+safe seed, then runs `npm run ingest:federal`):
+
+```bash
+docker compose --profile ingest run --rm ingest
+# narrow acceptance window:
+AUSTENDER_START_DATE=2026-11-02T00:00:00Z \
+AUSTENDER_END_DATE=2026-11-09T00:00:00Z \
+INGEST_SOURCES=aus-tender \
+docker compose --profile ingest run --rm ingest
+```
+
+The `ingest` service never runs on a plain `docker compose up`; it is opt-in. Ports are
+env-overridable if 3001/5173 are taken: `SERVER_PORT=3101 CLIENT_PORT=5174 docker compose up`.
 
 The source tree is bind-mounted at `/app`; `node_modules`, per-workspace `node_modules` and the
 shared `dist` output live in named volumes, so the compose stack never writes root-owned
@@ -100,23 +122,36 @@ Or run one side at a time: `npm run dev:server`, `npm run dev:client`. The Vite 
 
 ## Seed data
 
-The seed resets only the `ausspend_dev` database on host `q`. It refuses to run against any other
-database name, so a stray `MONGO_URL` cannot wipe unrelated data. It writes one clearly-marked
+The seed only ever touches the `ausspend_dev` database on host `q`. It refuses to run against any
+other database name, so a stray `MONGO_URL` cannot wipe unrelated data. It writes one clearly-marked
 synthetic source (`source_id: synthetic-seed`, `source_url: /data-sources#synthetic-seed`,
 `verified: false`), the national row plus the eight states/territories, the ten COFOG divisions
 with curated subdivisions, and actual/budget/estimate measures for three fiscal years. Seeded
 rows deliberately have no `natural_key`: the sparse unique index only applies to ingested records.
 
+**Restart semantics.** A normal seed is non-destructive: it deletes only measures whose
+`source_id` is `synthetic-seed`, upserts the synthetic source/regions/functions, and leaves every
+ingested row, other `data_sources` and every `ingestion_logs` document untouched. Seeding twice
+therefore yields the same 810 synthetic rows, no duplicates, and the same live contracts.
+
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run seed
-# [seed] sources=1 regions=9 functions=53 measures=810
+# [seed] target database: ausspend_dev (safe, preserves ingested rows)
+# [seed] sources=2 regions=9 functions=53 measures=1671 synthetic=810 non_synthetic=861
 # [seed] verified measures: 0 (must be 0)
 ```
 
-Re-running is deterministic: identical counts and values. The seed refuses a missing `MONGO_URL`
-and any database whose name is not exactly `ausspend_dev` (for example
-`mongodb://10.10.10.30:27017/some_other_db`), exiting nonzero before it deletes anything.
+The only destructive path is explicit:
+
+```bash
+npm run seed -- --reset          # or SEED_RESET=1 npm run seed
+```
+
+It deletes every measure, function, region and data source before seeding. There is no profile or
+default that runs it. The seed also refuses a missing `MONGO_URL` and any database whose name is
+not exactly `ausspend_dev` (for example `mongodb://10.10.10.30:27017/some_other_db`), exiting
+nonzero before it changes anything.
 
 ## API
 
@@ -232,6 +267,18 @@ INGEST_SOURCES=aus-tender \
 MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
 npm run ingest:federal
 ```
+
+In Docker, the same run is the opt-in compose profile (it does not run on a normal `up`):
+
+```bash
+AUSTENDER_START_DATE=2026-11-02T00:00:00Z \
+AUSTENDER_END_DATE=2026-11-09T00:00:00Z \
+INGEST_SOURCES=aus-tender \
+docker compose --profile ingest run --rm ingest
+```
+
+Ingestion is idempotent on `natural_key` (`ocid`), so re-running it after a seed/restart never
+duplicates contracts.
 
 The endpoint, the `contractPublished` nuance, the `contracts[0]`/`parties[]` mapping, the
 July–June FY rule, location quality flags, pagination/rate limits, natural key and the remaining
@@ -370,10 +417,11 @@ verified measures before reporting success.
 ## Docker Compose (development)
 
 `docker-compose.yml` is the authoritative one-command development flow documented above: a
-one-shot `seed` service, then `server` and `client`, all from `node:24-alpine`. It passes
-`MONGO_URL` from the host environment (defaulting to host `q`'s `ausspend_dev`) and deliberately
-has **no mongo service**. Dependency/build directories are named volumes under the bind mount, so
-`docker compose down -v` leaves the host checkout clean.
+one-shot, non-destructive `seed` service, then `server` and `client`, all from `node:24-alpine`.
+The opt-in `ingest` profile re-runs federal ingestion after that safe seed and is never started by
+a plain `up`. It passes `MONGO_URL` from the host environment (defaulting to host `q`'s
+`ausspend_dev`) and deliberately has **no mongo service**. Dependency/build directories are named
+volumes under the bind mount, so `docker compose down -v` leaves the host checkout clean.
 
 ## Repository rule
 

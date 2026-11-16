@@ -139,6 +139,50 @@ curl -s 'http://localhost:3101/api/v1/meta/coverage'
 Re-run the ingestion command and compare the counts: they should not grow except for genuinely new
 `ocid`s in the same window.
 
+## Restart safety (seed vs live ingestion)
+
+The development seed is **non-destructive by default**. On a normal run it deletes only measures
+whose `source_id` is `synthetic-seed`, upserts the synthetic source/regions/functions, and leaves
+every ingested AusTender contract, every other `data_sources` register entry and every
+`ingestion_logs` document untouched. That is why `docker compose up` (which runs the one-shot
+`seed` service) can be repeated without losing the 861 live contracts.
+
+The only destructive path is explicit and opt-in:
+
+```bash
+npm run seed -- --reset          # wipes measures, functions, regions and data sources first
+```
+
+There is no compose profile or default that runs `--reset`.
+
+### Re-ingest after a restart
+
+The `ingest` compose service is an opt-in profile, so a plain `docker compose up` never runs it:
+
+```bash
+# default window (seven complete days before today, UTC)
+docker compose --profile ingest run --rm ingest
+
+# narrow acceptance window
+AUSTENDER_START_DATE=2026-11-02T00:00:00Z \
+AUSTENDER_END_DATE=2026-11-09T00:00:00Z \
+INGEST_SOURCES=aus-tender \
+docker compose --profile ingest run --rm ingest
+```
+
+Without Docker, run the same `npm run ingest:federal` command from the previous section. Both
+paths wait for the safe seed and upsert on `natural_key`, so a re-run never duplicates contracts
+and a subsequent seed never removes them.
+
+### Expected coexistence after the narrow run
+
+```text
+810 synthetic measures (source_id: synthetic-seed)
+861 AusTender contract measures (source_id: aus-tender, measure_type: contract)
+861 distinct federal natural_key values
+data_sources: synthetic-seed active, aus-tender active
+```
+
 ## Remaining caveats
 
 - **PBS (data.gov.au) is pending.** Portfolio Budget Statements are budget/actual measures, not
