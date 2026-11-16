@@ -99,26 +99,43 @@ invalid query parameters return JSON `400`.
 ## Checks
 
 ```bash
+npm ci               # install from the lockfile
 npm run typecheck    # shared build then server + client TypeScript
 npm run lint         # ESLint flat config
 npm run format:check # Prettier
 npm test             # Vitest shared + server suites
 npm run build        # shared, server and client production builds
-npm run test:e2e     # Playwright smoke test (needs browsers installed)
+npm run test:e2e     # Playwright specs with page.route API mocks
 ```
+
+The Playwright suite mocks every `/api` response with `page.route`, so it does not need the seeded
+database or a running API. The dev server pair in `playwright.config.ts` still starts for the page
+shell; e2e only requires installed browsers (`npx playwright install chromium`).
 
 ## Pages
 
-Six routes are wired in the shell, each rendering a clearly-marked placeholder:
+Six routes render live API data. Every page shows a persistent Phase 1 coverage banner: synthetic
+seed only, no live ingestion, figures unverified.
 
-| Route                 | Purpose                                       |
-| --------------------- | --------------------------------------------- |
-| `/`                   | Home / national overview                      |
-| `/search`             | Search across programs, functions and regions |
-| `/functions/:code?`   | COFOG division index and detail               |
-| `/regions/:regionId?` | Region index and detail                       |
-| `/states/:code?`      | State/territory index and detail              |
-| `/data-sources`       | Source register and verification status       |
+| Route                 | Purpose                                                                |
+| --------------------- | ---------------------------------------------------------------------- |
+| `/`                   | What ausspend is, quick links, COFOG divisions and source verification |
+| `/search?q=`          | Search regions and functions, linking to their pages                   |
+| `/functions/:code?`   | COFOG division index and detail with fiscal-year/measure-type filters  |
+| `/regions/:regionId?` | Region directory and detail by region `_id`                            |
+| `/states/:code?`      | State/territory directory and detail by abbreviation                   |
+| `/data-sources`       | Source register with licence, retrieval date and verification status   |
+
+The client has a small typed API layer in `client/src/api` (fetch + error normalisation) and shared
+provenance components in `client/src/components`. Every amount and table row shows a source id,
+source link and verification badge. There is no map.
+
+### Measure-type rule
+
+A response containing more than one measure type is **mixed**: the API returns `total_cents: null`
+and withholds `ranked_states`, and the UI shows a warning plus a per-measure-type breakdown instead
+of a headline total. Per-type totals computed from rows request `limit=1000` so the sum is not
+truncated. A single measure type may show a headline total, ranked states and a bar.
 
 ## Data and provenance
 
