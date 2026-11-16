@@ -42,6 +42,7 @@ export const listIngestionLogs: RequestHandler = async (req, res) => {
       records_upserted: log.records_upserted,
       errors: log.errors,
       ...(log.message ? { message: log.message } : {}),
+      ...(log.backup_path ? { backup_path: log.backup_path } : {}),
     })),
     count: logs.length,
   });

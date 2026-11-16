@@ -11,6 +11,8 @@ export interface IngestionLogDocument {
   records_upserted: number;
   errors: string[];
   message?: string;
+  /** Set only for a gated AusTender historical backfill; never contains secrets. */
+  backup_path?: string;
 }
 
 const IngestionLogMongooseSchema = new Schema<IngestionLogDocument>(
@@ -28,6 +30,7 @@ const IngestionLogMongooseSchema = new Schema<IngestionLogDocument>(
     records_upserted: { type: Number, required: true, default: 0, min: 0 },
     errors: { type: [String], required: true, default: [] },
     message: { type: String },
+    backup_path: { type: String },
   },
   { collection: 'ingestion_logs', versionKey: false, suppressReservedKeysWarning: true },
 );

@@ -23,6 +23,8 @@ export interface IngestionRunResult {
 export interface RunIngestionOptions {
   connectors?: readonly Connector[];
   now?: () => Date;
+  /** Recorded in ingestion_logs when a gated AusTender historical backfill runs. */
+  ausTenderBackfillBackupPath?: string;
 }
 
 function errorMessage(error: unknown): string {
@@ -94,6 +96,8 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
 
   for (const connector of connectors) {
     const startedAt = now();
+    const backupPath =
+      connector.id === 'aus-tender' ? options.ausTenderBackfillBackupPath : undefined;
 
     if (connector.status === 'stub') {
       const message = 'stub — not wired; skipped';
@@ -106,6 +110,7 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         records_upserted: 0,
         errors: [],
         message,
+        ...(backupPath ? { backup_path: backupPath } : {}),
       });
       await recordSourceState(connector, 'stub', now(), 0, []);
       results.push({
@@ -160,6 +165,7 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
             : warnings.length > 0
               ? `completed with warnings: ${warnings.join('; ')}`
               : 'completed successfully',
+        ...(backupPath ? { backup_path: backupPath } : {}),
       });
       await recordSourceState(
         connector,
@@ -192,6 +198,7 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         records_upserted: 0,
         errors: [message],
         message: 'source failed; run continues with the next connector',
+        ...(backupPath ? { backup_path: backupPath } : {}),
       });
       await recordSourceState(connector, 'degraded', finishedAt, 0, [message]);
       results.push({

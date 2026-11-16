@@ -155,6 +155,87 @@ default that runs it. The seed also refuses a missing `MONGO_URL` and any databa
 not exactly `ausspend_dev` (for example `mongodb://10.10.10.30:27017/some_other_db`), exiting
 nonzero before it changes anything.
 
+## Backup, restore and the AusTender backfill gate
+
+The current live baseline is **810 synthetic seed measures** plus **861 AusTender contract
+measures** (the `measures` collection also contains the PBS line items, so its total is larger).
+Before any historical AusTender backfill, take a verified backup:
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+npm run db:backup -- --prune 14
+# [backup] wrote /home/steve/backups/ausspend/2026-11-16T11-04-33.153Z
+# [backup] natural_key count=2092 distinct=2092 checksum=...
+# [backup] data_sources aus-tender=active data-gov-au-pbs=active synthetic-seed=active
+```
+
+`db:backup` reads `MONGO_URL`, refuses anything except `ausspend_dev` (or an explicit
+`--scratch` `ausspend_test_*`/`ausspend_restore_test_*` database), and writes every collection as
+Extended JSON to a timestamped directory **outside the repository**. The default root is
+`/home/steve/backups/ausspend` (`AUSSPEND_BACKUP_ROOT` or `--out-root` overrides it). The manifest
+records every collection count and index, the `data_sources` statuses, and the `natural_key`
+count, distinct count and SHA-256 checksum. `MONGO_URL` is redacted in logs and never written with
+credentials. `--prune 14` removes only old timestamped backup directories under that root.
+
+Restore into a **scratch database by default**; this is the only routine restore path:
+
+```bash
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+  npm run db:restore -- /home/steve/backups/ausspend/2026-11-16T11-04-33.153Z \
+  --target ausspend_restore_test_20261116_safety1
+# [restore] verify natural_key count=2092 distinct=2092 checksum=...
+# [restore] OK target=ausspend_restore_test_20261116_safety1
+```
+
+The restore verifies every collection count, `natural_key` uniqueness/checksum and the
+`data_sources` statuses after writing, and exits nonzero on any mismatch. Restoring into the live
+database is deliberately hard: it requires both `--target ausspend_dev` **and**
+`--confirm ausspend_dev`, a backup whose manifest says `ausspend_dev`, and the user/approver's
+explicit approval. Do not use it as a normal test.
+
+### Historical backfill is gated
+
+The historical AusTender backfill is **not** part of a normal ingestion run and must not be
+started until the user/approver confirms. `npm run ingest:federal` with `--backfill` requires:
+
+- `BACKFILL_CONFIRM=yes`;
+- `BACKUP_DIR` (or `--backup-dir`) pointing at a complete, recent, verified `ausspend_dev` backup
+  (default maximum age 60 minutes, `BACKFILL_MAX_BACKUP_AGE_MINUTES`);
+- explicit `AUSTENDER_START_DATE` and `AUSTENDER_END_DATE` for a real run;
+- `INGEST_SOURCES` including `aus-tender`.
+
+The gate refuses a missing, stale, truncated or checksum-mismatched backup and records the refused
+attempt in `ingestion_logs` with `records_fetched: 0`. Validate the gate without fetching any data:
+
+```bash
+BACKFILL_CONFIRM=yes BACKUP_DIR=/home/steve/backups/ausspend/2026-11-16T11-04-33.153Z \
+  npm run ingest:federal -- --backfill --dry-run
+# [ingest] backfill gate passed backup=... age_minutes=... natural_key=...
+# [ingest] backfill gate dry run OK target=ausspend_dev backup=...
+```
+
+A real backfill additionally records the verified backup path in the `ingestion_logs.backup_path`
+field. Do not run it without explicit approval.
+
+### Daily backup timer
+
+User-level systemd units live in `scripts/systemd/` (service + timer). The installer copies them
+to `~/.config/systemd/user/` and snapshots `db-backup.mjs` + `lib/backup-format.mjs` with their
+own `node_modules` into `~/.local/share/ausspend-backup`, so the timer works even when
+`/opt/ausspend/node_modules` is empty and the Docker stack is down. Re-run the installer after
+changing the backup script.
+
+```bash
+scripts/install-db-backup-timer.sh
+systemctl --user list-timers ausspend-db-backup.timer
+systemctl --user status ausspend-db-backup.service
+journalctl --user -u ausspend-db-backup.service -n 20
+```
+
+The timer runs daily (`03:15` with a short randomized delay), is `Persistent=true`, keeps 14
+backups via `--prune 14`, and logs to the journal. It prunes only under
+`/home/steve/backups/ausspend`, never application data.
+
 ## API
 
 All amounts are integer cents and every measure row carries `source_id`, `source_url` and

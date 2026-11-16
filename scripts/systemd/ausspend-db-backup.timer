@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily ausspend MongoDB backup
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+RandomizedDelaySec=15m
+Persistent=true
+Unit=ausspend-db-backup.service
+
+[Install]
+WantedBy=timers.target
