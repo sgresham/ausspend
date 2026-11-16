@@ -59,6 +59,7 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
 
   const years = coverage.data?.fiscal_years ?? [];
   const measureTypes = base.data?.measure_types ?? [];
+  const syntheticPresent = coverage.data?.synthetic ?? true;
 
   const setFilters = (next: FilterSelection) => {
     const params = new URLSearchParams(searchParams);
@@ -154,7 +155,9 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {areaProfile
           ? 'Area profile: local Dubbo rows, NSW-wide state rows, NSW-tagged federal AusTender rows and a separate Commonwealth-wide PBS panel. These levels overlap and are never added together.'
-          : 'Spending recorded for this region in the Phase 1 synthetic seed. Region detail is fetched by the region _id or a case-insensitive slug/name; state pages use the state/territory abbreviation. Group totals and per-type totals come from the API.'}
+          : syntheticPresent
+            ? 'Spending recorded for this region in the Phase 1 synthetic seed and live ingestions. Region detail is fetched by the region _id or a case-insensitive slug/name; state pages use the state/territory abbreviation. Group totals and per-type totals come from the API.'
+            : 'Real spending recorded for this region. Region pages match a curated region _id; state pages also match location.state. No real feed covers national or non-NSW state actual/estimate spending with COFOG and region yet. Group totals and per-type totals come from the API.'}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
         <Button
@@ -177,8 +180,14 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
 
       {detail.count === 0 ? (
         <EmptyState
-          title="No measures for this view"
-          message={`No measure rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. Nothing is being estimated or filled in.`}
+          title={
+            syntheticPresent ? 'No measures for this view' : 'No real data for this dimension yet'
+          }
+          message={
+            syntheticPresent
+              ? `No measure rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. Nothing is being estimated or filled in.`
+              : `No real published spending rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. The synthetic seed is not present and no real feed covers this region/type yet. Nothing is estimated, zero-filled or replaced with a placeholder.`
+          }
         />
       ) : areaProfile ? (
         <>
@@ -196,7 +205,11 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
             summary={detail}
             sources={sources}
             scopeLabel={region.name}
-            note="Phase 1 synthetic seed; every row is verified:false."
+            note={
+              syntheticPresent
+                ? 'Phase 1 synthetic seed and live ingestions; every row is verified:false.'
+                : 'Real published rows only; every row is unverified until human-checked.'
+            }
           />
 
           {detail.mixed ? (

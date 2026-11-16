@@ -42,15 +42,16 @@ export function DataSourcesPage() {
         Data sources
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        The registered sources behind every figure. The synthetic development seed is explicitly
-        unverified; the anchor <code>#synthetic-seed</code> resolves to it below. AusTender is a
-        live federal source as of F2 and data.gov.au PBS budget line items are live as of F3 — their
-        ingested records and last-ingested times appear here with their provenance. NSW Budget
-        2025-26 Open Data is live as of S1 (official Wayback XLSX copy plus the ArcGIS capital
-        projects layer); its rows are Budgeted, never actual/spent. Targeted data.nsw.gov.au CKAN
-        ingestion is live as of S2: selected CSV/XLSX and DataStore datasets only, with SHA-256
-        archived copies. PDF/DOCX resources are deliberately deferred and listed on that source —
-        they are not ingested. S3 adds exactly one local council, Dubbo Regional Council (
+        The registered sources behind every figure. When present, the synthetic development seed is
+        explicitly unverified and the anchor <code>#synthetic-seed</code> resolves to it below. When
+        it has been retired, the register lists only real sources. AusTender is a live federal
+        source as of F2 and data.gov.au PBS budget line items are live as of F3 — their ingested
+        records and last-ingested times appear here with their provenance. NSW Budget 2025-26 Open
+        Data is live as of S1 (official Wayback XLSX copy plus the ArcGIS capital projects layer);
+        its rows are Budgeted, never actual/spent. Targeted data.nsw.gov.au CKAN ingestion is live
+        as of S2: selected CSV/XLSX and DataStore datasets only, with SHA-256 archived copies.
+        PDF/DOCX resources are deliberately deferred and listed on that source — they are not
+        ingested. S3 adds exactly one local council, Dubbo Regional Council (
         <code>dubbo-council</code>): its adopted 2026/27 budget PDF is archived with SHA-256 and
         every local row is provisional and unverified. No other council is covered. GrantConnect is
         a manual, SHA-256-archived DownloadResult XLSX import (chunked and cap-safe): it is not an

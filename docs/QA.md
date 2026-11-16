@@ -72,7 +72,7 @@ The audit defaults to <http://localhost:5173> and <http://localhost:3001>; overr
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run seed
 npm run seed
-# both: [seed] sources=1 regions=9 functions=53 measures=810
+# both: [seed] mode=synthetic ... regions=9 functions=53 synthetic=810 synthetic_written=810
 #       [seed] verified measures: 0 (must be 0)
 
 MONGO_URL=mongodb://10.10.10.30:27017/not_ausspend_dev npm run seed
@@ -80,6 +80,42 @@ MONGO_URL=mongodb://10.10.10.30:27017/not_ausspend_dev npm run seed
 ```
 
 The guard runs before any delete or connect, so a refused target is never touched.
+
+## Synthetic-seed removal readiness (dry run only)
+
+Read [SYNTHETIC_REMOVAL_READINESS.md](SYNTHETIC_REMOVAL_READINESS.md) first. Deletion is gated and
+is **not** part of this checklist.
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+
+# DRY RUN: counts by type/year/region/function; no writes.
+npm run clean:synthetic
+# [clean:synthetic] mode=DRY RUN (no writes)
+# [clean:synthetic] before measures=810 ... non_synthetic=…
+# [clean:synthetic] DRY RUN complete: 0 rows deleted.
+
+# Real-only bootstrap on a scratch DB (never the live DB): 0 synthetic rows.
+SEED_ALLOW_SCRATCH=1 \
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_test_manual_realonly \
+  npm run seed:real
+# [seed] mode=real ... synthetic=0 synthetic_written=0
+```
+
+Expected: the dry run prints the same before/after inventory and deletes nothing; the live DB still
+has 810 synthetic rows and 124,767 measures. The scratch real-only run has 0 synthetic rows while
+regions/functions and the real source register are created. `--execute` is only allowed after the
+seven-point gate in the readiness document and requires `--backup <verified backup dir>`.
+
+## Alt-port e2e and audit
+
+Do not stop or restart the user's 3001/5173 stack. The mocked Playwright suite and live audit can
+run on alternate ports:
+
+```bash
+PW_SERVER_PORT=3101 PW_CLIENT_PORT=5174 npm run test:e2e
+AUDIT_WEB_URL=http://localhost:5174 AUDIT_API_URL=http://localhost:3101 npm run audit
+```
 
 ## Host cleanliness
 

@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import { MEASURE_TYPES, REGION_LEVELS } from '@ausspend/shared';
+import { MEASURE_TYPES, REGION_LEVELS, SYNTHETIC_SOURCE } from '@ausspend/shared';
 import {
   CONNECTORS,
   GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
@@ -20,11 +20,60 @@ import { AREA_NOT_COVERED } from './area-profile.js';
 /** Federal sources that are registered but still waiting on a live connector. */
 export const PENDING_FEDERAL_SOURCES = [] as const;
 
-function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
+/** Real-feed gaps that the synthetic seed used to paper over. */
+export const COVERAGE_GAPS = [
+  {
+    dimension: 'national actual / budget / estimate with COFOG',
+    status: 'missing',
+    detail:
+      'No real source provides a national actual, budget or estimate series broken down by COFOG function. PBS is budget only, programme-level and not a national expense series.',
+  },
+  {
+    dimension: 'state/territory actual / estimate with COFOG and region',
+    status: 'missing',
+    detail:
+      'No state/territory feed provides actual or estimate expenditure tagged to both a COFOG function and a curated region. NSW Budget is budget/actual statement lines for NSW only and is not COFOG-complete.',
+  },
+  {
+    dimension: 'state/territory coverage',
+    status: 'partial',
+    detail:
+      'NSW only (NSW Budget, targeted data.nsw.gov.au CKAN and Dubbo). VIC, QLD, WA, SA, TAS, ACT and NT have no real state spending feed.',
+  },
+  {
+    dimension: 'sub-state region coverage',
+    status: 'partial',
+    detail:
+      'Exactly one council, Dubbo Regional Council. No other local council is covered and no LGA/SA2/coordinate is invented.',
+  },
+  {
+    dimension: 'federal contracts (AusTender) with COFOG and region',
+    status: 'partial',
+    detail:
+      'AusTender contract rows have no COFOG function and no curated region; only location.state is present. They can never substitute for a function-by-region spending series.',
+  },
+  {
+    dimension: 'PBS with region',
+    status: 'partial',
+    detail:
+      'PBS has a COFOG-A function for the defensible portfolios but no region: location.state is literally "Commonwealth".',
+  },
+] as const;
+
+function coverageLimitations(
+  liveFederal: boolean,
+  pbsLive: boolean,
+  syntheticMeasures: number,
+): string[] {
+  const syntheticLine =
+    syntheticMeasures > 0
+      ? liveFederal
+        ? 'Mixed data: live AusTender contract rows and PBS budget line items sit alongside the synthetic development seed. The seed values remain deterministic placeholders, not published Australian government spending.'
+        : 'Synthetic development seed only: every value is a deterministic placeholder, not published Australian government spending.'
+      : 'No synthetic seed rows are present. Real feeds are live for AusTender contracts, PBS budget line items, NSW Budget/selected data.nsw.gov.au CKAN rows and Dubbo council, but they do not cover national/state actual or estimate expenditure with COFOG and region; those dimensions now correctly show "no real data for this dimension yet" rather than a placeholder or zero.';
+
   return [
-    liveFederal
-      ? 'Mixed data: live AusTender contract rows and PBS budget line items sit alongside the synthetic development seed. The seed values remain deterministic placeholders, not published Australian government spending.'
-      : 'Synthetic development seed only: every value is a deterministic placeholder, not published Australian government spending.',
+    syntheticLine,
     'No records are human-verified: seeded measures, ingested AusTender contracts and ingested PBS budget rows all carry verified: false.',
     liveFederal
       ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. The eight other registered connectors are stubs and make no network call.'
@@ -67,6 +116,8 @@ export function createCoverageHandler(
       rawMeasureTypes,
       rawRegionLevels,
       latestLogs,
+      syntheticMeasures,
+      realMeasures,
     ] = await Promise.all([
       DataSourceModel.find({}).lean(),
       RegionModel.countDocuments({}),
@@ -76,6 +127,8 @@ export function createCoverageHandler(
       MeasureModel.distinct('measure_type'),
       RegionModel.distinct('level'),
       IngestionLogModel.find({}).sort({ finished_at: -1 }).limit(20).lean(),
+      MeasureModel.countDocuments({ source_id: SYNTHETIC_SOURCE.source_id }),
+      MeasureModel.countDocuments({ source_id: { $ne: SYNTHETIC_SOURCE.source_id } }),
     ]);
     const dataSources = dataSourceDocs.length;
     const dataSourceById = new Map(dataSourceDocs.map((source) => [source.source_id, source]));
@@ -147,7 +200,11 @@ export function createCoverageHandler(
             : 'Phase 1 + F2/F3 (AusTender + PBS live)'
           : 'Phase 1 + F2 (AusTender live)'
         : 'Phase 1',
-      synthetic: true,
+      // Derived from the live measures collection, not a hard-coded flag: after
+      // `clean:synthetic` this becomes false automatically.
+      synthetic: syntheticMeasures > 0,
+      synthetic_measures: syntheticMeasures,
+      real_measures: realMeasures,
       // Derived from persisted ingestion state: no active connector means no
       // live ingestion has happened.
       live_ingestion: liveIngestion,
@@ -157,6 +214,8 @@ export function createCoverageHandler(
         regions,
         functions,
         measures,
+        synthetic_measures: syntheticMeasures,
+        real_measures: realMeasures,
       },
       fiscal_years: fiscalYears.sort(),
       measure_types: measureTypes.sort((a, b) => typeRank(a) - typeRank(b)),
@@ -236,7 +295,8 @@ export function createCoverageHandler(
           ...(log.message ? { message: log.message } : {}),
         })),
       },
-      limitations: coverageLimitations(liveIngestion, pbsLive),
+      limitations: coverageLimitations(liveIngestion, pbsLive, syntheticMeasures),
+      coverage_gaps: COVERAGE_GAPS,
       note: NOTE,
     });
   };

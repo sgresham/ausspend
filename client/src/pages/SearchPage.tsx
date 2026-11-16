@@ -480,8 +480,7 @@ export function SearchPage() {
           </Typography>
           {applied.length === 0 ? (
             <Typography variant="body2" color="text.secondary">
-              No filters applied — showing every measure in the database (synthetic seed and any
-              live AusTender records).
+              No filters applied — showing every measure in the database, whatever its source.
             </Typography>
           ) : (
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
@@ -503,8 +502,16 @@ export function SearchPage() {
       {!state.loading && !state.error && state.data ? (
         state.data.summary.count === 0 ? (
           <EmptyState
-            title="No spending rows match these filters"
-            message="The API returned no rows for this filter combination. Nothing is estimated, zero-filled or invented. Reset the filters to see the whole database."
+            title={
+              coverage.data?.synthetic === false
+                ? 'No real data for this dimension yet'
+                : 'No spending rows match these filters'
+            }
+            message={
+              coverage.data?.synthetic === false
+                ? 'No real published spending rows match this filter combination. The synthetic seed is not present and no real feed covers this dimension yet. Nothing is estimated, zero-filled or invented. Reset the filters to see the whole database.'
+                : 'The API returned no rows for this filter combination. Nothing is estimated, zero-filled or invented. Reset the filters to see the whole database.'
+            }
           />
         ) : (
           <>

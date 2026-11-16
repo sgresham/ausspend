@@ -1177,7 +1177,66 @@ async function json(route: Route, body: unknown, status = 200) {
  * every route the pages call is fulfilled from these fixtures, including the
  * filter- and pagination-aware spending explorer.
  */
-export async function mockApi(page: Page) {
+export interface MockApiOptions {
+  /** Simulate a database with the synthetic seed retired and no matching real rows. */
+  empty?: boolean;
+}
+
+function emptySpendingResponse() {
+  return {
+    data: [],
+    summary: {
+      count: 0,
+      currency: 'AUD',
+      total_cents: null,
+      total_measure_type: null,
+      total_by_measure_type: [],
+      measure_types: [],
+      mixed: false,
+      breakdown_by_function: [],
+      breakdown_by_region: [],
+    },
+    pagination: { page: 1, page_size: 20, total: 0, total_pages: 0, has_next: false },
+    applied_filters: {
+      fiscal_year: null,
+      measure_type: null,
+      jurisdiction_level: null,
+      function: null,
+      region: null,
+      min_amount: null,
+      max_amount: null,
+      sort: 'amount_desc',
+    },
+  };
+}
+
+function emptyRegionDetail(region: typeof AUS) {
+  return {
+    region,
+    filters: { fiscal_year: null, measure_type: null, limit: 1000 },
+    count: 0,
+    measure_types: [],
+    mixed: false,
+    total_cents: null,
+    total_measure_type: null,
+    total_by_measure_type: [],
+    by_function: [],
+    measures: [],
+  };
+}
+
+export async function mockApi(page: Page, options: MockApiOptions = {}) {
+  const empty = options.empty === true;
+  const coverage = empty
+    ? {
+        ...COVERAGE,
+        synthetic: false,
+        synthetic_measures: 0,
+        real_measures: COVERAGE.counts.measures,
+        counts: { ...COVERAGE.counts, synthetic_measures: 0 },
+      }
+    : COVERAGE;
+
   await page.route(
     (url) => url.pathname.startsWith('/api/'),
     async (route) => {
@@ -1193,21 +1252,21 @@ export async function mockApi(page: Page) {
       }
 
       if (path === '/api/meta/coverage') {
-        await json(route, COVERAGE);
+        await json(route, coverage);
         return;
       }
 
       if (path === '/api/data-sources') {
+        const sources = [
+          AUS_TENDER_SOURCE,
+          PBS_SOURCE,
+          NSW_BUDGET_SOURCE,
+          NSW_CKAN_SOURCE,
+          DUBBO_SOURCE,
+          GRANTCONNECT_SOURCE,
+        ];
         await json(route, {
-          sources: [
-            SYNTHETIC_SOURCE,
-            AUS_TENDER_SOURCE,
-            PBS_SOURCE,
-            NSW_BUDGET_SOURCE,
-            NSW_CKAN_SOURCE,
-            DUBBO_SOURCE,
-            GRANTCONNECT_SOURCE,
-          ],
+          sources: empty ? sources : [SYNTHETIC_SOURCE, ...sources],
         });
         return;
       }
@@ -1244,6 +1303,10 @@ export async function mockApi(page: Page) {
       }
 
       if (path === '/api/spending') {
+        if (empty) {
+          await json(route, emptySpendingResponse());
+          return;
+        }
         const response = spendingResponse(url);
         await json(route, response.body, response.status);
         return;
@@ -1279,6 +1342,22 @@ export async function mockApi(page: Page) {
       }
 
       if (path === '/api/functions/07') {
+        if (empty) {
+          await json(
+            route,
+            functionResponse([], {
+              count: 0,
+              measure_types: [],
+              mixed: false,
+              total_cents: null,
+              total_measure_type: null,
+              total_by_measure_type: [],
+              ranked_states: null,
+              by_region: [],
+            }),
+          );
+          return;
+        }
         await json(route, measureType || fiscalYear ? SINGLE_FUNCTION : MIXED_FUNCTION);
         return;
       }
@@ -1298,17 +1377,17 @@ export async function mockApi(page: Page) {
       }
 
       if (path === `/api/regions/${AUS._id}`) {
-        await json(route, MIXED_REGION);
+        await json(route, empty ? emptyRegionDetail(AUS) : MIXED_REGION);
         return;
       }
 
       if (path === `/api/regions/${NSW._id}`) {
-        await json(route, SINGLE_STATE);
+        await json(route, empty ? emptyRegionDetail(NSW) : SINGLE_STATE);
         return;
       }
 
       if (path === '/api/states/NSW') {
-        await json(route, SINGLE_STATE);
+        await json(route, empty ? { ...emptyRegionDetail(NSW), state: NSW } : SINGLE_STATE);
         return;
       }
 

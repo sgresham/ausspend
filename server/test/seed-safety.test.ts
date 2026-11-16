@@ -132,4 +132,37 @@ describe('seed restart safety', () => {
     expect(await contractCount()).toBe(0);
     expect(await syntheticCount()).toBe(SYNTHETIC_MEASURE_COUNT);
   });
+
+  it('real-only mode on an empty database emits 0 synthetic measures but keeps the taxonomy', async () => {
+    await mongoose.connection.dropDatabase();
+
+    const summary = await seedSyntheticData({ mode: 'real' });
+
+    expect(summary.mode).toBe('real');
+    expect(summary.syntheticMeasuresWritten).toBe(0);
+    expect(summary.syntheticMeasures).toBe(0);
+    expect(summary.measures).toBe(0);
+    expect(await syntheticCount()).toBe(0);
+    expect(await MeasureModel.countDocuments({})).toBe(0);
+    expect(summary.regions).toBe(9);
+    expect(summary.functions).toBe(53);
+    expect(summary.sources).toBeGreaterThanOrEqual(13);
+    expect(await DataSourceModel.countDocuments({ source_id: SYNTHETIC_SOURCE.source_id })).toBe(0);
+    expect(await DataSourceModel.countDocuments({ source_id: 'aus-tender' })).toBe(1);
+  });
+
+  it('real-only mode never deletes existing synthetic or live rows', async () => {
+    await mongoose.connection.dropDatabase();
+    await seedSyntheticData();
+    await MeasureModel.create(FAKE_CONTRACT);
+
+    const summary = await seedSyntheticData({ mode: 'real' });
+
+    expect(summary.mode).toBe('real');
+    expect(summary.syntheticMeasuresWritten).toBe(0);
+    expect(summary.syntheticMeasures).toBe(SYNTHETIC_MEASURE_COUNT);
+    expect(await syntheticCount()).toBe(SYNTHETIC_MEASURE_COUNT);
+    expect(await contractCount()).toBe(1);
+    expect(await MeasureModel.countDocuments({})).toBe(SYNTHETIC_MEASURE_COUNT + 1);
+  });
 });

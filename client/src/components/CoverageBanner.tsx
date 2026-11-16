@@ -23,17 +23,22 @@ export function CoverageBanner() {
     );
   }
 
+  const syntheticRows = data.counts.synthetic_measures ?? (data.synthetic ? null : 0);
+
   return (
     <Alert severity="warning" sx={{ mb: 3 }} data-testid="coverage-banner">
       <strong>{data.phase}.</strong>{' '}
-      {data.live_ingestion
-        ? 'Live AusTender contract records, PBS budget line items, NSW Budget rows and selected data.nsw.gov.au CKAN rows are included next to the synthetic development seed. Ingested rows are real published records; seed rows remain placeholders. PBS line items do not sum to the federal total, and CKAN rows with an inferred unit are provisional. '
-        : 'Synthetic development seed data only; no live ingestion has run. '}
+      {data.synthetic
+        ? data.live_ingestion
+          ? 'Live AusTender contract records, PBS budget line items, NSW Budget rows and selected data.nsw.gov.au CKAN rows are included next to the synthetic development seed. Ingested rows are real published records; seed rows remain placeholders. PBS line items do not sum to the federal total, and CKAN rows with an inferred unit are provisional. '
+          : 'Synthetic development seed data only; no live ingestion has run. '
+        : 'No synthetic seed rows are present. Real AusTender contracts, PBS budget line items, NSW Budget/CKAN rows and Dubbo rows are shown with provenance. National and state actual/estimate spending with COFOG and region is not covered by any real feed yet, so those views show an explicit “no real data for this dimension yet” state rather than a placeholder or a zero. '}
       No figure is human-verified or a single government total.{' '}
       <Stack component="span" direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
         <span>{data.counts.regions} regions</span>
         <span>{data.counts.functions} COFOG records</span>
         <span>{data.counts.measures} measure rows</span>
+        {syntheticRows !== null ? <span>{syntheticRows} synthetic seed rows</span> : null}
         <span>{data.counts.data_sources} source(s)</span>
         <Link component={RouterLink} to="/data-sources">
           Source register
