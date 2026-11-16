@@ -225,3 +225,34 @@ S1 stops after the NSW Budget Open Data connector. It does **not** start:
 - the separate S3 PDF/source-archive foundation.
 
 The VIC/QLD/WA connectors remain stubs in `server/src/connectors/registry.ts`.
+
+## 11. Archived copies and the reusable PDF foundation
+
+The official blobs are not committed. S1's local copies live in
+`~/.cache/ausspend/nsw-budget/2025-26` and the committed manifest
+`docs/source-archive/nsw-budget-2025-26.json` records the exact URL and SHA-256 for each one.
+The post-S1 source-archive foundation adopts those copies **by reference** (it re-hashes them, it
+does not copy or mutate them):
+
+```bash
+npm run archive -- adopt-nsw            # metadata records; no DB write
+npm run archive -- verify --source-id=nsw-budget
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+  npm run archive -- adopt-nsw --write-db
+```
+
+Examples matching the manifest:
+
+- `open-data-2025-26.html` — `9a0a79b1…b12438`, 23,684 bytes (Wayback);
+- `2025-26-Budget-Financial-Statements.xlsx` — `c3e4fb8e…661c09`, 178,309 bytes (Wayback);
+- `arcgis-capital-projects.json` — `7229c636…935a6b`, 797,716 bytes, 974 features (ArcGIS).
+
+`GET /api/v1/source-documents?source_id=nsw-budget` lists the records (path, hash, exact URL).
+
+The same foundation provides reusable PDF text/table extraction
+(`server/src/connectors/pdf-extract.ts`, `npm run pdf:extract -- --file=…`). It detects explicit
+`$`/`$'000`/`$m`/`$b` units, converts to integer cents, and **refuses to ingest** a table when the
+unit is missing/ambiguous or row/column totals do not reconcile. All PDF rows are `provisional`
+and require human review before `verified`. S1 does not ingest any PDF and does not start S2/S3 or
+VIC/QLD/WA/SOC/charity. Details, tests and boundaries:
+[docs/SOURCE_ARCHIVE_AND_PDF.md](./docs/SOURCE_ARCHIVE_AND_PDF.md).
