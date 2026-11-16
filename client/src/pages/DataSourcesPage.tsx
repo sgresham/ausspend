@@ -35,7 +35,9 @@ export function DataSourcesPage() {
         unverified; the anchor <code>#synthetic-seed</code> resolves to it below. AusTender is a
         live federal source as of F2 and data.gov.au PBS budget line items are live as of F3 — their
         ingested records and last-ingested times appear here with their provenance. GrantConnect
-        remains a pending stub, as do the state/territory connectors.
+        remains a blocked stub — the Commonwealth publishes no grant award API/feed and the cited
+        Track A adaptor does not exist without a paid token — as do the state/territory connectors.
+        No direct GrantConnect scraper is built and no grant records are claimed.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -170,8 +172,8 @@ export function DataSourcesPage() {
         and ingests no records; an <strong>active</strong> connector has ingested, and a{' '}
         <strong>degraded</strong> connector reports errors. <code>aus-tender</code> is live from the
         AusTender OCDS contractPublished feed and <code>data-gov-au-pbs</code> is live from the
-        data.gov.au CKAN PBS CSV. <code>grantconnect</code> remains pending and the other eight
-        connectors are stubs.
+        data.gov.au CKAN PBS CSV. <code>grantconnect</code> is blocked pending a usable adaptor (no
+        public award API; no direct scraper) and the other eight connectors are stubs.
       </Typography>
 
       {!coverage.data && coverage.error ? (

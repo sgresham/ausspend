@@ -226,6 +226,9 @@ export function SearchPage() {
   const showPbsCaveat =
     (measureType === 'budget' && jurisdictionLevel === 'federal') ||
     pageSources.some((source) => source.source_id === 'data-gov-au-pbs');
+  const showGrantBlocked =
+    measureType === 'grant_award' ||
+    pageSources.some((source) => source.source_id === 'grantconnect');
 
   return (
     <Box>
@@ -278,6 +281,15 @@ export function SearchPage() {
         <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
           <strong>PBS line-item caveat.</strong> {PBS_CAVEAT} The per-measure-type budget total
           below is the PBS line-item sum only.
+        </Alert>
+      ) : null}
+
+      {showGrantBlocked ? (
+        <Alert severity="info" data-testid="grantconnect-blocked" sx={{ mb: 3 }}>
+          <strong>GrantConnect is blocked.</strong> GrantConnect publishes no public grant award API
+          or feed. The cited Track A third-party adaptor does not exist and the only public
+          alternative requires a paid Apify token. No direct scraper is built, so no{' '}
+          <code>grant_award</code> rows are ingested and none are estimated or zero-filled.
         </Alert>
       ) : null}
 
