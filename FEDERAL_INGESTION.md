@@ -130,26 +130,26 @@ Releases sharing an `ocid` within one batch are de-duplicated, keeping the newes
 
 ### PBS row mapping
 
-| Target field         | Source / rule                                                                                |
-| -------------------- | -------------------------------------------------------------------------------------------- |
-| `source_id`          | literal `"data-gov-au-pbs"`                                                                   |
-| `source_dataset`     | literal `"2025-26 Portfolio Budget Statements (data.gov.au)"`                                 |
-| `measure_type`       | literal `"budget"`                                                                            |
-| `jurisdiction_level` | literal `"federal"`; `jurisdiction` literal `"Commonwealth"`                                  |
-| `project_name`       | `Program` (whitespace/NBSP-normalised)                                                        |
-| `description`        | `Outcome`                                                                                     |
-| `delivery_entity`    | `Department/Agency`                                                                           |
-| `funding_source`     | `Portfolio`                                                                                   |
+| Target field         | Source / rule                                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `source_id`          | literal `"data-gov-au-pbs"`                                                                                          |
+| `source_dataset`     | literal `"2025-26 Portfolio Budget Statements (data.gov.au)"`                                                        |
+| `measure_type`       | literal `"budget"`                                                                                                   |
+| `jurisdiction_level` | literal `"federal"`; `jurisdiction` literal `"Commonwealth"`                                                         |
+| `project_name`       | `Program` (whitespace/NBSP-normalised)                                                                               |
+| `description`        | `Outcome`                                                                                                            |
+| `delivery_entity`    | `Department/Agency`                                                                                                  |
+| `funding_source`     | `Portfolio`                                                                                                          |
 | `amount_cents`       | `2025-26` column × 1,000 (published `$'000`) × 100, safe integer; `nfp`, blank, negative or invalid rows are skipped |
-| `fiscal_year`        | literal `"2025-26"`                                                                           |
-| `source_url`         | the data.gov.au resource page URL                                                             |
-| `source_date`        | resource `last_modified` / release date (`2025-03-26`)                                        |
-| `function_code`      | COFOG-A division only where the portfolio has one defensible functional area (see below)      |
-| `data_quality_flag`  | `statewide_only` when a COFOG division is mapped; `provisional` when it is not                |
-| `location`           | `{ state: "Commonwealth" }` only; PBS is not geographically tagged                             |
-| `natural_key`        | `4f025f38-...:<stable row hash>`; exact duplicate rows add an occurrence suffix               |
-| `verified`           | `false`                                                                                       |
-| `notes`              | expense/appropriation/source table, the `$'000` unit rule, the CSV download URL and the caveat |
+| `fiscal_year`        | literal `"2025-26"`                                                                                                  |
+| `source_url`         | the data.gov.au resource page URL                                                                                    |
+| `source_date`        | resource `last_modified` / release date (`2025-03-26`)                                                               |
+| `function_code`      | COFOG-A division only where the portfolio has one defensible functional area (see below)                             |
+| `data_quality_flag`  | `statewide_only` when a COFOG division is mapped; `provisional` when it is not                                       |
+| `location`           | `{ state: "Commonwealth" }` only; PBS is not geographically tagged                                                   |
+| `natural_key`        | `4f025f38-...:<stable row hash>`; exact duplicate rows add an occurrence suffix                                      |
+| `verified`           | `false`                                                                                                              |
+| `notes`              | expense/appropriation/source table, the `$'000` unit rule, the CSV download URL and the caveat                       |
 
 **Units.** The CSV has bare integers and no unit column. The referenced PBS program tables publish
 `$'000`, so the raw value is thousands of dollars: `2,500` → `$2,500,000` → `250,000,000` cents.

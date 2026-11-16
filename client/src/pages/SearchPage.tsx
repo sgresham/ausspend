@@ -276,8 +276,8 @@ export function SearchPage() {
 
       {showPbsCaveat ? (
         <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
-          <strong>PBS line-item caveat.</strong> {PBS_CAVEAT} The per-measure-type budget total below
-          is the PBS line-item sum only.
+          <strong>PBS line-item caveat.</strong> {PBS_CAVEAT} The per-measure-type budget total
+          below is the PBS line-item sum only.
         </Alert>
       ) : null}
 

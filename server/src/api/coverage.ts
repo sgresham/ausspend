@@ -105,7 +105,8 @@ export function createCoverageHandler(
       stub: connectors.filter((connector) => connector.status === 'stub').length,
     };
     const liveIngestion = connectorStatusCounts.active > 0;
-    const pbsLive = connectors.find((connector) => connector.id === 'data-gov-au-pbs')?.status === 'active';
+    const pbsLive =
+      connectors.find((connector) => connector.id === 'data-gov-au-pbs')?.status === 'active';
     const federalConnectors = connectors.filter(
       (connector) => connector.jurisdiction_level === 'federal',
     );

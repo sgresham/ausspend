@@ -141,54 +141,57 @@ async function apiChecks() {
     return body.error;
   });
 
-  await check('API meta/coverage reports AusTender and PBS live, GrantConnect pending', async () => {
-    const { status, body } = await getJson('/api/meta/coverage');
-    assert(status === 200, `expected 200, got ${status}`);
-    assert(
-      Array.isArray(body?.connectors) && body.connectors.length === 11,
-      `expected 11 connectors, got ${body?.connectors?.length}`,
-    );
-    const connectorIds = body.connectors.map((connector) => connector.id);
-    const ausTender = body.connectors.find((entry) => entry.id === 'aus-tender');
-    assert(ausTender, 'missing federal connector aus-tender');
-    assert(
-      ausTender.status === 'active' || ausTender.status === 'degraded',
-      `expected aus-tender active/degraded, got ${ausTender.status}`,
-    );
-    const pbs = body.connectors.find((entry) => entry.id === 'data-gov-au-pbs');
-    assert(pbs, 'missing federal connector data-gov-au-pbs');
-    assert(
-      pbs.status === 'active' || pbs.status === 'degraded',
-      `expected data-gov-au-pbs active/degraded, got ${pbs.status}`,
-    );
-    const grantconnect = body.connectors.find((entry) => entry.id === 'grantconnect');
-    assert(grantconnect, 'missing federal connector grantconnect');
-    assert(
-      grantconnect.status === 'stub',
-      `expected grantconnect to be a stub, got ${grantconnect.status}`,
-    );
-    assert(
-      body?.federal_ingestion?.live?.includes('aus-tender') &&
-        body.federal_ingestion.live.includes('data-gov-au-pbs'),
-      'meta/coverage does not list AusTender and PBS as live',
-    );
-    assert(
-      Array.isArray(body?.federal_ingestion?.pending) &&
-        body.federal_ingestion.pending.includes('grantconnect') &&
-        !body.federal_ingestion.pending.includes('data-gov-au-pbs'),
-      'meta/coverage pending list is not grantconnect-only',
-    );
-    assert(
-      /does not equal the Budget Paper 1/.test(body?.federal_ingestion?.pbs_caveat ?? ''),
-      'meta/coverage does not carry the PBS caveat',
-    );
-    assert(connectorIds.length === new Set(connectorIds).size, 'connector ids must be unique');
-    assert(body.counts?.data_sources > 0, 'counts.data_sources must be > 0');
-    assert(body.counts?.regions > 0, 'counts.regions must be > 0');
-    assert(body.counts?.functions > 0, 'counts.functions must be > 0');
-    assert(body.counts?.measures > 0, 'counts.measures must be > 0');
-    return `counts=${body.counts.data_sources}/${body.counts.regions}/${body.counts.functions}/${body.counts.measures}`;
-  });
+  await check(
+    'API meta/coverage reports AusTender and PBS live, GrantConnect pending',
+    async () => {
+      const { status, body } = await getJson('/api/meta/coverage');
+      assert(status === 200, `expected 200, got ${status}`);
+      assert(
+        Array.isArray(body?.connectors) && body.connectors.length === 11,
+        `expected 11 connectors, got ${body?.connectors?.length}`,
+      );
+      const connectorIds = body.connectors.map((connector) => connector.id);
+      const ausTender = body.connectors.find((entry) => entry.id === 'aus-tender');
+      assert(ausTender, 'missing federal connector aus-tender');
+      assert(
+        ausTender.status === 'active' || ausTender.status === 'degraded',
+        `expected aus-tender active/degraded, got ${ausTender.status}`,
+      );
+      const pbs = body.connectors.find((entry) => entry.id === 'data-gov-au-pbs');
+      assert(pbs, 'missing federal connector data-gov-au-pbs');
+      assert(
+        pbs.status === 'active' || pbs.status === 'degraded',
+        `expected data-gov-au-pbs active/degraded, got ${pbs.status}`,
+      );
+      const grantconnect = body.connectors.find((entry) => entry.id === 'grantconnect');
+      assert(grantconnect, 'missing federal connector grantconnect');
+      assert(
+        grantconnect.status === 'stub',
+        `expected grantconnect to be a stub, got ${grantconnect.status}`,
+      );
+      assert(
+        body?.federal_ingestion?.live?.includes('aus-tender') &&
+          body.federal_ingestion.live.includes('data-gov-au-pbs'),
+        'meta/coverage does not list AusTender and PBS as live',
+      );
+      assert(
+        Array.isArray(body?.federal_ingestion?.pending) &&
+          body.federal_ingestion.pending.includes('grantconnect') &&
+          !body.federal_ingestion.pending.includes('data-gov-au-pbs'),
+        'meta/coverage pending list is not grantconnect-only',
+      );
+      assert(
+        /does not equal the Budget Paper 1/.test(body?.federal_ingestion?.pbs_caveat ?? ''),
+        'meta/coverage does not carry the PBS caveat',
+      );
+      assert(connectorIds.length === new Set(connectorIds).size, 'connector ids must be unique');
+      assert(body.counts?.data_sources > 0, 'counts.data_sources must be > 0');
+      assert(body.counts?.regions > 0, 'counts.regions must be > 0');
+      assert(body.counts?.functions > 0, 'counts.functions must be > 0');
+      assert(body.counts?.measures > 0, 'counts.measures must be > 0');
+      return `counts=${body.counts.data_sources}/${body.counts.regions}/${body.counts.functions}/${body.counts.measures}`;
+    },
+  );
 
   await check('API federal contracts carry provenance and integer cents', async () => {
     const { status, body } = await getJson(
@@ -445,7 +448,9 @@ async function uiChecks(page, regionId) {
       await limitations.waitFor({ state: 'visible', timeout: 20_000 });
       const limitationText = (await limitations.innerText()).replace(/\s+/g, ' ');
       assert(
-        /AusTender OCDS contractPublished ingestion and data\.gov\.au PBS program-expense ingestion are live/.test(limitationText),
+        /AusTender OCDS contractPublished ingestion and data\.gov\.au PBS program-expense ingestion are live/.test(
+          limitationText,
+        ),
         'coverage limitations do not mention live AusTender/PBS ingestion',
       );
       assert(

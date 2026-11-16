@@ -25,9 +25,7 @@ test('home renders the shell, coverage banner and provenance', async ({ page }) 
   await expect(page.getByRole('link', { name: '07 — Health' })).toBeVisible();
   await expect(page.getByText('Unverified').first()).toBeVisible();
   await expect(page.getByTestId('headline-total')).toHaveCount(0);
-  await expect(page.getByTestId('coverage-limitations')).toContainText(
-    'Mixed data',
-  );
+  await expect(page.getByTestId('coverage-limitations')).toContainText('Mixed data');
   await expect(page.getByTestId('connector-status')).toContainText('stub — not wired');
 });
 

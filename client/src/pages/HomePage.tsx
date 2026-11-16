@@ -71,8 +71,8 @@ export function HomePage() {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         An explorer for published Australian government spending, organised by COFOG function,
-        region and state. Synthetic seed rows sit alongside live AusTender contracts and
-        data.gov.au PBS budget line items; no figure is verified or a single federal total.
+        region and state. Synthetic seed rows sit alongside live AusTender contracts and data.gov.au
+        PBS budget line items; no figure is verified or a single federal total.
       </Typography>
 
       {coverage.data ? (

@@ -23,7 +23,9 @@ test('data sources shows the synthetic source, Unverified badge and anchor targe
   await expect(page.getByText('Provenance:').first()).toBeVisible();
 });
 
-test('data sources lists live connectors, open stubs and coverage limitations', async ({ page }) => {
+test('data sources lists live connectors, open stubs and coverage limitations', async ({
+  page,
+}) => {
   await page.goto('/data-sources');
 
   const stubs = page.getByTestId('connector-stubs');
@@ -47,7 +49,9 @@ test('data sources surfaces PBS provenance and the line-item caveat', async ({ p
   await expect(pbs).toContainText('Portfolio Budget Statements');
   await expect(pbs).toContainText('12 record(s)');
   await expect(pbs).toContainText('last ingested');
-  await expect(pbs.getByRole('link', { name: /Browse ingested PBS budget line items/ })).toBeVisible();
+  await expect(
+    pbs.getByRole('link', { name: /Browse ingested PBS budget line items/ }),
+  ).toBeVisible();
 
   const caveat = page.getByTestId('pbs-caveat');
   await expect(caveat).toBeVisible();

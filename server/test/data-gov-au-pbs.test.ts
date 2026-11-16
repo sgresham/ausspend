@@ -18,7 +18,7 @@ import {
 import type { RawRecord } from '../src/connectors/types.js';
 
 const HEADER =
-  "Portfolio,Department/Agency,Outcome,Program,Expense_type,Appropriation_type,2024-25,2025-26,2026-27,2027-28,2028-29,Source_document,Source_table\r\n";
+  'Portfolio,Department/Agency,Outcome,Program,Expense_type,Appropriation_type,2024-25,2025-26,2026-27,2027-28,2028-29,Source_document,Source_table\r\n';
 
 function csvRow(overrides: Record<string, string> = {}): string {
   const values: Record<string, string> = {
@@ -183,9 +183,7 @@ describe('PBS mapping', () => {
     // 2,500 thousands = $2,500,000 = 250,000,000 cents.
     expect(record?.amount_cents).toBe(250_000_000);
     expect(Number.isSafeInteger(record?.amount_cents)).toBe(true);
-    expect(record?.natural_key).toMatch(
-      new RegExp(`^${PBS_DATASET_ID}:[a-f0-9]{32}$`),
-    );
+    expect(record?.natural_key).toMatch(new RegExp(`^${PBS_DATASET_ID}:[a-f0-9]{32}$`));
     expect(record?.notes).toContain("$'000");
     expect(record?.notes).toContain(PBS_CAVEAT);
   });
@@ -197,7 +195,11 @@ describe('PBS mapping', () => {
     expect(record?.data_quality_flag).toBe('provisional');
     expect(record?.location).toEqual({ state: 'Commonwealth' });
     expect(record?.amount_cents).toBe(12_500_000_000);
-    expect(pbsCofogForPortfolio('Infrastructure, Transport, Regional Development, Communications and the Arts')).toBeNull();
+    expect(
+      pbsCofogForPortfolio(
+        'Infrastructure, Transport, Regional Development, Communications and the Arts',
+      ),
+    ).toBeNull();
     expect(pbsCofogForPortfolio('Health and Aged Care')).toBe('07');
   });
 
@@ -275,8 +277,9 @@ describe('PBS connector fetch/transform', () => {
   });
 
   it('records the skip reason when package_show has no CSV', async () => {
-    const fetchImpl = vi.fn(async () =>
-      new Response(JSON.stringify({ success: true, result: { resources: [] } }), { status: 200 }),
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ success: true, result: { resources: [] } }), { status: 200 }),
     ) as unknown as typeof fetch;
     const connector = createPbsConnector({ fetchImpl });
     await expect(connector.fetch()).rejects.toThrow(/no CSV resource matching/i);
@@ -284,20 +287,16 @@ describe('PBS connector fetch/transform', () => {
 });
 
 describe.skipIf(process.env.PBS_LIVE_TEST !== '1')('PBS live smoke', () => {
-  it(
-    'selects the published line-item CSV and maps real rows',
-    async () => {
-      const connector = createPbsConnector({ delayMs: 500 });
-      const raw = await connector.fetch();
-      const records = connector.transform(raw);
-      expect(records.length).toBeGreaterThanOrEqual(10);
-      for (const record of records.slice(0, 5)) {
-        expect(Number.isSafeInteger(record.amount_cents)).toBe(true);
-        expect(record.amount_cents).toBeGreaterThan(0);
-        expect(record.source_url).toContain('data.gov.au');
-        expect(record.verified).toBe(false);
-      }
-    },
-    90_000,
-  );
+  it('selects the published line-item CSV and maps real rows', async () => {
+    const connector = createPbsConnector({ delayMs: 500 });
+    const raw = await connector.fetch();
+    const records = connector.transform(raw);
+    expect(records.length).toBeGreaterThanOrEqual(10);
+    for (const record of records.slice(0, 5)) {
+      expect(Number.isSafeInteger(record.amount_cents)).toBe(true);
+      expect(record.amount_cents).toBeGreaterThan(0);
+      expect(record.source_url).toContain('data.gov.au');
+      expect(record.verified).toBe(false);
+    }
+  }, 90_000);
 });

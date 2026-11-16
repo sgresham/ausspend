@@ -33,9 +33,9 @@ export function DataSourcesPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         The registered sources behind every figure. The synthetic development seed is explicitly
         unverified; the anchor <code>#synthetic-seed</code> resolves to it below. AusTender is a
-        live federal source as of F2 and data.gov.au PBS budget line items are live as of F3 —
-        their ingested records and last-ingested times appear here with their provenance.
-        GrantConnect remains a pending stub, as do the state/territory connectors.
+        live federal source as of F2 and data.gov.au PBS budget line items are live as of F3 — their
+        ingested records and last-ingested times appear here with their provenance. GrantConnect
+        remains a pending stub, as do the state/territory connectors.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>

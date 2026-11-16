@@ -35,8 +35,7 @@ const PBS_SOURCE = {
   source_id: 'data-gov-au-pbs',
   name: 'Portfolio Budget Statements (data.gov.au)',
   publisher: 'Australian Government Department of Finance',
-  source_url:
-    'https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637',
+  source_url: 'https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637',
   retrieved_at: '2026-11-16T00:00:00.000Z',
   license: 'Not yet verified — see connector metadata',
   verified: false,
@@ -139,8 +138,7 @@ const COVERAGE = {
       id: 'data-gov-au-pbs',
       name: 'Portfolio Budget Statements (data.gov.au)',
       publisher: 'Australian Government Department of Finance',
-      source_url:
-        'https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637',
+      source_url: 'https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637',
       status: 'active',
       jurisdiction_level: 'federal',
       last_fetched_at: '2026-11-16T00:06:00.000Z',
@@ -209,12 +207,7 @@ const COVERAGE = {
     live: ['aus-tender', 'data-gov-au-pbs'],
     degraded: [],
     pending: ['grantconnect'],
-    stubs: [
-      'federal-budget-portal',
-      'abs-government-finance',
-      'aihw-health-expenditure',
-      'aofm',
-    ],
+    stubs: ['federal-budget-portal', 'abs-government-finance', 'aihw-health-expenditure', 'aofm'],
     aus_tender_last_ingested_at: '2026-11-16T00:05:00.000Z',
     pbs_last_ingested_at: '2026-11-16T00:06:00.000Z',
     pbs_caveat:
@@ -611,8 +604,7 @@ function spendingResponse(url: URL) {
     return { status: 404, body: { ok: false, error: `Unknown region: ${regionId}` } };
   }
 
-  let rows =
-    jurisdictionLevel === 'federal' ? [...PBS_ROWS] : [...SPENDING_ROWS];
+  let rows = jurisdictionLevel === 'federal' ? [...PBS_ROWS] : [...SPENDING_ROWS];
   if (functionCode) rows = rows.filter((row) => row.function_code === functionCode);
   if (regionId) rows = rows.filter((row) => row.region_id === regionId);
   if (fiscalYear) rows = rows.filter((row) => row.fiscal_year === fiscalYear);

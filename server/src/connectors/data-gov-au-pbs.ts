@@ -130,7 +130,10 @@ function asString(value: unknown): string | null {
 function normaliseText(value: unknown): string | null {
   const raw = asString(value);
   if (!raw) return null;
-  const collapsed = raw.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+  const collapsed = raw
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
   return collapsed.length > 0 ? collapsed : null;
 }
 
@@ -500,4 +503,3 @@ export function createPbsConnector(options: PbsConnectorOptions = {}): Connector
     metadata,
   };
 }
-
