@@ -1,4 +1,5 @@
 import { createAusTenderConnector } from './aus-tender.js';
+import { createNswCkanConnector } from './data-nsw-ckan.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
@@ -89,6 +90,14 @@ export const CONNECTORS: readonly Connector[] = [
   // the ArcGIS capital-projects feature layer. Per-run status is recorded on
   // data_sources/ingestion_logs by the runner.
   createNswBudgetConnector(),
+  // S2: targeted data.nsw.gov.au CKAN ingestion (CSV/XLSX downloads, DataStore
+  // paging, delayed PDF/DOCX resources). The old nsw-budget source above stays
+  // the S1 NSW Budget source; this one is a separate source id.
+  createNswCkanConnector({
+    ...(process.env.NSW_CKAN_MANIFEST_PATH
+      ? { manifestPath: process.env.NSW_CKAN_MANIFEST_PATH }
+      : {}),
+  }),
   stub({
     id: 'vic-budget',
     name: 'Victorian State Budget',

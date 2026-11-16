@@ -1,4 +1,5 @@
 import type { SpendingRecord } from '@ausspend/shared';
+import type { DeferredResource } from '../models/data-source.js';
 
 export type ConnectorStatus = 'stub' | 'active' | 'degraded';
 
@@ -19,6 +20,8 @@ export interface ConnectorMetadata {
   license?: string;
   /** Optional provenance note persisted on data_sources by the runner. */
   notes?: string;
+  /** Resources deliberately deferred (PDF/DOCX) for a later phase. */
+  deferredResources?: DeferredResource[];
 }
 
 export interface ConnectorRunMetadata {
@@ -49,6 +52,7 @@ export interface ConnectorSummary extends ConnectorMetadata {
   last_fetched_at: string | null;
   records_ingested: number;
   errors: string[];
+  deferred_resources: DeferredResource[];
 }
 
 export function notImplemented(connector: Pick<ConnectorMetadata, 'id' | 'name'>): never {
@@ -68,5 +72,6 @@ export function connectorSummary(connector: Connector): ConnectorSummary {
     last_fetched_at: connector.metadata.lastFetchedAt,
     records_ingested: connector.metadata.recordsIngested,
     errors: [...connector.metadata.errors],
+    deferred_resources: [...(connector.deferredResources ?? [])],
   };
 }

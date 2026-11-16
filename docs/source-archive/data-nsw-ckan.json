@@ -1,0 +1,389 @@
+{
+  "source_id": "data-nsw-ckan",
+  "generated_at": "2026-11-16T22:05:09.853Z",
+  "api_base": "https://data.nsw.gov.au/data/api/3/action",
+  "queries": [
+    {
+      "label": "budget",
+      "query": "budget",
+      "count": 80,
+      "top": [
+        {
+          "name": "nsw-budget-paper-2",
+          "title": "NSW Budget Paper 2"
+        },
+        {
+          "name": "nsw-budget-2018-19",
+          "title": "NSW Budget 2018-19"
+        },
+        {
+          "name": "nsw-budget-2017-18",
+          "title": "NSW Budget 2017-18"
+        },
+        {
+          "name": "3-19820-2007-08-budget-result",
+          "title": "2007-08 Budget Result"
+        },
+        {
+          "name": "budget-data-visualisation",
+          "title": "Budget Data Visualisation"
+        }
+      ]
+    },
+    {
+      "label": "expenditure",
+      "query": "expenditure",
+      "count": 62,
+      "top": [
+        {
+          "name": "visitor-expenditure-nsw",
+          "title": "Visitor expenditure, NSW"
+        },
+        {
+          "name": "nsw-total-visitor-expenditure",
+          "title": "NSW Total Visitor Expenditure"
+        },
+        {
+          "name": "media-expenditure-by-campaign-2023-2024",
+          "title": "Media Expenditure by Campaign 2023-2024"
+        },
+        {
+          "name": "media-expenditure-by-agency-2023-24",
+          "title": "Media Expenditure by Agency 2023/2024"
+        },
+        {
+          "name": "fleet-vehicle-expenditure-data-fy18-19",
+          "title": "Fleet Vehicle expenditure data FY18-19"
+        }
+      ]
+    },
+    {
+      "label": "capital works",
+      "query": "capital works",
+      "count": 32,
+      "top": [
+        {
+          "name": "3-18613-performance-audit-report--health-capital-works",
+          "title": "Performance audit report: Health capital works"
+        },
+        {
+          "name": "workforce-forecast",
+          "title": "Workforce Forecasts"
+        },
+        {
+          "name": "3-17370-sydney-newcastle-freeway---freeway-f3---section---mount-white-to-ourimbah---national-highway",
+          "title": "Sydney-Newcastle Freeway : Freeway F3 : Section : Mount White to Ourimbah : National Highway project No. 212A : environmental impact statement"
+        },
+        {
+          "name": "3-17372-sydney-newcastle-freeway---freeway-f3---section---mount-white-to-ourimbah---national-highway",
+          "title": "Sydney-Newcastle Freeway : Freeway F3 : Section : Mount White to Ourimbah : National Highway project No. 212A : environmental impact statement"
+        },
+        {
+          "name": "fdp-lower-wyong-river-floodplain-risk-management-study-2010-report",
+          "title": "Lower Wyong River Floodplain Risk Management Study"
+        }
+      ]
+    },
+    {
+      "label": "grants",
+      "query": "grants",
+      "count": 73,
+      "top": [
+        {
+          "name": "3-18087-grants-administration",
+          "title": "Grants Administration"
+        },
+        {
+          "name": "3-18004-managing-grants",
+          "title": "Managing Grants"
+        },
+        {
+          "name": "5-cityofsydney--grants-and-sponsorships-funding",
+          "title": "Grants and sponsorships funding"
+        },
+        {
+          "name": "5-cityofsydney--environmental-grant-projects",
+          "title": "Environmental grant projects"
+        },
+        {
+          "name": "new-home-grants-data",
+          "title": "New Home Grants Data"
+        }
+      ]
+    },
+    {
+      "label": "agency expenditure",
+      "query": "agency expenditure",
+      "count": 23,
+      "top": [
+        {
+          "name": "media-expenditure-by-agency-2023-24",
+          "title": "Media Expenditure by Agency 2023/2024"
+        },
+        {
+          "name": "media-expenditure-by-agency-2024-2025",
+          "title": "Media Expenditure by Agency 2024/2025"
+        },
+        {
+          "name": "3-18514-media-expenditure-by-agency-2016-17",
+          "title": "Media Expenditure by Agency 2016/17"
+        },
+        {
+          "name": "3-18515-media-expenditure-by-agency-2008-2009",
+          "title": "Media Expenditure by Agency 2008/2009"
+        },
+        {
+          "name": "3-19962-media-expenditure-by-agency-2022-2023",
+          "title": "Media Expenditure by Agency 2022/2023"
+        }
+      ]
+    },
+    {
+      "label": "NSW Treasury",
+      "query": "organization:the-treasury",
+      "count": 11,
+      "top": [
+        {
+          "name": "fleet-vehicle-expenditure-data-fy22-23",
+          "title": "Fleet Vehicle expenditure data FY22-23"
+        },
+        {
+          "name": "nsw-remote-working-survey",
+          "title": "NSW Remote Working Survey"
+        },
+        {
+          "name": "ecec-survey-2023",
+          "title": "ECEC Survey 2023"
+        },
+        {
+          "name": "fleet-vehicle-expenditure-data-fy21-22",
+          "title": "Fleet Vehicle expenditure data FY21-22"
+        },
+        {
+          "name": "nsw-budget-for-2022-2023",
+          "title": "NSW Budget for 2022-2023"
+        }
+      ]
+    },
+    {
+      "label": "Transport for NSW",
+      "query": "organization:transport-for-nsw",
+      "count": 268,
+      "top": [
+        {
+          "name": "2-opal-trips-bus",
+          "title": "Opal Trips - Bus"
+        },
+        {
+          "name": "2-transport-mode-symbols-and-pictograms",
+          "title": "Transport Mode Symbols and Pictograms"
+        },
+        {
+          "name": "2-train-station-maps-including-metro",
+          "title": "Train Station Maps (including Metro)"
+        },
+        {
+          "name": "2-nsw-boat-registrations-and-licences",
+          "title": "NSW Boat Registrations and Licences"
+        },
+        {
+          "name": "2-roam-rail-opal-assignment-model",
+          "title": "ROAM - Rail Opal Assignment Model"
+        }
+      ]
+    },
+    {
+      "label": "NSW Health",
+      "query": "organization:nsw-health",
+      "count": 29,
+      "top": [
+        {
+          "name": "arbovirus-data",
+          "title": "Arbovirus data"
+        },
+        {
+          "name": "proportion-of-non-admitted-service-provided-through-virtual-care-nsw-quarterly",
+          "title": "Proportion of non-admitted service provided through virtual care - NSW - quarterly"
+        },
+        {
+          "name": "proportion-of-patients-commencing-emergency-treatment-on-time-nsw-quarterly",
+          "title": "Proportion of patients commencing emergency treatment on time, NSW, quarterly"
+        },
+        {
+          "name": "proportion-of-adults-meeting-physical-activity-guidelines",
+          "title": "Proportion of adults meeting physical activity guidelines"
+        },
+        {
+          "name": "potentially-preventable-hospitalisations-due-to-chronic-conditions",
+          "title": "Potentially preventable hospitalisations due to chronic conditions"
+        }
+      ]
+    },
+    {
+      "label": "Department of Education",
+      "query": "organization:education",
+      "count": 79,
+      "top": [
+        {
+          "name": "nsw-education-schools-s170-heritage-conservation-register",
+          "title": "NSW Education Schools S170 Heritage Conservation Register"
+        },
+        {
+          "name": "nsw-education-smart-and-skilled",
+          "title": "NSW Government-subsidised vocational education and training (VET) commencements and completions delivered through Smart and Skilled (2015 - 2026)"
+        },
+        {
+          "name": "nsw-education-apprenticeship-and-traineeship",
+          "title": "NSW Government Apprenticeship and Traineeship training contract approvals, completions and in-trainings"
+        },
+        {
+          "name": "nsw-education-nsw-public-schools-master-dataset",
+          "title": "Master dataset: NSW government school locations and student enrolment numbers"
+        },
+        {
+          "name": "nsw-education-school-intake-zones-catchment-areas-for-nsw-government-schools",
+          "title": "School intake zones (catchment areas) for NSW government schools"
+        }
+      ]
+    }
+  ],
+  "datasets": [
+    {
+      "package_id": "3ea5010a-89bd-46bf-be2a-13c82cc0e1bb",
+      "package_name": "nsw-education-resource-allocation-model",
+      "title": "NSW public schools Resource Allocation Model (RAM) funding by school",
+      "source_url": "https://data.nsw.gov.au/data/dataset/nsw-education-resource-allocation-model",
+      "query": "budget / Department of Education",
+      "resources": [
+        {
+          "package_id": "3ea5010a-89bd-46bf-be2a-13c82cc0e1bb",
+          "package_name": "nsw-education-resource-allocation-model",
+          "dataset_title": "NSW public schools Resource Allocation Model (RAM) funding by school",
+          "dataset_page": "https://data.nsw.gov.au/data/dataset/nsw-education-resource-allocation-model",
+          "resource_id": "359f1b44-f453-4cc6-961f-840a4b83d1de",
+          "resource_name": "2026 Resource Allocation Model (RAM) funding table",
+          "resource_format": "CSV",
+          "mode": "csv",
+          "resource_url": "https://data.nsw.gov.au/data/dataset/3ea5010a-89bd-46bf-be2a-13c82cc0e1bb/resource/359f1b44-f453-4cc6-961f-840a4b83d1de/download/2026-resource-allocation-model-ram-funding-table.csv",
+          "source_date": "2026-05-13",
+          "source_rows": 2212,
+          "archive": {
+            "filename": "2026-resource-allocation-model-ram-funding-table.csv",
+            "sha256": "5669f406ac3a9a437ed990744cb56899e0a02d5700e75652207b9e07f908d5bc",
+            "bytes": 93674
+          }
+        }
+      ],
+      "deferred_resources": []
+    },
+    {
+      "package_id": "56f0b52a-1354-4910-b681-509ecd92888e",
+      "package_name": "nsw-budget-paper-2",
+      "title": "NSW Budget Paper 2",
+      "source_url": "https://data.nsw.gov.au/data/dataset/nsw-budget-paper-2",
+      "query": "capital works",
+      "resources": [
+        {
+          "package_id": "56f0b52a-1354-4910-b681-509ecd92888e",
+          "package_name": "nsw-budget-paper-2",
+          "dataset_title": "NSW Budget Paper 2",
+          "dataset_page": "https://data.nsw.gov.au/data/dataset/nsw-budget-paper-2",
+          "resource_id": "0b1ab94e-10a1-4fa9-b483-1cd72f5df778",
+          "resource_name": "NSW_BudgetPaper2_201617",
+          "resource_format": "CSV",
+          "mode": "datastore",
+          "resource_url": "https://data.nsw.gov.au/data/dataset/nsw-budget-paper-2/resource/0b1ab94e-10a1-4fa9-b483-1cd72f5df778",
+          "source_date": "2016-06-21",
+          "source_rows": 672,
+          "archive": {
+            "filename": "0b1ab94e-10a1-4fa9-b483-1cd72f5df778-datastore.json",
+            "sha256": "b85ec0895da74559c3fd35113458e12f266a6651fe3070720e786ac1cfe98bb5",
+            "bytes": 369081
+          }
+        }
+      ],
+      "deferred_resources": []
+    },
+    {
+      "package_id": "f0f58123-5405-4dd2-87d8-48e319fb84ee",
+      "package_name": "fleet-vehicle-expenditure-data-fy18-19",
+      "title": "Fleet Vehicle expenditure data FY18-19",
+      "source_url": "https://data.nsw.gov.au/data/dataset/fleet-vehicle-expenditure-data-fy18-19",
+      "query": "expenditure / NSW Treasury",
+      "resources": [
+        {
+          "package_id": "f0f58123-5405-4dd2-87d8-48e319fb84ee",
+          "package_name": "fleet-vehicle-expenditure-data-fy18-19",
+          "dataset_title": "Fleet Vehicle expenditure data FY18-19",
+          "dataset_page": "https://data.nsw.gov.au/data/dataset/fleet-vehicle-expenditure-data-fy18-19",
+          "resource_id": "1bf4db95-01d1-4e11-8ac0-097e6a7e7167",
+          "resource_name": "Fleet Vehicle expenditure data FY18-19.xlsx",
+          "resource_format": "excel (xlsx)",
+          "mode": "xlsx",
+          "resource_url": "https://data.nsw.gov.au/data/dataset/f0f58123-5405-4dd2-87d8-48e319fb84ee/resource/1bf4db95-01d1-4e11-8ac0-097e6a7e7167/download/fleet-vehicle-expenditure-data-fy18-19.xlsx",
+          "source_date": "2019-09-03",
+          "source_rows": 11,
+          "archive": {
+            "filename": "fleet-vehicle-expenditure-data-fy18-19.xlsx",
+            "sha256": "7a876fcde7a6da8ebf2eec5d813f19f5ed3daa26d038af16a788993e81466e63",
+            "bytes": 15624
+          }
+        }
+      ],
+      "deferred_resources": [
+        {
+          "package_id": "f0f58123-5405-4dd2-87d8-48e319fb84ee",
+          "package_name": "fleet-vehicle-expenditure-data-fy18-19",
+          "dataset_title": "Fleet Vehicle expenditure data FY18-19",
+          "resource_id": "00cfd3ab-8192-4d3d-8b09-b09080574b50",
+          "name": "Fleet Vehicle expenditure data FY18-19.pdf",
+          "format": "PDF",
+          "url": "https://data.nsw.gov.au/data/dataset/f0f58123-5405-4dd2-87d8-48e319fb84ee/resource/00cfd3ab-8192-4d3d-8b09-b09080574b50/download/fleet-vehicle-expenditure-data-fy18-19.pdf",
+          "reason": "Deferred: PDF/DOC/DOCX extraction belongs to the separate PDF foundation; not ingested in S2."
+        }
+      ]
+    },
+    {
+      "package_id": "a1a350b5-2c9a-4055-8030-7b570364421d",
+      "package_name": "media-expenditure-by-agency-2024-2025",
+      "title": "Media Expenditure by Agency 2024/2025",
+      "source_url": "https://data.nsw.gov.au/data/dataset/media-expenditure-by-agency-2024-2025",
+      "query": "agency expenditure",
+      "resources": [],
+      "deferred_resources": [
+        {
+          "package_id": "a1a350b5-2c9a-4055-8030-7b570364421d",
+          "package_name": "media-expenditure-by-agency-2024-2025",
+          "dataset_title": "Media Expenditure by Agency 2024/2025",
+          "resource_id": "f6e15e73-e00b-44a1-afea-816fd6e8be9e",
+          "name": "202407-202506-q4-expenditure-by-agency.docx",
+          "format": "DOC",
+          "url": "https://data.nsw.gov.au/data/dataset/a1a350b5-2c9a-4055-8030-7b570364421d/resource/f6e15e73-e00b-44a1-afea-816fd6e8be9e/download/202407-202506-q4-expenditure-by-agency.docx",
+          "reason": "Deferred: PDF/DOC/DOCX extraction belongs to the separate PDF foundation; not ingested in S2."
+        }
+      ]
+    }
+  ],
+  "deferred_resources": [
+    {
+      "package_id": "f0f58123-5405-4dd2-87d8-48e319fb84ee",
+      "package_name": "fleet-vehicle-expenditure-data-fy18-19",
+      "dataset_title": "Fleet Vehicle expenditure data FY18-19",
+      "resource_id": "00cfd3ab-8192-4d3d-8b09-b09080574b50",
+      "name": "Fleet Vehicle expenditure data FY18-19.pdf",
+      "format": "PDF",
+      "url": "https://data.nsw.gov.au/data/dataset/f0f58123-5405-4dd2-87d8-48e319fb84ee/resource/00cfd3ab-8192-4d3d-8b09-b09080574b50/download/fleet-vehicle-expenditure-data-fy18-19.pdf",
+      "reason": "Deferred: PDF/DOC/DOCX extraction belongs to the separate PDF foundation; not ingested in S2."
+    },
+    {
+      "package_id": "a1a350b5-2c9a-4055-8030-7b570364421d",
+      "package_name": "media-expenditure-by-agency-2024-2025",
+      "dataset_title": "Media Expenditure by Agency 2024/2025",
+      "resource_id": "f6e15e73-e00b-44a1-afea-816fd6e8be9e",
+      "name": "202407-202506-q4-expenditure-by-agency.docx",
+      "format": "DOC",
+      "url": "https://data.nsw.gov.au/data/dataset/a1a350b5-2c9a-4055-8030-7b570364421d/resource/f6e15e73-e00b-44a1-afea-816fd6e8be9e/download/202407-202506-q4-expenditure-by-agency.docx",
+      "reason": "Deferred: PDF/DOC/DOCX extraction belongs to the separate PDF foundation; not ingested in S2."
+    }
+  ]
+}

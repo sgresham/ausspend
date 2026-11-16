@@ -29,6 +29,7 @@ function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory only. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
     'NSW Budget 2025-26 rows come from the 12 official XLSX workbooks in the 14 November 2025 Wayback snapshot plus the ArcGIS Treasury_Project_Data_20260609_gdb layer. Financial/HFI values are $m/$b statement line items; capital projects are $000 Budgeted amounts. Negative net/deficit lines are skipped, not sign-flipped, and missing LGAs are left absent (statewide_only), never inferred.',
+    "data.nsw.gov.au CKAN ingestion is targeted: nine discovery searches and a small selected dataset set, never the whole ~16,907-dataset portal. CSV/XLSX downloads and DataStore pages are archived with SHA-256. PDF/DOC/DOCX resources are deferred to the separate PDF foundation and are listed on the source. Units are explicit where CKAN states one; NSW Budget Paper 2 capital allocations are provisionally treated as $'000 and fleet spend as $, and measure types are never summed.",
   ];
 }
 
@@ -98,6 +99,7 @@ export function createCoverageHandler(
           : summary.last_fetched_at,
         records_ingested: stored.records_ingested,
         errors: stored.errors ?? [],
+        deferred_resources: stored.deferred_resources ?? summary.deferred_resources,
       };
     });
     const connectorStatusCounts = {
@@ -117,12 +119,16 @@ export function createCoverageHandler(
     const pending: string[] = [...PENDING_FEDERAL_SOURCES];
     const ausTender = dataSourceById.get('aus-tender');
     const pbs = dataSourceById.get('data-gov-au-pbs');
+    const nswCkan = dataSourceById.get('data-nsw-ckan');
+    const stateLive = stateConnectors.some((connector) => connector.status === 'active');
 
     res.set('Cache-Control', 'no-store');
     res.json({
       phase: liveIngestion
         ? pbsLive
-          ? 'Phase 1 + F2/F3 (AusTender + PBS live)'
+          ? stateLive
+            ? 'Phase 1 + F2/F3 + S1/S2 (AusTender + PBS + NSW live)'
+            : 'Phase 1 + F2/F3 (AusTender + PBS live)'
           : 'Phase 1 + F2 (AusTender live)'
         : 'Phase 1',
       synthetic: true,
@@ -174,7 +180,11 @@ export function createCoverageHandler(
         stubs: stateConnectors
           .filter((connector) => connector.status === 'stub')
           .map((connector) => connector.id),
-        note: 'NSW Budget 2025-26 Open Data is live (official Wayback XLSX copy + ArcGIS capital projects). Victoria, Queensland and Western Australia remain stubs. NSW Budget rows are Budgeted/estimate/actual statement line items, never spent amounts, and measure types are never summed.',
+        nsw_ckan_last_ingested_at: nswCkan?.last_ingested_at
+          ? new Date(nswCkan.last_ingested_at).toISOString()
+          : null,
+        deferred_resources: nswCkan?.deferred_resources ?? [],
+        note: 'NSW Budget 2025-26 Open Data (official Wayback XLSX copy + ArcGIS capital projects) and targeted data.nsw.gov.au CKAN datasets are live. CKAN CSV/XLSX downloads and DataStore pages are archived with SHA-256; PDF/DOCX resources are deferred and listed here, not ingested. Victoria, Queensland and Western Australia remain stubs. NSW Budget rows are Budgeted/estimate/actual statement line items, never spent amounts, and measure types are never summed.',
       },
       ingestion: {
         latest_logs: latestLogs.map((log) => ({

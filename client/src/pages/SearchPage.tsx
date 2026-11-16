@@ -231,7 +231,9 @@ export function SearchPage() {
     pageSources.some((source) => source.source_id === 'grantconnect');
   const showNswNote =
     jurisdictionLevel === 'state' ||
-    pageSources.some((source) => source.source_id === 'nsw-budget');
+    pageSources.some(
+      (source) => source.source_id === 'nsw-budget' || source.source_id === 'data-nsw-ckan',
+    );
 
   return (
     <Box>
@@ -240,8 +242,10 @@ export function SearchPage() {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Query every measure through <code>/api/spending</code>: synthetic budget seed rows, live
-        AusTender federal contract records, and NSW Budget 2025-26 state rows. Measure types are
-        never added together, and NSW budget figures are labelled <strong>Budgeted</strong>.
+        AusTender federal contract records, NSW Budget 2025-26 state rows, and selected
+        data.nsw.gov.au CKAN state datasets (CSV/XLSX downloads and DataStore pages). Measure types
+        are never added together, and NSW budget figures are labelled <strong>Budgeted</strong>;
+        some CKAN rows are <strong>provisional</strong> where the source does not state a unit.
         Filters, sort and pagination live in the URL, so reload and browser back/forward restore the
         same view. Amounts are entered in dollars and sent to the API as integer cents.
       </Typography>
@@ -297,7 +301,10 @@ export function SearchPage() {
         <Alert severity="info" data-testid="nsw-budgeted-note" sx={{ mb: 3 }}>
           <strong>NSW state rows are Budgeted.</strong> The NSW Budget 2025-26 figures are
           statement/capital budget lines, not actual or spent amounts. Capital projects are Budgeted
-          for 2025-26, and rows never carry an invented LGA. Measure types are not summed.
+          for 2025-26, and rows never carry an invented LGA. data.nsw.gov.au CKAN rows include
+          budget allocations, reported historical spend and provisional inferred units; their
+          provenance and deferred PDF/DOCX resources are listed on the Data sources page. Measure
+          types are not summed.
         </Alert>
       ) : null}
 

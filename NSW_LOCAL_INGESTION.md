@@ -1,9 +1,11 @@
-# NSW / local ingestion — S1: NSW Budget Open Data
+# NSW / local ingestion — S1 NSW Budget + S2 data.nsw.gov.au CKAN
 
-**Scope of this item (S1).** This is the first state source only. It ingests the official
-NSW Budget 2025-26 open-data workbooks and the NSW Treasury ArcGIS capital-projects layer.
-It deliberately stops before `data.nsw.gov.au` CKAN, Dubbo, VIC, QLD, WA, SOC/charity and
-the separate S3 PDF/source-archive foundation. Federal statuses are unchanged.
+**Scope.** S1 ingests the official NSW Budget 2025-26 open-data workbooks and the NSW Treasury
+ArcGIS capital-projects layer (source id `nsw-budget`). S2 adds **targeted**
+`data.nsw.gov.au` CKAN ingestion (source id `data-nsw-ckan`): a small curated set of budget,
+capital and agency-expenditure datasets, never the whole portal. Both phases stop before
+Dubbo/local-government (S3), VIC/QLD/WA, SOC/charity and live PDF/DOCX ingestion. Federal
+statuses and the 121,050 pre-S2 measures are unchanged except for the new S2 rows.
 
 ## 1. Source, redirect and snapshot
 
@@ -192,8 +194,9 @@ negative lines and non-spending rows/columns are also skipped/flagged, never gue
 `nsw-budget` source ends `active` on success and `degraded` on failure; a failure keeps the old
 rows because the runner only upserts and never deletes.
 
-Federal counts before/after S1 are unchanged: **119,935 total = 117,894 AusTender + 1,231 PBS +
-810 synthetic**. S1 adds only `source_id: "nsw-budget"` rows.
+Federal counts before/after S1 are unchanged: **119,935 federal = 117,894 AusTender + 1,231 PBS +
+810 synthetic**. With S1's 1,115 NSW rows the pre-S2 database total is **121,050**. S1 adds only
+`source_id: "nsw-budget"` rows; S2 adds only `source_id: "data-nsw-ckan"` rows.
 
 ## 9. Known limitations
 
@@ -214,19 +217,147 @@ Federal counts before/after S1 are unchanged: **119,935 total = 117,894 AusTende
 - The 2026-06-22 ArcGIS layer is a later Treasury extract used for the 2025-26 budget field; the
   manifest records its source date and hash.
 
-## 10. What this item stops before
+## 10. S2 — targeted data.nsw.gov.au CKAN
 
-S1 stops after the NSW Budget Open Data connector. It does **not** start:
+### 10.1 API and politeness
 
-- `data.nsw.gov.au` CKAN ingestion,
-- Dubbo / local-government data,
+Read-only CKAN API: <https://data.nsw.gov.au/data/api/3/action/> (no key). The connector runs
+`package_search` for the nine required discovery queries, then `package_show` only for the selected
+datasets. It never harvests the ~16,907-dataset portal.
+
+- 500 ms between every CKAN API/download request (`CKAN_DEFAULT_DELAY_MS`).
+- `Retry-After` is honoured on HTTP 429/503, with up to four retries
+  (`CKAN_DEFAULT_MAX_RETRIES`).
+- Downloads are sequential (well below the two-concurrent ceiling).
+
+Observed discovery counts (logged in `data_sources.notes` / the archive manifest):
+
+| Query                            | Count | Selected?                                                                  |
+| -------------------------------- | ----: | -------------------------------------------------------------------------- |
+| `budget`                         |    80 | `nsw-budget-paper-2`                                                       |
+| `expenditure`                    |    62 | `fleet-vehicle-expenditure-data-fy18-19`                                   |
+| `capital works`                  |    32 | `nsw-budget-paper-2` (capital)                                             |
+| `grants`                         |    73 | no tabular grant dataset selected; PDF-only results deferred/not harvested |
+| `agency expenditure`             |    23 | `media-expenditure-by-agency-2024-2025` (DOCX deferred)                    |
+| `organization:the-treasury`      |    11 | fleet expenditure                                                          |
+| `organization:transport-for-nsw` |   268 | no extra spend dataset selected                                            |
+| `organization:nsw-health`        |    29 | no extra spend dataset selected                                            |
+| `organization:education`         |    79 | `nsw-education-resource-allocation-model`                                  |
+
+### 10.2 Selected datasets and resources
+
+| Dataset (CKAN title)                                                 | Resource                                                    | Mode                                           | Source rows | SHA-256                                                            |
+| -------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------- | ----------: | ------------------------------------------------------------------ |
+| NSW public schools Resource Allocation Model (RAM) funding by school | 2026 RAM funding table (`359f1b44…`)                        | CSV download (explicit `$` column)             |       2,212 | `5669f406ac3a9a437ed990744cb56899e0a02d5700e75652207b9e07f908d5bc` |
+| NSW Budget Paper 2                                                   | `NSW_BudgetPaper2_201617` (`0b1ab94e…`)                     | DataStore `datastore_search` (paged)           |         672 | `b85ec0895da74559c3fd35113458e12f266a6651fe3070720e786ac1cfe98bb5` |
+| Fleet Vehicle expenditure data FY18-19                               | `Fleet Vehicle expenditure data FY18-19.xlsx` (`1bf4db95…`) | XLSX download; `$` from cell format `"$"#,##0` |          11 | `7a876fcde7a6da8ebf2eec5d813f19f5ed3daa26d038af16a788993e81466e63` |
+
+The committed manifest is [`docs/source-archive/data-nsw-ckan.json`](docs/source-archive/data-nsw-ckan.json).
+It records the exact resource URL, local archive path and SHA-256 for every downloaded/DataStore
+resource. Bytes live outside the repository (default `~/ausspend-source-archive/data-nsw-ckan`);
+only metadata is committed.
+
+The DataStore JSON is archived too: the paged `datastore_search` response is serialised, hashed and
+recorded, so a DataStore-only resource has the same auditability as a downloaded CSV/XLSX.
+
+### 10.3 Deferred resources (recorded, not ingested)
+
+| Dataset                                | Resource                                      | Format   | Why deferred                                                       |
+| -------------------------------------- | --------------------------------------------- | -------- | ------------------------------------------------------------------ |
+| Fleet Vehicle expenditure data FY18-19 | `Fleet Vehicle expenditure data FY18-19.pdf`  | PDF      | PDF extraction is the separate foundation; S2 does not ingest PDFs |
+| Media Expenditure by Agency 2024/2025  | `202407-202506-q4-expenditure-by-agency.docx` | DOC/DOCX | DOCX extraction is deferred with PDF                               |
+
+Deferred resources are persisted in `data_sources.deferred_resources`, returned by
+`/api/v1/data-sources` and shown on the Data sources page as a labelled "recorded, not ingested"
+list. They are not silently dropped.
+
+### 10.4 Mapping rules
+
+- `jurisdiction_level: "state"`, `jurisdiction: "NSW"`.
+- `source_id: "data-nsw-ckan"`.
+- `source_dataset` = the CKAN dataset title.
+- `source_url` = `https://data.nsw.gov.au/data/dataset/<package_name>`.
+- `source_detail` (in `notes`) = the exact resource URL + archive local path + SHA-256.
+- Amount columns are detected by header keywords and explicit `$`/`$'000`/`$m`/`$b` markers. Where
+  a source also has cumulative/total columns, the resource mapping names only the annual allocation
+  columns so cumulative spend and project totals are not double-counted.
+- Units are converted to integer cents (`$` ×100, `$'000` ×100,000, `$m` ×100,000,000,
+  `$b` ×100,000,000,000). Missing/ambiguous units are never silently assumed: the closest
+  published convention is used, the row gets `data_quality_flag: "provisional"` and the run logs a
+  warning.
+- Financial years come from the amount-column header (`Allocation201415` → `2014-15`), a row
+  date/FY column, or the resource mapping (RAM 2026 → `2025-26`; fleet FY18-19 → `2018-19`).
+- Measure type: RAM and Budget Paper 2 are `budget` (allocations, not spend); fleet is `actual`
+  because it reports historical supplier-invoice spend, but the source does not describe it as
+  audited, so it is provisional. No new measure type is invented.
+- `natural_key = data-nsw-ckan:sha256(package_id + resource_id + row_hash)`, where `row_hash`
+  hashes the sorted row fields plus the amount column. Re-running the connector produces the same
+  keys (idempotent upsert); exact duplicate source rows are counted and logged, not silently kept
+  as separate observations.
+- Every row has `verified: false`; locations are `{state: "NSW"}` plus an LGA only where the source
+  supplies one. Missing LGAs are `statewide_only`, never inferred.
+- COFOG is filled only from a conservative entity/category prefix map (for example Health → 07,
+  Education → 09, Transport → 04, Justice/Fire → 03); otherwise `function_code` is absent.
+
+### 10.5 Reconciliation and counts
+
+The live run logs per-resource reconciliation:
+
+```text
+RAM 2026:    source_rows=2212, rows_with_records=2211, measures=2211, rejected_rows=1 (Grand Total)
+BudgetPaper2: source_rows=672, rows_with_records=628, measures=1251, rejected_rows=44,
+              rejected_values=44 ("n.a" in Allocation201617)
+Fleet FY18-19: source_rows=11, rows_with_records=10, measures=10, rejected_rows=1 (Total)
+```
+
+Every rejection is logged with its row and reason (`total/subtotal row excluded`, `unusable amount
+"n.a"`, `negative amount skipped`, or `no usable amount`). Source rows are reconciled as
+`rows_with_records + rejected_rows`; one row may legitimately produce more than one measure when it
+has multiple annual allocation columns.
+
+Live total: **3,472 measures** from **2,895 source rows** (2,211 RAM + 1,251 Budget Paper 2 + 10
+fleet). The database therefore moves from **121,050** pre-S2 measures to **124,522**; the existing
+117,894 AusTender + 1,231 PBS + 810 synthetic + 1,115 NSW Budget rows are preserved exactly.
+
+### 10.6 Idempotency and failure behaviour
+
+`npm run ingest:nsw -- --source data-nsw-ckan` re-runs the same selection. The runner upserts on
+`natural_key`; a second run reports the same fetched/upserted counts and does not duplicate rows.
+A source failure is logged as `error`, marks `data_sources.status = "degraded"` and preserves the
+previous rows (the runner never deletes).
+
+### 10.7 API and UI visibility
+
+- `GET /api/v1/spending?jurisdiction_level=state` includes `source_id: "data-nsw-ckan"` rows with
+  `source_dataset`, `source_url`, `source_date`, `data_quality_flag`, `location` and provenance
+  notes.
+- `GET /api/v1/data-sources` returns `data-nsw-ckan` with `status`, `records_ingested`,
+  `last_ingested_at`, `notes` and `deferred_resources`.
+- `GET /api/v1/meta/coverage` lists `data-nsw-ckan` under `state_ingestion.live` and exposes the
+  deferred resources; the limitations name the targeted/no-harvest and deferred-PDF/DOCX rules.
+- The Data sources page renders the new source, its deferred PDF/DOCX list, and a link to the
+  state spending view. The Search page labels CKAN rows' provenance and provisional status.
+
+### 10.8 What S2 does not do
+
+S2 stops at targeted `data.nsw.gov.au` CKAN. It does **not** start Dubbo/local-government (S3),
+VIC/QLD/WA, SOC/charity, or live PDF/DOCX ingestion. PDF/DOCX resources are listed as deferred and
+remain for a later phase.
+
+## 11. What these items stop before
+
+S1 stops after the NSW Budget Open Data connector. S2 adds only the targeted CKAN connector.
+Neither starts:
+
+- Dubbo / local-government data (S3),
 - VIC, QLD or WA budget sources,
 - SOC/charity sources,
-- the separate S3 PDF/source-archive foundation.
+- live PDF/DOCX ingestion (the source-archive/PDF foundation is available, but S2 only records
+  PDF/DOCX resources as deferred).
 
 The VIC/QLD/WA connectors remain stubs in `server/src/connectors/registry.ts`.
 
-## 11. Archived copies and the reusable PDF foundation
+## 12. Archived copies and the reusable PDF foundation
 
 The official blobs are not committed. S1's local copies live in
 `~/.cache/ausspend/nsw-budget/2025-26` and the committed manifest
@@ -253,6 +384,6 @@ The same foundation provides reusable PDF text/table extraction
 (`server/src/connectors/pdf-extract.ts`, `npm run pdf:extract -- --file=…`). It detects explicit
 `$`/`$'000`/`$m`/`$b` units, converts to integer cents, and **refuses to ingest** a table when the
 unit is missing/ambiguous or row/column totals do not reconcile. All PDF rows are `provisional`
-and require human review before `verified`. S1 does not ingest any PDF and does not start S2/S3 or
-VIC/QLD/WA/SOC/charity. Details, tests and boundaries:
-[docs/SOURCE_ARCHIVE_AND_PDF.md](./docs/SOURCE_ARCHIVE_AND_PDF.md).
+and require human review before `verified`. S1 and S2 do not ingest any PDF/DOCX; S2 records those
+resources as deferred, and S3/VIC/QLD/WA/SOC/charity remain out of scope. Details, tests and
+boundaries: [docs/SOURCE_ARCHIVE_AND_PDF.md](./docs/SOURCE_ARCHIVE_AND_PDF.md).

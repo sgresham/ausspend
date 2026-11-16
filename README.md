@@ -278,7 +278,7 @@ invalid query parameters return JSON `400`.
 `GET /api/meta/coverage` returns the Phase 1 banner from the database plus the connector registry:
 `phase`, `synthetic: true`, `live_ingestion` (derived from real connector status: true once
 AusTender/PBS ingest), `generated_at`, `counts {data_sources, regions, functions, measures}`, distinct sorted
-`fiscal_years`, supported/observed `measure_types`, `region_levels`, the eleven `connectors`
+`fiscal_years`, supported/observed `measure_types`, `region_levels`, the twelve `connectors`
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
 `federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat}` and
@@ -332,16 +332,19 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 `null` and are omitted from the function/region breakdowns; no COFOG code or region is invented.
 `GET /api/spending/:id` returns one row in the same shape (`400` invalid id, `404` unknown).
 
-### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget live)
+### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers eleven Australian public-spending sources. **AusTender
+`server/src/connectors` registers twelve Australian public-spending sources. **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
 `4f025f38-0c70-45e2-8106-4c29a5e48637`: `package_show` selects the "2025-26 PBS Program Expenses
 Line Items" CSV, which is streamed (Windows-1252, chunked, `csv-parse`) rather than loaded whole.
 **NSW Budget (`nsw-budget`) is live as of S1** from the official 2025-26 open-data XLSX
-snapshot plus the ArcGIS `Treasury_Project_Data_20260609_gdb` capital-projects layer. The other
+snapshot plus the ArcGIS `Treasury_Project_Data_20260609_gdb` capital-projects layer.
+**data.nsw.gov.au CKAN (`data-nsw-ckan`) is live as of S2**: nine targeted `package_search`
+queries feed a small selected dataset set (RAM school funding CSV, Budget Paper 2 DataStore,
+fleet-vehicle XLSX); PDF/DOCX resources are recorded as deferred, not ingested. The other
 eight connectors are stubs (`status: "stub"`; `fetch()` rejects with "not implemented" and
 `transform()` returns no records). GrantConnect (`grantconnect`) remains **pending**, and
 VIC/QLD/WA remain stubs.
@@ -388,20 +391,25 @@ MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
 npm run ingest:federal
 ```
 
-NSW Budget is a separate S1 command. It discovers the 12 official 2025-26 XLSX links in the
-14 November 2025 Wayback snapshot, caches and hashes every workbook, streams each XLSX, fetches
-the 974 ArcGIS capital projects, and upserts on `natural_key`. The official blobs are never
-committed; the metadata manifest is `docs/source-archive/nsw-budget-2025-26.json`.
+`npm run ingest:nsw` runs the NSW sources (`nsw-budget`, then `data-nsw-ckan`) against
+`ausspend_dev`; `--source data-nsw-ckan` runs only S2. S1 discovers the 12 official 2025-26 XLSX
+links in the 14 November 2025 Wayback snapshot, caches and hashes every workbook, streams each
+XLSX, fetches the 974 ArcGIS capital projects, and upserts on `natural_key`. S2 archives every
+downloaded/DataStore resource with SHA-256 and upserts selected CKAN rows. Official blobs are
+never committed; the metadata manifests are `docs/source-archive/nsw-budget-2025-26.json` and
+`docs/source-archive/data-nsw-ckan.json`.
 
 ```bash
 MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:nsw
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:nsw -- --source data-nsw-ckan
 ```
 
 NSW financial statements are in `$m`, historical fiscal indicators in `$b` and capital projects in
 `$'000`; all are converted to integer cents with explicit, tested multipliers. Budgeted rows are
 labelled **Budgeted**, never actual/spent, and measure types are never summed. Full mapping,
-COFOG decisions and limitations are in [NSW_LOCAL_INGESTION.md](./NSW_LOCAL_INGESTION.md). S1 stops
-before `data.nsw.gov.au` CKAN, Dubbo, VIC/QLD/WA, SOC/charity and any live PDF ingestion.
+COFOG decisions and limitations are in [NSW_LOCAL_INGESTION.md](./NSW_LOCAL_INGESTION.md). S2 stops
+before Dubbo (S3), VIC/QLD/WA, SOC/charity and any live PDF/DOCX ingestion; CKAN PDF/DOCX
+resources are listed as deferred on `data-nsw-ckan`.
 
 ### Source archive and PDF foundation
 
@@ -409,9 +417,10 @@ before `data.nsw.gov.au` CKAN, Dubbo, VIC/QLD/WA, SOC/charity and any live PDF i
 source-agnostic archive: documents are copied **outside** the repository (default
 `/home/steve/ausspend-source-archive`) and recorded with their exact URL, `sha256`, bytes and
 content type in the `source_documents` collection. `npm run archive -- list|verify|adopt-nsw|fetch`
-manages them; `GET /api/v1/source-documents?source_id=nsw-budget` lists them read-only. S1's
-Wayback XLSX workbooks and ArcGIS JSON are adopted by reference (re-hashed against the committed
-manifest, never copied or mutated).
+manages them; `GET /api/v1/source-documents?source_id=nsw-budget` and
+`?source_id=data-nsw-ckan` list them read-only. S1's Wayback XLSX workbooks and ArcGIS JSON are
+adopted by reference (re-hashed against the committed manifest, never copied or mutated); S2
+CSV/XLSX downloads and DataStore JSON are written to the same archive with SHA-256 records.
 
 `server/src/connectors/pdf-extract.ts` is the reusable PDF text/table extractor
 (`npm run pdf:extract -- --file=…`). It detects `$`, `$'000`, `$m` and `$b`, converts to integer

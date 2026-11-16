@@ -27,7 +27,7 @@ export function CoverageBanner() {
     <Alert severity="warning" sx={{ mb: 3 }} data-testid="coverage-banner">
       <strong>{data.phase}.</strong>{' '}
       {data.live_ingestion
-        ? 'Live AusTender contract records and PBS budget line items are included next to the synthetic development seed. Contract and PBS rows are real published records; seed rows remain placeholders. PBS line items do not sum to the federal total. '
+        ? 'Live AusTender contract records, PBS budget line items, NSW Budget rows and selected data.nsw.gov.au CKAN rows are included next to the synthetic development seed. Ingested rows are real published records; seed rows remain placeholders. PBS line items do not sum to the federal total, and CKAN rows with an inferred unit are provisional. '
         : 'Synthetic development seed data only; no live ingestion has run. '}
       No figure is human-verified or a single government total.{' '}
       <Stack component="span" direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>

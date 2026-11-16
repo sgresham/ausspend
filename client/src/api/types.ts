@@ -11,6 +11,17 @@ export type JurisdictionLevel = 'federal' | 'state' | 'territory' | 'local' | 'o
 
 export type DataSourceStatus = 'stub' | 'active' | 'degraded';
 
+export interface DeferredResource {
+  package_id: string;
+  package_name: string;
+  dataset_title: string;
+  resource_id: string;
+  name: string;
+  format: string;
+  url: string;
+  reason: string;
+}
+
 export type RegionLevel = 'national' | 'state' | 'region';
 
 export type FunctionLevel = 'division' | 'subdivision';
@@ -28,6 +39,7 @@ export interface DataSource {
   last_ingested_at: string | null;
   records_ingested: number;
   errors: string[];
+  deferred_resources?: DeferredResource[];
 }
 
 export interface DataSourcesResponse {
@@ -44,6 +56,7 @@ export interface ConnectorMetadata {
   last_fetched_at: string | null;
   records_ingested: number;
   errors: string[];
+  deferred_resources?: DeferredResource[];
 }
 
 export interface CoverageCounts {
@@ -74,6 +87,14 @@ export interface CoverageResponse {
     aus_tender_last_ingested_at: string | null;
     pbs_last_ingested_at?: string | null;
     pbs_caveat?: string;
+    note: string;
+  };
+  state_ingestion?: {
+    live: string[];
+    degraded: string[];
+    stubs: string[];
+    nsw_ckan_last_ingested_at?: string | null;
+    deferred_resources?: DeferredResource[];
     note: string;
   };
   ingestion?: { latest_logs: IngestionLog[] };

@@ -75,6 +75,7 @@ async function recordSourceState(
         last_ingested_at: at,
         records_ingested: recordsUpserted,
         errors,
+        deferred_resources: connector.deferredResources ?? [],
         ...(connector.license ? { license: connector.license } : {}),
         ...(connector.notes ? { notes: connector.notes } : {}),
       },
