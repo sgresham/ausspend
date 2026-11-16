@@ -4,20 +4,19 @@ import { titleCase } from '../format';
 import { Amount, MeasureTypeChip, ProvenanceFooter, type ProvenanceSourceRef } from './Provenance';
 
 /**
- * The one place a headline total may appear. Totals are only shown for a
- * single measure type; a mixed response renders an explicit warning instead.
+ * The one place a detail-page headline total may appear. Totals are only shown
+ * for a single measure type; a mixed response renders an explicit warning
+ * instead. Per-type totals come from the API, never from summing rows.
  */
 export function TotalsPanel({
   summary,
   sources,
   scopeLabel,
-  limit,
   note,
 }: {
   summary: MeasureSummary;
   sources: readonly ProvenanceSourceRef[];
   scopeLabel: string;
-  limit: number;
   note?: string;
 }) {
   if (summary.count === 0) return null;
@@ -29,7 +28,7 @@ export function TotalsPanel({
         {scopeLabel} contains {summary.measure_types.map((type) => titleCase(type)).join(', ')}{' '}
         measures. These measure types are not comparable, so ausspend does not add them together or
         present a headline total. Use the filters to select one measure type, or read the
-        per-measure-type breakdown below.
+        per-measure-type totals below.
       </Alert>
     );
   }
@@ -57,8 +56,8 @@ export function TotalsPanel({
           <Chip size="small" variant="outlined" label={`${summary.count} measure rows`} />
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {scopeLabel} · sum of {summary.count} rows for one measure type. Computed with limit=
-          {limit}; the request asks for limit=1000 so the sum is not truncated.
+          {scopeLabel} · sum of {summary.count} rows for one measure type. The total is returned by
+          the API over the whole filtered set.
         </Typography>
         <ProvenanceFooter sources={sources} note={note} />
       </CardContent>

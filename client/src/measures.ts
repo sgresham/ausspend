@@ -1,11 +1,4 @@
-import type { MeasureRow, MeasureType } from './api/types';
-
-export const LIMIT_FOR_TOTALS = 1000;
-
-/** Fiscal years present in a set of measure rows, newest first. */
-export function fiscalYearsFromRows(rows: readonly MeasureRow[]): string[] {
-  return [...new Set(rows.map((row) => row.fiscal_year))].sort((a, b) => b.localeCompare(a));
-}
+import type { MeasureType, PerMeasureTypeTotal } from './api/types';
 
 const EMPTY_TOTALS: Record<MeasureType, number> = {
   actual: 0,
@@ -13,11 +6,17 @@ const EMPTY_TOTALS: Record<MeasureType, number> = {
   estimate: 0,
 };
 
-/** Sum integer cents per measure type. Never produces a combined total. */
-export function measureTypeTotals(rows: readonly MeasureRow[]): Record<MeasureType, number> {
-  const totals: Record<MeasureType, number> = { ...EMPTY_TOTALS };
-  for (const row of rows) {
-    totals[row.measure_type] += row.amount_cents;
+/**
+ * Turn the API's per-measure-type totals into the shape chart components need.
+ * This never sums rows client-side: every value comes straight from
+ * `total_by_measure_type` in the response.
+ */
+export function typeTotalsFromApi(
+  totals: readonly PerMeasureTypeTotal[],
+): Record<MeasureType, number> {
+  const result: Record<MeasureType, number> = { ...EMPTY_TOTALS };
+  for (const entry of totals) {
+    result[entry.measure_type] = entry.total_cents;
   }
-  return totals;
+  return result;
 }

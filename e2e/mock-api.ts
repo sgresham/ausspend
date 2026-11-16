@@ -25,6 +25,92 @@ const VIC = {
   name: 'Victoria',
   level: 'state',
 };
+const QLD = {
+  _id: '6afaa24c06cd1221b0f07294',
+  code: 'QLD',
+  name: 'Queensland',
+  level: 'state',
+};
+
+const ALL_REGIONS = [AUS, NSW, VIC, QLD];
+
+const COVERAGE = {
+  phase: 'Phase 1',
+  synthetic: true,
+  live_ingestion: false,
+  generated_at: '2026-11-16T00:00:00.000Z',
+  counts: { data_sources: 1, regions: ALL_REGIONS.length, functions: 53, measures: 810 },
+  fiscal_years: ['2022-23', '2023-24', '2024-25'],
+  measure_types: ['actual', 'budget', 'estimate'],
+  region_levels: ['national', 'state'],
+  connectors: [
+    {
+      id: 'federal-budget-portal',
+      name: 'Australian Government Budget Portal',
+      publisher: 'Australian Government Department of Finance',
+      source_url: 'https://budget.gov.au/',
+      status: 'stub',
+    },
+    {
+      id: 'abs-government-finance',
+      name: 'Government Finance Statistics',
+      publisher: 'Australian Bureau of Statistics',
+      source_url:
+        'https://www.abs.gov.au/statistics/economy/government/government-finance-statistics',
+      status: 'stub',
+    },
+    {
+      id: 'aihw-health-expenditure',
+      name: 'Health Expenditure Australia',
+      publisher: 'Australian Institute of Health and Welfare',
+      source_url: 'https://www.aihw.gov.au/reports-data/health-welfare-overview/health-expenditure',
+      status: 'stub',
+    },
+    {
+      id: 'aofm',
+      name: 'Australian Office of Financial Management',
+      publisher: 'Australian Office of Financial Management',
+      source_url: 'https://www.aofm.gov.au/',
+      status: 'stub',
+    },
+    {
+      id: 'nsw-budget',
+      name: 'NSW Budget',
+      publisher: 'NSW Treasury',
+      source_url: 'https://www.treasury.nsw.gov.au/budget',
+      status: 'stub',
+    },
+    {
+      id: 'vic-budget',
+      name: 'Victorian State Budget',
+      publisher: 'Victorian Department of Treasury and Finance',
+      source_url: 'https://www.dtf.vic.gov.au/state-budget',
+      status: 'stub',
+    },
+    {
+      id: 'qld-budget',
+      name: 'Queensland Budget',
+      publisher: 'Queensland Treasury',
+      source_url: 'https://budget.qld.gov.au/',
+      status: 'stub',
+    },
+    {
+      id: 'wa-budget',
+      name: 'Western Australian Budget',
+      publisher: 'Western Australian Department of Treasury',
+      source_url: 'https://www.wa.gov.au/organisation/department-of-treasury/budget',
+      status: 'stub',
+    },
+  ],
+  limitations: [
+    'Synthetic development seed only: every value is a deterministic placeholder, not published Australian government spending.',
+    'No verified records: every seeded measure carries verified: false.',
+    'No live ingestion: all eight connectors are stubs and the API never calls them.',
+    'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
+    'Region granularity is national plus state/territory only; there are no sub-state regions yet.',
+  ],
+  note: 'Phase 1 coverage metadata. Treat every figure as synthetic and unverified until a real, sourced ingestion milestone lands.',
+};
 
 const DIVISION_NAMES = [
   ['01', 'General public services'],
@@ -53,10 +139,22 @@ const DIVISIONS = DIVISION_NAMES.map(([code, name]) => ({
   ],
 }));
 
+type MockMeasureType = 'actual' | 'budget' | 'estimate';
+type MockRegion = typeof AUS | typeof NSW | typeof VIC | typeof QLD;
+
+const FUNCTION_NAMES: Record<
+  string,
+  { name: string; level: 'division' | 'subdivision'; parent?: string }
+> = {
+  '07': { name: 'Health', level: 'division' },
+  '074': { name: 'Public health services', level: 'subdivision', parent: '07' },
+  '09': { name: 'Education', level: 'division' },
+};
+
 function measureRow(
   id: string,
   regionId: string,
-  measureType: 'actual' | 'budget' | 'estimate',
+  measureType: MockMeasureType,
   fiscalYear: string,
   amountCents: number,
 ) {
@@ -74,6 +172,79 @@ function measureRow(
   };
 }
 
+function perTypeTotals(rows: Array<{ measure_type: MockMeasureType; amount_cents: number }>) {
+  const types = [...new Set(rows.map((row) => row.measure_type))].sort();
+  return types.map((measure_type) => {
+    const matching = rows.filter((row) => row.measure_type === measure_type);
+    return {
+      measure_type,
+      count: matching.length,
+      total_cents: matching.reduce((sum, row) => sum + row.amount_cents, 0),
+    };
+  });
+}
+
+function spendingRow(
+  id: string,
+  region: MockRegion,
+  functionCode: string,
+  measureType: MockMeasureType,
+  fiscalYear: string,
+  amountCents: number,
+) {
+  const fn = FUNCTION_NAMES[functionCode] ?? FUNCTION_NAMES['07'];
+  return {
+    id,
+    region_id: region._id,
+    function_code: functionCode,
+    amount_cents: amountCents,
+    measure_type: measureType,
+    fiscal_year: fiscalYear,
+    source_id: SYNTHETIC_SOURCE.source_id,
+    source_url: SYNTHETIC_SOURCE.source_url,
+    verified: false,
+    notes: 'Synthetic development value; not real spending.',
+    function_name: fn.name,
+    function_level: fn.level,
+    ...(fn.parent ? { function_parent_code: fn.parent } : {}),
+    region_code: region.code,
+    region_name: region.name,
+    region_level: region.level,
+    provenance: {
+      source_id: SYNTHETIC_SOURCE.source_id,
+      source_url: SYNTHETIC_SOURCE.source_url,
+      verified: false,
+      notes: SYNTHETIC_SOURCE.notes,
+    },
+  };
+}
+
+const SPENDING_ROWS = [
+  spendingRow('p-a1', NSW, '07', 'actual', '2024-25', 200_000_000_000),
+  spendingRow('p-a2', VIC, '07', 'actual', '2024-25', 120_000_000_000),
+  spendingRow('p-a3', AUS, '07', 'actual', '2024-25', 90_000_000_000),
+  spendingRow('p-a4', NSW, '07', 'actual', '2023-24', 180_000_000_000),
+  spendingRow('p-b1', NSW, '07', 'budget', '2024-25', 210_000_000_000),
+  spendingRow('p-b2', VIC, '07', 'budget', '2024-25', 110_000_000_000),
+  spendingRow('p-e1', NSW, '07', 'estimate', '2024-25', 220_000_000_000),
+  spendingRow('p-e2', VIC, '07', 'estimate', '2023-24', 130_000_000_000),
+  spendingRow('p-09a', AUS, '09', 'actual', '2024-25', 80_000_000_000),
+  spendingRow('p-09b', NSW, '09', 'budget', '2024-25', 85_000_000_000),
+];
+
+for (let index = 0; index < 15; index += 1) {
+  SPENDING_ROWS.push(
+    spendingRow(
+      `p-f${index}`,
+      index % 2 === 0 ? NSW : VIC,
+      '07',
+      index % 3 === 0 ? 'actual' : index % 3 === 1 ? 'budget' : 'estimate',
+      '2022-23',
+      10_000_000_000 + index * 1_000_000,
+    ),
+  );
+}
+
 const MIXED_ROWS = [
   measureRow('m1', NSW._id, 'actual', '2024-25', 200_000_000_000),
   measureRow('m2', NSW._id, 'budget', '2024-25', 210_000_000_000),
@@ -89,6 +260,7 @@ const MIXED_BY_REGION = [
     measure_types: ['actual', 'budget', 'estimate'],
     mixed: true,
     total_cents: null,
+    total_by_measure_type: perTypeTotals(MIXED_ROWS.filter((row) => row.region_id === NSW._id)),
     measures: MIXED_ROWS.filter((row) => row.region_id === NSW._id),
   },
   {
@@ -96,6 +268,7 @@ const MIXED_BY_REGION = [
     measure_types: ['actual', 'budget', 'estimate'],
     mixed: true,
     total_cents: null,
+    total_by_measure_type: perTypeTotals(MIXED_ROWS.filter((row) => row.region_id === VIC._id)),
     measures: MIXED_ROWS.filter((row) => row.region_id === VIC._id),
   },
 ];
@@ -109,6 +282,7 @@ function functionResponse(rows: typeof MIXED_ROWS, overrides: Record<string, unk
     mixed: false,
     total_cents: 0,
     total_measure_type: null,
+    total_by_measure_type: perTypeTotals(rows),
     ranked_states: null,
     by_region: [],
     measures: rows,
@@ -136,6 +310,7 @@ const SINGLE_FUNCTION = functionResponse(SINGLE_ROWS, {
   mixed: false,
   total_cents: 320_000_000_000,
   total_measure_type: 'actual',
+  total_by_measure_type: perTypeTotals(SINGLE_ROWS),
   ranked_states: [
     { region: NSW, total_cents: 200_000_000_000 },
     { region: VIC, total_cents: 120_000_000_000 },
@@ -146,6 +321,7 @@ const SINGLE_FUNCTION = functionResponse(SINGLE_ROWS, {
       measure_types: ['actual'],
       mixed: false,
       total_cents: 200_000_000_000,
+      total_by_measure_type: perTypeTotals([SINGLE_ROWS[0]]),
       measures: [SINGLE_ROWS[0]],
     },
     {
@@ -153,6 +329,7 @@ const SINGLE_FUNCTION = functionResponse(SINGLE_ROWS, {
       measure_types: ['actual'],
       mixed: false,
       total_cents: 120_000_000_000,
+      total_by_measure_type: perTypeTotals([SINGLE_ROWS[1]]),
       measures: [SINGLE_ROWS[1]],
     },
   ],
@@ -164,6 +341,7 @@ const FUNCTION_BY_CODE: Record<
 > = {
   '07': { code: '07', name: 'Health', level: 'division' },
   '074': { code: '074', name: 'Public health services', level: 'subdivision', parent_code: '07' },
+  '09': { code: '09', name: 'Education', level: 'division' },
 };
 
 const MIXED_REGION_ROWS = [
@@ -180,12 +358,14 @@ const MIXED_REGION = {
   mixed: true,
   total_cents: null,
   total_measure_type: null,
+  total_by_measure_type: perTypeTotals(MIXED_REGION_ROWS),
   by_function: [
     {
       function: { code: '07', name: 'Health', level: 'division' },
       measure_types: ['actual', 'budget', 'estimate'],
       mixed: true,
       total_cents: null,
+      total_by_measure_type: perTypeTotals(MIXED_REGION_ROWS),
       measures: MIXED_REGION_ROWS,
     },
   ],
@@ -203,17 +383,142 @@ const SINGLE_STATE = {
   mixed: false,
   total_cents: 200_000_000_000,
   total_measure_type: 'actual',
+  total_by_measure_type: perTypeTotals(SINGLE_STATE_ROWS),
   by_function: [
     {
       function: { code: '07', name: 'Health', level: 'division' },
       measure_types: ['actual'],
       mixed: false,
       total_cents: 200_000_000_000,
+      total_by_measure_type: perTypeTotals(SINGLE_STATE_ROWS),
       measures: SINGLE_STATE_ROWS,
     },
   ],
   measures: SINGLE_STATE_ROWS,
 };
+
+function groupBy<T, K extends string>(rows: T[], key: (row: T) => K): Map<K, T[]> {
+  const groups = new Map<K, T[]>();
+  for (const row of rows) {
+    const group = groups.get(key(row)) ?? [];
+    group.push(row);
+    groups.set(key(row), group);
+  }
+  return groups;
+}
+
+function breakdownBase(rows: typeof SPENDING_ROWS) {
+  const measureTypes = [...new Set(rows.map((row) => row.measure_type))].sort();
+  const mixed = measureTypes.length > 1;
+  return {
+    count: rows.length,
+    measure_types: measureTypes,
+    mixed,
+    total_cents: mixed ? null : rows.reduce((sum, row) => sum + row.amount_cents, 0),
+    total_by_measure_type: perTypeTotals(rows),
+  };
+}
+
+function spendingResponse(url: URL) {
+  const functionCode = url.searchParams.get('function');
+  const regionId = url.searchParams.get('region');
+  const fiscalYear = url.searchParams.get('fiscal_year');
+  const measureType = url.searchParams.get('measure_type');
+  const minAmount = url.searchParams.get('min_amount');
+  const maxAmount = url.searchParams.get('max_amount');
+  const sort = url.searchParams.get('sort') ?? 'amount_desc';
+  const page = Number(url.searchParams.get('page') ?? '1');
+  const pageSize = Number(url.searchParams.get('page_size') ?? '20');
+
+  if (functionCode && !FUNCTION_NAMES[functionCode]) {
+    return { status: 404, body: { ok: false, error: `Unknown function code: ${functionCode}` } };
+  }
+  if (regionId && !ALL_REGIONS.some((region) => region._id === regionId)) {
+    return { status: 404, body: { ok: false, error: `Unknown region: ${regionId}` } };
+  }
+
+  let rows = [...SPENDING_ROWS];
+  if (functionCode) rows = rows.filter((row) => row.function_code === functionCode);
+  if (regionId) rows = rows.filter((row) => row.region_id === regionId);
+  if (fiscalYear) rows = rows.filter((row) => row.fiscal_year === fiscalYear);
+  if (measureType) rows = rows.filter((row) => row.measure_type === measureType);
+  if (minAmount) rows = rows.filter((row) => row.amount_cents >= Number(minAmount));
+  if (maxAmount) rows = rows.filter((row) => row.amount_cents <= Number(maxAmount));
+
+  rows.sort((a, b) => {
+    if (sort === 'amount_asc') return a.amount_cents - b.amount_cents || a.id.localeCompare(b.id);
+    if (sort === 'fiscal_year_desc') {
+      return b.fiscal_year.localeCompare(a.fiscal_year) || b.amount_cents - a.amount_cents;
+    }
+    if (sort === 'fiscal_year_asc') {
+      return a.fiscal_year.localeCompare(b.fiscal_year) || b.amount_cents - a.amount_cents;
+    }
+    return b.amount_cents - a.amount_cents || a.id.localeCompare(b.id);
+  });
+
+  const total = rows.length;
+  const totalPages = total === 0 ? 0 : Math.ceil(total / pageSize);
+  const start = (page - 1) * pageSize;
+  const pageRows = rows.slice(start, start + pageSize);
+  const summaryBase = breakdownBase(rows);
+
+  const byFunction = [...groupBy(rows, (row) => row.function_code).entries()]
+    .map(([code, groupRows]) => {
+      const fn = FUNCTION_NAMES[code] ?? FUNCTION_NAMES['07'];
+      return {
+        function: {
+          code,
+          name: fn.name,
+          level: fn.level,
+          ...(fn.parent ? { parent_code: fn.parent } : {}),
+        },
+        ...breakdownBase(groupRows),
+      };
+    })
+    .sort((a, b) => a.function.code.localeCompare(b.function.code));
+
+  const byRegion = [...groupBy(rows, (row) => row.region_id).entries()]
+    .map(([id, groupRows]) => {
+      const region = ALL_REGIONS.find((item) => item._id === id) ?? AUS;
+      return { region, ...breakdownBase(groupRows) };
+    })
+    .sort((a, b) => a.region.code.localeCompare(b.region.code));
+
+  return {
+    status: 200,
+    body: {
+      data: pageRows,
+      summary: {
+        count: total,
+        currency: 'AUD',
+        total_cents: summaryBase.total_cents,
+        total_measure_type:
+          summaryBase.measure_types.length === 1 ? summaryBase.measure_types[0] : null,
+        total_by_measure_type: summaryBase.total_by_measure_type,
+        measure_types: summaryBase.measure_types,
+        mixed: summaryBase.mixed,
+        breakdown_by_function: byFunction,
+        breakdown_by_region: byRegion,
+      },
+      pagination: {
+        page,
+        page_size: pageSize,
+        total,
+        total_pages: totalPages,
+        has_next: page < totalPages,
+      },
+      applied_filters: {
+        fiscal_year: fiscalYear,
+        measure_type: measureType,
+        function: functionCode,
+        region: regionId,
+        min_amount: minAmount ? Number(minAmount) : null,
+        max_amount: maxAmount ? Number(maxAmount) : null,
+        sort,
+      },
+    },
+  };
+}
 
 async function json(route: Route, body: unknown, status = 200) {
   await route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
@@ -221,7 +526,8 @@ async function json(route: Route, body: unknown, status = 200) {
 
 /**
  * Deterministic API mocks. e2e must not depend on the seeded Mongo database;
- * every route the six pages call is fulfilled from these fixtures.
+ * every route the pages call is fulfilled from these fixtures, including the
+ * filter- and pagination-aware spending explorer.
  */
 export async function mockApi(page: Page) {
   await page.route(
@@ -238,6 +544,11 @@ export async function mockApi(page: Page) {
         return;
       }
 
+      if (path === '/api/meta/coverage') {
+        await json(route, COVERAGE);
+        return;
+      }
+
       if (path === '/api/data-sources') {
         await json(route, { sources: [SYNTHETIC_SOURCE] });
         return;
@@ -245,6 +556,45 @@ export async function mockApi(page: Page) {
 
       if (path === '/api/functions') {
         await json(route, { functions: DIVISIONS });
+        return;
+      }
+
+      if (path === '/api/regions') {
+        const type = url.searchParams.get('type');
+        const stateCode = url.searchParams.get('state');
+        const limit = Number(url.searchParams.get('limit') ?? '50');
+        let regions = [...ALL_REGIONS];
+        if (type) regions = regions.filter((region) => region.level === type);
+        if (stateCode) {
+          regions = regions.filter((region) => region.parent_code === stateCode.toUpperCase());
+        }
+        if (q) {
+          regions = regions.filter(
+            (region) =>
+              region.code.toLowerCase().includes(q) || region.name.toLowerCase().includes(q),
+          );
+        }
+        regions.sort(
+          (a, b) =>
+            (a.level === 'national' ? 0 : a.level === 'state' ? 1 : 2) -
+              (b.level === 'national' ? 0 : b.level === 'state' ? 1 : 2) ||
+            a.code.localeCompare(b.code),
+        );
+        const sliced = regions.slice(0, limit);
+        await json(route, { regions: sliced, count: sliced.length });
+        return;
+      }
+
+      if (path === '/api/spending') {
+        const response = spendingResponse(url);
+        await json(route, response.body, response.status);
+        return;
+      }
+
+      if (path.startsWith('/api/spending/')) {
+        const id = decodeURIComponent(path.slice('/api/spending/'.length));
+        const row = SPENDING_ROWS.find((candidate) => candidate.id === id);
+        await json(route, row ?? { ok: false, error: `Unknown measure: ${id}` }, row ? 200 : 404);
         return;
       }
 
@@ -258,8 +608,8 @@ export async function mockApi(page: Page) {
           });
           return;
         }
-        if (q === 'nsw') {
-          await json(route, { q: 'NSW', regions: [NSW], functions: [], count: 1 });
+        if (q === 'nsw' || q === 'new') {
+          await json(route, { q, regions: [NSW], functions: [], count: 1 });
           return;
         }
         if (q === 'aus') {
@@ -311,4 +661,4 @@ export async function mockApi(page: Page) {
   );
 }
 
-export const MOCK_IDS = { AUS: AUS._id, NSW: NSW._id };
+export const MOCK_IDS = { AUS: AUS._id, NSW: NSW._id, VIC: VIC._id };

@@ -177,32 +177,75 @@ shell; e2e only requires installed browsers (`npx playwright install chromium`).
 
 ## Pages
 
-Six routes render live API data. Every page shows a persistent Phase 1 coverage banner: synthetic
-seed only, no live ingestion, figures unverified.
+Eight routes render API data. Every page, including `/about`, shows a persistent Phase 1 coverage
+banner driven by `GET /api/meta/coverage`: synthetic seed only, no live ingestion, figures
+unverified, plus counts and a link to the source register. If coverage metadata cannot be loaded the
+banner falls back to the same static synthetic-data warning rather than disappearing.
 
-| Route                 | Purpose                                                                |
-| --------------------- | ---------------------------------------------------------------------- |
-| `/`                   | What ausspend is, quick links, COFOG divisions and source verification |
-| `/search?q=`          | Search regions and functions, linking to their pages                   |
-| `/functions/:code?`   | COFOG division index and detail with fiscal-year/measure-type filters  |
-| `/regions/:regionId?` | Region directory and detail by region `_id`                            |
-| `/states/:code?`      | State/territory directory and detail by abbreviation                   |
-| `/data-sources`       | Source register with licence, retrieval date and verification status   |
+| Route                 | Purpose                                                                      |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `/`                   | Overview, coverage counts/limitations, autocomplete, quick links, connectors |
+| `/search`             | Spending explorer over `GET /api/spending` with URL-driven filters/paging    |
+| `/functions/:code?`   | COFOG division index and detail with fiscal-year/measure-type filters        |
+| `/regions/:regionId?` | Region directory from `GET /api/regions` and detail by region `_id`          |
+| `/states/:code?`      | State/territory directory and detail by abbreviation                         |
+| `/data-sources`       | Source register, Unverified badge, eight connector stubs and limitations     |
+| `/about`              | What ausspend is, Phase 1 scope, provenance and mixed-measure rules          |
 
-The client has a small typed API layer in `client/src/api` (fetch + error normalisation) and shared
-provenance components in `client/src/components`. Every amount and table row shows a source id,
-source link and verification badge. There is no map.
+The client has a small typed API layer in `client/src/api` (fetch + error normalisation), a shared
+coverage provider (`client/src/coverage.tsx`) and provenance components in
+`client/src/components`. Every amount and table row shows a source id, source link and verification
+badge. There is no map and no national headline total.
 
-### Measure-type rule
+### Autocomplete
+
+The home page and the spending explorer each include a bounded, debounced name search. It queries
+`GET /api/regions?q=` for regions and `GET /api/search?q=` for functions. Region results link by
+`_id` to `/regions/:id` (state rows link to `/states/:code`) and function results link to
+`/functions/:code`. On the explorer the same search applies a function/region filter instead of
+navigating.
+
+### Spending explorer URL parameters
+
+`/search` keeps all state in the query string, so reload and browser back/forward restore the same
+view. Every filter change resets `page` to 1; pagination and page size preserve the filters.
+
+| Parameter                 | UI / wire behaviour                                                          |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `function`                | two- or three-digit COFOG code from `GET /api/functions`                     |
+| `region`                  | region `_id` chosen from autocomplete over `GET /api/regions`                |
+| `fiscal_year`             | one of the coverage metadata's distinct fiscal years                         |
+| `measure_type`            | `actual`, `budget` or `estimate`                                             |
+| `min_amount`/`max_amount` | dollars in the URL/UI; converted to integer cents on the wire                |
+| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc` |
+| `page`/`page_size`        | pagination; page size is one of 10/20/50/100                                 |
+
+The page shows the API's whole-set summary (count, per-measure-type totals and function/region
+breakdowns), then one page of rows with function, region, year, measure type, amount and per-row
+source/verification. Empty, loading, `400`, `404` and network failures each render a visible state.
+A reset button clears the query string. Each function/region/state detail page has an “Explore this
+in the spending search” link that prefills the relevant filters.
+
+### Coverage, connectors and the about page
+
+`/data-sources` keeps the synthetic source card and its `#synthetic-seed` anchor with the Unverified
+badge, and adds the eight connector stubs from coverage metadata (id, name, publisher, source URL
+and `status: "stub"`) marked **stub — not wired**, plus the API's coverage `limitations`. The
+`/about` page explains the Phase 1 scope (synthetic seed, no live ingestion, curated COFOG subset,
+state/territory granularity), how provenance is attached, and why mixed measures never get a
+headline total. It makes no real-data claims.
+
+### Measure-type and provenance rules
 
 A response containing more than one measure type is **mixed**: the API returns `total_cents: null`
-and withholds `ranked_states`, and the UI shows a warning plus a per-measure-type breakdown instead
-of a headline total. Function, region and state detail responses (and their group summaries) now
-include `total_by_measure_type: [{measure_type, count, total_cents}]` at the API level, so callers
-never have to sum rows to get a per-type total. The totals are always present; a single type has one
+and withholds `ranked_states`, and the UI shows a warning plus per-measure-type totals instead of a
+headline total. Function, region and state detail responses and their group summaries include
+`total_by_measure_type: [{measure_type, count, total_cents}]`; the client renders those API values
+directly and never sums measure rows itself. The totals are always present; a single type has one
 entry equal to `total_cents`, while a mixed response has one entry per type and a null headline
-total. Never sum `total_cents` across measure types. A single measure type may show a headline
-total, ranked states and a bar.
+total. Never sum `total_cents` across measure types. Only a single measure type may show a headline
+total, ranked states and a bar. Every figure, group and table row keeps its source id, link and
+`verified` flag.
 
 ## Data and provenance
 

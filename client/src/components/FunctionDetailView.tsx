@@ -1,10 +1,12 @@
-import { Alert, Button, Typography } from '@mui/material';
+import { Alert, Button, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SearchIcon from '@mui/icons-material/Search';
 import { Link as RouterLink, useParams, useSearchParams } from 'react-router-dom';
 import { apiGet, buildQuery } from '../api';
 import type { FunctionDetail, MeasureRow } from '../api/types';
 import { useApi } from '../hooks/useApi';
-import { fiscalYearsFromRows, LIMIT_FOR_TOTALS, measureTypeTotals } from '../measures';
+import { useCoverage } from '../coverage';
+import { typeTotalsFromApi } from '../measures';
 import { FilterBar, type FilterSelection } from './FilterBar';
 import { uniqueSources } from '../provenance';
 import { MeasureTypeStackedBar, SpendingBarChart, type BarDatum } from './SpendingCharts';
@@ -16,12 +18,12 @@ function detailUrl(code: string, filters: FilterSelection): string {
   return `/api/functions/${encodeURIComponent(code)}${buildQuery({
     fiscal_year: filters.fiscalYear || undefined,
     measure_type: filters.measureType || undefined,
-    limit: LIMIT_FOR_TOTALS,
   })}`;
 }
 
 export function FunctionDetailView() {
   const { code = '' } = useParams<{ code: string }>();
+  const coverage = useCoverage();
   const [searchParams, setSearchParams] = useSearchParams();
   const selection: FilterSelection = {
     fiscalYear: searchParams.get('fiscal_year') ?? '',
@@ -30,7 +32,12 @@ export function FunctionDetailView() {
   const filterActive = selection.fiscalYear !== '' || selection.measureType !== '';
 
   const base = useApi(`function-base:${code}`, () =>
-    apiGet<FunctionDetail>(detailUrl(code, { fiscalYear: '', measureType: '' })),
+    apiGet<FunctionDetail>(
+      detailUrl(code, {
+        fiscalYear: '',
+        measureType: '',
+      }),
+    ),
   );
   const filtered = useApi(
     `function-view:${code}:${selection.fiscalYear}:${selection.measureType}`,
@@ -42,7 +49,7 @@ export function FunctionDetailView() {
   const loading = base.loading || (filterActive && filtered.loading);
   const error = base.error ?? filtered.error;
 
-  const years = base.data ? fiscalYearsFromRows(base.data.measures) : [];
+  const years = coverage.data?.fiscal_years ?? [];
   const measureTypes = base.data?.measure_types ?? [];
 
   const setFilters = (next: FilterSelection) => {
@@ -91,7 +98,7 @@ export function FunctionDetailView() {
   }
 
   const sources = uniqueSources(detail.measures);
-  const totals = measureTypeTotals(detail.measures);
+  const totals = typeTotalsFromApi(detail.total_by_measure_type);
   const regionNames = new Map(
     detail.by_region.map((group) => [
       group.region._id,
@@ -112,6 +119,11 @@ export function FunctionDetailView() {
     value: entry.total_cents,
   }));
 
+  const exploreParams = new URLSearchParams({ function: detail.function.code });
+  if (detail.filters.fiscal_year) exploreParams.set('fiscal_year', detail.filters.fiscal_year);
+  if (detail.filters.measure_type) exploreParams.set('measure_type', detail.filters.measure_type);
+  const exploreUrl = `/search?${exploreParams.toString()}`;
+
   return (
     <>
       {backLink}
@@ -121,17 +133,27 @@ export function FunctionDetailView() {
       <Typography variant="h1" gutterBottom>
         {detail.function.name} ({detail.function.code})
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Spending recorded against this function in the Phase 1 synthetic seed. Filters and the
         measure-type rule below determine whether any total can be shown.
       </Typography>
+      <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
+        <Button
+          component={RouterLink}
+          to={exploreUrl}
+          size="small"
+          variant="outlined"
+          startIcon={<SearchIcon />}
+        >
+          Explore this in the spending search
+        </Button>
+      </Stack>
 
       <FilterBar
         years={years}
         measureTypes={measureTypes}
         selection={selection}
         onChange={setFilters}
-        limitNote={`limit=${LIMIT_FOR_TOTALS} requested`}
       />
 
       {detail.count === 0 ? (
@@ -145,7 +167,6 @@ export function FunctionDetailView() {
             summary={detail}
             sources={sources}
             scopeLabel={scopeLabel}
-            limit={detail.filters.limit}
             note="Phase 1 synthetic seed; every row is verified:false."
           />
 
@@ -155,12 +176,11 @@ export function FunctionDetailView() {
                 measureTypes={detail.measure_types}
                 totals={totals}
                 sources={sources}
-                note={`Computed from ${detail.count} rows with limit=${detail.filters.limit}.`}
+                note={`Per-type totals from the API over ${detail.count} rows.`}
               />
               <MeasureTypeBreakdownTable
-                measureTypes={detail.measure_types}
+                totals={detail.total_by_measure_type}
                 rows={detail.measures}
-                limit={detail.filters.limit}
               />
             </>
           ) : ranked.length > 0 ? (
@@ -170,7 +190,7 @@ export function FunctionDetailView() {
                 description="State and territory totals for the single measure type in this view. National and sub-state rows are excluded from the ranking."
                 data={rankedBarData}
                 sources={rankedSources}
-                note={`Ranked from ${detail.count} measure rows (limit=${detail.filters.limit}).`}
+                note={`Ranked from ${detail.count} API measure rows.`}
               />
               <RankedStatesTable ranked={ranked} byRegion={detail.by_region} />
             </>

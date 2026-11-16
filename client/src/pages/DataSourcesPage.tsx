@@ -1,14 +1,17 @@
-import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Box, Card, CardContent, Chip, Divider, Stack, Typography } from '@mui/material';
 import { apiGet } from '../api';
 import type { DataSourcesResponse } from '../api/types';
 import { useApi } from '../hooks/useApi';
+import { useCoverage } from '../coverage';
 import { formatDate } from '../format';
 import { ProvenanceFooter, SourceLink, VerifiedBadge } from '../components/Provenance';
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 
 export function DataSourcesPage() {
   const state = useApi('data-sources', () => apiGet<DataSourcesResponse>('/api/data-sources'));
+  const coverage = useCoverage();
   const sources = state.data?.sources ?? [];
+  const connectors = coverage.data?.connectors ?? [];
 
   return (
     <Box>
@@ -18,7 +21,7 @@ export function DataSourcesPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         The registered sources behind every figure. Phase 1 has a single synthetic seed source, and
         it is explicitly unverified. The anchor <code>#synthetic-seed</code> resolves to that source
-        below.
+        below. The eight ingestion connectors are stubs — no live data has been ingested.
       </Typography>
 
       {state.loading ? <LoadingState label="Loading source register…" /> : null}
@@ -106,6 +109,73 @@ export function DataSourcesPage() {
             ))}
           </Stack>
         )
+      ) : null}
+
+      <Typography variant="h5" component="h2" sx={{ mt: 4 }} gutterBottom>
+        Ingestion connector stubs
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        These eight connectors are registered for later milestones but are not wired. Each is
+        <strong> status “stub — not wired”</strong>: there are no network calls, credentials or
+        ingested records in Phase 1.
+      </Typography>
+
+      {!coverage.data && coverage.error ? (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Connector metadata could not be loaded from <code>/api/meta/coverage</code> (
+          {coverage.error.message}). No connector is claimed to be operational.
+        </Alert>
+      ) : null}
+
+      {coverage.data ? (
+        <Card variant="outlined" data-testid="connector-stubs">
+          <CardContent>
+            <Stack divider={<Divider flexItem />} spacing={2}>
+              {connectors.map((connector) => (
+                <Box key={connector.id}>
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    <Typography variant="subtitle1">{connector.name}</Typography>
+                    <Chip size="small" variant="outlined" label={connector.id} />
+                    <Chip
+                      size="small"
+                      color="default"
+                      variant="outlined"
+                      label="stub — not wired"
+                    />
+                  </Stack>
+                  <Typography variant="body2" color="text.secondary">
+                    {connector.publisher}
+                  </Typography>
+                  <Typography variant="body2" component="div">
+                    <SourceLink
+                      sourceId={connector.id}
+                      sourceUrl={connector.source_url}
+                      label={connector.source_url}
+                    />
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <Typography variant="h5" component="h2" sx={{ mt: 4 }} gutterBottom>
+        Coverage limitations
+      </Typography>
+      {coverage.data ? (
+        <Card variant="outlined" data-testid="coverage-limitations">
+          <CardContent>
+            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 2.5 }}>
+              {coverage.data.limitations.map((limitation) => (
+                <Typography component="li" variant="body2" key={limitation}>
+                  {limitation}
+                </Typography>
+              ))}
+            </Box>
+            <ProvenanceFooter sources={[]} note={coverage.data.note} />
+          </CardContent>
+        </Card>
       ) : null}
     </Box>
   );

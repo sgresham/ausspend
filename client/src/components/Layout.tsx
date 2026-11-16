@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DatasetIcon from '@mui/icons-material/Dataset';
+import InfoIcon from '@mui/icons-material/Info';
 import { CoverageBanner } from './CoverageBanner';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import HomeIcon from '@mui/icons-material/Home';
@@ -38,6 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Regions', to: '/regions', icon: <MapIcon /> },
   { label: 'States', to: '/states', icon: <PlaceIcon /> },
   { label: 'Data sources', to: '/data-sources', icon: <DatasetIcon /> },
+  { label: 'About', to: '/about', icon: <InfoIcon /> },
 ];
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {

@@ -9,7 +9,11 @@ test('regions index lists the national row and states with links', async ({ page
   await page.goto('/regions');
 
   await expect(page.getByRole('heading', { level: 1, name: 'Regions' })).toBeVisible();
+  await expect(page.getByTestId('regions-list')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'National' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'States and territories' })).toBeVisible();
   await expect(page.getByText('AUS — Australia')).toBeVisible();
+  await expect(page.getByText('QLD — Queensland')).toBeVisible();
 
   const national = page.getByRole('link', { name: 'National region page' });
   await expect(national).toHaveAttribute('href', `/regions/${MOCK_IDS.AUS}`);

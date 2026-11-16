@@ -15,31 +15,44 @@ import { Link as RouterLink } from 'react-router-dom';
 import { apiGet } from '../api';
 import type { DataSourcesResponse, FunctionsResponse } from '../api/types';
 import { useApi } from '../hooks/useApi';
+import { useCoverage } from '../coverage';
 import { formatDate } from '../format';
 import { ProvenanceFooter, SourceLink, VerifiedBadge } from '../components/Provenance';
+import { QuickSearch } from '../components/QuickSearch';
 import { ApiErrorState, LoadingState } from '../components/StatusViews';
 
 const QUICK_LINKS = [
   {
+    to: '/search',
+    title: 'Spending explorer',
+    description:
+      'Filter by function, region, year, measure type and amount, then page through rows.',
+  },
+  {
     to: '/functions',
     title: 'Functions',
-    description: 'Browse the ten COFOG divisions and their subdivisions.',
+    description: 'Browse the ten COFOG divisions and their curated subdivisions.',
   },
   {
     to: '/regions',
     title: 'Regions',
-    description: 'National and state/territory region directory.',
+    description: 'National and state/territory region directory from the regions endpoint.',
   },
   { to: '/states', title: 'States', description: 'Open a state or territory spending page.' },
-  { to: '/search', title: 'Search', description: 'Find a function or region by name or code.' },
   {
     to: '/data-sources',
     title: 'Data sources',
-    description: 'Source register, licence and verification status.',
+    description: 'Source register, licence, verification status and connector stubs.',
+  },
+  {
+    to: '/about',
+    title: 'About',
+    description: 'Phase 1 scope, provenance rules and how mixed measures are handled.',
   },
 ];
 
 export function HomePage() {
+  const coverage = useCoverage();
   const functionsState = useApi('home:functions', () =>
     apiGet<FunctionsResponse>('/api/functions'),
   );
@@ -49,6 +62,7 @@ export function HomePage() {
 
   const divisions = functionsState.data?.functions ?? [];
   const sources = sourcesState.data?.sources ?? [];
+  const connectors = coverage.data?.connectors ?? [];
 
   return (
     <Box>
@@ -61,6 +75,21 @@ export function HomePage() {
         happened.
       </Typography>
 
+      {coverage.data ? (
+        <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
+          <Chip size="small" label={`Phase: ${coverage.data.phase}`} />
+          <Chip size="small" label={`Synthetic: ${coverage.data.synthetic ? 'yes' : 'no'}`} />
+          <Chip
+            size="small"
+            label={`Live ingestion: ${coverage.data.live_ingestion ? 'yes' : 'no'}`}
+          />
+          <Chip size="small" label={`${coverage.data.counts.regions} regions`} />
+          <Chip size="small" label={`${coverage.data.counts.functions} COFOG records`} />
+          <Chip size="small" label={`${coverage.data.counts.measures} measure rows`} />
+          <Chip size="small" label={`${coverage.data.counts.data_sources} source(s)`} />
+        </Stack>
+      ) : null}
+
       <Alert severity="info" sx={{ mb: 3 }}>
         <AlertTitle>What you are looking at</AlertTitle>
         Every amount in this build is deterministic placeholder data marked{' '}
@@ -71,6 +100,17 @@ export function HomePage() {
         </Link>{' '}
         page.
       </Alert>
+
+      <Typography variant="h5" component="h2" gutterBottom>
+        Search regions and functions
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Results come from <code>/api/regions?q=</code> and <code>/api/search?q=</code>. Region
+        results link by <code>_id</code>; state rows link to their state page.
+      </Typography>
+      <Box sx={{ mb: 4 }} data-testid="home-autocomplete">
+        <QuickSearch />
+      </Box>
 
       <Typography variant="h5" component="h2" gutterBottom>
         Explore
@@ -112,8 +152,7 @@ export function HomePage() {
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         The taxonomy is shared COFOG data. No national headline total is shown here: the seed mixes
-        actual, budget and estimate measures, and the API does not expose a comparable national
-        total across those types.
+        actual, budget and estimate measures, and the API never sums across measure types.
       </Typography>
 
       {functionsState.loading ? <LoadingState label="Loading COFOG divisions…" /> : null}
@@ -148,7 +187,62 @@ export function HomePage() {
         </Card>
       ) : null}
 
+      {coverage.data ? (
+        <Card variant="outlined" sx={{ mb: 4 }} data-testid="coverage-limitations">
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Coverage limitations
+            </Typography>
+            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 2.5 }}>
+              {coverage.data.limitations.map((limitation) => (
+                <Typography component="li" variant="body2" key={limitation}>
+                  {limitation}
+                </Typography>
+              ))}
+            </Box>
+            <ProvenanceFooter sources={[]} note={coverage.data.note} />
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Typography variant="h5" component="h2" gutterBottom>
+        Ingestion connectors
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        All {connectors.length} connectors are stubs: no network request leaves the API and no live
+        data has been ingested.
+      </Typography>
+      {coverage.data ? (
+        <Card variant="outlined" data-testid="connector-status">
+          <CardContent>
+            <Stack divider={<Divider flexItem />} spacing={1}>
+              {connectors.map((connector) => (
+                <Box key={connector.id}>
+                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                    <Typography variant="subtitle1">{connector.name}</Typography>
+                    <Chip size="small" variant="outlined" label={connector.status} />
+                    <Chip size="small" variant="outlined" label={connector.id} />
+                  </Stack>
+                  <Typography variant="caption" component="div" color="text.secondary">
+                    {connector.publisher} · status “stub — not wired” ·{' '}
+                    <SourceLink
+                      sourceId={connector.id}
+                      sourceUrl={connector.source_url}
+                      label={connector.source_url}
+                    />
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+      ) : (
+        <Typography variant="body2" color="text.secondary">
+          Connector status is unavailable because coverage metadata could not be loaded.
+        </Typography>
+      )}
+
+      <Typography variant="h5" component="h2" gutterBottom sx={{ mt: 4 }}>
         Source verification status
       </Typography>
       {sourcesState.loading ? <LoadingState label="Loading source register…" /> : null}

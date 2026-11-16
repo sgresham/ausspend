@@ -12,14 +12,13 @@ export interface FilterBarProps {
   measureTypes: MeasureType[];
   selection: FilterSelection;
   onChange: (next: FilterSelection) => void;
-  limitNote?: string;
 }
 
 /**
  * Shared fiscal-year / measure-type filter. Values come from the unfiltered
  * response (never hardcoded) and are kept in the URL by the caller.
  */
-export function FilterBar({ years, measureTypes, selection, onChange, limitNote }: FilterBarProps) {
+export function FilterBar({ years, measureTypes, selection, onChange }: FilterBarProps) {
   const active = selection.fiscalYear !== '' || selection.measureType !== '';
 
   return (
@@ -76,7 +75,6 @@ export function FilterBar({ years, measureTypes, selection, onChange, limitNote 
         >
           Showing fiscal year <strong>{selection.fiscalYear || 'all'}</strong> · measure type{' '}
           <strong>{selection.measureType || 'all'}</strong>
-          {limitNote ? ` · ${limitNote}` : ''}
         </Typography>
 
         {years.length === 0 ? (
