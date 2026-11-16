@@ -46,6 +46,22 @@ const PBS_SOURCE = {
   notes: '2025-26 PBS program-expense CSV from data.gov.au; unverified budget line items.',
 };
 
+const NSW_BUDGET_SOURCE = {
+  source_id: 'nsw-budget',
+  name: 'NSW Budget 2025-26 Open Data',
+  publisher: 'NSW Treasury',
+  source_url: 'https://www.budget.nsw.gov.au/budget-detail/open-data',
+  retrieved_at: '2026-11-16T00:00:00.000Z',
+  license: 'CC BY 3.0 AU',
+  verified: false,
+  status: 'active',
+  last_ingested_at: '2026-11-16T00:07:00.000Z',
+  records_ingested: 2355,
+  errors: [],
+  notes:
+    'Official 2025-26 XLSX Wayback copy plus ArcGIS capital projects; unverified Budgeted rows.',
+};
+
 const AUS = { _id: '6afaa24c06cd1221b0f07291', code: 'AUS', name: 'Australia', level: 'national' };
 const NSW = {
   _id: '6afaa24c06cd1221b0f07292',
@@ -158,13 +174,13 @@ const COVERAGE = {
     },
     {
       id: 'nsw-budget',
-      name: 'NSW Budget',
+      name: 'NSW Budget 2025-26 Open Data',
       publisher: 'NSW Treasury',
-      source_url: 'https://www.treasury.nsw.gov.au/budget',
-      status: 'stub',
+      source_url: 'https://www.budget.nsw.gov.au/budget-detail/open-data',
+      status: 'active',
       jurisdiction_level: 'state',
-      last_fetched_at: null,
-      records_ingested: 0,
+      last_fetched_at: '2026-11-16T00:07:00.000Z',
+      records_ingested: 2355,
       errors: [],
     },
     {
@@ -201,8 +217,14 @@ const COVERAGE = {
       errors: [],
     },
   ],
-  connector_status_counts: { active: 2, degraded: 0, stub: 9 },
+  connector_status_counts: { active: 3, degraded: 0, stub: 8 },
   supported_measure_types: ['actual', 'budget', 'estimate', 'contract', 'grant_award'],
+  state_ingestion: {
+    live: ['nsw-budget'],
+    degraded: [],
+    stubs: ['vic-budget', 'qld-budget', 'wa-budget'],
+    note: 'NSW Budget 2025-26 Open Data is live; Victoria, Queensland and Western Australia remain stubs.',
+  },
   federal_ingestion: {
     live: ['aus-tender', 'data-gov-au-pbs'],
     degraded: [],
@@ -332,7 +354,7 @@ function spendingRow(
   };
 }
 
-const SPENDING_ROWS = [
+const SPENDING_ROWS: Array<ReturnType<typeof spendingRow> & Record<string, unknown>> = [
   spendingRow('p-a1', NSW, '07', 'actual', '2024-25', 200_000_000_000),
   spendingRow('p-a2', VIC, '07', 'actual', '2024-25', 120_000_000_000),
   spendingRow('p-a3', AUS, '07', 'actual', '2024-25', 90_000_000_000),
@@ -344,6 +366,26 @@ const SPENDING_ROWS = [
   spendingRow('p-09a', AUS, '09', 'actual', '2024-25', 80_000_000_000),
   spendingRow('p-09b', NSW, '09', 'budget', '2024-25', 85_000_000_000),
 ];
+
+SPENDING_ROWS.push({
+  ...spendingRow('nsw-cap-1', NSW, '04', 'budget', '2025-26', 118_100_000),
+  id: 'nsw-cap-1',
+  source_id: 'nsw-budget',
+  source_url: 'https://www.budget.nsw.gov.au/budget-detail/open-data',
+  project_name: 'Chichester Trunk Gravity Main',
+  description: 'Major Works — Works in Progress',
+  jurisdiction_level: 'state',
+  jurisdiction: 'NSW',
+  source_dataset: 'NSW Budget 2025-26 Open Data',
+  data_quality_flag: 'provisional',
+  location: { state: 'NSW', lga_name: 'DUNGOG' },
+  provenance: {
+    source_id: 'nsw-budget',
+    source_url: 'https://www.budget.nsw.gov.au/budget-detail/open-data',
+    verified: false,
+    notes: 'ArcGIS capital project; Budgeted 2025-26.',
+  },
+});
 
 for (let index = 0; index < 15; index += 1) {
   SPENDING_ROWS.push(
@@ -604,7 +646,14 @@ function spendingResponse(url: URL) {
     return { status: 404, body: { ok: false, error: `Unknown region: ${regionId}` } };
   }
 
-  let rows = jurisdictionLevel === 'federal' ? [...PBS_ROWS] : [...SPENDING_ROWS];
+  let rows =
+    jurisdictionLevel === 'federal'
+      ? [...PBS_ROWS]
+      : jurisdictionLevel === 'state'
+        ? SPENDING_ROWS.filter(
+            (row) => 'jurisdiction_level' in row && row.jurisdiction_level === 'state',
+          )
+        : [...SPENDING_ROWS];
   if (functionCode) rows = rows.filter((row) => row.function_code === functionCode);
   if (regionId) rows = rows.filter((row) => row.region_id === regionId);
   if (fiscalYear) rows = rows.filter((row) => row.fiscal_year === fiscalYear);
@@ -717,7 +766,9 @@ export async function mockApi(page: Page) {
       }
 
       if (path === '/api/data-sources') {
-        await json(route, { sources: [SYNTHETIC_SOURCE, AUS_TENDER_SOURCE, PBS_SOURCE] });
+        await json(route, {
+          sources: [SYNTHETIC_SOURCE, AUS_TENDER_SOURCE, PBS_SOURCE, NSW_BUDGET_SOURCE],
+        });
         return;
       }
 

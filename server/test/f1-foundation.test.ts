@@ -233,13 +233,13 @@ describe('F1 extended measure shape and API', () => {
 
     const coverage = await request(app).get('/api/v1/meta/coverage');
     expect(coverage.status).toBe(200);
-    // The registry has one live connector (AusTender); PBS/GrantConnect stay
-    // stubs until their milestones.
+    // AusTender, PBS and NSW Budget are live; GrantConnect and the remaining
+    // federal/state connectors are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(2);
-    expect(coverage.body.connector_status_counts.stub).toBe(9);
+    ).toBe(3);
+    expect(coverage.body.connector_status_counts.stub).toBe(8);
     expect([
       ...coverage.body.federal_ingestion.live,
       ...coverage.body.federal_ingestion.degraded,

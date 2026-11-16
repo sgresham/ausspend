@@ -6,7 +6,7 @@ import {
   getConnector,
 } from '../src/connectors/index.js';
 
-const LIVE_IDS = ['aus-tender', 'data-gov-au-pbs'];
+const LIVE_IDS = ['aus-tender', 'data-gov-au-pbs', 'nsw-budget'];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
@@ -19,7 +19,7 @@ describe('federal connector registry', () => {
     );
   });
 
-  it('registers AusTender and PBS as live and the other nine as stubs', () => {
+  it('registers AusTender, PBS and NSW Budget as live and the other eight as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -71,6 +71,9 @@ describe('federal connector registry', () => {
     expect(getConnector('data-gov-au-pbs')?.status).toBe('active');
     expect(getConnector('data-gov-au-pbs')?.source_url).toContain('data.gov.au');
     expect(getConnector('grantconnect')?.status).toBe('stub');
+    expect(getConnector('nsw-budget')?.status).toBe('active');
+    expect(getConnector('nsw-budget')?.jurisdiction_level).toBe('state');
+    expect(getConnector('nsw-budget')?.source_url).toContain('budget.nsw.gov.au');
     expect(getConnector('nope')).toBeUndefined();
   });
 });

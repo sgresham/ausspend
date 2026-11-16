@@ -18,8 +18,12 @@ import type { FunctionDocument } from '../models/index.js';
 async function loadRegionMeasures(
   region: LeanRegion,
   filters: MeasureFilters,
+  stateCode?: string,
 ): Promise<LeanMeasure[]> {
-  return MeasureModel.find({ ...measureQuery(filters), region_id: region._id })
+  const regionMatch = stateCode
+    ? { $or: [{ region_id: region._id }, { 'location.state': stateCode }] }
+    : { region_id: region._id };
+  return MeasureModel.find({ ...measureQuery(filters), ...regionMatch })
     .sort({ fiscal_year: 1, function_code: 1, measure_type: 1 })
     .limit(filters.limit)
     .lean<LeanMeasure[]>();
@@ -63,8 +67,8 @@ async function groupByFunction(measures: readonly LeanMeasure[], mixed: boolean)
     .sort((a, b) => a.function.code.localeCompare(b.function.code));
 }
 
-async function regionDetail(region: LeanRegion, filters: MeasureFilters) {
-  const measures = await loadRegionMeasures(region, filters);
+async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCode?: string) {
+  const measures = await loadRegionMeasures(region, filters, stateCode);
   const summary = summarizeMeasures(measures);
 
   return {
@@ -103,6 +107,6 @@ export const getState: RequestHandler = async (req, res) => {
     throw notFound(`Unknown state/territory code: ${code}`);
   }
 
-  const detail = await regionDetail(region, filters);
+  const detail = await regionDetail(region, filters, code);
   res.json({ state: detail.region, ...detail, region: detail.region });
 };

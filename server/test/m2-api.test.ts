@@ -164,13 +164,21 @@ describe('GET /api/meta/coverage', () => {
     expect(response.body.connectors).toHaveLength(11);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
-        connector.id === 'aus-tender' || connector.id === 'data-gov-au-pbs' ? 'active' : 'stub',
+        connector.id === 'aus-tender' ||
+          connector.id === 'data-gov-au-pbs' ||
+          connector.id === 'nsw-budget'
+          ? 'active'
+          : 'stub',
       );
       expect(connector.id).toBeTruthy();
       expect(connector.fetch).toBeUndefined();
     }
     expect(response.body.federal_ingestion.live).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs']),
+    );
+    expect(response.body.state_ingestion.live).toEqual(['nsw-budget']);
+    expect(response.body.state_ingestion.stubs).toEqual(
+      expect.arrayContaining(['vic-budget', 'qld-budget', 'wa-budget']),
     );
     expect(response.body.federal_ingestion.pending).toEqual(['grantconnect']);
     expect(response.body.limitations.join(' ')).toMatch(/synthetic/i);

@@ -28,6 +28,7 @@ function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory only. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
+    'NSW Budget 2025-26 rows come from the 12 official XLSX workbooks in the 14 November 2025 Wayback snapshot plus the ArcGIS Treasury_Project_Data_20260609_gdb layer. Financial/HFI values are $m/$b statement line items; capital projects are $000 Budgeted amounts. Negative net/deficit lines are skipped, not sign-flipped, and missing LGAs are left absent (statewide_only), never inferred.',
   ];
 }
 
@@ -110,6 +111,9 @@ export function createCoverageHandler(
     const federalConnectors = connectors.filter(
       (connector) => connector.jurisdiction_level === 'federal',
     );
+    const stateConnectors = connectors.filter(
+      (connector) => connector.jurisdiction_level === 'state',
+    );
     const pending: string[] = [...PENDING_FEDERAL_SOURCES];
     const ausTender = dataSourceById.get('aus-tender');
     const pbs = dataSourceById.get('data-gov-au-pbs');
@@ -159,6 +163,18 @@ export function createCoverageHandler(
         note: liveIngestion
           ? 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect remains pending; every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.'
           : 'No federal source is live yet. AusTender, PBS and GrantConnect are pending.',
+      },
+      state_ingestion: {
+        live: stateConnectors
+          .filter((connector) => connector.status === 'active')
+          .map((connector) => connector.id),
+        degraded: stateConnectors
+          .filter((connector) => connector.status === 'degraded')
+          .map((connector) => connector.id),
+        stubs: stateConnectors
+          .filter((connector) => connector.status === 'stub')
+          .map((connector) => connector.id),
+        note: 'NSW Budget 2025-26 Open Data is live (official Wayback XLSX copy + ArcGIS capital projects). Victoria, Queensland and Western Australia remain stubs. NSW Budget rows are Budgeted/estimate/actual statement line items, never spent amounts, and measure types are never summed.',
       },
       ingestion: {
         latest_logs: latestLogs.map((log) => ({

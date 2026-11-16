@@ -30,10 +30,11 @@ test('data sources lists live connectors, open stubs and coverage limitations', 
 
   const stubs = page.getByTestId('connector-stubs');
   await expect(stubs).toBeVisible();
-  await expect(stubs.getByText('stub — not wired')).toHaveCount(9);
-  await expect(stubs.getByText('active', { exact: true })).toHaveCount(2);
+  await expect(stubs.getByText('stub — not wired')).toHaveCount(8);
+  await expect(stubs.getByText('active', { exact: true })).toHaveCount(3);
   await expect(stubs).toContainText('Australian Government Budget Portal');
   await expect(stubs).toContainText('Western Australian Budget');
+  await expect(stubs).toContainText('NSW Budget 2025-26 Open Data');
   await expect(stubs).toContainText('grantconnect');
   await expect(page.getByText('GrantConnect').first()).toBeVisible();
   await expect(page.getByText(/no public award API|blocked/i).first()).toBeVisible();

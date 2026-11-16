@@ -331,7 +331,7 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 `null` and are omitted from the function/region breakdowns; no COFOG code or region is invented.
 `GET /api/spending/:id` returns one row in the same shape (`400` invalid id, `404` unknown).
 
-### Ingestion connectors and runner (F2 AusTender + F3 PBS live)
+### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget live)
 
 `server/src/connectors` registers eleven Australian public-spending sources. **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
@@ -339,9 +339,11 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 (`data-gov-au-pbs`) is live** from the CKAN dataset
 `4f025f38-0c70-45e2-8106-4c29a5e48637`: `package_show` selects the "2025-26 PBS Program Expenses
 Line Items" CSV, which is streamed (Windows-1252, chunked, `csv-parse`) rather than loaded whole.
-The other nine connectors are stubs (`status: "stub"`; `fetch()` rejects with "not implemented"
-and `transform()` returns no records). GrantConnect (`grantconnect`) remains **pending**, as do
-the NSW/VIC/QLD/WA treasuries.
+**NSW Budget (`nsw-budget`) is live as of S1** from the official 2025-26 open-data XLSX
+snapshot plus the ArcGIS `Treasury_Project_Data_20260609_gdb` capital-projects layer. The other
+eight connectors are stubs (`status: "stub"`; `fetch()` rejects with "not implemented" and
+`transform()` returns no records). GrantConnect (`grantconnect`) remains **pending**, and
+VIC/QLD/WA remain stubs.
 
 `npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
 selected connectors sequentially, writes an `ingestion_logs` row per source, upserts on
@@ -384,6 +386,21 @@ INGEST_SOURCES=data-gov-au-pbs \
 MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
 npm run ingest:federal
 ```
+
+NSW Budget is a separate S1 command. It discovers the 12 official 2025-26 XLSX links in the
+14 November 2025 Wayback snapshot, caches and hashes every workbook, streams each XLSX, fetches
+the 974 ArcGIS capital projects, and upserts on `natural_key`. The official blobs are never
+committed; the metadata manifest is `docs/source-archive/nsw-budget-2025-26.json`.
+
+```bash
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:nsw
+```
+
+NSW financial statements are in `$m`, historical fiscal indicators in `$b` and capital projects in
+`$'000`; all are converted to integer cents with explicit, tested multipliers. Budgeted rows are
+labelled **Budgeted**, never actual/spent, and measure types are never summed. Full mapping,
+COFOG decisions and limitations are in [NSW_LOCAL_INGESTION.md](./NSW_LOCAL_INGESTION.md). S1 stops
+before `data.nsw.gov.au` CKAN, Dubbo, VIC/QLD/WA, SOC/charity and the S3 PDF foundation.
 
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
 not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this

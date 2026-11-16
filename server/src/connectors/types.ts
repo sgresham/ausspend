@@ -15,6 +15,10 @@ export interface ConnectorMetadata {
   source_url: string;
   status: ConnectorStatus;
   jurisdiction_level: ConnectorJurisdictionLevel;
+  /** Optional source licence text persisted on data_sources by the runner. */
+  license?: string;
+  /** Optional provenance note persisted on data_sources by the runner. */
+  notes?: string;
 }
 
 export interface ConnectorRunMetadata {

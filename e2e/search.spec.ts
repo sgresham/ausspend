@@ -113,3 +113,13 @@ test('grant award filter states that GrantConnect is blocked (no fake rows)', as
   await expect(blocked).toContainText('no public grant award API');
   await expect(blocked).toContainText('No direct scraper');
 });
+
+test('NSW state budget rows are shown and labelled Budgeted', async ({ page }) => {
+  await page.goto('/search?jurisdiction_level=state&measure_type=budget');
+
+  await expect(page.getByTestId('nsw-budgeted-note')).toContainText('NSW state rows are Budgeted');
+  const rows = page.getByTestId('spending-rows');
+  await expect(rows).toContainText('Chichester Trunk Gravity Main');
+  await expect(rows).toContainText('Budgeted');
+  await expect(rows).not.toContainText('No COFOG function');
+});

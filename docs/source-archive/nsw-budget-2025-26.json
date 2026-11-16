@@ -1,0 +1,118 @@
+{
+  "dataset": "NSW Budget 2025-26 Open Data",
+  "fiscal_year": "2025-26",
+  "page_url": "https://www.budget.nsw.gov.au/budget-detail/open-data",
+  "page_snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/budget-detail/open-data",
+  "page_sha256": "9a0a79b17088ab9e33ef1968eb506171976d0bf141d88d717f806e3b00b12438",
+  "page_bytes": 23684,
+  "snapshot_timestamp": "20251114084846",
+  "retrieved_at": "2026-11-16T13:56:10.333Z",
+  "attribution": "© State of New South Wales (NSW Treasury), (2025).",
+  "license": "CC BY 3.0 AU",
+  "files": [
+    {
+      "filename": "2025-26-Budget-Economy-Open-Data.xlsx",
+      "category": "economy",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/2025-26-Budget-Economy-Open-Data.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/2025-26-Budget-Economy-Open-Data.xlsx",
+      "sha256": "1cb452d35ad74753940a19cd238dfe02bec78cd8102d6de673bf1a2d3f6756e4",
+      "bytes": 324577
+    },
+    {
+      "filename": "2025-26-Budget-Financial-Statements.xlsx",
+      "category": "financial",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/2025-26-Budget-Financial-Statements.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/2025-26-Budget-Financial-Statements.xlsx",
+      "sha256": "c3e4fb8e30f554fea06cb8878d9418060de44c6b3a4bc3271047aa6d50661c09",
+      "bytes": 178309
+    },
+    {
+      "filename": "Open-Data-2025-26-Budget-Historical-Fiscal-Indicators.xlsx",
+      "category": "hfi",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/Open-Data-2025-26-Budget-Historical-Fiscal-Indicators.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/Open-Data-2025-26-Budget-Historical-Fiscal-Indicators.xlsx",
+      "sha256": "e9f66981d63ef41e7e92f1a97e63d70ca2f069760ff4be273d10de81a1bf5757",
+      "bytes": 173123
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-community-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-community-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-community-nsw-budget-2025-26.xlsx",
+      "sha256": "5a9f234104d8cf43f93242ca24f216745966c58cc4171b290b23109f198b3593",
+      "bytes": 27776
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-connected-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-connected-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-connected-nsw-budget-2025-26.xlsx",
+      "sha256": "12edcd98c79b13b1ce09bf21cf4d7def79330ee6f6f04fb48a1c268da5ef7811",
+      "bytes": 26531
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-healthy-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-healthy-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-healthy-nsw-budget-2025-26.xlsx",
+      "sha256": "a0291878555d5fe31592134a48baf903e55864f5e31cc421531db5f1486298b5",
+      "bytes": 35751
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-housed-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-housed-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-housed-nsw-budget-2025-26.xlsx",
+      "sha256": "2eaa694411bbede2b593403aa2d1b70343907269e194f5624b4a1095a790d14a",
+      "bytes": 31093
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-overall-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-overall-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-overall-nsw-budget-2025-26.xlsx",
+      "sha256": "7616b3574131237e645dcc6bea1c2242f99ee3ca3e87b6130888d44ca4b87966",
+      "bytes": 18576
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-prosperous-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-prosperous-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-prosperous-nsw-budget-2025-26.xlsx",
+      "sha256": "0f27de335da694532f66f4a0b1f3c2ccd19029b817be52e745de4655bb9738f0",
+      "bytes": 32089
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-secure-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-secure-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-secure-nsw-budget-2025-26.xlsx",
+      "sha256": "d27d586d9e484c9795a6f1a0d89e35e8a1e8a33e403ea432b5e9e479b51d8ca6",
+      "bytes": 33139
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-skilled-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-skilled-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-skilled-nsw-budget-2025-26.xlsx",
+      "sha256": "1d530c1351150da0f8df0f271fb7371411b2c030afac0f393fd0fb626e814f0e",
+      "bytes": 29533
+    },
+    {
+      "filename": "open-data-performance-and-wellbeing-sustainable-nsw-budget-2025-26.xlsx",
+      "category": "wellbeing",
+      "source_url": "https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-sustainable-nsw-budget-2025-26.xlsx",
+      "snapshot_url": "https://web.archive.org/web/20251114084846id_/https://www.budget.nsw.gov.au/sites/default/files/2025-06/open-data-performance-and-wellbeing-sustainable-nsw-budget-2025-26.xlsx",
+      "sha256": "18ee2847987f8205fcdd12e297b16746c13ff6dbb2f7216bc38721aa779a70aa",
+      "bytes": 34264
+    }
+  ],
+  "arcgis": {
+    "layer": "Treasury_Project_Data_20260609_gdb",
+    "query_url": "https://services2.arcgis.com/Yb2UeNWvQYEwyYDl/arcgis/rest/services/Treasury_Project_Data_20260609_gdb/FeatureServer/0",
+    "source_date": "2026-06-22",
+    "feature_count": 974,
+    "sha256": "7229c636fbe1a845a1b2d563b1fb55ed940a14fc255a27a7143ab3f65d935a6b",
+    "bytes": 797716
+  }
+}
