@@ -10,10 +10,11 @@ test('home renders the shell, coverage banner and provenance', async ({ page }) 
 
   await expect(page.getByRole('heading', { level: 1, name: 'ausspend' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+  await expect(page.getByTestId('coverage-banner')).toContainText('Phase 1.');
   await expect(page.getByTestId('coverage-banner')).toContainText(
-    'Phase 1 synthetic seed data only',
+    'Synthetic development seed data only',
   );
-  await expect(page.getByTestId('coverage-banner')).toContainText('unverified');
+  await expect(page.getByTestId('coverage-banner')).toContainText('human-verified');
   await expect(page.getByText('Provenance:').first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Data sources' }).first()).toBeVisible();
 
