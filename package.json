@@ -1,0 +1,41 @@
+{
+  "name": "ausspend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Australian government spending explorer — Phase 1 monorepo foundation",
+  "type": "module",
+  "packageManager": "npm@11.11.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run build -w shared && concurrently -k -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "npm run dev -w client",
+    "dev:server": "npm run dev -w server",
+    "typecheck": "npm run build -w shared && npm run typecheck -w server && npm run typecheck -w client",
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "build": "npm run build -w shared && npm run build -w server && npm run build -w client"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.19.2",
+    "concurrently": "9.2.5",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.8",
+    "globals": "16.5.0",
+    "prettier": "3.10.1",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.72.2",
+    "vitest": "3.2.7"
+  }
+}

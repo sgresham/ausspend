@@ -1,0 +1,28 @@
+{
+  "name": "@ausspend/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ausspend API server",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "cors": "2.8.6",
+    "dotenv": "17.4.2",
+    "express": "5.3.0",
+    "mongoose": "8.24.9",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/cors": "2.8.19",
+    "@types/express": "5.0.6",
+    "@types/supertest": "7.2.1",
+    "supertest": "7.3.2",
+    "tsx": "4.23.15"
+  }
+}
