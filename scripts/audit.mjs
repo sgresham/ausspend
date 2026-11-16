@@ -24,6 +24,7 @@ const KNOWN_SOURCE_IDS = [
   'data-gov-au-pbs',
   'nsw-budget',
   'data-nsw-ckan',
+  'dubbo-council',
 ];
 
 const results = [];
@@ -136,11 +137,35 @@ async function apiChecks() {
     return `total_cents=${summary.total_cents}`;
   });
 
-  await check('API spending with region=NSW (a code, not an _id) is 400', async () => {
-    const { status, body } = await getJson('/api/spending?region=NSW');
-    assert(status === 400, `expected 400, got ${status}`);
-    assert(body?.ok === false, 'error envelope missing ok:false');
-    return body.error;
+  await check('API spending resolves region=<name|slug> and rejects an unknown slug', async () => {
+    // Contract C: a 24-character _id stays an exact filter, while a region
+    // name/code/slug resolves case-insensitively. An unknown slug is a 404.
+    const resolved = await getJson('/api/spending?region=NSW&page_size=1');
+    assert(resolved.status === 200, `expected region=NSW to resolve (200), got ${resolved.status}`);
+    assert(
+      resolved.body?.applied_filters?.region === 'NSW',
+      `expected applied_filters.region=NSW, got ${resolved.body?.applied_filters?.region}`,
+    );
+
+    const dubbo = await getJson('/api/spending?region=dubbo&page_size=1');
+    assert(dubbo.status === 200, `expected region=dubbo to resolve (200), got ${dubbo.status}`);
+    assert(
+      Array.isArray(dubbo.body?.area_profile?.panels) &&
+        dubbo.body.area_profile.panels.length === 4,
+      `expected 4 Dubbo area panels, got ${dubbo.body?.area_profile?.panels?.length}`,
+    );
+    assert(
+      dubbo.body?.summary?.total_cents === null,
+      `expected no cross-level total for area mode, got ${dubbo.body?.summary?.total_cents}`,
+    );
+
+    const unknown = await getJson('/api/spending?region=not-a-region');
+    assert(
+      unknown.status === 404 || unknown.status === 400,
+      `expected 404/400 for an unknown slug, got ${unknown.status}`,
+    );
+    assert(unknown.body?.ok === false, 'error envelope missing ok:false');
+    return `region=NSW 200, region=dubbo 4 panels, unknown ${unknown.status}`;
   });
 
   await check('API spending/:id with an unknown measure id is 404', async () => {
@@ -155,9 +180,14 @@ async function apiChecks() {
     async () => {
       const { status, body } = await getJson('/api/meta/coverage');
       assert(status === 200, `expected 200, got ${status}`);
+      assert(Array.isArray(body?.connectors), 'connectors must be an array');
+      const statusCounts = body?.connector_status_counts;
+      assert(statusCounts, 'missing connector_status_counts');
+      const expectedConnectorTotal =
+        statusCounts.active + statusCounts.degraded + statusCounts.stub;
       assert(
-        Array.isArray(body?.connectors) && body.connectors.length === 12,
-        `expected 12 connectors, got ${body?.connectors?.length}`,
+        body.connectors.length === expectedConnectorTotal,
+        `connector count ${body.connectors.length} does not match status counts ${expectedConnectorTotal}`,
       );
       const connectorIds = body.connectors.map((connector) => connector.id);
       const ausTender = body.connectors.find((entry) => entry.id === 'aus-tender');
@@ -183,6 +213,16 @@ async function apiChecks() {
       assert(
         nswCkan.status === 'active' || nswCkan.status === 'degraded',
         `expected data-nsw-ckan active/degraded, got ${nswCkan.status}`,
+      );
+      const dubbo = body.connectors.find((entry) => entry.id === 'dubbo-council');
+      assert(dubbo, 'missing local connector dubbo-council');
+      assert(
+        dubbo.status === 'active' || dubbo.status === 'degraded',
+        `expected dubbo-council active/degraded, got ${dubbo.status}`,
+      );
+      assert(
+        dubbo.jurisdiction_level === 'local',
+        `expected dubbo-council jurisdiction_level local, got ${dubbo.jurisdiction_level}`,
       );
       const grantconnect = body.connectors.find((entry) => entry.id === 'grantconnect');
       assert(grantconnect, 'missing federal connector grantconnect');
@@ -210,6 +250,15 @@ async function apiChecks() {
           body.state_ingestion.live.includes('nsw-budget') &&
           body.state_ingestion.live.includes('data-nsw-ckan'),
         'meta/coverage state_ingestion.live must include nsw-budget and data-nsw-ckan',
+      );
+      assert(
+        Array.isArray(body?.local_ingestion?.live) &&
+          body.local_ingestion.live.includes('dubbo-council'),
+        'meta/coverage local_ingestion.live must include dubbo-council',
+      );
+      assert(
+        Array.isArray(body?.region_levels) && body.region_levels.includes('region'),
+        'meta/coverage region_levels must include the sub-state region level',
       );
       assert(connectorIds.length === new Set(connectorIds).size, 'connector ids must be unique');
       assert(body.counts?.data_sources > 0, 'counts.data_sources must be > 0');
@@ -465,15 +514,26 @@ async function uiChecks(page, regionId) {
         stubCount === expectedStubs,
         `expected ${expectedStubs} connector stubs marked not wired (from coverage), got ${stubCount}`,
       );
+      const expectedActive = coverage?.connector_status_counts?.active;
+      assert(
+        Number.isInteger(expectedActive),
+        `coverage connector_status_counts.active is not an integer: ${expectedActive}`,
+      );
       const activeCount = await stubs.getByText('active', { exact: true }).count();
       assert(
-        activeCount >= 4,
-        `expected AusTender, PBS, NSW Budget and data.nsw.gov.au CKAN active, got ${activeCount} active connector(s)`,
+        activeCount === expectedActive,
+        `expected ${expectedActive} active connectors (from coverage), got ${activeCount}`,
       );
       const activeIds = (coverage?.connectors ?? [])
         .filter((connector) => connector.status === 'active' || connector.status === 'degraded')
         .map((connector) => connector.id);
-      for (const id of ['aus-tender', 'data-gov-au-pbs', 'nsw-budget', 'data-nsw-ckan']) {
+      for (const id of [
+        'aus-tender',
+        'data-gov-au-pbs',
+        'nsw-budget',
+        'data-nsw-ckan',
+        'dubbo-council',
+      ]) {
         assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
       }
       const connectorText = await stubs.innerText();
@@ -481,6 +541,10 @@ async function uiChecks(page, regionId) {
       assert(
         /data-nsw-ckan/.test(connectorText),
         'data.nsw.gov.au CKAN connector is not shown in the UI',
+      );
+      assert(
+        /dubbo-council/.test(connectorText),
+        'Dubbo Regional Council connector is not shown in the UI',
       );
       const pbsCard = page.getByTestId('source-data-gov-au-pbs');
       await pbsCard.waitFor({ state: 'visible', timeout: 20_000 });
@@ -509,7 +573,7 @@ async function uiChecks(page, regionId) {
         'coverage limitations do not mention pending GrantConnect',
       );
       assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
-      return `source Unverified, ${expectedStubs} stubs, AusTender+PBS+NSW active, PBS caveat, limitations present`;
+      return `source Unverified, ${expectedStubs} stubs, ${expectedActive} active (incl. Dubbo), PBS caveat, limitations present`;
     },
   );
 }
