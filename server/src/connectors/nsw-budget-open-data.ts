@@ -370,15 +370,19 @@ export function detectFinancialHeader(
     const unitRow = rows[index + 1]?.values ?? [];
     const columns: NswWorkbookHeader['columns'] = [];
     let currentHeader: string | null = null;
-    values.forEach((value, columnIndex) => {
-      const header = text(value);
+    // The header row is often shorter than the year/unit rows: Excel omits
+    // trailing blank cells. Iterate to the longest of the three rows so
+    // Forward Estimates is forward-filled across every year column.
+    const columnCount = Math.max(values.length, yearRow.length, unitRow.length);
+    for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
+      const header = text(values[columnIndex]);
       if (header && measureTypeForFinancialHeader(header)) currentHeader = header;
-      if (!currentHeader) return;
+      if (!currentHeader) continue;
       const unit = text(unitRow[columnIndex]) ?? '';
       const year = financialYearOf(yearRow[columnIndex]);
-      if (!year || !unit.includes('$')) return;
+      if (!year || !unit.includes('$')) continue;
       columns.push({ index: columnIndex, header: currentHeader, year, unit });
-    });
+    }
     if (columns.length === 0) continue;
     return {
       headerRow: rows[index]!.number,
@@ -416,6 +420,28 @@ export function detectHfiHeader(
   return null;
 }
 
+function rowLabel(values: Array<string | number | null>): string | null {
+  for (const value of values) {
+    const label = text(value);
+    if (label && !/^\d+(\.\d+)?$/.test(label)) return label;
+  }
+  return null;
+}
+
+/** HFI indicators that are spending (expenses/capital) and therefore ingestible. */
+const HFI_SPENDING_METRICS = new Set(['expenses', 'capital expenditure', 'interest expense']);
+
+function isHfiSpendingMetric(label: string): boolean {
+  return HFI_SPENDING_METRICS.has(label.toLowerCase().replace(/\s+/g, ' ').trim());
+}
+
+/**
+ * Financial statements: ingest ONLY the expenses section of each sector's
+ * Operating Statement. Revenue/taxation lines, balance-sheet lines, cash-flow
+ * receipts/payments and the budget result/net operating balance are excluded.
+ * The "Total Expenses" row is also excluded so the component lines are not
+ * double-counted at the total.
+ */
 export function financialRawRows(
   file: NswSourceFile,
   workbook: NswWorkbookRows,
@@ -424,17 +450,58 @@ export function financialRawRows(
   const output: NswCellRaw[] = [];
   for (const sheet of workbook.sheets) {
     if (/^Introduction/i.test(sheet.name)) continue;
+    if (!/Operating Statement$/i.test(sheet.name)) {
+      skipped.push({
+        filename: file.filename,
+        sheet: sheet.name,
+        row: null,
+        reason: 'non-spending statement sheet excluded (balance sheet/cash flow/introduction)',
+      });
+      continue;
+    }
     const header = detectFinancialHeader(sheet.rows);
     if (!header) continue;
     const sector = sectorForSheet(sheet.name);
-    for (const row of sheet.rows) {
-      if (row.number <= header.unitRow) continue;
-      const label = row.values
-        .map(text)
-        .find((value) => value !== null && !/^\d+(\.\d+)?$/.test(value));
+
+    const startIndex = sheet.rows.findIndex(
+      (row) => rowLabel(row.values)?.toLowerCase() === 'expenses from transactions',
+    );
+    if (startIndex === -1) {
+      skipped.push({
+        filename: file.filename,
+        sheet: sheet.name,
+        row: null,
+        reason: 'no "Expenses from Transactions" section found; no expense lines ingested',
+      });
+      continue;
+    }
+    let endIndex = sheet.rows.length;
+    for (let index = startIndex + 1; index < sheet.rows.length; index += 1) {
+      const label = rowLabel(sheet.rows[index]!.values);
       if (!label) continue;
-      if (measureTypeForFinancialHeader(label)) continue;
-      let emitted = 0;
+      if (
+        /^total expenses from transactions/i.test(label) ||
+        /net operating balance|budget result/i.test(label)
+      ) {
+        endIndex = index;
+        break;
+      }
+    }
+
+    for (let index = 0; index < sheet.rows.length; index += 1) {
+      const row = sheet.rows[index]!;
+      if (row.number <= header.unitRow) continue;
+      const label = rowLabel(row.values);
+      if (!label) continue;
+      if (index <= startIndex || index >= endIndex) {
+        skipped.push({
+          filename: file.filename,
+          sheet: sheet.name,
+          row: row.number,
+          reason: `${label}: non-spending line excluded (revenue/balance-sheet/cash-flow/budget-result/total)`,
+        });
+        continue;
+      }
       for (const column of header.columns) {
         const value = row.values[column.index];
         if (numberValue(value) === null) continue;
@@ -473,10 +540,6 @@ export function financialRawRows(
           source_date: NSW_SOURCE_DATE,
           source_sha256: file.sha256 ?? '',
         });
-        emitted += 1;
-      }
-      if (emitted === 0) {
-        // Section/header row with no usable amount: expected, not a warning.
       }
     }
   }
@@ -493,11 +556,24 @@ export function hfiRawRows(
     if (!/^Table D\./i.test(sheet.name)) continue;
     const header = detectHfiHeader(sheet.rows);
     if (!header) continue;
+    const excludedIndicators = new Set<string>();
     for (const row of sheet.rows) {
       if (row.number <= header.unitRow) continue;
       const fiscalYear = financialYearOf(row.values[0]);
       if (!fiscalYear) continue;
       for (const column of header.columns) {
+        if (!isHfiSpendingMetric(column.header)) {
+          if (!excludedIndicators.has(column.header)) {
+            excludedIndicators.add(column.header);
+            skipped.push({
+              filename: file.filename,
+              sheet: sheet.name,
+              row: null,
+              reason: `${column.header}: non-spending HFI indicator excluded`,
+            });
+          }
+          continue;
+        }
         const value = row.values[column.index];
         if (numberValue(value) === null) continue;
         if (isNegativeAmount(value)) {

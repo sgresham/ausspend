@@ -54,28 +54,66 @@ function financialWorkbook(): NswWorkbookRows {
           },
           {
             number: 5,
-            values: [null, null, 'Actual', 'Revised', 'Budget', 'Forward Estimates', null, null],
+            values: [null, null, 'Actual', 'Revised', 'Budget', 'Forward Estimates'],
           },
           { number: 6, values: [null, null, '$m', '$m', '$m', '$m', '$m', '$m'] },
           {
             number: 7,
-            values: [
-              null,
-              'Total Expenses from Transactions',
-              120908.56095860401,
-              123805.115107308,
-              127581.07005784,
-              129186.04721571,
-              132100.53920749002,
-              136077.59127116,
-            ],
+            values: [null, 'Revenue from Transactions', null, null, null, null, null, null],
           },
           {
             number: 8,
             values: [
               null,
+              'Taxation',
+              44603.2656120131,
+              47599.03,
+              51318.06,
+              54138.03,
+              56668.42,
+              59540.53,
+            ],
+          },
+          {
+            number: 9,
+            values: [null, 'Expenses from Transactions', null, null, null, null, null, null],
+          },
+          {
+            number: 10,
+            values: [null, 'Employee', 46130.91, 48514.16, 50307.42, 51912.61, 53129.08, 56205.58],
+          },
+          {
+            number: 11,
+            values: [
+              null,
+              'Other Operating Expense',
+              27993.67,
+              27191.94,
+              27775.93,
+              26153.96,
+              27805.99,
+              27497.07,
+            ],
+          },
+          {
+            number: 12,
+            values: [
+              null,
+              'Total Expenses from Transactions',
+              74124.58,
+              75706.1,
+              78083.35,
+              78066.57,
+              80935.07,
+              83702.65,
+            ],
+          },
+          {
+            number: 13,
+            values: [
+              null,
               'Budget result (deficit)',
-              -10689.828411028,
+              -10689.82,
               -5715.43,
               -3427.03,
               -1148.09,
@@ -83,6 +121,18 @@ function financialWorkbook(): NswWorkbookRows {
               -900,
             ],
           },
+        ],
+      },
+      {
+        name: 'GG Cashflow Statement',
+        rows: [
+          { number: 4, values: [null, null, '2023-24', '2024-25', '2025-26'] },
+          {
+            number: 5,
+            values: [null, null, 'Actual', 'Revised', 'Budget'],
+          },
+          { number: 6, values: [null, null, '$m', '$m', '$m'] },
+          { number: 7, values: [null, 'Cash Receipts', 1000, 1100, 1200] },
         ],
       },
     ],
@@ -127,6 +177,30 @@ function hfiWorkbook(): NswWorkbookRows {
           },
           { number: 4, values: ['2025-26', 124.2, 5.1, 127.6, 3, -3.4, -0.4, 22.3, 2.5, 879.5] },
           { number: 5, values: ['2026-27', 128, 3.1, 129.2, 1.3, -1.1, -0.1, 22, 2.4, 922.4] },
+        ],
+      },
+      {
+        name: 'Table D.2 - App E',
+        rows: [
+          {
+            number: 2,
+            values: [
+              null,
+              'Net Lending/ (Borrowing)',
+              null,
+              'Gross Debt',
+              null,
+              'Net Debt',
+              null,
+              'Interest Expense',
+            ],
+          },
+          {
+            number: 3,
+            values: [null, '$b', '% of GSP', '$b', '% of GSP', '$b', '% of GSP', '$b'],
+          },
+          { number: 4, values: ['2025-26', -15.6, -1.8, 178.8, 20.3, 120.3, 13.7, 7.7] },
+          { number: 5, values: ['2026-27', -11.7, -1.3, 188.3, 20.4, 127.8, 13.9, 8.4] },
         ],
       },
     ],
@@ -213,12 +287,26 @@ describe('NSW financial-statement sheet mapping', () => {
     ]);
   });
 
-  it('emits one row per financial year, not one flattened row; skips negative deficits', () => {
+  it('ingests only Operating Statement expenses, one row per FY, not flattened', () => {
     const skipped: Array<{ filename: string; sheet: string; row: number | null; reason: string }> =
       [];
     const raw = financialRawRows(financialFile, financialWorkbook(), skipped);
-    expect(raw).toHaveLength(6);
-    expect(raw.map((row) => row.fiscal_year)).toEqual([
+    expect(raw).toHaveLength(12);
+    expect(raw.map((row) => row.label)).toEqual([
+      'Employee',
+      'Employee',
+      'Employee',
+      'Employee',
+      'Employee',
+      'Employee',
+      'Other Operating Expense',
+      'Other Operating Expense',
+      'Other Operating Expense',
+      'Other Operating Expense',
+      'Other Operating Expense',
+      'Other Operating Expense',
+    ]);
+    expect(raw.slice(0, 6).map((row) => row.fiscal_year)).toEqual([
       '2023-24',
       '2024-25',
       '2025-26',
@@ -226,7 +314,7 @@ describe('NSW financial-statement sheet mapping', () => {
       '2027-28',
       '2028-29',
     ]);
-    expect(raw.map((row) => row.measure_type)).toEqual([
+    expect(raw.slice(0, 6).map((row) => row.measure_type)).toEqual([
       'actual',
       'estimate',
       'budget',
@@ -234,25 +322,46 @@ describe('NSW financial-statement sheet mapping', () => {
       'estimate',
       'estimate',
     ]);
-    expect(raw[2]!.raw_value).toBe(127581.07005784);
-    expect(raw[2]!.unit).toBe('$m');
-    expect(skipped.some((entry) => entry.reason.includes('negative'))).toBe(true);
+    expect(raw.find((row) => row.label === 'Taxation')).toBeUndefined();
+    expect(raw.find((row) => row.label.includes('Total Expenses'))).toBeUndefined();
+    expect(skipped.some((entry) => entry.reason.includes('Taxation'))).toBe(true);
+    expect(skipped.some((entry) => entry.reason.includes('non-spending statement sheet'))).toBe(
+      true,
+    );
   });
 });
 
 describe('NSW historical fiscal indicators', () => {
-  it('ingests only $b columns and maps budget/estimate by year', () => {
+  it('ingests only Expenses, Interest Expense and Capital Expenditure $b columns', () => {
     const skipped: Array<{ filename: string; sheet: string; row: number | null; reason: string }> =
       [];
     const raw = hfiRawRows(hfiFile, hfiWorkbook(), skipped);
-    expect(raw).toHaveLength(8);
+    expect(raw).toHaveLength(6);
     expect(new Set(raw.map((row) => row.unit))).toEqual(new Set(['$b']));
+    expect(raw.map((row) => row.label)).toEqual([
+      'Expenses ($b)',
+      'Capital Expenditure ($b)',
+      'Expenses ($b)',
+      'Capital Expenditure ($b)',
+      'Interest Expense ($b)',
+      'Interest Expense ($b)',
+    ]);
     expect(
       raw.filter((row) => row.fiscal_year === '2025-26').map((row) => row.measure_type),
-    ).toEqual(['budget', 'budget', 'budget', 'budget']);
+    ).toEqual(['budget', 'budget', 'budget']);
     expect(
       raw.filter((row) => row.fiscal_year === '2026-27').map((row) => row.measure_type),
-    ).toEqual(['estimate', 'estimate', 'estimate', 'estimate']);
+    ).toEqual(['estimate', 'estimate', 'estimate']);
+    const reasons = skipped.map((entry) => entry.reason);
+    expect(reasons).toEqual(
+      expect.arrayContaining([
+        'Revenue: non-spending HFI indicator excluded',
+        'Budget Result: non-spending HFI indicator excluded',
+        'GSP: non-spending HFI indicator excluded',
+        'Gross Debt: non-spending HFI indicator excluded',
+        'Net Debt: non-spending HFI indicator excluded',
+      ]),
+    );
   });
 });
 
@@ -310,7 +419,7 @@ describe('NSW discovery and natural keys', () => {
     ];
     const first = transformNswRaw(raw);
     const second = transformNswRaw(raw);
-    expect(first.records).toHaveLength(15);
+    expect(first.records).toHaveLength(19);
     expect(first.records.map((record) => record.natural_key)).toEqual(
       second.records.map((record) => record.natural_key),
     );

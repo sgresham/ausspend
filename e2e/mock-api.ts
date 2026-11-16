@@ -56,7 +56,7 @@ const NSW_BUDGET_SOURCE = {
   verified: false,
   status: 'active',
   last_ingested_at: '2026-11-16T00:07:00.000Z',
-  records_ingested: 2355,
+  records_ingested: 1115,
   errors: [],
   notes:
     'Official 2025-26 XLSX Wayback copy plus ArcGIS capital projects; unverified Budgeted rows.',
@@ -180,7 +180,7 @@ const COVERAGE = {
       status: 'active',
       jurisdiction_level: 'state',
       last_fetched_at: '2026-11-16T00:07:00.000Z',
-      records_ingested: 2355,
+      records_ingested: 1115,
       errors: [],
     },
     {

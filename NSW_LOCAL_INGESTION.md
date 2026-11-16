@@ -74,7 +74,7 @@ through the official ArcGIS feature layer:
 - Dataset: **`Treasury_Project_Data_20260609_gdb`**
 - Layer: `https://services2.arcgis.com/Yb2UeNWvQYEwyYDl/arcgis/rest/services/Treasury_Project_Data_20260609_gdb/FeatureServer/0`
 - Query: `.../FeatureServer/0/query?where=1%3D1&outFields=*&returnGeometry=false&f=json`
-- Project count: **974** (verified with `returnCountOnly=true`, and the connector refuses any other count)
+- Project count: **974** fetched (verified with `returnCountOnly=true`, and the connector refuses any other count); 803 have a usable 2025-26 budget and 171 are skipped with a warning rather than zero-filled
 - Budget field: **`Budget_Year_FY_2025_26_000`** (`$'000`)
 - Carried into records: `Project_ID`, `OBJECTID`, `Agency_Name`, `Cluster_PNFC_Sector`, `Sector`,
   `Project_name`, `Project_Category`, `Project_Status`, `Electorate`, `Region`, `LGA`,
@@ -104,11 +104,12 @@ non-negative spending. The unit conversion is covered by
 
 ## 5. Column / measure mapping
 
-**Financial statements.** Sheets `GG Operating Statement`, `GG Balance Sheet`, `GG Cashflow
-Statement`, `PNFC …`, `NFPS …`. The header row is found by the presence of `Actual`, `Budget` and
-`Forward Estimates`; the year row is above it and the unit row below it. `Forward Estimates` is
-forward-filled across its three year columns. Each row is emitted **once per financial-year
-column**, never flattened into one record:
+**Financial statements.** Only the `Operating Statement` sheet for each sector
+(`GG`/`PNFC`/`NFPS`) is considered. The header row is found by the presence of `Actual`, `Budget`
+and `Forward Estimates`; the year row is above it and the unit row below it. `Forward Estimates` is
+forward-filled across all three year columns (the header row is often shorter than the year/unit
+rows). Each expense row is emitted **once per financial-year column**, never flattened into one
+record:
 
 | Column header       | `measure_type`                                               |
 | ------------------- | ------------------------------------------------------------ |
@@ -117,24 +118,31 @@ column**, never flattened into one record:
 | `Budget`            | `budget` (displayed as **Budgeted**)                         |
 | `Forward Estimates` | `estimate`                                                   |
 
+**Only the `Expenses from Transactions` section is ingested.** Revenue/taxation rows, balance-sheet
+lines, cash-flow receipts/payments, `Other Economic Flows`, the budget result/net operating balance
+and the `Total Expenses from Transactions` row are excluded. Excluding the total avoids
+double-counting the component expense lines. Balance-sheet and cash-flow sheets are excluded
+wholesale. Anything the classifier cannot place in the expenses section is logged as a skipped
+warning rather than guessed.
+
 The sector sheet prefix maps to `delivery_entity` (`General government sector`, `Public
 non-financial corporations`, `Non-financial public sector`); `funding_source` is `NSW Treasury`.
-Balance-sheet date columns (` June 2024`, Excel serials such as `46174`) are normalised to
-`2023-24` / `2025-26` etc.
 
-**Historical fiscal indicators.** Sheets `Table D.1`–`D.3`. Only columns whose unit is `$b` are
-ingested (`Revenue`, `Expenses`, `Budget Result`, `Capital Expenditure`, `GSP`). Percentage,
-`% of GSP`, `% Growth` and index columns are not dollars and are not ingested. The financial year
-is the row label in column A; years before 2025-26 are `actual`, 2025-26 is `budget`, later years
-are `estimate` (forward estimates).
+**Historical fiscal indicators.** Sheets `Table D.1`–`D.4`. Only **spending** indicators with an
+explicit `$b` unit are ingested: `Expenses`, `Capital Expenditure` and `Interest Expense`.
+`Revenue`, `GSP`, `Budget Result`, `Gross Debt`, `Net Debt` and `Net Lending/(Borrowing)` are
+excluded, as are percentage, `% of GSP`, `% Growth` and index columns. The financial year is the
+row label in column A; years before 2025-26 are `actual`, 2025-26 is `budget`, later years are
+`estimate` (forward estimates).
 
 **Economy and performance/wellbeing workbooks.** The economy workbook and the nine
 performance/wellbeing workbooks contain percentages, indices and counts, not dollar spending
 series. They are discovered, downloaded, hashed and stream-parsed to prove they are valid XLSX,
 but **no `amount_cents` is invented for them**. This is recorded as a connector warning.
 
-**Capital projects.** Every ArcGIS feature becomes one `budget` measure for `2025-26` with
-`amount_cents = Budget_Year_FY_2025_26_000 × 100000`, `delivery_entity = Agency_Name`,
+**Capital projects.** Every ArcGIS feature **with a usable `Budget_Year_FY_2025_26_000`** becomes
+one `budget` measure for `2025-26` with `amount_cents = value × 100000`,
+`delivery_entity = Agency_Name`,
 `funding_source = Cluster_PNFC_Sector` (falling back to `Sector`), `location.state = "NSW"`,
 `location.lga_name` only when present, and `data_quality_flag` `provisional` (LGA present) or
 `statewide_only` (no LGA). `Project_name`, `Project_ID`, `Electorate`, `Region`, status and
@@ -169,19 +177,20 @@ raw batch twice yields identical keys and that a repeated batch collapses to the
 The live proof on a scratch DB was:
 
 ```text
-[ingest:nsw] nsw-budget: success fetched=2526 upserted=2355
+[ingest:nsw] nsw-budget: success fetched=1286 upserted=1115
 # second run, same DB
-[ingest:nsw] nsw-budget: success fetched=2526 upserted=2355
-db.measures.countDocuments({source_id:"nsw-budget"}) -> 2355
+[ingest:nsw] nsw-budget: success fetched=1286 upserted=1115
+db.measures.countDocuments({source_id:"nsw-budget"}) -> 1115
 ```
 
 ## 8. Counts and provenance shape
 
-On the 2025-26 data: **2,526 raw cells/projects → 2,355 valid records**
-(1,105 financial-statement cells + 447 HFI $b cells + 974 capital projects). 171 source cells were
-skipped (negative net/deficit lines and non-dollar columns); they are logged as warnings, not
-errors. The `nsw-budget` source ends `active` on success and `degraded` on failure; a failure keeps
-the old rows because the runner only upserts and never deletes.
+On the 2025-26 data: **1,286 raw spending cells/projects → 1,115 valid records**
+(138 financial-statement expense cells + 174 HFI spending cells + 803 capital projects with a
+usable budget). 171 capital features lack a usable 2025-26 budget and are skipped with a warning;
+negative lines and non-spending rows/columns are also skipped/flagged, never guessed. The
+`nsw-budget` source ends `active` on success and `degraded` on failure; a failure keeps the old
+rows because the runner only upserts and never deletes.
 
 Federal counts before/after S1 are unchanged: **119,935 total = 117,894 AusTender + 1,231 PBS +
 810 synthetic**. S1 adds only `source_id: "nsw-budget"` rows.
@@ -190,9 +199,11 @@ Federal counts before/after S1 are unchanged: **119,935 total = 117,894 AusTende
 
 - **Budgeted, not spent.** Every NSW figure is a Budget/estimate/actual statement line item. The
   UI labels budget rows **Budgeted** and never presents them as actual/spent.
-- The financial-statement workbooks include revenue, expense, balance-sheet and cash-flow lines.
-  Their row values are not additive across line items or sectors; the API's per-type totals are
-  only per measure type, and the UI must not present a sum across types.
+- Only Operating Statement expense lines and the three spending HFI indicators are ingested.
+  Revenue, taxation, receipts, GSP, debt, net assets, budget result, cash-flow and balance-sheet
+  lines are deliberately absent from the API, so state totals cannot be misread as "all budget
+  money". Expense line items are still not additive across sectors; the API's per-type totals are
+  only per measure type.
 - Negative net/deficit lines are skipped because `amount_cents` is non-negative.
 - Economy/wellbeing workbooks are percentages/indices/counts and are not converted to dollars.
 - Capital locations are only as good as the ArcGIS `LGA` field. Missing LGAs are `statewide_only`,
