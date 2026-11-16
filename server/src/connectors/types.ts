@@ -20,7 +20,13 @@ export interface ConnectorMetadata {
 export interface ConnectorRunMetadata {
   lastFetchedAt: string | null;
   recordsIngested: number;
+  /** Fatal/partial-run problems; a non-empty list marks the source degraded. */
   errors: string[];
+  /**
+   * Non-fatal data-quality notes (for example expected PBS `nfp`/negative rows
+   * skipped). They are logged but do not mark the source degraded.
+   */
+  warnings?: string[];
 }
 
 /**

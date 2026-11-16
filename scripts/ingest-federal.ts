@@ -4,8 +4,8 @@ import { CONNECTORS, runIngestion, type Connector } from '../server/src/connecto
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
- * Federal ingestion runner (F2). AusTender is the only live connector; every
- * other registered source is a stub and is logged as `skipped`.
+ * Federal ingestion runner (F2/F3). AusTender and data.gov.au PBS are live;
+ * every other registered source is a stub and is logged as `skipped`.
  *
  * Narrow live run (the acceptance window):
  *
@@ -14,7 +14,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
  *   npm run ingest:federal
  *
- * Set INGEST_SOURCES=aus-tender to run only AusTender. A source failure is
+ * Set INGEST_SOURCES=aus-tender to run only AusTender, or
+ * INGEST_SOURCES=data-gov-au-pbs to run only the PBS CSV. A source failure is
  * logged and marked degraded without aborting the rest of the run.
  */
 function selectConnectors(): readonly Connector[] {
@@ -48,6 +49,10 @@ async function main(): Promise<void> {
     );
     if (ausTender) {
       console.log(`[ingest] aus-tender status=${ausTender.status}`);
+    }
+    const pbs = connectors.find((connector) => connector.id === 'data-gov-au-pbs');
+    if (pbs) {
+      console.log(`[ingest] data-gov-au-pbs status=${pbs.status}`);
     }
 
     const result = await runIngestion({ connectors });

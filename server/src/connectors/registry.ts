@@ -1,4 +1,5 @@
 import { createAusTenderConnector } from './aus-tender.js';
+import { createPbsConnector } from './data-gov-au-pbs.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -29,10 +30,11 @@ function stub(metadata: Omit<ConnectorMetadata, 'status'>): Connector {
 
 /**
  * The registered Australian public-spending sources. AusTender is live as of F2
- * (contractPublished OCDS feed). Every other connector is still a stub: its
- * `fetch` rejects with a clear "not implemented" error, no request leaves the
- * process, and `transform` returns no records. data-gov-au-pbs (PBS) and
- * grantconnect remain pending, as do the state/territory sources.
+ * (contractPublished OCDS feed) and data.gov.au PBS is live as of F3 (CKAN
+ * package_show + streamed program-expense CSV). Every other connector is still
+ * a stub: its `fetch` rejects with a clear "not implemented" error, no request
+ * leaves the process, and `transform` returns no records. grantconnect remains
+ * pending, as do the state/territory sources.
  */
 export const CONNECTORS: readonly Connector[] = [
   stub({
@@ -71,14 +73,9 @@ export const CONNECTORS: readonly Connector[] = [
   // F2: live OCDS contractPublished ingestion. The connector is active; each
   // run's status is recorded by the runner on data_sources/ingestion_logs.
   ausTenderFromEnv(),
-  stub({
-    id: 'data-gov-au-pbs',
-    name: 'Portfolio Budget Statements (data.gov.au)',
-    publisher: 'Australian Government Department of Finance',
-    source_url: 'https://www.budget.gov.au/',
-    jurisdiction_level: 'federal',
-    // PBS: ingest Portfolio Budget Statements once the release format is pinned.
-  }),
+  // F3: live data.gov.au CKAN ingestion of the 2025-26 PBS program-expense CSV.
+  // `fetch` streams the CSV; per-run status is recorded on data_sources/logs.
+  createPbsConnector(),
   stub({
     id: 'grantconnect',
     name: 'GrantConnect — Australian Government grants',

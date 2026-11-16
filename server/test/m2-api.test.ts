@@ -152,7 +152,7 @@ describe('GET /api/meta/coverage', () => {
     expect(response.status).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body).toMatchObject({
-      phase: 'Phase 1 + F2 (AusTender live)',
+      phase: 'Phase 1 + F2/F3 (AusTender + PBS live)',
       synthetic: true,
       live_ingestion: true,
       counts: { data_sources: 1, regions: 3, functions: 4, measures: 8 },
@@ -163,12 +163,16 @@ describe('GET /api/meta/coverage', () => {
     expect(new Date(response.body.generated_at).toString()).not.toBe('Invalid Date');
     expect(response.body.connectors).toHaveLength(11);
     for (const connector of response.body.connectors) {
-      expect(connector.status).toBe(connector.id === 'aus-tender' ? 'active' : 'stub');
+      expect(connector.status).toBe(
+        connector.id === 'aus-tender' || connector.id === 'data-gov-au-pbs' ? 'active' : 'stub',
+      );
       expect(connector.id).toBeTruthy();
       expect(connector.fetch).toBeUndefined();
     }
-    expect(response.body.federal_ingestion.live).toContain('aus-tender');
-    expect(response.body.federal_ingestion.pending).toEqual(['data-gov-au-pbs', 'grantconnect']);
+    expect(response.body.federal_ingestion.live).toEqual(
+      expect.arrayContaining(['aus-tender', 'data-gov-au-pbs']),
+    );
+    expect(response.body.federal_ingestion.pending).toEqual(['grantconnect']);
     expect(response.body.limitations.join(' ')).toMatch(/synthetic/i);
     expect(response.body.limitations.join(' ')).toMatch(/verified/i);
     expect(response.body.limitations.join(' ')).toMatch(/AusTender/i);

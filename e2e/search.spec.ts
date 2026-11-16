@@ -86,3 +86,20 @@ test('jump-to name search applies a function filter', async ({ page }) => {
   await expect(page).toHaveURL(/function=07/);
   await expect(page.getByTestId('applied-filters')).toContainText('Function: 07 — Health');
 });
+
+test('PBS budget rows carry provenance and the line-item caveat', async ({ page }) => {
+  await page.goto('/search?measure_type=budget&jurisdiction_level=federal');
+
+  await expect(page.getByTestId('pbs-caveat')).toBeVisible();
+  await expect(page.getByTestId('pbs-caveat')).toContainText(
+    'does not equal the Budget Paper 1 total',
+  );
+  await expect(page.getByTestId('applied-filters')).toContainText('Measure type: Budget');
+  await expect(page.getByTestId('applied-filters')).toContainText('Jurisdiction: Federal');
+
+  const rows = page.getByTestId('spending-rows');
+  await expect(rows).toContainText('data-gov-au-pbs');
+  await expect(rows).toContainText('Unverified');
+  await expect(rows.getByRole('link', { name: 'data-gov-au-pbs' }).first()).toBeVisible();
+  await expect(rows).toContainText('Program 1.1: Health policy');
+});

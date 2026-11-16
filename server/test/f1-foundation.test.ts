@@ -5,6 +5,7 @@ import { createApp } from '../src/app';
 import { DataSourceModel, IngestionLogModel, MeasureModel } from '../src/models/index.js';
 import {
   createAusTenderConnector,
+  createPbsConnector,
   getConnector,
   runIngestion,
   type Connector,
@@ -70,7 +71,7 @@ const workingConnector = activeConnector(
   async () => [{ id: 'c-1' }],
 );
 
-const pendingFederalStub = getConnector('data-gov-au-pbs')!;
+const pendingFederalStub = getConnector('grantconnect')!;
 
 beforeAll(async () => {
   await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
@@ -89,14 +90,14 @@ describe('F1 ingestion runner', () => {
     });
 
     expect(result.results.map((entry) => `${entry.source_id}:${entry.log_status}`)).toEqual([
-      'data-gov-au-pbs:skipped',
+      'grantconnect:skipped',
       'fake-failing-source:error',
       'fake-contract-source:success',
     ]);
 
     const logs = await IngestionLogModel.find({}).sort({ source_id: 1 }).lean();
     expect(logs).toHaveLength(3);
-    expect(logs.find((log) => log.source_id === 'data-gov-au-pbs')).toMatchObject({
+    expect(logs.find((log) => log.source_id === 'grantconnect')).toMatchObject({
       status: 'skipped',
       records_fetched: 0,
       records_upserted: 0,
@@ -111,7 +112,7 @@ describe('F1 ingestion runner', () => {
       records_upserted: 1,
     });
 
-    const stubSource = await DataSourceModel.findOne({ source_id: 'data-gov-au-pbs' }).lean();
+    const stubSource = await DataSourceModel.findOne({ source_id: 'grantconnect' }).lean();
     expect(stubSource).toMatchObject({ status: 'stub', records_ingested: 0 });
     const failedSource = await DataSourceModel.findOne({
       source_id: 'fake-failing-source',
@@ -122,6 +123,33 @@ describe('F1 ingestion runner', () => {
       source_id: 'fake-contract-source',
     }).lean();
     expect(activeSource).toMatchObject({ status: 'active', records_ingested: 1 });
+  });
+
+  it('records a PBS source failure as error/degraded and continues', async () => {
+    const failingPbs = createPbsConnector({
+      fetchImpl: (async () => {
+        throw new Error('ckan fixture failure');
+      }) as unknown as typeof fetch,
+    });
+
+    const result = await runIngestion({ connectors: [failingPbs, workingConnector] });
+    expect(result.results.map((entry) => `${entry.source_id}:${entry.log_status}`)).toEqual([
+      'data-gov-au-pbs:error',
+      'fake-contract-source:success',
+    ]);
+
+    const log = await IngestionLogModel.findOne({
+      source_id: 'data-gov-au-pbs',
+      status: 'error',
+    }).lean();
+    expect(log).toMatchObject({
+      records_fetched: 0,
+      records_upserted: 0,
+      errors: ['ckan fixture failure'],
+    });
+    const source = await DataSourceModel.findOne({ source_id: 'data-gov-au-pbs' }).lean();
+    expect(source).toMatchObject({ status: 'degraded', records_ingested: 0 });
+    expect(source?.errors).toEqual(['ckan fixture failure']);
   });
 
   it('upserts a duplicate natural_key instead of duplicating it', async () => {
@@ -208,9 +236,13 @@ describe('F1 extended measure shape and API', () => {
     // The registry has one live connector (AusTender); PBS/GrantConnect stay
     // stubs until their milestones.
     expect(coverage.body.live_ingestion).toBe(true);
-    expect(coverage.body.connector_status_counts).toMatchObject({ active: 1, stub: 10 });
-    expect(coverage.body.federal_ingestion.live).toContain('aus-tender');
-    expect(coverage.body.federal_ingestion.pending).toEqual(['data-gov-au-pbs', 'grantconnect']);
+    expect(coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded).toBe(2);
+    expect(coverage.body.connector_status_counts.stub).toBe(9);
+    expect([
+      ...coverage.body.federal_ingestion.live,
+      ...coverage.body.federal_ingestion.degraded,
+    ]).toEqual(expect.arrayContaining(['aus-tender', 'data-gov-au-pbs']));
+    expect(coverage.body.federal_ingestion.pending).toEqual(['grantconnect']);
     expect(coverage.body.supported_measure_types).toContain('contract');
     expect(coverage.body.supported_measure_types).toContain('grant_award');
 
@@ -218,13 +250,13 @@ describe('F1 extended measure shape and API', () => {
     expect(logs.status).toBe(200);
     expect(logs.body.logs.length).toBeGreaterThanOrEqual(3);
     expect(logs.body.logs.map((log: { source_id: string }) => log.source_id)).toEqual(
-      expect.arrayContaining(['data-gov-au-pbs', 'fake-failing-source', 'fake-contract-source']),
+      expect.arrayContaining(['grantconnect', 'fake-failing-source', 'fake-contract-source']),
     );
 
-    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=data-gov-au-pbs');
+    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=grantconnect');
     expect(legacyLogs.status).toBe(200);
     expect(legacyLogs.body.logs[0]).toMatchObject({
-      source_id: 'data-gov-au-pbs',
+      source_id: 'grantconnect',
       status: 'skipped',
     });
   });

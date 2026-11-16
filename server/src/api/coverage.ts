@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import { MEASURE_TYPES, REGION_LEVELS } from '@ausspend/shared';
-import { CONNECTORS, connectorSummary } from '../connectors/index.js';
+import { CONNECTORS, PBS_CAVEAT, connectorSummary } from '../connectors/index.js';
 import { pingDatabase, type DbStatus } from '../db.js';
 import {
   DataSourceModel,
@@ -12,24 +12,27 @@ import {
 import { HttpError } from './errors.js';
 
 /** Federal sources that are registered but still waiting on a live connector. */
-export const PENDING_FEDERAL_SOURCES = ['data-gov-au-pbs', 'grantconnect'] as const;
+export const PENDING_FEDERAL_SOURCES = ['grantconnect'] as const;
 
-function coverageLimitations(liveFederal: boolean): string[] {
+function coverageLimitations(liveFederal: boolean, pbsLive: boolean): string[] {
   return [
     liveFederal
-      ? 'Mixed data: live AusTender federal contract rows sit alongside the synthetic development seed. The seed values remain deterministic placeholders, not published Australian government spending.'
+      ? 'Mixed data: live AusTender contract rows and PBS budget line items sit alongside the synthetic development seed. The seed values remain deterministic placeholders, not published Australian government spending.'
       : 'Synthetic development seed only: every value is a deterministic placeholder, not published Australian government spending.',
-    'No records are human-verified: seeded measures and ingested AusTender contracts all carry verified: false.',
+    'No records are human-verified: seeded measures, ingested AusTender contracts and ingested PBS budget rows all carry verified: false.',
     liveFederal
-      ? 'AusTender OCDS contractPublished ingestion is live. Portfolio Budget Statements (data.gov.au PBS) and GrantConnect are not implemented (pending stubs); the eight other registered connectors are stubs and make no network call.'
+      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is not implemented (pending stub); the eight other registered connectors are stubs and make no network call.'
       : 'No live ingestion has run yet: aus-tender, data-gov-au-pbs and grantconnect plus the eight other registered connectors are stubs; no request leaves the API until the runner runs.',
+    pbsLive
+      ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
+      : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
-    'Region granularity is national plus state/territory only. Federal contract rows may have no region or COFOG function; their location is the party address state only (flagged approximate or statewide), never an invented LGA/SA2/coordinate.',
+    'Region granularity is national plus state/territory only. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
   ];
 }
 
 const NOTE =
-  'Coverage metadata is generated from the connector registry and the live ingestion records. AusTender contract rows are real published procurement records and remain unverified; synthetic seed rows are placeholders. Never sum across measure types.';
+  'Coverage metadata is generated from the connector registry and the live ingestion records. AusTender contract rows and PBS budget line items are real published records and remain unverified; synthetic seed rows are placeholders. Never sum across measure types, and never present a PBS line-item total as the federal total.';
 
 /**
  * Coverage banner payload. Reads counts from the live database, connector
@@ -102,15 +105,21 @@ export function createCoverageHandler(
       stub: connectors.filter((connector) => connector.status === 'stub').length,
     };
     const liveIngestion = connectorStatusCounts.active > 0;
+    const pbsLive = connectors.find((connector) => connector.id === 'data-gov-au-pbs')?.status === 'active';
     const federalConnectors = connectors.filter(
       (connector) => connector.jurisdiction_level === 'federal',
     );
     const pending: string[] = [...PENDING_FEDERAL_SOURCES];
     const ausTender = dataSourceById.get('aus-tender');
+    const pbs = dataSourceById.get('data-gov-au-pbs');
 
     res.set('Cache-Control', 'no-store');
     res.json({
-      phase: liveIngestion ? 'Phase 1 + F2 (AusTender live)' : 'Phase 1',
+      phase: liveIngestion
+        ? pbsLive
+          ? 'Phase 1 + F2/F3 (AusTender + PBS live)'
+          : 'Phase 1 + F2 (AusTender live)'
+        : 'Phase 1',
       synthetic: true,
       // Derived from persisted ingestion state: no active connector means no
       // live ingestion has happened.
@@ -142,8 +151,12 @@ export function createCoverageHandler(
         aus_tender_last_ingested_at: ausTender?.last_ingested_at
           ? new Date(ausTender.last_ingested_at).toISOString()
           : null,
+        pbs_last_ingested_at: pbs?.last_ingested_at
+          ? new Date(pbs.last_ingested_at).toISOString()
+          : null,
+        pbs_caveat: PBS_CAVEAT,
         note: liveIngestion
-          ? 'AusTender OCDS contracts are live. Portfolio Budget Statements (data.gov.au PBS) and GrantConnect remain pending; every other source is a stub.'
+          ? 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect remains pending; every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.'
           : 'No federal source is live yet. AusTender, PBS and GrantConnect are pending.',
       },
       ingestion: {
@@ -158,7 +171,7 @@ export function createCoverageHandler(
           ...(log.message ? { message: log.message } : {}),
         })),
       },
-      limitations: coverageLimitations(liveIngestion),
+      limitations: coverageLimitations(liveIngestion, pbsLive),
       note: NOTE,
     });
   };

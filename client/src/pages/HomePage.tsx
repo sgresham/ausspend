@@ -71,8 +71,8 @@ export function HomePage() {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         An explorer for published Australian government spending, organised by COFOG function,
-        region and state. Phase 1 uses a synthetic development seed only: no live ingestion has
-        happened.
+        region and state. Synthetic seed rows sit alongside live AusTender contracts and
+        data.gov.au PBS budget line items; no figure is verified or a single federal total.
       </Typography>
 
       {coverage.data ? (
@@ -212,7 +212,10 @@ export function HomePage() {
         {connectors.length} connectors are registered;{' '}
         {coverage.data?.connector_status_counts?.stub ??
           connectors.filter((connector) => connector.status === 'stub').length}{' '}
-        are stubs. No network request leaves the API and no live data has been ingested.
+        are stubs.{' '}
+        {coverage.data?.live_ingestion
+          ? 'AusTender contracts and PBS budget line items are live; stubs make no network request.'
+          : 'No live data has been ingested yet.'}
       </Typography>
       {coverage.data ? (
         <Card variant="outlined" data-testid="connector-status">
@@ -303,7 +306,7 @@ export function HomePage() {
             )}
             <ProvenanceFooter
               sources={sources}
-              note="The only Phase 1 source is the synthetic seed, and it is unverified."
+              note="Synthetic seed rows are placeholders; AusTender and PBS rows carry their own unverified source provenance."
             />
           </CardContent>
         </Card>

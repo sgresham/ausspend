@@ -5,9 +5,11 @@ and state. This repository is the Phase 1 application: an npm-workspace monorepo
 client, an Express API and shared TypeScript/Zod contracts.
 
 > The app ships a **synthetic development seed** plus, as of F2, **live AusTender federal contract
-> records**. Seed values are deterministic placeholders; AusTender rows are real published
-> procurement notices. Neither is human-verified (`verified: false`), and the app never sums across
-> measure types. PBS and GrantConnect are not implemented yet.
+> records** and, as of F3, **live data.gov.au PBS budget line items**. Seed values are
+> deterministic placeholders; AusTender and PBS rows are real published records. None is
+> human-verified (`verified: false`), and the app never sums across measure types. PBS line items
+> do **not** sum to the Budget Paper 1 total general government expense. GrantConnect is not
+> implemented yet.
 
 ## Stack
 
@@ -186,13 +188,15 @@ invalid query parameters return JSON `400`.
 ### Coverage metadata
 
 `GET /api/meta/coverage` returns the Phase 1 banner from the database plus the connector registry:
-`phase`, `synthetic: true`, `live_ingestion` (derived from real connector status, currently
-`false`), `generated_at`, `counts {data_sources, regions, functions, measures}`, distinct sorted
+`phase`, `synthetic: true`, `live_ingestion` (derived from real connector status: true once
+AusTender/PBS ingest), `generated_at`, `counts {data_sources, regions, functions, measures}`, distinct sorted
 `fiscal_years`, supported/observed `measure_types`, `region_levels`, the eleven `connectors`
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
-`limitations`/`note` stating that the seed is synthetic, nothing is verified, no federal connector
-is live yet, the COFOG set is curated and regions stop at state/territory granularity. The response
+`federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat}` and
+`limitations`/`note` stating that the seed is synthetic, nothing is verified, live AusTender/PBS
+rows are unverified, and PBS line items are not the federal total. The COFOG set is curated and
+regions stop at state/territory granularity. The response
 is generated per request and sent with `Cache-Control: no-store`. If the database is unavailable it
 returns `503`.
 
@@ -240,14 +244,17 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 `null` and are omitted from the function/region breakdowns; no COFOG code or region is invented.
 `GET /api/spending/:id` returns one row in the same shape (`400` invalid id, `404` unknown).
 
-### Ingestion connectors and runner (F2 — AusTender live)
+### Ingestion connectors and runner (F2 AusTender + F3 PBS live)
 
 `server/src/connectors` registers eleven Australian public-spending sources. **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
-`GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. The other ten connectors are
-still stubs (`status: "stub"`; `fetch()` rejects with "not implemented" and `transform()` returns
-no records). Portfolio Budget Statements (`data-gov-au-pbs`) and GrantConnect (`grantconnect`)
-remain **pending**, as do the NSW/VIC/QLD/WA treasuries.
+`GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
+(`data-gov-au-pbs`) is live** from the CKAN dataset
+`4f025f38-0c70-45e2-8106-4c29a5e48637`: `package_show` selects the "2025-26 PBS Program Expenses
+Line Items" CSV, which is streamed (Windows-1252, chunked, `csv-parse`) rather than loaded whole.
+The other nine connectors are stubs (`status: "stub"`; `fetch()` rejects with "not implemented"
+and `transform()` returns no records). GrantConnect (`grantconnect`) remains **pending**, as do
+the NSW/VIC/QLD/WA treasuries.
 
 `npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
 selected connectors sequentially, writes an `ingestion_logs` row per source, upserts on
@@ -256,7 +263,10 @@ per-record error is logged as `error`/`partial` and marked `degraded`, and the r
 with the next source. AusTender rows are contract-shaped records: `measure_type: "contract"`,
 `jurisdiction_level: "federal"`, integer `amount_cents`, `natural_key` = `ocid`, and mandatory
 `source_dataset` / `source_url` / `source_date` / `data_quality_flag`. AusTender uses UNSPSC, which
-is stored verbatim and never mapped to COFOG.
+is stored verbatim and never mapped to COFOG. PBS rows are `measure_type: "budget"`, fiscal year
+`2025-26`, integer cents converted from the published `$'000` column, COFOG-A only where the
+portfolio is defensible (`provisional` otherwise), and `natural_key` = dataset id + stable row
+hash. PBS is not geographically tagged: `location.state` is literally `"Commonwealth"`.
 
 Narrow live week (the acceptance run):
 
@@ -277,13 +287,28 @@ INGEST_SOURCES=aus-tender \
 docker compose --profile ingest run --rm ingest
 ```
 
-Ingestion is idempotent on `natural_key` (`ocid`), so re-running it after a seed/restart never
-duplicates contracts.
+Ingestion is idempotent on `natural_key`, so re-running it after a seed/restart never duplicates
+contracts or PBS line items.
+
+PBS requires no date window:
+
+```bash
+INGEST_SOURCES=data-gov-au-pbs \
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+npm run ingest:federal
+```
+
+**PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
+not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this
+document state that wherever PBS figures appear; the budget per-measure-type total is the PBS
+line-item sum only.
 
 The endpoint, the `contractPublished` nuance, the `contracts[0]`/`parties[]` mapping, the
 July–June FY rule, location quality flags, pagination/rate limits, natural key and the remaining
-PBS/GrantConnect caveats are documented in [FEDERAL_INGESTION.md](./FEDERAL_INGESTION.md). Re-run
-the same command: it upserts on `ocid`, so counts stay stable and no duplicate natural keys appear.
+PBS (source, CSV/resource selection, streaming/encoding, units, COFOG rule, caveat, re-ingest) and
+the AusTender/GrantConnect caveats are documented in
+[FEDERAL_INGESTION.md](./FEDERAL_INGESTION.md). Re-run the same command: it upserts on
+`natural_key`, so counts stay stable and no duplicate natural keys appear.
 
 ## Checks
 
@@ -325,20 +350,23 @@ It proves:
 - Mixed measure types show the warning and **no headline total** on `/search` and `/functions/07`;
   a single measure type shows a headline total.
 - Rendered row tables and summary/headline footers carry the source id/link and Unverified status.
-- `/data-sources#synthetic-seed` shows the synthetic source Unverified, all eleven connector stubs
-  marked **stub — not wired**, and the coverage limitations.
+- `/data-sources#synthetic-seed` shows the synthetic source Unverified, nine connector stubs
+  marked **stub — not wired**, AusTender and PBS live, and the coverage limitations plus the PBS
+  line-item caveat.
 - API invariants: `function=07` is mixed with `total_cents: null` and per-type totals;
   `measure_type=actual` has a numeric total; `region=NSW` is `400`; an unknown measure id is `404`;
-  `/api/meta/coverage` reports synthetic, no live ingestion, eleven stubs and nonzero counts.
+  `/api/meta/coverage` reports synthetic, live ingestion, nine stubs, `pending: ["grantconnect"]`
+  and nonzero counts.
 
 The mocked `npm run test:e2e` run stays database-free; the audit script is not a Playwright spec.
 
 ## Pages
 
-Eight routes render API data. Every page, including `/about`, shows a persistent Phase 1 coverage
-banner driven by `GET /api/meta/coverage`: synthetic seed only, no live ingestion, figures
-unverified, plus counts and a link to the source register. If coverage metadata cannot be loaded the
-banner falls back to the same static synthetic-data warning rather than disappearing.
+Eight routes render API data. Every page, including `/about`, shows a persistent coverage banner
+driven by `GET /api/meta/coverage`: synthetic seed rows next to live AusTender contracts and PBS
+budget line items, all figures unverified, plus counts and a link to the source register. If
+coverage metadata cannot be loaded the banner falls back to a static warning rather than
+disappearing.
 
 | Route                 | Purpose                                                                      |
 | --------------------- | ---------------------------------------------------------------------------- |
@@ -388,12 +416,12 @@ in the spending search” link that prefills the relevant filters.
 ### Coverage, connectors and the about page
 
 `/data-sources` keeps the synthetic source card and its `#synthetic-seed` anchor with the Unverified
-badge, and lists every connector from coverage metadata with id, name, publisher, source URL,
-status, jurisdiction level, last fetch and records ingested; stubs are marked **stub — not
-wired**. It also shows the API's coverage `limitations`. The
-`/about` page explains the Phase 1 scope (synthetic seed, no live ingestion, curated COFOG subset,
-state/territory granularity), how provenance is attached, and why mixed measures never get a
-headline total. It makes no real-data claims.
+badge, shows the AusTender and PBS cards with last-ingested times/record counts and the PBS
+line-item caveat, and lists every connector from coverage metadata with id, name, publisher,
+source URL, status, jurisdiction level, last fetch and records ingested; stubs are marked **stub
+— not wired**. It also shows the API's coverage `limitations`. The `/about` page explains the
+F2/F3 scope (synthetic seed, live AusTender and PBS, curated COFOG subset, state/territory
+granularity), how provenance is attached, and why mixed measures never get a headline total.
 
 ### Measure-type and provenance rules
 

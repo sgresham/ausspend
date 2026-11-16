@@ -16,6 +16,37 @@ const SYNTHETIC_SOURCE = {
     'Deterministic placeholder values generated for development. Not sourced from, and not a substitute for, any published Australian government figure.',
 };
 
+const AUS_TENDER_SOURCE = {
+  source_id: 'aus-tender',
+  name: 'AusTender — Australian Government contracts',
+  publisher: 'Australian Government Department of Finance',
+  source_url: 'https://www.tenders.gov.au/',
+  retrieved_at: '2026-11-16T00:00:00.000Z',
+  license: 'Not yet verified — see connector metadata',
+  verified: false,
+  status: 'active',
+  last_ingested_at: '2026-11-16T00:05:00.000Z',
+  records_ingested: 861,
+  errors: [],
+  notes: 'Ingested from the AusTender OCDS contractPublished feed; unverified.',
+};
+
+const PBS_SOURCE = {
+  source_id: 'data-gov-au-pbs',
+  name: 'Portfolio Budget Statements (data.gov.au)',
+  publisher: 'Australian Government Department of Finance',
+  source_url:
+    'https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637',
+  retrieved_at: '2026-11-16T00:00:00.000Z',
+  license: 'Not yet verified — see connector metadata',
+  verified: false,
+  status: 'active',
+  last_ingested_at: '2026-11-16T00:06:00.000Z',
+  records_ingested: 12,
+  errors: [],
+  notes: '2025-26 PBS program-expense CSV from data.gov.au; unverified budget line items.',
+};
+
 const AUS = { _id: '6afaa24c06cd1221b0f07291', code: 'AUS', name: 'Australia', level: 'national' };
 const NSW = {
   _id: '6afaa24c06cd1221b0f07292',
@@ -39,12 +70,12 @@ const QLD = {
 const ALL_REGIONS = [AUS, NSW, VIC, QLD];
 
 const COVERAGE = {
-  phase: 'Phase 1',
+  phase: 'Phase 1 + F2/F3 (AusTender + PBS live)',
   synthetic: true,
-  live_ingestion: false,
+  live_ingestion: true,
   generated_at: '2026-11-16T00:00:00.000Z',
-  counts: { data_sources: 1, regions: ALL_REGIONS.length, functions: 53, measures: 810 },
-  fiscal_years: ['2022-23', '2023-24', '2024-25'],
+  counts: { data_sources: 3, regions: ALL_REGIONS.length, functions: 53, measures: 822 },
+  fiscal_years: ['2022-23', '2023-24', '2024-25', '2025-26'],
   measure_types: ['actual', 'budget', 'estimate'],
   region_levels: ['national', 'state'],
   connectors: [
@@ -98,21 +129,22 @@ const COVERAGE = {
       name: 'AusTender — Australian Government contracts',
       publisher: 'Australian Government Department of Finance',
       source_url: 'https://www.tenders.gov.au/',
-      status: 'stub',
+      status: 'active',
       jurisdiction_level: 'federal',
-      last_fetched_at: null,
-      records_ingested: 0,
+      last_fetched_at: '2026-11-16T00:05:00.000Z',
+      records_ingested: 861,
       errors: [],
     },
     {
       id: 'data-gov-au-pbs',
       name: 'Portfolio Budget Statements (data.gov.au)',
       publisher: 'Australian Government Department of Finance',
-      source_url: 'https://www.budget.gov.au/',
-      status: 'stub',
+      source_url:
+        'https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637',
+      status: 'active',
       jurisdiction_level: 'federal',
-      last_fetched_at: null,
-      records_ingested: 0,
+      last_fetched_at: '2026-11-16T00:06:00.000Z',
+      records_ingested: 12,
       errors: [],
     },
     {
@@ -171,16 +203,33 @@ const COVERAGE = {
       errors: [],
     },
   ],
-  connector_status_counts: { active: 0, degraded: 0, stub: 11 },
+  connector_status_counts: { active: 2, degraded: 0, stub: 9 },
   supported_measure_types: ['actual', 'budget', 'estimate', 'contract', 'grant_award'],
+  federal_ingestion: {
+    live: ['aus-tender', 'data-gov-au-pbs'],
+    degraded: [],
+    pending: ['grantconnect'],
+    stubs: [
+      'federal-budget-portal',
+      'abs-government-finance',
+      'aihw-health-expenditure',
+      'aofm',
+    ],
+    aus_tender_last_ingested_at: '2026-11-16T00:05:00.000Z',
+    pbs_last_ingested_at: '2026-11-16T00:06:00.000Z',
+    pbs_caveat:
+      'PBS CSV line items are entity program tables; their sum does not equal the Budget Paper 1 total general government expense, so it is not the federal total.',
+    note: 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect remains pending; every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.',
+  },
   limitations: [
-    'Synthetic development seed only: every value is a deterministic placeholder, not published Australian government spending.',
-    'No verified records: every seeded measure carries verified: false.',
-    'No live ingestion yet: the three federal source connectors (aus-tender, data-gov-au-pbs, grantconnect) and the eight other registered connectors are stubs; no request leaves the API.',
+    'Mixed data: live AusTender contract rows and PBS budget line items sit alongside the synthetic development seed. The seed values remain deterministic placeholders, not published Australian government spending.',
+    'No records are human-verified: seeded measures, ingested AusTender contracts and ingested PBS budget rows all carry verified: false.',
+    'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is not implemented (pending stub); the other registered federal connectors are stubs and make no network call.',
+    'PBS CSV line items are entity program tables; their sum does not equal the Budget Paper 1 total general government expense, so it is not the federal total.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
-    'Region granularity is national plus state/territory only; there are no sub-state regions yet.',
+    'Region granularity is national plus state/territory only. PBS rows are not geographically tagged (location.state is literally "Commonwealth").',
   ],
-  note: 'Phase 1 coverage metadata. Treat every figure as synthetic and unverified until a real, sourced ingestion milestone lands.',
+  note: 'Coverage metadata is generated from the connector registry and the live ingestion records. AusTender contract rows and PBS budget line items are real published records and remain unverified; synthetic seed rows are placeholders. Never sum across measure types, and never present a PBS line-item total as the federal total.',
 };
 
 const DIVISION_NAMES = [
@@ -315,6 +364,59 @@ for (let index = 0; index < 15; index += 1) {
     ),
   );
 }
+
+function pbsSpendingRow(id: string, amountCents: number, projectName: string) {
+  return {
+    id,
+    region_id: AUS._id,
+    function_code: '07',
+    amount_cents: amountCents,
+    measure_type: 'budget' as const,
+    fiscal_year: '2025-26',
+    source_id: 'data-gov-au-pbs',
+    source_url: PBS_SOURCE.source_url,
+    verified: false,
+    natural_key: `4f025f38-0c70-45e2-8106-4c29a5e48637:${id}`,
+    project_name: projectName,
+    description: 'PBS program-expense line item for 2025-26.',
+    jurisdiction_level: 'federal' as const,
+    jurisdiction: 'Commonwealth',
+    delivery_entity: 'Department of Health and Aged Care',
+    funding_source: 'Health and Aged Care',
+    source_dataset: '2025-26 Portfolio Budget Statements (data.gov.au)',
+    source_date: '2025-03-26',
+    data_quality_flag: 'statewide_only',
+    location: { state: 'Commonwealth' },
+    notes:
+      "PBS line item; amount column 2025-26 in $'000. PBS line-item sum is not the federal total.",
+    function_name: 'Health',
+    function_level: 'division',
+    region_code: 'AUS',
+    region_name: 'Australia',
+    region_level: 'national',
+    provenance: {
+      source_id: 'data-gov-au-pbs',
+      source_url: PBS_SOURCE.source_url,
+      verified: false,
+      notes: PBS_SOURCE.notes,
+    },
+  };
+}
+
+const PBS_ROWS = [
+  pbsSpendingRow('pbs-1', 250_000_000, 'Program 1.1: Health policy'),
+  pbsSpendingRow('pbs-2', 12_500_000_000, 'Program 1.2: Hospitals'),
+  pbsSpendingRow('pbs-3', 7_400_000_000, 'Program 1.3: Medicare'),
+  pbsSpendingRow('pbs-4', 3_200_000_000, 'Program 1.4: Aged care'),
+  pbsSpendingRow('pbs-5', 1_100_000_000, 'Program 1.5: Preventative health'),
+  pbsSpendingRow('pbs-6', 900_000_000, 'Program 1.6: Mental health'),
+  pbsSpendingRow('pbs-7', 800_000_000, 'Program 1.7: Health workforce'),
+  pbsSpendingRow('pbs-8', 700_000_000, 'Program 1.8: Digital health'),
+  pbsSpendingRow('pbs-9', 600_000_000, 'Program 1.9: Medical research'),
+  pbsSpendingRow('pbs-10', 500_000_000, 'Program 1.10: Aboriginal health'),
+  pbsSpendingRow('pbs-11', 400_000_000, 'Program 1.11: Sport'),
+  pbsSpendingRow('pbs-12', 300_000_000, 'Program 1.12: Food safety'),
+];
 
 const MIXED_ROWS = [
   measureRow('m1', NSW._id, 'actual', '2024-25', 200_000_000_000),
@@ -478,7 +580,7 @@ function groupBy<T, K extends string>(rows: T[], key: (row: T) => K): Map<K, T[]
   return groups;
 }
 
-function breakdownBase(rows: typeof SPENDING_ROWS) {
+function breakdownBase(rows: Array<{ measure_type: MockMeasureType; amount_cents: number }>) {
   const measureTypes = [...new Set(rows.map((row) => row.measure_type))].sort();
   const mixed = measureTypes.length > 1;
   return {
@@ -495,6 +597,7 @@ function spendingResponse(url: URL) {
   const regionId = url.searchParams.get('region');
   const fiscalYear = url.searchParams.get('fiscal_year');
   const measureType = url.searchParams.get('measure_type');
+  const jurisdictionLevel = url.searchParams.get('jurisdiction_level');
   const minAmount = url.searchParams.get('min_amount');
   const maxAmount = url.searchParams.get('max_amount');
   const sort = url.searchParams.get('sort') ?? 'amount_desc';
@@ -508,7 +611,8 @@ function spendingResponse(url: URL) {
     return { status: 404, body: { ok: false, error: `Unknown region: ${regionId}` } };
   }
 
-  let rows = [...SPENDING_ROWS];
+  let rows =
+    jurisdictionLevel === 'federal' ? [...PBS_ROWS] : [...SPENDING_ROWS];
   if (functionCode) rows = rows.filter((row) => row.function_code === functionCode);
   if (regionId) rows = rows.filter((row) => row.region_id === regionId);
   if (fiscalYear) rows = rows.filter((row) => row.fiscal_year === fiscalYear);
@@ -621,7 +725,7 @@ export async function mockApi(page: Page) {
       }
 
       if (path === '/api/data-sources') {
-        await json(route, { sources: [SYNTHETIC_SOURCE] });
+        await json(route, { sources: [SYNTHETIC_SOURCE, AUS_TENDER_SOURCE, PBS_SOURCE] });
         return;
       }
 

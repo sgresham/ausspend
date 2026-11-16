@@ -10,9 +10,11 @@ test('home renders the shell, coverage banner and provenance', async ({ page }) 
 
   await expect(page.getByRole('heading', { level: 1, name: 'ausspend' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
-  await expect(page.getByTestId('coverage-banner')).toContainText('Phase 1.');
   await expect(page.getByTestId('coverage-banner')).toContainText(
-    'Synthetic development seed data only',
+    'Phase 1 + F2/F3 (AusTender + PBS live).',
+  );
+  await expect(page.getByTestId('coverage-banner')).toContainText(
+    'Live AusTender contract records and PBS budget line items',
   );
   await expect(page.getByTestId('coverage-banner')).toContainText('human-verified');
   await expect(page.getByText('Provenance:').first()).toBeVisible();
@@ -24,7 +26,7 @@ test('home renders the shell, coverage banner and provenance', async ({ page }) 
   await expect(page.getByText('Unverified').first()).toBeVisible();
   await expect(page.getByTestId('headline-total')).toHaveCount(0);
   await expect(page.getByTestId('coverage-limitations')).toContainText(
-    'Synthetic development seed',
+    'Mixed data',
   );
   await expect(page.getByTestId('connector-status')).toContainText('stub — not wired');
 });

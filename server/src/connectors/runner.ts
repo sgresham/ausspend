@@ -138,11 +138,13 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
       }
 
       const errors = [...connector.metadata.errors, ...recordErrors];
+      const warnings = connector.metadata.warnings ?? [];
       const logStatus = errors.length > 0 ? 'partial' : 'success';
       const finishedAt = now();
       connector.metadata.lastFetchedAt = finishedAt.toISOString();
       connector.metadata.recordsIngested = upserted;
       connector.metadata.errors = errors;
+      connector.metadata.warnings = warnings;
 
       await IngestionLogModel.create({
         source_id: connector.id,
@@ -155,7 +157,9 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         message:
           errors.length > 0
             ? 'completed with errors; other sources continue'
-            : 'completed successfully',
+            : warnings.length > 0
+              ? `completed with warnings: ${warnings.join('; ')}`
+              : 'completed successfully',
       });
       await recordSourceState(
         connector,

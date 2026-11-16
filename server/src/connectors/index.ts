@@ -19,6 +19,32 @@ export {
   type AusTenderWindow,
   type MappedRelease,
 } from './aus-tender.js';
+export {
+  PBS_AMOUNT_COLUMN,
+  PBS_CAVEAT,
+  PBS_COFOG_BY_PORTFOLIO,
+  PBS_DATASET,
+  PBS_DATASET_ID,
+  PBS_DATASET_URL,
+  PBS_FISCAL_YEAR,
+  PBS_ID,
+  PBS_NAME,
+  PBS_RESOURCE_NAME,
+  createPbsConnector,
+  mapPbsRow,
+  parsePbsCsvStream,
+  pbsAmountToCents,
+  pbsCofogForPortfolio,
+  pbsRowHash,
+  selectPbsResource,
+  transformPbsRows,
+  type PbsConnectorOptions,
+  type PbsMappedRow,
+  type PbsMappingContext,
+  type PbsResourceRef,
+  type PbsSkip,
+  type PbsTransformResult,
+} from './data-gov-au-pbs.js';
 export { runIngestion, type ConnectorRunResult, type IngestionRunResult } from './runner.js';
 export {
   connectorSummary,

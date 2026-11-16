@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+  Alert,
   Autocomplete,
   Box,
   Button,
@@ -25,7 +26,7 @@ import type {
 import { useApi } from '../hooks/useApi';
 import { useCoverage } from '../coverage';
 import { titleCase } from '../format';
-import { uniqueSources } from '../provenance';
+import { PBS_CAVEAT, uniqueSources } from '../provenance';
 import { QuickSearch } from '../components/QuickSearch';
 import { SpendingSummaryPanel } from '../components/SpendingSummaryPanel';
 import { SpendingRowsTable } from '../components/SpendingRowsTable';
@@ -222,6 +223,9 @@ export function SearchPage() {
   if (maxAmount !== null) applied.push(`Max amount: $${maxAmount.toLocaleString('en-AU')}`);
 
   const pageSources = uniqueSources((state.data?.data ?? []).map((row) => row.provenance));
+  const showPbsCaveat =
+    (measureType === 'budget' && jurisdictionLevel === 'federal') ||
+    pageSources.some((source) => source.source_id === 'data-gov-au-pbs');
 
   return (
     <Box>
@@ -256,7 +260,26 @@ export function SearchPage() {
         >
           Latest federal contracts
         </Button>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            update({
+              measure_type: 'budget',
+              jurisdiction_level: 'federal',
+              sort: 'amount_desc',
+            })
+          }
+        >
+          Show federal budget (PBS)
+        </Button>
       </Stack>
+
+      {showPbsCaveat ? (
+        <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
+          <strong>PBS line-item caveat.</strong> {PBS_CAVEAT} The per-measure-type budget total below
+          is the PBS line-item sum only.
+        </Alert>
+      ) : null}
 
       <Card variant="outlined" sx={{ mb: 3 }} data-testid="jump-search">
         <CardContent>
