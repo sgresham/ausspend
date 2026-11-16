@@ -4,9 +4,11 @@
 # never a container and never the pool Mongo. The one-shot `seed` service installs dependencies,
 # builds the shared package and runs the guarded, non-destructive seed (only `synthetic-seed`
 # rows are replaced, so live ingestion survives a restart); the API and client only start after
-# it succeeds. The opt-in `ingest` profile (never started by a plain `up`) re-runs federal
-# ingestion. node_modules and build output live in named volumes so the bind-mounted source tree
-# stays clean.
+# it succeeds. Set `SEED_MODE=real` to bootstrap the taxonomy and real source register without
+# writing synthetic rows (retiring existing seed rows is a separate, backed-up
+# `npm run clean:synthetic`). The opt-in `ingest` profile (never started by a plain `up`) re-runs
+# federal ingestion. node_modules and build output live in named volumes so the bind-mounted
+# source tree stays clean.
 services:
   seed:
     image: node:24-alpine
@@ -14,6 +16,7 @@ services:
     command: sh -c "npm ci && npm run seed"
     environment:
       MONGO_URL: ${MONGO_URL:-mongodb://10.10.10.30:27017/ausspend_dev}
+      SEED_MODE: ${SEED_MODE:-synthetic}
     volumes:
       - .:/app
       - app_node_modules:/app/node_modules

@@ -18,9 +18,20 @@ export function AboutPage() {
       </Typography>
 
       <Alert severity="warning" sx={{ mb: 3 }} data-testid="about-unverified">
-        Synthetic development seed rows sit beside live AusTender contracts and data.gov.au PBS
-        budget line items. Every figure is unverified; the synthetic rows are not published
-        government figures, and PBS line items do not sum to the federal total.
+        {coverage.data?.synthetic ? (
+          <>
+            Synthetic development seed rows sit beside live AusTender contracts and data.gov.au PBS
+            budget line items. Every figure is unverified; the synthetic rows are not published
+            government figures, and PBS line items do not sum to the federal total.
+          </>
+        ) : (
+          <>
+            No synthetic seed rows are present. Live AusTender contracts, PBS budget line items, NSW
+            Budget/CKAN rows and Dubbo rows are real published records but remain unverified, and
+            PBS line items do not sum to the federal total. National/state actual and estimate
+            spending with COFOG and region is not covered by a real feed yet.
+          </>
+        )}
       </Alert>
 
       <Card variant="outlined" sx={{ mb: 3 }}>
@@ -30,8 +41,9 @@ export function AboutPage() {
           </Typography>
           <Stack component="ul" spacing={1} sx={{ mt: 0, mb: 0, pl: 2.5 }}>
             <Typography component="li" variant="body2">
-              Synthetic seed only: deterministic placeholder measure rows, all marked{' '}
-              <code>verified: false</code>.
+              {coverage.data?.synthetic
+                ? 'Synthetic seed present: deterministic placeholder measure rows, all marked verified: false.'
+                : 'Real-only dataset: no synthetic seed rows are present; every shown row comes from a published feed and remains marked verified: false.'}
             </Typography>
             <Typography component="li" variant="body2">
               F2/F3 live ingestion: AusTender contracts and data.gov.au PBS budget line items are

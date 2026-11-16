@@ -51,6 +51,7 @@ export function FunctionDetailView() {
 
   const years = coverage.data?.fiscal_years ?? [];
   const measureTypes = base.data?.measure_types ?? [];
+  const syntheticPresent = coverage.data?.synthetic ?? true;
 
   const setFilters = (next: FilterSelection) => {
     const params = new URLSearchParams(searchParams);
@@ -137,8 +138,10 @@ export function FunctionDetailView() {
         {detail.function.name} ({detail.function.code})
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Spending recorded against this function in the Phase 1 synthetic seed. Filters and the
-        measure-type rule below determine whether any total can be shown.
+        {syntheticPresent
+          ? 'Spending recorded against this function in the Phase 1 synthetic seed and live ingestions. '
+          : 'Real spending rows recorded against this function. National and state actual/estimate rows with COFOG and region are not covered by a real feed yet. '}
+        Filters and the measure-type rule below determine whether any total can be shown.
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
         <Button
@@ -161,8 +164,14 @@ export function FunctionDetailView() {
 
       {detail.count === 0 ? (
         <EmptyState
-          title="No measures for this view"
-          message={`No measure rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${scopeLabel}. Nothing is being estimated or filled in.`}
+          title={
+            syntheticPresent ? 'No measures for this view' : 'No real data for this dimension yet'
+          }
+          message={
+            syntheticPresent
+              ? `No measure rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${scopeLabel}. Nothing is being estimated or filled in.`
+              : `No real published spending rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${scopeLabel}. The synthetic seed is not present and no real feed covers this function/type yet. Nothing is estimated, zero-filled or replaced with a placeholder.`
+          }
         />
       ) : (
         <>
@@ -170,7 +179,11 @@ export function FunctionDetailView() {
             summary={detail}
             sources={sources}
             scopeLabel={scopeLabel}
-            note="Phase 1 synthetic seed; every row is verified:false."
+            note={
+              syntheticPresent
+                ? 'Phase 1 synthetic seed and live ingestions; every row is verified:false.'
+                : 'Real published rows only; every row is unverified until human-checked.'
+            }
           />
 
           {detail.mixed ? (

@@ -161,6 +161,15 @@ describe('GET /api/meta/coverage', () => {
       region_levels: ['national', 'state'],
     });
     expect(new Date(response.body.generated_at).toString()).not.toBe('Invalid Date');
+    expect(response.body.synthetic_measures).toBe(8);
+    expect(response.body.real_measures).toBe(0);
+    expect(response.body.counts.synthetic_measures).toBe(8);
+    expect(response.body.coverage_gaps.map((gap: { dimension: string }) => gap.dimension)).toEqual(
+      expect.arrayContaining([
+        'national actual / budget / estimate with COFOG',
+        'state/territory actual / estimate with COFOG and region',
+      ]),
+    );
     expect(response.body.connectors).toHaveLength(13);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(

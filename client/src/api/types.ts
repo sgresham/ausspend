@@ -66,15 +66,26 @@ export interface CoverageCounts {
   regions: number;
   functions: number;
   measures: number;
+  synthetic_measures?: number;
+  real_measures?: number;
+}
+
+export interface CoverageGap {
+  dimension: string;
+  status: 'missing' | 'partial';
+  detail: string;
 }
 
 /** GET /api/meta/coverage — the Phase 1 banner payload. */
 export interface CoverageResponse {
   phase: string;
   synthetic: boolean;
+  synthetic_measures?: number;
+  real_measures?: number;
   live_ingestion: boolean;
   generated_at: string;
   counts: CoverageCounts;
+  coverage_gaps?: CoverageGap[];
   fiscal_years: string[];
   measure_types: MeasureType[];
   supported_measure_types?: MeasureType[];

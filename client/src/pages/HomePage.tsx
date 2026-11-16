@@ -71,8 +71,11 @@ export function HomePage() {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         An explorer for published Australian government spending, organised by COFOG function,
-        region and state. Synthetic seed rows sit alongside live AusTender contracts and data.gov.au
-        PBS budget line items; no figure is verified or a single federal total.
+        region and state.{' '}
+        {coverage.data?.synthetic
+          ? 'Synthetic seed rows sit alongside live AusTender contracts and data.gov.au PBS budget line items'
+          : 'Live AusTender contracts, PBS budget line items, NSW Budget rows and Dubbo council rows are shown with provenance'}
+        ; no figure is verified or a single federal total.
       </Typography>
 
       {coverage.data ? (
@@ -92,9 +95,21 @@ export function HomePage() {
 
       <Alert severity="info" sx={{ mb: 3 }}>
         <AlertTitle>What you are looking at</AlertTitle>
-        Every amount in this build is deterministic placeholder data marked{' '}
-        <strong>verified: false</strong>. It is not a published Australian government figure. The
-        source register and licence live on the{' '}
+        {coverage.data?.synthetic ? (
+          <>
+            Synthetic seed amounts in this build are deterministic placeholders marked{' '}
+            <strong>verified: false</strong>. Ingested rows are real published records but are also
+            unverified. No figure is a single government total. The source register and licence live
+            on the{' '}
+          </>
+        ) : (
+          <>
+            There are no synthetic seed rows. Every amount comes from a real published feed and is
+            marked <strong>verified: false</strong> until a human checks it. National and state
+            actual/estimate series with COFOG and region are not covered yet, so those views show an
+            explicit empty state. The source register and licence live on the{' '}
+          </>
+        )}
         <Link component={RouterLink} to="/data-sources">
           Data sources
         </Link>{' '}

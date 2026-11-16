@@ -141,10 +141,26 @@ therefore yields the same 810 synthetic rows, no duplicates, and the same live c
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run seed
-# [seed] target database: ausspend_dev (safe, preserves ingested rows)
-# [seed] sources=2 regions=9 functions=53 measures=119935 synthetic=810 non_synthetic=119125
+# [seed] target database: ausspend_dev (mode=synthetic, non-destructive)
+# [seed] mode=synthetic sources=… regions=9 functions=53 measures=… synthetic=810 synthetic_written=810 non_synthetic=…
 # [seed] verified measures: 0 (must be 0)
 ```
+
+**Real-only bootstrap.** `npm run seed:real` (or `SEED_MODE=real npm run seed`, or
+`npm run seed -- --no-synthetic`) creates the regions, COFOG functions and the real connector
+source register but writes **0 synthetic measure rows**. It is non-destructive: any existing
+synthetic rows, ingested rows and ingestion logs are left in place. This is the mode to run when
+the synthetic seed has been retired. Set `SEED_MODE=real` for the compose `seed` service to use it.
+
+**Retiring the synthetic seed (not yet executed).** `npm run clean:synthetic` is a **dry run by
+default**: it prints counts by measure type, fiscal year, region and function and writes nothing.
+`npm run clean:synthetic -- --execute --backup /home/steve/backups/ausspend/<stamp>` first verifies
+a complete, recent `ausspend_dev` backup (collection counts, natural-key checksum, `data_sources`
+statuses) and only then deletes rows whose `source_id` is exactly `synthetic-seed`, plus that one
+source-register document. It refuses a stale backup, a missing backup, a backup from another
+database, or a backup that does not contain the synthetic source. See
+[docs/SYNTHETIC_REMOVAL_READINESS.md](docs/SYNTHETIC_REMOVAL_READINESS.md) for the dependency
+audit, coverage gaps and the exact gate that must be met before `--execute` is used.
 
 The only destructive path is explicit:
 
@@ -278,8 +294,11 @@ invalid query parameters return JSON `400`.
 ### Coverage metadata
 
 `GET /api/meta/coverage` returns the Phase 1 banner from the database plus the connector registry:
-`phase`, `synthetic: true`, `live_ingestion` (derived from real connector status: true once
-AusTender/PBS ingest), `generated_at`, `counts {data_sources, regions, functions, measures}`, distinct sorted
+`phase`, `synthetic` (derived from the live `synthetic-seed` row count, so it becomes `false` after
+`clean:synthetic`), `synthetic_measures`, `real_measures`, `live_ingestion` (derived from real
+connector status: true once AusTender/PBS ingest), `generated_at`,
+`counts {data_sources, regions, functions, measures, synthetic_measures, real_measures}`,
+`coverage_gaps` (the real national/state actual/estimate, COFOG, region and PBS gaps), distinct sorted
 `fiscal_years`, supported/observed `measure_types`, `region_levels`, the thirteen `connectors`
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and

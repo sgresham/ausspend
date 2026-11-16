@@ -84,11 +84,11 @@ async function apiChecks() {
     return `${body.regions.length} regions, first _id=${regionId}`;
   });
 
-  await check('API data-sources returns the unverified synthetic source', async () => {
+  await check('API data-sources returns honest provenance (synthetic if present)', async () => {
     const { status, body } = await getJson('/api/data-sources');
     assert(status === 200, `expected 200, got ${status}`);
     const source = body?.sources?.find((entry) => entry.source_id === 'synthetic-seed');
-    assert(source, 'synthetic-seed source missing');
+    if (!source) return 'synthetic-seed absent (real-only mode)';
     assert(source.verified === false, 'synthetic-seed must be unverified');
     assert(
       source.source_url === '/data-sources#synthetic-seed',
@@ -432,10 +432,20 @@ async function uiChecks(page, regionId) {
     );
     const perType = await page.getByTestId('spending-per-type-totals').innerText();
     assert(/Provenance:/.test(perType), 'per-type totals have no provenance footer');
-    assert(/synthetic-seed/.test(perType), 'per-type totals footer has no source');
+    assert(
+      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council/.test(
+        perType,
+      ),
+      'per-type totals footer has no known source id',
+    );
     const headline = await page.getByTestId('headline-total').innerText();
     assert(/Provenance:/.test(headline), 'headline total has no provenance footer');
-    assert(/synthetic-seed/.test(headline), 'headline total footer has no source');
+    assert(
+      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council/.test(
+        headline,
+      ),
+      'headline total footer has no known source id',
+    );
     return `${rows}, summary + headline footers present`;
   });
 
@@ -486,12 +496,12 @@ async function uiChecks(page, regionId) {
     return `${rows}; ${functionRows}`;
   });
 
-  await check(
-    '/data-sources#synthetic-seed shows the synthetic source and connector statuses',
-    async () => {
-      pageErrors.length = 0;
-      await page.goto(`${WEB_URL}/data-sources#synthetic-seed`, { waitUntil: 'domcontentloaded' });
-      const source = page.getByTestId('source-synthetic-seed');
+  await check('/data-sources shows source register and connector statuses', async () => {
+    pageErrors.length = 0;
+    await page.goto(`${WEB_URL}/data-sources#synthetic-seed`, { waitUntil: 'domcontentloaded' });
+    const source = page.getByTestId('source-synthetic-seed');
+    const syntheticPresent = (await source.count()) > 0;
+    if (syntheticPresent) {
       await source.waitFor({ state: 'visible', timeout: 20_000 });
       const sourceText = (await source.innerText()).replace(/\s+/g, ' ');
       assert(/Unverified/.test(sourceText), 'source is not marked Unverified');
@@ -504,85 +514,85 @@ async function uiChecks(page, regionId) {
         (await source.locator('a[href="/data-sources#synthetic-seed"]').count()) > 0,
         'synthetic source anchor link is missing',
       );
+    }
 
-      const stubs = page.getByTestId('connector-stubs');
-      await stubs.waitFor({ state: 'visible', timeout: 20_000 });
-      const coverageResponse = await getJson('/api/meta/coverage');
-      assert(coverageResponse.status === 200, 'meta/coverage unavailable for stub expectation');
-      const coverage = coverageResponse.body;
-      const expectedStubs = coverage?.connector_status_counts?.stub;
-      assert(
-        Number.isInteger(expectedStubs),
-        `coverage connector_status_counts.stub is not an integer: ${expectedStubs}`,
-      );
-      const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
-      assert(
-        stubCount === expectedStubs,
-        `expected ${expectedStubs} connector stubs marked not wired (from coverage), got ${stubCount}`,
-      );
-      const expectedActive = coverage?.connector_status_counts?.active;
-      assert(
-        Number.isInteger(expectedActive),
-        `coverage connector_status_counts.active is not an integer: ${expectedActive}`,
-      );
-      const activeCount = await stubs.getByText('active', { exact: true }).count();
-      assert(
-        activeCount === expectedActive,
-        `expected ${expectedActive} active connectors (from coverage), got ${activeCount}`,
-      );
-      const activeIds = (coverage?.connectors ?? [])
-        .filter((connector) => connector.status === 'active' || connector.status === 'degraded')
-        .map((connector) => connector.id);
-      for (const id of [
-        'aus-tender',
-        'data-gov-au-pbs',
-        'nsw-budget',
-        'data-nsw-ckan',
-        'dubbo-council',
-        'grantconnect',
-      ]) {
-        assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
-      }
-      const connectorText = await stubs.innerText();
-      assert(/nsw-budget/.test(connectorText), 'NSW Budget connector is not shown in the UI');
-      assert(
-        /data-nsw-ckan/.test(connectorText),
-        'data.nsw.gov.au CKAN connector is not shown in the UI',
-      );
-      assert(
-        /dubbo-council/.test(connectorText),
-        'Dubbo Regional Council connector is not shown in the UI',
-      );
-      const pbsCard = page.getByTestId('source-data-gov-au-pbs');
-      await pbsCard.waitFor({ state: 'visible', timeout: 20_000 });
-      assert(
-        /PBS Program Expenses|Portfolio Budget Statements/.test(await pbsCard.innerText()),
-        'PBS source card is missing its provenance',
-      );
-      const caveat = page.getByTestId('pbs-caveat');
-      await caveat.waitFor({ state: 'visible', timeout: 20_000 });
-      assert(
-        /does not equal the Budget Paper 1 total/.test(await caveat.innerText()),
-        'PBS caveat is not visible on /data-sources',
-      );
+    const stubs = page.getByTestId('connector-stubs');
+    await stubs.waitFor({ state: 'visible', timeout: 20_000 });
+    const coverageResponse = await getJson('/api/meta/coverage');
+    assert(coverageResponse.status === 200, 'meta/coverage unavailable for stub expectation');
+    const coverage = coverageResponse.body;
+    const expectedStubs = coverage?.connector_status_counts?.stub;
+    assert(
+      Number.isInteger(expectedStubs),
+      `coverage connector_status_counts.stub is not an integer: ${expectedStubs}`,
+    );
+    const stubCount = await stubs.getByText('stub — not wired', { exact: true }).count();
+    assert(
+      stubCount === expectedStubs,
+      `expected ${expectedStubs} connector stubs marked not wired (from coverage), got ${stubCount}`,
+    );
+    const expectedActive = coverage?.connector_status_counts?.active;
+    assert(
+      Number.isInteger(expectedActive),
+      `coverage connector_status_counts.active is not an integer: ${expectedActive}`,
+    );
+    const activeCount = await stubs.getByText('active', { exact: true }).count();
+    assert(
+      activeCount === expectedActive,
+      `expected ${expectedActive} active connectors (from coverage), got ${activeCount}`,
+    );
+    const activeIds = (coverage?.connectors ?? [])
+      .filter((connector) => connector.status === 'active' || connector.status === 'degraded')
+      .map((connector) => connector.id);
+    for (const id of [
+      'aus-tender',
+      'data-gov-au-pbs',
+      'nsw-budget',
+      'data-nsw-ckan',
+      'dubbo-council',
+      'grantconnect',
+    ]) {
+      assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
+    }
+    const connectorText = await stubs.innerText();
+    assert(/nsw-budget/.test(connectorText), 'NSW Budget connector is not shown in the UI');
+    assert(
+      /data-nsw-ckan/.test(connectorText),
+      'data.nsw.gov.au CKAN connector is not shown in the UI',
+    );
+    assert(
+      /dubbo-council/.test(connectorText),
+      'Dubbo Regional Council connector is not shown in the UI',
+    );
+    const pbsCard = page.getByTestId('source-data-gov-au-pbs');
+    await pbsCard.waitFor({ state: 'visible', timeout: 20_000 });
+    assert(
+      /PBS Program Expenses|Portfolio Budget Statements/.test(await pbsCard.innerText()),
+      'PBS source card is missing its provenance',
+    );
+    const caveat = page.getByTestId('pbs-caveat');
+    await caveat.waitFor({ state: 'visible', timeout: 20_000 });
+    assert(
+      /does not equal the Budget Paper 1 total/.test(await caveat.innerText()),
+      'PBS caveat is not visible on /data-sources',
+    );
 
-      const limitations = page.getByTestId('coverage-limitations');
-      await limitations.waitFor({ state: 'visible', timeout: 20_000 });
-      const limitationText = (await limitations.innerText()).replace(/\s+/g, ' ');
-      assert(
-        /AusTender OCDS contractPublished ingestion and data\.gov\.au PBS program-expense ingestion are live/.test(
-          limitationText,
-        ),
-        'coverage limitations do not mention live AusTender/PBS ingestion',
-      );
-      assert(
-        /GrantConnect is a manual/.test(limitationText),
-        'coverage limitations do not mention the manual GrantConnect export',
-      );
-      assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
-      return `source Unverified, ${expectedStubs} stubs, ${expectedActive} active (incl. Dubbo), PBS caveat, limitations present`;
-    },
-  );
+    const limitations = page.getByTestId('coverage-limitations');
+    await limitations.waitFor({ state: 'visible', timeout: 20_000 });
+    const limitationText = (await limitations.innerText()).replace(/\s+/g, ' ');
+    assert(
+      /AusTender OCDS contractPublished ingestion and data\.gov\.au PBS program-expense ingestion are live/.test(
+        limitationText,
+      ),
+      'coverage limitations do not mention live AusTender/PBS ingestion',
+    );
+    assert(
+      /GrantConnect is a manual/.test(limitationText),
+      'coverage limitations do not mention the manual GrantConnect export',
+    );
+    assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
+    return `source Unverified, ${expectedStubs} stubs, ${expectedActive} active (incl. Dubbo), PBS caveat, limitations present`;
+  });
 }
 
 async function main() {
