@@ -143,7 +143,7 @@ category are kept in `project_name`/`description`/`notes`.
 **Common fields.** `jurisdiction_level: "state"`, `jurisdiction: "NSW"`, `source_id:
 "nsw-budget"`, `source_dataset: "NSW Budget 2025-26 Open Data"`, `verified: false`,
 `source_url` = the open-data page (financial/HFI) or the ArcGIS layer (capital), and every row has
-provenance in `notes` (workbook filename, sheet, row, column, unit, source copy reference).
+provenance in `notes` (workbook filename, sheet, row, column, unit and the source-copy SHA-256).
 
 ## 6. COFOG decisions
 

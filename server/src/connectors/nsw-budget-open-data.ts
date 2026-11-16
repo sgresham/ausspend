@@ -88,12 +88,14 @@ export interface NswCellRaw extends Record<string, unknown> {
   unit: string;
   sector: string;
   source_date: string;
+  source_sha256: string;
 }
 
 export interface NswCapitalRaw extends Record<string, unknown> {
   kind: 'capital';
   feature: Record<string, unknown>;
   source_date: string;
+  source_sha256: string;
 }
 
 export type NswRaw = NswCellRaw | NswCapitalRaw;
@@ -469,6 +471,7 @@ export function financialRawRows(
           unit: column.unit,
           sector,
           source_date: NSW_SOURCE_DATE,
+          source_sha256: file.sha256 ?? '',
         });
         emitted += 1;
       }
@@ -520,6 +523,7 @@ export function hfiRawRows(
           unit: column.unit,
           sector: 'General government sector',
           source_date: NSW_SOURCE_DATE,
+          source_sha256: file.sha256 ?? '',
         });
       }
     }
@@ -557,7 +561,7 @@ export function nswCofogForAgency(agency: string | null): string | null {
   return null;
 }
 
-function capitalNote(feature: Record<string, unknown>): string {
+function capitalNote(feature: Record<string, unknown>, sourceSha256: string): string {
   const parts = [
     `ArcGIS feature layer ${ARCGIS_LAYER_NAME}`,
     `Project_ID ${text(feature.Project_ID) ?? '(none)'}`,
@@ -572,6 +576,7 @@ function capitalNote(feature: Record<string, unknown>): string {
     `category ${text(feature.Project_Category) ?? '(none)'}`,
     `Budget_Year_FY_2025_26_000 ${text(feature.Budget_Year_FY_2025_26_000) ?? '(none)'} ($'000; x1000 to dollars, x100000 to cents)`,
     `source ${ARCGIS_LAYER_URL}`,
+    `source copy SHA-256 ${sourceSha256 || '(see docs/source-archive/nsw-budget-2025-26.json)'}`,
   ];
   return parts.join('; ');
 }
@@ -580,6 +585,7 @@ function capitalNote(feature: Record<string, unknown>): string {
 export function mapCapitalFeature(
   feature: Record<string, unknown>,
   occurrence = 0,
+  sourceSha256 = '',
 ): SpendingRecord | null {
   const rawAmount = feature.Budget_Year_FY_2025_26_000;
   const amountCents = amountToCents(rawAmount, "$'000");
@@ -618,7 +624,7 @@ export function mapCapitalFeature(
     delivery_entity: agency ?? undefined,
     funding_source: text(feature.Cluster_PNFC_Sector) ?? text(feature.Sector) ?? 'NSW Treasury',
     location: { state: 'NSW', ...(usableLga ? { lga_name: usableLga } : {}) },
-    notes: capitalNote(feature),
+    notes: capitalNote(feature, sourceSha256),
     ...(functionCode ? { function_code: functionCode } : {}),
   };
 }
@@ -644,7 +650,7 @@ function cellRecord(raw: NswCellRaw): SpendingRecord | null {
       ? 'Financial statement line item: Actual -> actual, Revised -> estimate, Budget -> budget, Forward Estimates -> estimate'
       : 'Historical fiscal indicator: years before 2025-26 are actual, 2025-26 is Budgeted, later years are estimates',
     'Budgeted figures are not actual/spent figures; do not sum across measure types',
-    `Source copy recorded in docs/source-archive/nsw-budget-2025-26.json`,
+    `Source copy SHA-256: ${raw.source_sha256 || '(see docs/source-archive/nsw-budget-2025-26.json)'}`,
   ].join('; ');
   return {
     amount_cents: amountCents,
@@ -690,7 +696,8 @@ export function transformNswRaw(raw: readonly RawRecord[]): NswTransformResult {
       const sig = `${text(feature.Project_ID) ?? ''}\u001f${text(feature.OBJECTID) ?? ''}`;
       const occurrence = seen.get(sig) ?? 0;
       seen.set(sig, occurrence + 1);
-      const record = mapCapitalFeature(feature, occurrence);
+      const sourceSha = typeof entry.source_sha256 === 'string' ? entry.source_sha256 : '';
+      const record = mapCapitalFeature(feature, occurrence, sourceSha);
       if (!record) {
         skipped.push({
           filename: 'arcgis',
@@ -996,8 +1003,14 @@ export function createNswBudgetConnector(options: NswConnectorOptions = {}): Con
     }
 
     const features = await fetchArcGisFeatures(arcgisQueryUrl, fetchImpl, ARCGIS_EXPECTED_PROJECTS);
+    const arcgisSha = sha256(JSON.stringify(features));
     for (const feature of features) {
-      raw.push({ kind: 'capital', feature, source_date: ARCGIS_SOURCE_DATE });
+      raw.push({
+        kind: 'capital',
+        feature,
+        source_date: ARCGIS_SOURCE_DATE,
+        source_sha256: arcgisSha,
+      });
     }
 
     metadata.warnings = parseWarnings;
@@ -1123,8 +1136,14 @@ export async function buildNswArchive(
   const features = await fetchArcGisFeatures(ARCGIS_QUERY_URL, fetchImpl, ARCGIS_EXPECTED_PROJECTS);
   const arcgisBytes = Buffer.from(JSON.stringify(features));
   await writeFile(path.join(cacheDir, 'arcgis-capital-projects.json'), arcgisBytes);
+  const arcgisSha = sha256(arcgisBytes);
   for (const feature of features)
-    raw.push({ kind: 'capital', feature, source_date: ARCGIS_SOURCE_DATE });
+    raw.push({
+      kind: 'capital',
+      feature,
+      source_date: ARCGIS_SOURCE_DATE,
+      source_sha256: arcgisSha,
+    });
 
   const manifest: NswArchiveManifest = {
     dataset: NSW_DATASET,
