@@ -104,14 +104,17 @@ test('PBS budget rows carry provenance and the line-item caveat', async ({ page 
   await expect(rows).toContainText('Program 1.1: Health policy');
 });
 
-test('grant award filter states that GrantConnect is blocked (no fake rows)', async ({ page }) => {
+test('grant award filter states that GrantConnect is a manual, partial export', async ({
+  page,
+}) => {
   await page.goto('/search?measure_type=grant_award&jurisdiction_level=federal');
 
-  const blocked = page.getByTestId('grantconnect-blocked');
-  await expect(blocked).toBeVisible();
-  await expect(blocked).toContainText('GrantConnect is blocked');
-  await expect(blocked).toContainText('no public grant award API');
-  await expect(blocked).toContainText('No direct scraper');
+  const note = page.getByTestId('grantconnect-partial');
+  await expect(note).toBeVisible();
+  await expect(note).toContainText('GrantConnect is a manual export');
+  await expect(note).toContainText('not an API and not a live scraper');
+  await expect(note).toContainText('50,000-result cap');
+  await expect(note).toContainText('No grant row is estimated or zero-filled');
 });
 
 test('NSW state budget rows are shown and labelled Budgeted', async ({ page }) => {

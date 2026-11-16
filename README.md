@@ -5,11 +5,13 @@ and state. This repository is the Phase 1 application: an npm-workspace monorepo
 client, an Express API and shared TypeScript/Zod contracts.
 
 > The app ships a **synthetic development seed** plus, as of F2, **live AusTender federal contract
-> records** and, as of F3, **live data.gov.au PBS budget line items**. Seed values are
-> deterministic placeholders; AusTender and PBS rows are real published records. None is
-> human-verified (`verified: false`), and the app never sums across measure types. PBS line items
-> do **not** sum to the Budget Paper 1 total general government expense. GrantConnect is not
-> implemented yet.
+> records** and, as of F3, **live data.gov.au PBS budget line items**. It also imports
+> **GrantConnect grant awards from a human-downloaded, SHA-256-archived XLSX export** (manual file
+> import only; no API and no scraper). Seed values are deterministic placeholders; AusTender/PBS
+> and grant rows are real published records. None is human-verified (`verified: false`), and the
+> app never sums across measure types. PBS line items do **not** sum to the Budget Paper 1 total
+> general government expense. GrantConnect exports above the 50,000-result cap are rejected, so
+> grant coverage is partial until complete date-range chunks cover the period.
 
 ## Stack
 
@@ -278,10 +280,10 @@ invalid query parameters return JSON `400`.
 `GET /api/meta/coverage` returns the Phase 1 banner from the database plus the connector registry:
 `phase`, `synthetic: true`, `live_ingestion` (derived from real connector status: true once
 AusTender/PBS ingest), `generated_at`, `counts {data_sources, regions, functions, measures}`, distinct sorted
-`fiscal_years`, supported/observed `measure_types`, `region_levels`, the twelve `connectors`
+`fiscal_years`, supported/observed `measure_types`, `region_levels`, the thirteen `connectors`
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
-`federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat}` and
+`federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat, grantconnect_caveat, grantconnect_note}` and
 `limitations`/`note` stating that the seed is synthetic, nothing is verified, live AusTender/PBS
 rows are unverified, and PBS line items are not the federal total. The COFOG set is curated and
 regions stop at state/territory granularity. The response
@@ -334,7 +336,7 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 
 ### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers twelve Australian public-spending sources. **AusTender
+`server/src/connectors` registers thirteen Australian public-spending sources. **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
@@ -344,10 +346,13 @@ Line Items" CSV, which is streamed (Windows-1252, chunked, `csv-parse`) rather t
 snapshot plus the ArcGIS `Treasury_Project_Data_20260609_gdb` capital-projects layer.
 **data.nsw.gov.au CKAN (`data-nsw-ckan`) is live as of S2**: nine targeted `package_search`
 queries feed a small selected dataset set (RAM school funding CSV, Budget Paper 2 DataStore,
-fleet-vehicle XLSX); PDF/DOCX resources are recorded as deferred, not ingested. The other
-eight connectors are stubs (`status: "stub"`; `fetch()` rejects with "not implemented" and
-`transform()` returns no records). GrantConnect (`grantconnect`) remains **pending**, and
-VIC/QLD/WA remain stubs.
+fleet-vehicle XLSX); PDF/DOCX resources are recorded as deferred, not ingested.
+**GrantConnect (`grantconnect`) is a manual, cap-safe file import as of the GrantConnect item**:
+a human downloads public `DownloadResult` XLSX exports, the importer archives each with SHA-256,
+rejects any file carrying the >50,000-result cap warning, combines complete date-range chunks,
+de-duplicates on `GA ID` and reports partial coverage honestly. It is not an API and not a
+scraper. The other seven connectors are stubs (`status: "stub"`; `fetch()` rejects with
+"not implemented" and `transform()` returns no records); VIC/QLD/WA remain stubs.
 
 `npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
 selected connectors sequentially, writes an `ingestion_logs` row per source, upserts on
@@ -482,13 +487,13 @@ It proves:
 - Mixed measure types show the warning and **no headline total** on `/search` and `/functions/07`;
   a single measure type shows a headline total.
 - Rendered row tables and summary/headline footers carry the source id/link and Unverified status.
-- `/data-sources#synthetic-seed` shows the synthetic source Unverified, nine connector stubs
-  marked **stub — not wired**, AusTender and PBS live, and the coverage limitations plus the PBS
-  line-item caveat.
+- `/data-sources#synthetic-seed` shows the synthetic source Unverified, seven connector stubs
+  marked **stub — not wired**, AusTender/PBS/NSW/CKAN/Dubbo live, GrantConnect degraded/partial
+  with its manual-export caveat, and the coverage limitations plus the PBS line-item caveat.
 - API invariants: `function=07` is mixed with `total_cents: null` and per-type totals;
   `measure_type=actual` has a numeric total; `region=NSW` is `400`; an unknown measure id is `404`;
-  `/api/meta/coverage` reports synthetic, live ingestion, nine stubs, `pending: ["grantconnect"]`
-  and nonzero counts.
+  `/api/meta/coverage` reports synthetic, live ingestion, seven stubs, `pending: []`,
+  a GrantConnect manual-export caveat and nonzero counts.
 
 The mocked `npm run test:e2e` run stays database-free; the audit script is not a Playwright spec.
 

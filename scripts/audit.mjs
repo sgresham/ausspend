@@ -176,7 +176,7 @@ async function apiChecks() {
   });
 
   await check(
-    'API meta/coverage reports AusTender and PBS live, GrantConnect pending',
+    'API meta/coverage reports AusTender/PBS live and GrantConnect as a manual export',
     async () => {
       const { status, body } = await getJson('/api/meta/coverage');
       assert(status === 200, `expected 200, got ${status}`);
@@ -227,8 +227,14 @@ async function apiChecks() {
       const grantconnect = body.connectors.find((entry) => entry.id === 'grantconnect');
       assert(grantconnect, 'missing federal connector grantconnect');
       assert(
-        grantconnect.status === 'stub',
-        `expected grantconnect to be a stub, got ${grantconnect.status}`,
+        grantconnect.status === 'active' || grantconnect.status === 'degraded',
+        `expected grantconnect active/degraded (manual export), got ${grantconnect.status}`,
+      );
+      assert(
+        /manual export/i.test(
+          `${body?.federal_ingestion?.grantconnect_caveat ?? ''} ${body?.federal_ingestion?.grantconnect_note ?? ''}`,
+        ),
+        'meta/coverage does not carry the GrantConnect manual-export caveat',
       );
       assert(
         body?.federal_ingestion?.live?.includes('aus-tender') &&
@@ -237,9 +243,9 @@ async function apiChecks() {
       );
       assert(
         Array.isArray(body?.federal_ingestion?.pending) &&
-          body.federal_ingestion.pending.includes('grantconnect') &&
+          !body.federal_ingestion.pending.includes('grantconnect') &&
           !body.federal_ingestion.pending.includes('data-gov-au-pbs'),
-        'meta/coverage pending list is not grantconnect-only',
+        'meta/coverage still lists grantconnect as pending',
       );
       assert(
         /does not equal the Budget Paper 1/.test(body?.federal_ingestion?.pbs_caveat ?? ''),
@@ -533,6 +539,7 @@ async function uiChecks(page, regionId) {
         'nsw-budget',
         'data-nsw-ckan',
         'dubbo-council',
+        'grantconnect',
       ]) {
         assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
       }
@@ -569,8 +576,8 @@ async function uiChecks(page, regionId) {
         'coverage limitations do not mention live AusTender/PBS ingestion',
       );
       assert(
-        /GrantConnect is not implemented/.test(limitationText),
-        'coverage limitations do not mention pending GrantConnect',
+        /GrantConnect is a manual/.test(limitationText),
+        'coverage limitations do not mention the manual GrantConnect export',
       );
       assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
       return `source Unverified, ${expectedStubs} stubs, ${expectedActive} active (incl. Dubbo), PBS caveat, limitations present`;

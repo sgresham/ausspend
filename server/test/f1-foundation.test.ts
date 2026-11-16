@@ -71,7 +71,7 @@ const workingConnector = activeConnector(
   async () => [{ id: 'c-1' }],
 );
 
-const pendingFederalStub = getConnector('grantconnect')!;
+const stubConnector = getConnector('vic-budget')!;
 
 beforeAll(async () => {
   await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
@@ -86,18 +86,18 @@ afterAll(async () => {
 describe('F1 ingestion runner', () => {
   it('logs a skipped stub and an errored source, then continues to a working source', async () => {
     const result = await runIngestion({
-      connectors: [pendingFederalStub, failingConnector, workingConnector],
+      connectors: [stubConnector, failingConnector, workingConnector],
     });
 
     expect(result.results.map((entry) => `${entry.source_id}:${entry.log_status}`)).toEqual([
-      'grantconnect:skipped',
+      'vic-budget:skipped',
       'fake-failing-source:error',
       'fake-contract-source:success',
     ]);
 
     const logs = await IngestionLogModel.find({}).sort({ source_id: 1 }).lean();
     expect(logs).toHaveLength(3);
-    expect(logs.find((log) => log.source_id === 'grantconnect')).toMatchObject({
+    expect(logs.find((log) => log.source_id === 'vic-budget')).toMatchObject({
       status: 'skipped',
       records_fetched: 0,
       records_upserted: 0,
@@ -112,7 +112,7 @@ describe('F1 ingestion runner', () => {
       records_upserted: 1,
     });
 
-    const stubSource = await DataSourceModel.findOne({ source_id: 'grantconnect' }).lean();
+    const stubSource = await DataSourceModel.findOne({ source_id: 'vic-budget' }).lean();
     expect(stubSource).toMatchObject({ status: 'stub', records_ingested: 0 });
     const failedSource = await DataSourceModel.findOne({
       source_id: 'fake-failing-source',
@@ -233,18 +233,18 @@ describe('F1 extended measure shape and API', () => {
 
     const coverage = await request(app).get('/api/v1/meta/coverage');
     expect(coverage.status).toBe(200);
-    // AusTender, PBS, NSW Budget and data.nsw.gov.au CKAN are live;
-    // GrantConnect and the remaining federal/state connectors are stubs.
+    // AusTender, PBS, GrantConnect (manual export), NSW Budget, CKAN and
+    // Dubbo are wired; the remaining seven connectors are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(5);
-    expect(coverage.body.connector_status_counts.stub).toBe(8);
+    ).toBe(6);
+    expect(coverage.body.connector_status_counts.stub).toBe(7);
     expect([
       ...coverage.body.federal_ingestion.live,
       ...coverage.body.federal_ingestion.degraded,
     ]).toEqual(expect.arrayContaining(['aus-tender', 'data-gov-au-pbs']));
-    expect(coverage.body.federal_ingestion.pending).toEqual(['grantconnect']);
+    expect(coverage.body.federal_ingestion.pending).toEqual([]);
     expect(coverage.body.supported_measure_types).toContain('contract');
     expect(coverage.body.supported_measure_types).toContain('grant_award');
 
@@ -252,13 +252,13 @@ describe('F1 extended measure shape and API', () => {
     expect(logs.status).toBe(200);
     expect(logs.body.logs.length).toBeGreaterThanOrEqual(3);
     expect(logs.body.logs.map((log: { source_id: string }) => log.source_id)).toEqual(
-      expect.arrayContaining(['grantconnect', 'fake-failing-source', 'fake-contract-source']),
+      expect.arrayContaining(['vic-budget', 'fake-failing-source', 'fake-contract-source']),
     );
 
-    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=grantconnect');
+    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=vic-budget');
     expect(legacyLogs.status).toBe(200);
     expect(legacyLogs.body.logs[0]).toMatchObject({
-      source_id: 'grantconnect',
+      source_id: 'vic-budget',
       status: 'skipped',
     });
   });

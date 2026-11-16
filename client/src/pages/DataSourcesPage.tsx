@@ -17,7 +17,7 @@ import { useApi } from '../hooks/useApi';
 import { useCoverage } from '../coverage';
 import { formatDate } from '../format';
 import { ProvenanceFooter, SourceLink, VerifiedBadge } from '../components/Provenance';
-import { PBS_CAVEAT } from '../provenance';
+import { GRANTCONNECT_CAVEAT, PBS_CAVEAT } from '../provenance';
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 
 export function DataSourcesPage() {
@@ -52,10 +52,11 @@ export function DataSourcesPage() {
         archived copies. PDF/DOCX resources are deliberately deferred and listed on that source —
         they are not ingested. S3 adds exactly one local council, Dubbo Regional Council (
         <code>dubbo-council</code>): its adopted 2026/27 budget PDF is archived with SHA-256 and
-        every local row is provisional and unverified. No other council is covered. GrantConnect
-        remains a blocked stub — the Commonwealth publishes no grant award API/feed and the cited
-        Track A adaptor does not exist without a paid token — and VIC/QLD/WA remain stubs. No direct
-        GrantConnect scraper is built and no grant records are claimed.
+        every local row is provisional and unverified. No other council is covered. GrantConnect is
+        a manual, SHA-256-archived DownloadResult XLSX import (chunked and cap-safe): it is not an
+        API and no scraper is built, and wide exports above the 50,000-result cap are rejected, so
+        its coverage is reported as partial until complete date-range chunks cover the period.
+        VIC/QLD/WA remain stubs. No grant row is estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -193,6 +194,27 @@ export function DataSourcesPage() {
                         Open the Dubbo area profile (local + NSW-wide + NSW-tagged federal + PBS) →
                       </Link>
                     </Typography>
+                  ) : null}
+
+                  {source.source_id === 'grantconnect' ? (
+                    <>
+                      <Alert
+                        severity="warning"
+                        data-testid="grantconnect-manual-caveat"
+                        sx={{ mt: 2 }}
+                      >
+                        <strong>Manual export — not an API or scraper.</strong>{' '}
+                        {GRANTCONNECT_CAVEAT}
+                      </Alert>
+                      <Typography variant="body2" sx={{ mt: 1.5 }}>
+                        <Link
+                          component={RouterLink}
+                          to="/search?measure_type=grant_award&jurisdiction_level=federal"
+                        >
+                          Browse ingested grant awards with provenance →
+                        </Link>
+                      </Typography>
+                    </>
                   ) : null}
 
                   {source.deferred_resources && source.deferred_resources.length > 0 ? (

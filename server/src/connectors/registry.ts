@@ -2,6 +2,7 @@ import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
 import { createDubboConnector } from './dubbo-council.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
+import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
@@ -33,11 +34,11 @@ function stub(metadata: Omit<ConnectorMetadata, 'status'>): Connector {
 
 /**
  * The registered Australian public-spending sources. AusTender is live as of F2
- * (contractPublished OCDS feed) and data.gov.au PBS is live as of F3 (CKAN
- * package_show + streamed program-expense CSV). Every other connector is still
- * a stub: its `fetch` rejects with a clear "not implemented" error, no request
- * leaves the process, and `transform` returns no records. grantconnect remains
- * pending, as do the state/territory sources.
+ * (contractPublished OCDS feed), data.gov.au PBS as of F3 (CKAN package_show +
+ * streamed program-expense CSV), NSW/Dubbo as of S1/S2/S3, and GrantConnect as
+ * a manual, chunked DownloadResult XLSX import (no scraper, no paid adaptor).
+ * The remaining connectors are stubs: their `fetch` rejects with a clear
+ * "not implemented" error and no request leaves the process.
  */
 export const CONNECTORS: readonly Connector[] = [
   stub({
@@ -79,14 +80,11 @@ export const CONNECTORS: readonly Connector[] = [
   // F3: live data.gov.au CKAN ingestion of the 2025-26 PBS program-expense CSV.
   // `fetch` streams the CSV; per-run status is recorded on data_sources/logs.
   createPbsConnector(),
-  stub({
-    id: 'grantconnect',
-    name: 'GrantConnect — Australian Government grants',
-    publisher: 'Australian Government Department of Finance',
-    source_url: 'https://www.grants.gov.au/',
-    jurisdiction_level: 'federal',
-    // GrantConnect: ingest published grant award records.
-  }),
+  // F4 was re-scoped: GrantConnect is not scraped and no paid adaptor is used.
+  // It is a manual, SHA-256-archived DownloadResult export import (chunked and
+  // cap-safe). A file carrying the >50,000-result cap warning is rejected and
+  // the source stays partial until complete chunks cover the target period.
+  createGrantConnectConnector(),
   // S1: live official NSW Budget 2025-26 Open Data XLSX (Wayback snapshot) plus
   // the ArcGIS capital-projects feature layer. Per-run status is recorded on
   // data_sources/ingestion_logs by the runner.
