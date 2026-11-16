@@ -25,7 +25,10 @@
     "audit": "node scripts/audit.mjs",
     "build": "npm run build -w shared && npm run build -w server && npm run build -w client",
     "seed": "npm run build -w shared && tsx scripts/seed.ts",
-    "ingest:federal": "npm run build -w shared && tsx scripts/ingest-federal.ts"
+    "ingest:federal": "npm run build -w shared && tsx scripts/ingest-federal.ts",
+    "db:backup": "node scripts/db-backup.mjs",
+    "db:restore": "node scripts/db-restore.mjs",
+    "db:test-backfill-gate": "node --test scripts/test-backfill-gate.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

@@ -290,6 +290,95 @@ and a subsequent seed never removes them.
 data_sources: synthetic-seed active, aus-tender active
 ```
 
+## Backup before a historical backfill
+
+**Do not start a historical AusTender backfill until the user/approver explicitly confirms it.**
+The current live baseline is 810 synthetic seed measures plus 861 AusTender contract measures. A
+historical backfill would replace/expand that live data, so it is gated on a verified snapshot.
+
+### Take and restore a verified backup
+
+The backup/restore tools use the existing Mongo driver; they do not require `mongodump`.
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+npm run db:backup -- --prune 14
+# [backup] wrote /home/steve/backups/ausspend/<ISO>
+# [backup] natural_key count=<n> distinct=<n> checksum=<sha256>
+```
+
+- Writes every collection as Extended JSON to a timestamped directory outside the repository
+  (default `/home/steve/backups/ausspend`).
+- Refuses any database except `ausspend_dev`; `--scratch` additionally permits an explicit
+  `ausspend_test_*` / `ausspend_restore_test_*` database for tests.
+- The manifest records collection counts and indexes, `data_sources` statuses, and the
+  `natural_key` count, distinct count and SHA-256 checksum.
+- Never prints credentials. `--prune 14` deletes only old timestamped backup directories.
+
+Restore to a scratch database by default:
+
+```bash
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+  npm run db:restore -- /home/steve/backups/ausspend/<ISO> \
+  --target ausspend_restore_test_<timestamp>
+```
+
+The restore verifies collection counts, `natural_key` uniqueness and checksum, and data-source
+statuses, then prints the target database. A restore into `ausspend_dev` is only possible with
+`--target ausspend_dev --confirm ausspend_dev`, a matching backup, and explicit user/approver
+approval; it is never part of the test routine.
+
+The round trip has been demonstrated on a scratch database: the restored copy had the same 810
+synthetic rows, 861 AusTender contracts, 2,902 total measures and the same 2,092 distinct
+`natural_key` values/checksum as `ausspend_dev`, while the source database was unchanged.
+
+### Seed restart proof
+
+The safe seed deletes only `source_id: synthetic-seed` measures. A scratch database was seeded,
+given one fake `aus-tender` contract, and then re-seeded both locally and through the compose
+`seed` service. Before/after were identical: 810 synthetic, 1 contract, 811 total, one row for the
+fake `natural_key`, and no duplicate natural keys. A normal restart therefore preserves ingested
+rows. The only destructive path remains the explicit `npm run seed -- --reset`.
+
+### Gate a historical AusTender backfill
+
+`npm run ingest:federal -- --backfill` requires all of:
+
+1. `BACKFILL_CONFIRM=yes`;
+2. `BACKUP_DIR` (or `--backup-dir`) pointing at a complete, recent backup of `ausspend_dev`
+   (default maximum age 60 minutes: `BACKFILL_MAX_BACKUP_AGE_MINUTES`);
+3. explicit `AUSTENDER_START_DATE` and `AUSTENDER_END_DATE` for a real run;
+4. `INGEST_SOURCES` including `aus-tender`.
+
+The gate refuses a missing, stale, corrupt or checksum-mismatched backup **before any fetch**, and
+records the refused attempt in `ingestion_logs` (`status: skipped`, `records_fetched: 0`). A
+successful gated run also records the verified backup path in `ingestion_logs.backup_path`.
+
+Validate the gate without fetching data:
+
+```bash
+BACKFILL_CONFIRM=yes BACKUP_DIR=/home/steve/backups/ausspend/<ISO> \
+  npm run ingest:federal -- --backfill --dry-run
+```
+
+The dry run validates the backup, logs `backfill gate passed (dry run); no fetch performed`, and
+exits. The real historical backfill has **not** been run in this safety item; only the refusal and
+a fake-backup success were tested.
+
+### Daily backup timer
+
+`scripts/systemd/ausspend-db-backup.service` and `.timer` run the backup daily at 03:15 with a
+randomized delay, `Persistent=true`, journal logging and 14-backup retention. The installer creates
+a self-contained runner snapshot under `~/.local/share/ausspend-backup` (including its own
+`node_modules`) so the timer does not depend on the Docker stack or on host `/opt/ausspend`
+dependencies. Re-run it after changing the backup script. Then check:
+
+```bash
+systemctl --user list-timers ausspend-db-backup.timer
+systemctl --user status ausspend-db-backup.service
+journalctl --user -u ausspend-db-backup.service -n 20
+```
+
 ## Remaining caveats
 
 - **PBS is not a federal total.** The CSV line items come from entity program tables and do not
