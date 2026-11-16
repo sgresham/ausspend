@@ -103,6 +103,7 @@ export function SpendingSummaryPanel({
               Sum of {summary.count} rows for one measure type, computed by the API over the whole
               filtered set.
             </Typography>
+            <ProvenanceFooter sources={unique} note={note} />
           </CardContent>
         </Card>
       ) : null}

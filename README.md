@@ -27,12 +27,15 @@ client, an Express API and shared TypeScript/Zod contracts.
 
 ## Requirements
 
-- Node.js >= 24 (pinned in `package.json` `engines`; developed on Node 24.14.1)
-- npm 11.11.0 (pinned via `packageManager`)
+- **One-command flow** — Docker Engine with Compose v2 (v5.3.1 used here), plus network access to
+  host `q` at `10.10.10.30:27017`.
+- **Local non-Docker flow** — Node.js >= 24 (pinned in `package.json` `engines`; developed on Node
+  24.14.1) and npm 11.11.0 (pinned via `packageManager`).
+- Ports **3001** (API) and **5173** (client) must be free before either flow starts.
 
 ## Environment
 
-Copy `.env.example` to `.env` if you want local overrides. The app database lives on host `q`:
+The application database is the host `q` Mongo, never a container:
 
 ```
 MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
@@ -41,22 +44,58 @@ CLIENT_ORIGIN=http://localhost:5173
 VITE_API_PROXY_TARGET=http://localhost:3001
 ```
 
-Never point local development at the pool Mongo (`127.0.0.1:27018`). There is no app Mongo
-container; the dev compose file has no `mongo` service.
+A host or shell `MONGO_URL` overrides the compose default. Never point local development at the pool
+Mongo (`127.0.0.1:27018`). The dev compose file deliberately has **no `mongo` service**; the
+application creates only the `ausspend_dev` database it is allowed to seed.
 
-## Install and run
+## One-command dev stack (Docker Compose)
+
+From the repository root:
 
 ```bash
-npm install          # installs all workspaces and writes package-lock.json
-npm run dev          # builds shared, then starts API :3001 and client :5173
+docker compose up --build
 ```
 
-Or run one side at a time: `npm run dev:server`, `npm run dev:client`.
+This starts three containers from the `node:24-alpine` image:
 
-- Client: <http://localhost:5173>
-- API health: <http://localhost:3001/api/health> → `{"ok":true,"db":"connected"|"unavailable"}`
+1. `seed` — one-shot: `npm ci`, builds `shared`, then `npm run seed`. It exits nonzero if the seed
+   guard refuses the database, and `server`/`client` do not start unless it completes successfully.
+2. `server` — API on <http://localhost:3001>, waiting for `seed` to finish.
+3. `client` — Vite dev server on <http://localhost:5173>, waiting for the API healthcheck.
 
-The Vite dev server proxies `/api` to the API on port 3001.
+The source tree is bind-mounted at `/app`; `node_modules`, per-workspace `node_modules` and the
+shared `dist` output live in named volumes, so the compose stack never writes root-owned
+`node_modules`/`dist` into the host checkout. Healthchecks use the `node` binary already present in
+the image (`/api/health` for the server, `/` for the client).
+
+Detached flow:
+
+```bash
+docker compose up --build -d
+docker compose ps
+docker compose logs -f seed server client
+# Client: http://localhost:5173   API: http://localhost:3001/api/health
+npm run audit                      # live provenance audit against the compose stack
+docker compose down -v             # stops this project and removes its volumes/network
+```
+
+`docker compose down -v` is the finish line: it removes this project's containers, network and the
+named dependency/build volumes. Do not use system-wide `docker prune`, and do not stop or restart
+containers from other compose projects.
+
+## Local non-Docker flow
+
+```bash
+cp .env.example .env               # optional; set MONGO_URL explicitly to be safe
+npm ci
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+npm run seed                       # refuses anything except ausspend_dev
+npm run dev                        # builds shared, then API :3001 + client :5173
+```
+
+Or run one side at a time: `npm run dev:server`, `npm run dev:client`. The Vite dev server proxies
+`/api` to the API on port 3001. API health: <http://localhost:3001/api/health> →
+`{"ok":true,"db":"connected"|"unavailable"}`.
 
 ## Seed data
 
@@ -73,7 +112,9 @@ npm run seed
 # [seed] verified measures: 0 (must be 0)
 ```
 
-The seed refuses a missing `MONGO_URL` and any database whose name is not exactly `ausspend_dev`.
+Re-running is deterministic: identical counts and values. The seed refuses a missing `MONGO_URL`
+and any database whose name is not exactly `ausspend_dev` (for example
+`mongodb://10.10.10.30:27017/some_other_db`), exiting nonzero before it deletes anything.
 
 ## API
 
@@ -169,11 +210,42 @@ npm run format:check # Prettier
 npm test             # Vitest shared + server suites
 npm run build        # shared, server and client production builds
 npm run test:e2e     # Playwright specs with page.route API mocks
+npm run audit        # live audit against an already-running seeded stack (not part of test:e2e)
 ```
 
 The Playwright suite mocks every `/api` response with `page.route`, so it does not need the seeded
 database or a running API. The dev server pair in `playwright.config.ts` still starts for the page
 shell; e2e only requires installed browsers (`npx playwright install chromium`).
+
+## Live provenance audit
+
+`npm run audit` is a separate, live-only check. It requires a running, seeded stack and never
+writes to the database or reseeds. It drives the UI with Playwright and the API with `fetch`, then
+prints `PASS`/`FAIL` per check and exits nonzero on any failure or uncaught browser page error.
+
+```bash
+# against the compose stack (defaults)
+npm run audit
+
+# against a local `npm run dev` stack, or another host/port
+AUDIT_WEB_URL=http://localhost:5173 AUDIT_API_URL=http://localhost:3001 npm run audit
+```
+
+It proves:
+
+- Every route (`/`, `/search`, `/functions`, `/functions/07`, `/regions`,
+  `/regions/<_id resolved from /api/regions>`, `/states`, `/states/NSW`, `/data-sources`, `/about`)
+  renders without a page error.
+- Mixed measure types show the warning and **no headline total** on `/search` and `/functions/07`;
+  a single measure type shows a headline total.
+- Rendered row tables and summary/headline footers carry the source id/link and Unverified status.
+- `/data-sources#synthetic-seed` shows the synthetic source Unverified, all eight connector stubs
+  marked **stub — not wired**, and the coverage limitations.
+- API invariants: `function=07` is mixed with `total_cents: null` and per-type totals;
+  `measure_type=actual` has a numeric total; `region=NSW` is `400`; an unknown measure id is `404`;
+  `/api/meta/coverage` reports synthetic, no live ingestion, eight stubs and nonzero counts.
+
+The mocked `npm run test:e2e` run stays database-free; the audit script is not a Playwright spec.
 
 ## Pages
 
@@ -256,9 +328,11 @@ verified measures before reporting success.
 
 ## Docker Compose (development)
 
-`docker-compose.yml` runs the server and client as Node containers, passing `MONGO_URL` from the
-host environment and using host `q`'s Mongo. It deliberately has **no mongo service**; seed with
-`npm run seed` on the host.
+`docker-compose.yml` is the authoritative one-command development flow documented above: a
+one-shot `seed` service, then `server` and `client`, all from `node:24-alpine`. It passes
+`MONGO_URL` from the host environment (defaulting to host `q`'s `ausspend_dev`) and deliberately
+has **no mongo service**. Dependency/build directories are named volumes under the bind mount, so
+`docker compose down -v` leaves the host checkout clean.
 
 ## Repository rule
 
