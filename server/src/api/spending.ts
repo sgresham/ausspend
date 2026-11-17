@@ -335,7 +335,12 @@ export const listSpending: RequestHandler = async (req, res) => {
     }
   }
 
-  const mongoQuery: Record<string, unknown> = {};
+  const mongoQuery: Record<string, unknown> = {
+    // ABS GFS benchmark rows are top-down statistical aggregates, never project
+    // data. Keep them out of the generic spending query and every total; the
+    // dedicated /api/benchmark endpoint reads them explicitly.
+    aggregation_role: { $ne: 'benchmark' },
+  };
   if (query.fiscal_year) mongoQuery.fiscal_year = query.fiscal_year;
   if (query.measure_type) mongoQuery.measure_type = query.measure_type;
   if (query.jurisdiction_level) mongoQuery.jurisdiction_level = query.jurisdiction_level;

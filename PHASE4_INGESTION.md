@@ -507,3 +507,158 @@ total**.
 - Every row is `provisional` and `verified: false`.
 - State/postcode coverage is partial and approximate; it is not a full address register.
 - Zero and negative total-expenses rows are skipped, never zero-filled.
+
+# ABS Government Finance Statistics (GFS) — COFOG-A expense benchmark (Annual 2024-25)
+
+## SDMX is not available for GFS (verified, not assumed)
+
+The brief originally asked for the keyless ABS SDMX REST API. Before writing any mapper we checked
+the ABS catalogue, because the dataflow/version/key/time format and the COFOG/level dimensions must
+be confirmed, never guessed:
+
+| Check                              | URL                                                                                                                         | Result                                                                                        |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Full ABS dataflow catalogue        | `https://data.api.abs.gov.au/rest/v1/dataflow/ABS`                                                                          | HTTP 200, 3,231,497 bytes, **1,228 dataflows**, prepared 2026-11-17T03:00:37Z                 |
+| GFS/COFOG search of that catalogue | same response                                                                                                               | **0 matches** for GFS, COFOG, "Government Finance", catalogue 5512 or 5519 (case-insensitive) |
+| All-stubs catalogue                | `https://data.api.abs.gov.au/rest/v1/dataflow/ABS?detail=allstubs`                                                          | HTTP 200, 791,761 bytes, same result                                                          |
+| ABS DSD catalogue                  | `https://data.api.abs.gov.au/rest/v1/datastructure/ABS?detail=allstubs`                                                     | HTTP 200, 477,968 bytes, no COFOG/GFS data structure                                          |
+| Candidate dataflow ids             | `/rest/v1/dataflow/ABS/{GFS, ABS_GFS, GFS_COFOG, ABS_GFS_COFOG, GOVERNMENT_FINANCE, PUBLIC_FINANCE, GFS_5512, GFS_5519}`    | every id **HTTP 404**                                                                         |
+| ABS GFS release pages              | quarterly `.../government-finance-statistics-australia/jun-2026`; annual `.../government-finance-statistics-annual/2024-25` | XLSX downloads only; **0** `sdmx`/`data.api`/`rest/v1` links                                  |
+
+There is therefore **no GFS/COFOG SDMX dataflow to query**. The item was stopped and the human
+approved an explicit fallback to the official ABS GFS Annual XLSX. **No guessed SDMX mapper exists
+in this repo.** The connector is `server/src/connectors/abs-gfs.ts` (source id `abs-gfs`); it
+replaces the old `abs-government-finance` stub.
+
+## Source and archive (bytes outside the repo)
+
+- Catalogue/release page: `https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25`
+- Exact file: `https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO094_202425.xlsx`
+- Workbook: `55120DO094_202425.xlsx`, 175,454 bytes,
+  SHA-256 `5a4da532acba8efd05b71e2c84bdb5837860e9539a1cf8a3a2b750e953c7c679`.
+- The connector discovers the Key Tables link from the release page, downloads it through the shared
+  source-archive helper and stores the bytes under `AUSSPEND_SOURCE_ARCHIVE` **outside the repo**.
+  The repo only holds the metadata manifest (`docs/source-archive/abs-gfs-2024-25.json`) and the
+  `source_documents` rows persisted by the runner.
+
+## Workbook structure — confirmed from the workbook itself
+
+The workbook has 17 sheets. Only `Table_9` and `Table_10` carry COFOG-A "Expenses by purpose":
+
+| Sheet      | Title (row 4)                                                                             | Level columns (row 5)                                                                                                                               | Unit (row 7) |
+| ---------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| `Table_9`  | Table 9 Expenses by purpose, general government sector, Commonwealth and state government | Commonwealth, New South Wales, Victoria, Queensland, South Australia, Western Australia, Tasmania, Northern Territory, Australian Capital Territory | `$m`         |
+| `Table_10` | Table 10 Expenses by purpose, general government sector, local government                 | New South Wales, Victoria, Queensland, South Australia, Western Australia, Tasmania, Northern Territory                                             | `$m`         |
+
+The parser **validates** the title, every column header, every time-period cell (`2024-25`) and
+every unit cell (`$m`). A mismatch throws instead of guessing. The row labels are the COFOG-A
+purpose labels; `Total expenses` is explicitly skipped because it is not a COFOG function and would
+double count. The trailing "All levels of government" columns are **not ingested**: Table 9's
+column mixes Commonwealth and state governments (no single level), and Table 10's is a cross-state
+local total. Ingesting either would invite a cross-level/cross-jurisdiction sum.
+
+### Units and scale
+
+Row 7 of both tables says `$m`. One `$m` = 1,000,000 dollars = **100,000,000 cents**. Every value
+is converted with `Math.round(value * 100_000_000)` and checked with `Number.isSafeInteger`; the
+unit is never inferred from magnitude. The exact workbook cell is retained in `notes`.
+
+### COFOG-A and level mapping
+
+| Workbook label                   | `function_code` | Note                                                                                          |
+| -------------------------------- | --------------- | --------------------------------------------------------------------------------------------- |
+| General public services          | `01`            | COFOG division                                                                                |
+| Defence                          | `02`            | COFOG division                                                                                |
+| Public order and safety          | `03`            | COFOG division                                                                                |
+| Economic affairs                 | `04`            | ABS publishes this **excluding** Transport                                                    |
+| Environmental protection         | `05`            | COFOG division                                                                                |
+| Housing and community amenities  | `06`            | COFOG division                                                                                |
+| Health                           | `07`            | COFOG division                                                                                |
+| Recreation, culture and religion | `08`            | COFOG division                                                                                |
+| Education                        | `09`            | COFOG division                                                                                |
+| Social protection                | `10`            | COFOG division                                                                                |
+| Transport                        | `045`           | ABS publishes Transport as a separate purpose; stored as COFOG 04.5, **never rolled into 04** |
+
+| Column                                | `jurisdiction_level` | `jurisdiction` | `location`                          |
+| ------------------------------------- | -------------------- | -------------- | ----------------------------------- |
+| Commonwealth                          | `federal`            | `Australia`    | absent (national)                   |
+| State/territory governments (NSW…ACT) | `state`              | `NSW`…`ACT`    | `{ state: <code> }`, statewide only |
+| Local government (NSW…NT)             | `local`              | `NSW`…`NT`     | `{ state: <code> }`, statewide only |
+
+No LGA, SA2, postcode or coordinate is invented. The `state` level is used for the territory
+governments too, consistent with the app's existing state-page query.
+
+## Mapping
+
+| Measure field        | Value                                                                                          |
+| -------------------- | ---------------------------------------------------------------------------------------------- |
+| `jurisdiction_level` | `federal` / `state` / `local` from the column                                                  |
+| `jurisdiction`       | `Australia` or the state/territory code                                                        |
+| `function_code`      | COFOG code from the purpose label (Transport `045`)                                            |
+| `amount_cents`       | official `$m` aggregate × 100,000,000                                                          |
+| `measure_type`       | `actual`                                                                                       |
+| `fiscal_year`        | time-period cell (`2024-25`)                                                                   |
+| `location`           | absent for national; `{ state }` for state/local; statewide only                               |
+| `source_id`          | `abs-gfs`                                                                                      |
+| `source_dataset`     | `ABS Government Finance Statistics (GFS)`                                                      |
+| `source_url`         | exact Key Tables XLSX URL                                                                      |
+| `source_date`        | release date `2026-04-21`                                                                      |
+| `verified`           | `true`                                                                                         |
+| `data_quality_flag`  | `verified` (official aggregate only)                                                           |
+| `aggregation_role`   | `benchmark`                                                                                    |
+| `natural_key`        | `abs-gfs:hash(series_key + fiscal_year)`, series key = table + level + jurisdiction + function |
+| `project_name`       | absent — a benchmark cell is never project-level                                               |
+
+## No-sum / benchmark invariant
+
+ABS GFS is a **top-down statistical benchmark**, not a sum of projects:
+
+- `aggregation_role: benchmark` is non-additive. The shared API totals exclude it.
+- The generic `/api/spending`, `/api/search`, state, function and region queries explicitly filter
+  `aggregation_role: { $ne: 'benchmark' }`, so a GFS cell can never be silently added to project
+  data.
+- The dedicated `GET /api/benchmark` returns only published ABS cells and **computes no total**:
+  no sum across functions, levels of government or measure types.
+- The UI `/benchmark` page labels the data a benchmark, shows verified badges, and states that
+  project data is a separate population. It never displays a combined GFS + project figure.
+
+## Ingestion and idempotency
+
+```
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:phase4 -- --source=abs-gfs
+```
+
+The runner upserts on `natural_key`, so re-running updates the same 169 documents and creates none.
+It never deletes and never touches synthetic, AusTender, PBS, GrantConnect, NSW, VIC, QLD, Dubbo or
+ACNC rows. The output prints rows by level and function and deliberately prints no combined total.
+
+## Five source-backed spot checks (2024-25, `$m` from Table 9/10)
+
+| Series                                   | ABS `$m` | Stored cents       |
+| ---------------------------------------- | -------- | ------------------ |
+| Commonwealth — Health                    | 118,155  | 11,815,500,000,000 |
+| NSW state government — Health            | 32,293   | 3,229,300,000,000  |
+| QLD state government — Education         | 17,230   | 1,723,000,000,000  |
+| NSW local government — Transport         | 2,649    | 264,900,000,000    |
+| VIC state government — Social protection | 9,436    | 943,600,000,000    |
+
+The same cells are re-read from the archived workbook by the tests; the DB values are compared to
+the workbook values during verification.
+
+## API / UI
+
+- `GET /api/v1/benchmark?fiscal_year=2024-25&function=07` returns the published cells, source
+  metadata, the `$m` unit and `unit_to_cents: 100000000`, and no `total_cents`.
+- `GET /api/v1/meta/coverage` adds `benchmark_ingestion` (live source, last ingested, record count,
+  caveat) and the federal source list includes `abs-gfs`.
+- `/benchmark` is the benchmark view; `/data-sources` links to it and explains the fallback.
+
+## Limitations
+
+- The ABS SDMX API has **no GFS/COFOG dataflow**; this is an XLSX fallback, not an SDMX query.
+- The data is an annual official aggregate, not audited financial statements or project-level spend.
+- Only `2024-25` is ingested. The connector rejects other time periods rather than relabelling them.
+- `Total expenses` and the "All levels of government" columns are intentionally not ingested.
+- Transport is stored as `045` because ABS publishes it separately; it must never be rolled into
+  `04`.
+- No sub-state region exists; state/local rows are statewide only.

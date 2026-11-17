@@ -1,3 +1,4 @@
+import { createAbsGfsConnector } from './abs-gfs.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
 import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
@@ -54,15 +55,13 @@ export const CONNECTORS: readonly Connector[] = [
     jurisdiction_level: 'federal',
     // TODO: ingest Portfolio Budget Statements (PDF/XLSX) via budget.gov.au.
   }),
-  stub({
-    id: 'abs-government-finance',
-    name: 'Government Finance Statistics',
-    publisher: 'Australian Bureau of Statistics',
-    source_url:
-      'https://www.abs.gov.au/statistics/economy/government/government-finance-statistics',
-    jurisdiction_level: 'federal',
-    // TODO: ingest ABS GFS catalogue tables (XLSX) by release.
-  }),
+  // Phase 4: ABS GFS Annual 2024-25 Key Tables 9/10 "Expenses by purpose"
+  // (COFOG-A) from the official XLSX. The ABS SDMX API has no GFS/COFOG
+  // dataflow (verified against the full catalogue), so this is the explicit
+  // human-approved XLSX fallback. Rows are official aggregates (verified),
+  // aggregation_role=benchmark, and are never summed with project data or
+  // across levels/measures.
+  createAbsGfsConnector(),
   stub({
     id: 'aihw-health-expenditure',
     name: 'Health Expenditure Australia',

@@ -40,6 +40,12 @@ const QUICK_LINKS = [
   },
   { to: '/states', title: 'States', description: 'Open a state or territory spending page.' },
   {
+    to: '/benchmark',
+    title: 'ABS GFS benchmark',
+    description:
+      'Official COFOG-A expense aggregates by level of government — a top-down benchmark, never summed with project data.',
+  },
+  {
     to: '/data-sources',
     title: 'Data sources',
     description: 'Source register, licence, verification status and connector stubs.',
@@ -75,7 +81,8 @@ export function HomePage() {
         {coverage.data?.synthetic
           ? 'Synthetic seed rows sit alongside live AusTender contracts and data.gov.au PBS budget line items'
           : 'Live AusTender contracts, PBS budget line items, NSW, VIC and QLD Budget rows and Dubbo council rows are shown with provenance'}
-        ; no figure is verified or a single federal total.
+        ; no figure is a single federal total, and project rows stay unverified. ABS GFS COFOG-A
+        benchmark rows are official aggregates and are shown separately.
       </Typography>
 
       {coverage.data ? (
@@ -98,16 +105,18 @@ export function HomePage() {
         {coverage.data?.synthetic ? (
           <>
             Synthetic seed amounts in this build are deterministic placeholders marked{' '}
-            <strong>verified: false</strong>. Ingested rows are real published records but are also
-            unverified. No figure is a single government total. The source register and licence live
-            on the{' '}
+            <strong>verified: false</strong>. Ingested project rows are real published records but
+            are also unverified. Only ABS GFS COFOG-A benchmark rows are official verified
+            aggregates, and they are never summed with project data. No figure is a single
+            government total. The source register and licence live on the{' '}
           </>
         ) : (
           <>
-            There are no synthetic seed rows. Every amount comes from a real published feed and is
-            marked <strong>verified: false</strong> until a human checks it. National and state
-            actual/estimate series with COFOG and region are not covered yet, so those views show an
-            explicit empty state. The source register and licence live on the{' '}
+            There are no synthetic seed rows. Project and charity rows come from real published
+            feeds and are marked <strong>verified: false</strong> until a human checks them. ABS GFS
+            COFOG-A benchmark rows are official aggregates marked <strong>verified: true</strong>
+            but are never added to project data. Project-level national/state actual series with
+            COFOG and region are still not covered. The source register and licence live on the{' '}
           </>
         )}
         <Link component={RouterLink} to="/data-sources">

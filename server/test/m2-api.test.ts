@@ -171,14 +171,15 @@ describe('GET /api/meta/coverage', () => {
     expect(response.body.counts.synthetic_measures).toBe(8);
     expect(response.body.coverage_gaps.map((gap: { dimension: string }) => gap.dimension)).toEqual(
       expect.arrayContaining([
-        'national actual / budget / estimate with COFOG',
+        'national actual / budget / estimate project series with COFOG and region',
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
     expect(response.body.connectors).toHaveLength(15);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
-        connector.id === 'aus-tender' ||
+        connector.id === 'abs-gfs' ||
+          connector.id === 'aus-tender' ||
           connector.id === 'data-gov-au-pbs' ||
           connector.id === 'grantconnect' ||
           connector.id === 'nsw-budget' ||

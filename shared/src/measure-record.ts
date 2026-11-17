@@ -34,6 +34,10 @@ export const AGGREGATION_ROLES = [
   // together. Only `expense_total` participates in a charity headline total.
   'expense_total',
   'expense_component',
+  // ABS GFS top-down statistical aggregates. They are a benchmark, not a sum
+  // of project rows, so they are excluded from every generic additive total
+  // and are never combined with project data or across levels/measures.
+  'benchmark',
 ] as const;
 
 export const AggregationRoleSchema = z.enum(AGGREGATION_ROLES);

@@ -54,7 +54,13 @@ export function parseMeasureFilters(query: unknown): MeasureFilters {
 }
 
 export function measureQuery(filters: MeasureFilters): Record<string, unknown> {
-  const query: Record<string, unknown> = {};
+  const query: Record<string, unknown> = {
+    // ABS GFS rows are a top-down statistical benchmark, not project data.
+    // They are never exposed through the generic spending/state/function
+    // queries (which could add them to project totals); the dedicated
+    // benchmark endpoint reads them directly.
+    aggregation_role: { $ne: 'benchmark' },
+  };
   if (filters.fiscal_year) query.fiscal_year = filters.fiscal_year;
   if (filters.measure_type) query.measure_type = filters.measure_type;
   if (filters.region) query.region_id = new mongoose.Types.ObjectId(filters.region);
