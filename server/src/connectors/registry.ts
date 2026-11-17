@@ -15,6 +15,7 @@ import { createHunterWaterConnector } from './soc/nsw/hunter-water.js';
 import { createLandcomConnector } from './soc/nsw/landcom.js';
 import { createPortAuthorityConnector } from './soc/nsw/port-authority.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
+import { createTaheConnector } from './soc/nsw/tahe.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
@@ -174,6 +175,12 @@ export const CONNECTORS: readonly Connector[] = [
   // statement lines. Never added to government program spending, the PNFC
   // benchmark, or any other SOC. Other SOCs are not implemented.
   createPortAuthorityConnector(),
+  // SOC Phase 9: eighth NSW state-owned corporation — TAHE (Transport Asset
+  // Holding Entity of New South Wales). Latest annual report discovered,
+  // SHA-256 archived and parsed as entity-level statement lines. Never added to
+  // government program spending, the PNFC benchmark, or any other SOC. Other
+  // SOCs are not implemented.
+  createTaheConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

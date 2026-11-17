@@ -64,37 +64,42 @@ export function DataSourcesPage() {
         never summed with project data. ABS GFS Public Non-Financial Corporations (PNFC) adds a
         separate sector benchmark from nine official annual XLSX data cubes (Australia all levels
         plus the eight states/territories); it is a sector aggregate — never add it to
-        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–8 add
-        seven separate entities: Sydney Water Corporation, WaterNSW (Water NSW), Hunter Water
-        Corporation, Essential Energy, Forestry Corporation of NSW, Landcom and Port Authority of
-        NSW. Each latest annual report is discovered from the entity&apos;s official annual-report
-        page (no hard-coded PDF URL), SHA-256 archived outside the repo, and parsed as entity-level
-        statement lines (<code>jurisdiction_level: soc</code>,{' '}
-        <code>aggregation_role: agency_detail</code>) with an explicit printed $’000 unit (Forestry
-        Corporation) or the entity’s own explicit unit. WaterNSW&apos;s and Hunter Water&apos;s
-        explicit printed Total expenses are accepted only when their printed components and profit
-        bridges reconcile exactly; Hunter Water&apos;s one-dollar printed tax/NPAT rounding is
-        retained only as the printed net result and flagged for human spot-check. Essential Energy
-        prints in $M and has no single Total expenses subtotal, so its total expenses is the exact
-        sum of the printed expense lines, accepted only when every revenue, expense-component and
-        profit bridge reconciles exactly; its printed loss is stored with a negative sign and two
-        lines are flagged for human spot-check. Forestry Corporation of NSW prints in $’000 with an
-        explicit printed Total expenses, accepted only when its four expense lines, Note 5/8/9/10
-        subtotals and profit bridges reconcile exactly; its two government-grant lines are flagged
-        potential double count and two lines are flagged for human spot-check. Landcom prints in
-        $’000 with no printed Total revenue or Total expenses subtotal, so both are the exact signed
-        sums of the printed statement lines, accepted only when its gross-profit, profit-before-tax,
-        net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly; its grant-income line is
-        flagged potential double count and two lines are flagged for human spot-check. Port
-        Authority of NSW prints in $’000 with explicit printed Total revenue and Total expenses,
-        accepted only when its revenue and expense lines, profit-before-tax bridge (including net
-        gain on sale of PPE and other gains), net-result bridge and Note 3/Note 4 totals reconcile
-        exactly; it discloses no separate government grants, so no grant row is emitted, and two
-        lines are flagged for human spot-check. Rows are provisional and unverified;
-        government-named funding rows carry a potential-double-count warning. SOC rows are never
-        added to government program spending, the PNFC benchmark, another SOC entity or each other,
-        and are exposed only at <code>/api/soc</code> with separate entity/source badges. WA remains
-        a stub. No grant row is estimated or zero-filled.
+        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–9 add
+        eight separate entities: Sydney Water Corporation, WaterNSW (Water NSW), Hunter Water
+        Corporation, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW
+        and TAHE (Transport Asset Holding Entity of New South Wales). Each latest annual report is
+        discovered from the entity&apos;s official annual-report page (no hard-coded PDF URL),
+        SHA-256 archived outside the repo, and parsed as entity-level statement lines (
+        <code>jurisdiction_level: soc</code>, <code>aggregation_role: agency_detail</code>) with an
+        explicit printed $’000 unit (Forestry Corporation) or the entity’s own explicit unit.
+        WaterNSW&apos;s and Hunter Water&apos;s explicit printed Total expenses are accepted only
+        when their printed components and profit bridges reconcile exactly; Hunter Water&apos;s
+        one-dollar printed tax/NPAT rounding is retained only as the printed net result and flagged
+        for human spot-check. Essential Energy prints in $M and has no single Total expenses
+        subtotal, so its total expenses is the exact sum of the printed expense lines, accepted only
+        when every revenue, expense-component and profit bridge reconciles exactly; its printed loss
+        is stored with a negative sign and two lines are flagged for human spot-check. Forestry
+        Corporation of NSW prints in $’000 with an explicit printed Total expenses, accepted only
+        when its four expense lines, Note 5/8/9/10 subtotals and profit bridges reconcile exactly;
+        its two government-grant lines are flagged potential double count and two lines are flagged
+        for human spot-check. Landcom prints in $’000 with no printed Total revenue or Total
+        expenses subtotal, so both are the exact signed sums of the printed statement lines,
+        accepted only when its gross-profit, profit-before-tax, net-result and Note
+        2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly; its grant-income line is flagged potential
+        double count and two lines are flagged for human spot-check. Port Authority of NSW prints in
+        $’000 with explicit printed Total revenue and Total expenses, accepted only when its revenue
+        and expense lines, profit-before-tax bridge (including net gain on sale of PPE and other
+        gains), net-result bridge and Note 3/Note 4 totals reconcile exactly; it discloses no
+        separate government grants, so no grant row is emitted, and two lines are flagged for human
+        spot-check. TAHE prints in $’000 with explicit printed Total revenue and Total expenses,
+        accepted only when its five revenue lines, five non-nil expense lines plus an explicitly
+        printed nil valuation decrement and the net-result bridge reconcile exactly; its separately
+        disclosed Grants and contributions line is flagged potential double count and two lines are
+        flagged for human spot-check. Rows are provisional and unverified; government-named funding
+        rows carry a potential-double-count warning. SOC rows are never added to government program
+        spending, the PNFC benchmark, another SOC entity or each other, and are exposed only at{' '}
+        <code>/api/soc</code> with separate entity/source badges. WA remains a stub. No grant row is
+        estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
