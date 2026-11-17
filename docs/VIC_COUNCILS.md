@@ -12,8 +12,11 @@ historical years are now landed; **no year is deferred**. The planning pass
 touched docs only; pilots A–D are separate ingestion items. The database was **515,449 measures**
 at planning time, **515,955** on the eve of pilot A, **521,356** after it (exact delta +5,401),
 **530,415** after pilot B (exact delta +9,059), **602,062** after pilot C (exact delta +71,647),
-and **659,086** after pilot D (exact delta +57,024).
-No council PDFs were queued.
+and **659,086** after pilot D (exact delta +57,024). **The VIC grants overlay is implemented** as
+source `vic-vlgc-fag`: 79 estimated FY2024-25 + 79 final FY2023-24 Commonwealth Financial
+Assistance Grant rows (158 rows), taking the database to **659,244** (see §16). No council GPFS
+PDFs were queued; the two VLGGC Annual Allocation Report PDFs used by the overlay are archived
+with SHA-256 outside the repo.
 
 **As at:** 17 November 2026. **Scope:** Victorian local government — the 79 councils — not state
 government, and not a cross-council spending total.
@@ -1177,3 +1180,124 @@ counts, natural keys or other years change.
 Checks: `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` (including the
 `buildBendigoHistoryReconciliation` cases in `server/test/vic-vlgc-history.test.ts`) and
 `npm run build`.
+
+## 16. VIC FAG grants overlay implementation record (18 November 2026)
+
+**Scope delivered:** source `vic-vlgc-fag`, all 79 Victorian councils for **FY2024-25** and
+**FY2023-24** — **79 + 79 = 158 rows**. No NSW rows, no OLG data, no new GPFS, no re-ingest of
+VGC1/ABS, no cross-council total. The FAG is **Commonwealth grant income administered by the
+VLGGC**, not council spending.
+
+### 16.1 Official reports, snapshots and hashes
+
+The live VLGGC asset URLs return a Cloudflare challenge (HTTP 403); the exact PDF bytes were
+retrieved from the documented Wayback snapshots and SHA-256 verified before parsing. Bytes live
+outside the repo under `~/ausspend-source-archive/vic-vlgc-fag/` and are never redistributed.
+Metadata-only manifests are committed under `docs/source-archive/`.
+
+| Fiscal year | Report                                                  | Official URL                                                           | Wayback snapshot | SHA-256                                                            |     Bytes |
+| ----------- | ------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------ | --------: |
+| 2024-25     | VLGGC Annual Allocation Report 2024-25 (September 2024) | `.../0019/210727/2024-25-VLGGC-Annual-Allocation-Report-Sept-2024.pdf` | `20241020190403` | `9efcc61d5105cdae5353a536759e36470c44af6417fc9c3af4c2990473571788` | 1,628,398 |
+| 2023-24     | VLGGC Annual Allocation Report 2023-24 (September 2023) | `.../0023/202496/2023-24-VLGGC-ALLOCATION-REPORT-Sept-2023.pdf`        | `20231022163029` | `c2a23f7d0e77ae44d3ebb9f2710af612b4df8bb27e3c963b171f4cc8b7968604` | 1,605,938 |
+
+Manifests: `vic-vlgc-fag-2024-25.json` (FY2024-25 estimated rows),
+`vic-vlgc-fag-2023-24-final.json` (FY2023-24 final rows, printed in the 2024-25 report Appendix 1)
+and `vic-vlgc-fag-2023-24.json` (the September 2023 estimated table, parsed for the cross-check
+only and **not emitted**).
+
+### 16.2 Licence / attribution (verbatim; not a bare CC BY claim)
+
+Both reports' copyright pages say, verbatim:
+
+> “© Copyright State of Victoria 2024 Department of Government Services” (2024-25 report) /
+> “© Copyright State of Victoria 2023 Department of Government Services” (2023-24 report)
+> “Except for any logos, emblems, trademarks, artwork and photography this document is made
+> available under the terms of the Creative Commons Attribution 3.0 Australia license.”
+
+The underlying VLGGC data collection carries the separate VLGGC Conditions of Use, verbatim:
+_“Content from this spreadsheet should be attributed as Victorian Local Government Grants
+Commission data collection.”_ The VLGGC disclaimer adds that councils _“provide permission for
+this online release”_ and the Commission _“does not guarantee the material to be free from
+error.”_
+
+So the brief's **“VLGGC attribution/permission, NOT CC BY”** is correct for the VLGGC data
+collection. The report PDF itself additionally carries a **CC BY 3.0 Australia** statement for
+non-logo content (not CC BY 4.0). Both statements are recorded verbatim in the manifests and row
+notes; the connector does not claim only CC BY, does not redistribute the PDFs, and emits derived
+rows only. Attribution: Victorian Local Government Grants Commission Annual Allocation Report —
+© State of Victoria (Department of Government Services).
+
+### 16.3 Measure, rows and values
+
+- **FY2024-25 — estimated allocation.** Printed `Total Financial Assistance Grants` per council
+  from Appendix 2A. 79 rows, `measure_type: grant_award`, `vlgc_allocation_status: estimated`.
+  Sum of the 79 council rows = **$789,162,301**, exactly the printed Totals row.
+- **FY2023-24 — final allocation.** Printed final `Financial Assistance Grants` per council from
+  Appendix 1 of the 2024-25 report. 79 rows, `vlgc_allocation_status: final`. Sum =
+  **$748,241,357**, exactly the printed Totals row.
+- **FY2023-24 estimated cross-check (not emitted).** The 2023-24 report's Appendix 2A estimate
+  sums to **$747,377,237**. For every one of the 79 councils, final − estimate equals the printed
+  difference; the totals difference is **$864,120**. The estimate is therefore used only as a
+  reconciliation gate, not as a second set of FY2023-24 rows.
+- Multiple components (general purpose equalisation, natural disaster assistance, local roads,
+  data project in 2024-25) are **printed but never summed by the connector**. It emits the single
+  printed total per council. No invented total, no component row and no cross-council total.
+- Whole AUD is converted explicitly to integer cents at ×100; the unit is never inferred from
+  magnitude. Council labels are expanded deterministically to the exact directory names (for
+  example `Queenscliffe B` → `Borough of Queenscliffe`; `Ararat RC` → `Ararat Rural City
+Council`). No project name and no LGA/location allocation is set.
+
+Examples (whole dollars):
+
+| Council                      | 2024-25 estimated total | 2023-24 final total | 2023-24 estimate | Final − estimate |
+| ---------------------------- | ----------------------: | ------------------: | ---------------: | ---------------: |
+| Alpine Shire Council         |               4,809,149 |           4,689,035 |        4,683,325 |            5,710 |
+| Greater Bendigo City Council |              22,326,169 |          21,324,233 |       21,303,083 |           21,150 |
+| Borough of Queenscliffe      |                 561,612 |             443,133 |          442,743 |              390 |
+
+### 16.4 Totals suppression, keys and no-sum
+
+- Every year's printed Totals row is read for reconciliation and **suppressed** (3 in total: the
+  2024-25 estimate, the 2023-24 final and the 2023-24 estimate cross-check). DB
+  `delivery_entity` matching `Totals` = **0**.
+- Natural keys include the source id, fiscal year, exact council name, measure, allocation status
+  and report snapshot. All **158** keys are unique; re-running upserts on `natural_key` with no
+  deletes.
+- Every row is `aggregation_role: agency_detail`, `data_quality_flag:
+provisional/local_government`, `verified: false`, `jurisdiction_level: local`, `jurisdiction:
+VIC` and `funding_source: Victorian Local Government Grants Commission`.
+- Every row carries **`potential_double_count: true`**: the FAG is a component of council grant
+  revenue and overlaps VGC1 grant revenue and ABS grant lines. The rows are never added to
+  VGC1/ABS spending, never added to another grant source and never summed across councils. The
+  overlap is disclosed in `notes`, not resolved by addition.
+
+### 16.5 Reconciliation
+
+1. **Within each year:** the 79 council rows sum exactly to the printed Totals row (±$0) —
+   `$789,162,301` for 2024-25 and `$748,241,357` for 2023-24 final.
+2. **Across the two FY2023-24 statements:** final − September-2023 estimate equals the printed
+   per-council difference for all 79 councils and sums to the published `$864,120`.
+3. **No cross-council, state-plus-local or cross-year total is created or published.**
+
+### 16.6 DB delta and reproduce
+
+Before: **659,086** measures. After: **659,244** (+158; `vic-vlgc-fag` = 158; 79 distinct councils
+per year; Totals entities 0). VGC1 = 54,215 and ABS = 88,916 are untouched; no deletes.
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export VIC_FAG_ARCHIVE_ROOT=/home/steve/ausspend-source-archive
+export VIC_FAG_2024_25_PATH=/home/steve/ausspend-source-archive/vic-vlgc-fag/2024-25-VLGGC-Annual-Allocation-Report-Sept-2024.pdf
+export VIC_FAG_2023_24_PATH=/home/steve/ausspend-source-archive/vic-vlgc-fag/2023-24-VLGGC-ALLOCATION-REPORT-Sept-2023.pdf
+npm run ingest:vic-vlgc-fag
+# [ingest:vic-vlgc-fag] vic-vlgc-fag: success fetched=158 upserted=158
+# [ingest:vic-vlgc-fag] db source_rows=158 distinct_councils=79 totals_entities=0 all_measures=659244
+# [ingest:vic-vlgc-fag] by_year=2023-24=79,2024-25=79
+```
+
+Checks run: `npm run typecheck`, `npm run lint`, `npm run format:check` (changed files pass;
+repo-wide check still lists five pre-existing unrelated files), `npm test` (75 files, 832 passed,
+2 skipped; includes `server/test/vic-vlgc-fag.test.ts`: 79 rows/year, Totals excluded, natural
+keys, idempotency, no-sum, overlap semantics and licence metadata), `npm run build`, mocked
+`npm run test:e2e` on alternate ports `3103/5176` (51 passed) and live `npm run audit` on
+`3104/5177` (38/38 checks passed). Ports 3001/5173 and the production nginx were not touched.

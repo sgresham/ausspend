@@ -561,8 +561,15 @@ non-additive rows (57,024 total) across all 79 councils, so all nine historical 
 none is deferred. The older VGC1 header prints `Family & Community Service` (singular) and the older
 ABS2 balance sheet has 144 columns (no lease-liability line); the connector selects an explicit legacy
 layout, suppresses all Totals rows, keys each row by fiscal year, and reconciles each year to its
-workbook Totals row within 1 cent. The 79 individual GPFS PDFs and other states remain a
-later item. Council spending is never state spending.
+workbook Totals row within 1 cent. **The VIC grants overlay** adds source `vic-vlgc-fag`:
+79 estimated FY2024-25 and 79 final FY2023-24 Commonwealth Financial Assistance Grant totals (158
+rows) for the same 79 councils. The FY2023-24 final table reconciles to the earlier September 2023
+estimate by the published $864,120 adjustment; the source Totals rows are suppressed, no component
+sum or cross-council total is emitted, every row is `potential_double_count=true` against VGC1/ABS
+grant revenue, and the report copyright page/licence is recorded verbatim (VLGGC
+attribution/permission for the data collection; the PDF itself states CC BY 3.0 Australia for
+non-logo content). The 79 individual GPFS PDFs and other states remain a later item. Council
+spending is never state spending.
 
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
 not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this

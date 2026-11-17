@@ -52,6 +52,7 @@ import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
+import { createFagConnector } from './vic-vlgc-fag.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -478,6 +479,15 @@ export const CONNECTORS: readonly Connector[] = [
   // carry a documented accrual/cash bridge. Never mixed with VGC1, vic-budget,
   // ABS GFS, LGPRF, waste or NSW council data.
   createVlgcAbsConnector(),
+  // VIC grants overlay: the VLGGC Annual Allocation Report prints one
+  // Commonwealth Financial Assistance Grant total per council for 2024-25
+  // (estimated) and 2023-24 (final). It is grant income, not council spending:
+  // each row is non-additive agency_detail, potential_double_count=true and is
+  // never added to VGC1/ABS spending or any other grant source. The source
+  // Totals rows are suppressed; no component sum and no cross-council total.
+  // The report's copyright page is CC BY 3.0 AU for non-logo content; the
+  // underlying VLGGC data collection is attribution/permission, NOT CC BY.
+  createFagConnector(),
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),
