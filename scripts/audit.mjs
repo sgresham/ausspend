@@ -36,6 +36,7 @@ const KNOWN_SOURCE_IDS = [
   'waternsw',
   'hunter-water',
   'essential-energy',
+  'forestry-corporation',
 ];
 
 const results = [];
@@ -348,8 +349,8 @@ async function apiChecks() {
     );
     assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
     assert(
-      Array.isArray(soc.body?.series) && soc.body.series.length === 69,
-      `expected 69 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6), got ${soc.body?.series?.length}`,
+      Array.isArray(soc.body?.series) && soc.body.series.length === 76,
+      `expected 76 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -368,8 +369,9 @@ async function apiChecks() {
         soc.body.entities.includes('Sydney Water') &&
         soc.body.entities.includes('WaterNSW') &&
         soc.body.entities.includes('Hunter Water') &&
-        soc.body.entities.includes('Essential Energy'),
-      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy) are not returned',
+        soc.body.entities.includes('Essential Energy') &&
+        soc.body.entities.includes('Forestry Corporation of NSW'),
+      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW) are not returned',
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
@@ -379,7 +381,11 @@ async function apiChecks() {
       sources.get('essential-energy')?.records === 6,
       'Essential Energy source count is not 6 rows',
     );
-    for (const entity of ['sydney-water', 'waternsw', 'hunter-water']) {
+    assert(
+      sources.get('forestry-corporation')?.records === 7,
+      'Forestry Corporation source count is not 7 rows',
+    );
+    for (const entity of ['sydney-water', 'waternsw', 'hunter-water', 'forestry-corporation']) {
       assert(
         sources.get(entity)?.unit === 'AUD_thousands',
         `${entity} SOC unit is not AUD_thousands`,
@@ -623,6 +629,54 @@ async function apiChecks() {
       'Essential Energy government grants row is not flagged as a potential double count',
     );
 
+    const forestry = await getJson(
+      '/api/soc?fiscal_year=2024-25&entity=Forestry%20Corporation%20of%20NSW',
+    );
+    assert(
+      forestry.status === 200,
+      `Forestry Corporation SOC expected 200, got ${forestry.status}`,
+    );
+    assert(
+      forestry.body?.series?.length === 7,
+      `expected 7 Forestry Corporation SOC rows, got ${forestry.body?.series?.length}`,
+    );
+    assert(
+      forestry.body?.source?.source_id === 'forestry-corporation',
+      'Forestry Corporation SOC source is not forestry-corporation',
+    );
+    assert(
+      forestry.body.series.every((row) => row.delivery_entity === 'Forestry Corporation of NSW'),
+      'Forestry Corporation SOC response contains another entity',
+    );
+    const fcByLine = new Map(forestry.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      fcByLine.get('total_expenses')?.amount_cents === 38453200000,
+      'Forestry Corporation total expenses is not $384,532 thousand in cents',
+    );
+    assert(
+      fcByLine.get('total_revenue')?.amount_cents === 38855700000,
+      'Forestry Corporation total revenue is not $388,557 thousand in cents',
+    );
+    assert(
+      fcByLine.get('employee_expenses')?.amount_cents === 8961000000,
+      'Forestry Corporation employee expenses is not $89,610 thousand in cents',
+    );
+    assert(
+      fcByLine.get('depreciation_amortisation')?.amount_cents === 1216300000,
+      'Forestry Corporation depreciation/amortisation is not $12,163 thousand in cents',
+    );
+    assert(
+      fcByLine.get('net_result')?.amount_cents === 1983800000 &&
+        fcByLine.get('net_result')?.soc_printed_sign === 'positive',
+      'Forestry Corporation net result is not the printed $19,838 thousand profit',
+    );
+    assert(
+      fcByLine.get('government_grants_community_service_obligations')?.potential_double_count ===
+        true &&
+        fcByLine.get('government_grants_other_state_government')?.potential_double_count === true,
+      'Forestry Corporation government grant rows are not flagged as potential double counts',
+    );
+
     const generic = await getJson('/api/spending?limit=5');
     assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
     const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
@@ -635,7 +689,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '69 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326 and 2,042.7, no total, excluded from generic spending';
+    return '76 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7 and 384,532, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {

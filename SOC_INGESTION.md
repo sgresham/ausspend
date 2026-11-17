@@ -1,15 +1,16 @@
-# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy)
+# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW)
 
 **Status:** the ABS GFS Public Non-Financial Corporations (PNFC) sector
-benchmark is implemented, and three NSW per-entity State Owned Corporation (SOC)
-adapters are implemented: **Sydney Water Corporation**, **WaterNSW (Water NSW)**
-and **Hunter Water Corporation**. Per-entity NSW SOC extraction for any other entity, BP1 Chapter 9,
-VIC/QLD SOC and any synthetic SOC rows are out of scope and are not implemented.
-The three SOC entities are separate sources and are never summed with each other.
+benchmark is implemented, and five NSW per-entity State Owned Corporation (SOC)
+adapters are implemented: **Sydney Water Corporation**, **WaterNSW (Water NSW)**,
+**Hunter Water Corporation**, **Essential Energy** and **Forestry Corporation of
+NSW**. Per-entity NSW SOC extraction for any other entity, BP1 Chapter 9, VIC/QLD
+SOC and any synthetic SOC rows are out of scope and are not implemented. The five
+SOC entities are separate sources and are never summed with each other.
 
 `npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW, then
-Hunter Water**,
-logging each source's success/failure and continuing after a source error.
+Hunter Water, then Essential Energy, then Forestry Corporation of NSW**, logging
+each source's success/failure and continuing after a source error.
 
 ## 1. Source: ABS GFS PNFC (Annual 2024-25 data cubes)
 
@@ -751,6 +752,93 @@ item is invented: every value is a printed statement or note line.
 Both rows carry `human_spot_check: required` in their notes. No Essential Energy
 row is marked verified in this phase.
 
+## 2D. Source: Forestry Corporation of NSW (fifth NSW SOC entity)
+
+Forestry Corporation of New South Wales is an NSW statutory State Owned
+Corporation (the Corporation). Source id: `forestry-corporation`. Name:
+`Forestry Corporation of NSW — Annual Report`. Publisher: Forestry Corporation
+of NSW. Canonical `delivery_entity`: `Forestry Corporation of NSW`.
+
+The connector starts at the official annual-report page
+(`https://www.forestrycorporation.com.au/about/pubs/corporate/annual-report`) and
+selects the latest annual-report PDF. No PDF URL is hard-coded. The site's HTML
+pages sit behind a Cloudflare challenge from the ingestion host, so the live
+ingest can supply the exact official PDF URL through
+`FORESTRY_CORPORATION_ANNUAL_REPORT_URL`.
+
+- Document: `Annual Report 2024–25`
+- Official PDF: `https://www.forestrycorporation.com.au/__data/assets/pdf_file/0009/1650285/annual-report-2024-25.pdf`
+- Bytes: `6,448,775` (SHA-256
+  `18f9fa57718cd6177d505298d0fd214f897028b2db76e8a3e257376aa392be10`)
+- Printed unit: **`$‘000`** (thousands), stated on the face statement. The Basis
+  of Preparation (Note 2) states all values are rounded to the nearest thousand
+  dollars. `AUD_thousands`; `amount_cents = $'000 × 100,000`. A table read as
+  dollars or millions is rejected and the document is deferred.
+- Income statement: _Statement of profit or loss and other comprehensive income_
+  for the year ended 30 June 2025.
+
+### Exact reconciliation (zero tolerance, printed 2025 column, $‘000)
+
+| Printed line                                    | 2025 ($‘000) |
+| ----------------------------------------------- | -----------: |
+| Revenue from contracts with customers           |      335,995 |
+| Other income (Note 5)                           |       48,833 |
+| Investment revenue (Note 6)                     |        3,729 |
+| **Total revenue**                               |  **388,557** |
+| Other operating expenses (Note 8)               |      279,691 |
+| Employee benefits expense (Note 9)              |       89,610 |
+| Depreciation and amortisation expense           |       12,163 |
+| Finance costs (Note 10)                         |        3,068 |
+| **Total expenses** (explicit printed)           |  **384,532** |
+| Other gains/(losses)                            |       33,809 |
+| Net impairment of right-of-use asset            |           82 |
+| Net impairment of property, plant and equipment |        8,274 |
+| Fair value loss on revaluation                  |          171 |
+| Impairment loss on receivables                  |          474 |
+| **Net profit before income tax**                |   **28,833** |
+| Income tax expense                              |        8,995 |
+| **Net profit after income tax**                 |   **19,838** |
+
+1. Revenue components: `335,995 + 48,833 + 3,729 = 388,557` (Total revenue).
+2. Expense components: `279,691 + 89,610 + 12,163 + 3,068 = 384,532` (printed
+   Total expenses).
+3. Profit before tax: `388,557 − 384,532 + 33,809 − 82 − 8,274 − 171 − 474 + 0
+= 28,833`.
+4. Net result: `28,833 − 8,995 = 19,838`.
+5. Note 5 Other income: `31,511 + 12,192 + 0 + 5,130 = 48,833`.
+6. Note 8 Other operating expenses: the ten printed components sum to `279,691`.
+7. Note 9 Employee benefits: `80,800 + 7,255 + 1,555 = 89,610`.
+8. Note 10 Finance costs: `−101 + 950 + 1,982 + 237 = 3,068`.
+
+Any one-thousand-dollar mismatch defers the whole document; no partial rows are
+ingested.
+
+### Ingested line items (7 rows)
+
+| `soc_line_item`                                   | Printed source                          | 2025 ($‘000) | `funding_source`                     | `potential_double_count` |
+| ------------------------------------------------- | --------------------------------------- | -----------: | ------------------------------------ | ------------------------ |
+| `total_revenue`                                   | Statement Total revenue                 |      388,557 | Forestry Corporation of NSW          | false                    |
+| `total_expenses`                                  | Statement Total expenses (explicit)     |  **384,532** | Forestry Corporation of NSW          | false                    |
+| `employee_expenses`                               | Statement Employee benefits expense     |       89,610 | Forestry Corporation of NSW          | false                    |
+| `depreciation_amortisation`                       | Statement Depreciation and amortisation |       12,163 | Forestry Corporation of NSW          | false                    |
+| `government_grants_community_service_obligations` | Note 5 Grants revenue — CSO             |       31,511 | NSW Government (agency not itemised) | **true**                 |
+| `government_grants_other_state_government`        | Note 5 Grants revenue — other state     |       12,192 | NSW Government (agency not itemised) | **true**                 |
+| `net_result`                                      | Statement Net profit after income tax   |   **19,838** | Forestry Corporation of NSW          | false                    |
+
+`total_revenue` includes both grant lines; `total_expenses` includes employee
+benefits and depreciation; `net_result` is a result. None of the seven rows may be
+added to another SOC row, the PNFC benchmark or government program spending.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (384,532 $‘000)** — confirm the four printed expense lines
+   are the intended total-expenses definition.
+2. **`net_result` (19,838 $‘000)** — confirm the printed profit after income tax
+   is the intended net result.
+
+Both rows carry `human_spot_check: required` in their notes. No Forestry
+Corporation row is marked verified in this phase.
+
 ## 3. Mapping (PNFC and SOC)
 
 | Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             | Hunter Water SOC                                         |
@@ -770,6 +858,8 @@ row is marked verified in this phase.
 | `potential_double_count` | absent                                          | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source |
 | `natural_key`            | `abs-gfs-pnfc:` + 40 hex                        | `sydney-water:` + 40 hex                                 | `waternsw:` + 40 hex                                     | `hunter-water:` + 40 hex                                 |
 
+Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`/`location` NSW, `amount_cents = $’000 × 100,000`, `measure_type` `actual`, `aggregation_role` `agency_detail`, `verified` `false`, `data_quality_flag` `provisional`, `soc_unit` `AUD_thousands`, and `natural_key` prefix `forestry-corporation:`. Both grant rows are `potential_double_count: true`.
+
 ## 4. No-sum and double-count invariants (critical)
 
 - `jurisdiction_level: "pnfc"` is a sector benchmark; `jurisdiction_level: "soc"`
@@ -782,11 +872,11 @@ row is marked verified in this phase.
   already includes the separately shown grants; `total_expenses` already
   includes employee, depreciation/amortisation and transfer lines; `net_result`
   is a result, not an expense. Summing any of them is invalid.
-- Sydney Water, WaterNSW, Hunter Water and Essential Energy are **separate
-  sources and separate entities**. The API returns a `sources` array and an
+- Sydney Water, WaterNSW, Hunter Water, Essential Energy and Forestry
+  Corporation of NSW are **separate sources and separate entities**. The API returns a `sources` array and an
   `entities` filter; the UI shows an entity column and an entity selector.
-  WaterNSW, Hunter Water and Essential Energy rows are never added to Sydney
-  Water's rows or to each other.
+  WaterNSW, Hunter Water, Essential Energy and Forestry Corporation rows are
+  never added to Sydney Water's rows or to each other.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
@@ -815,7 +905,7 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water and Essential Energy, in order.
+1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy and Forestry Corporation of NSW, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
@@ -823,9 +913,10 @@ The runner:
 5. Writes `docs/source-archive/abs-gfs-pnfc-2024-25.json`,
    `docs/source-archive/sydney-water-annual-report.json` and
    `docs/source-archive/waternsw-annual-report.json`,
-   `docs/source-archive/hunter-water-annual-report.json` and
-   `docs/source-archive/essential-energy-annual-report.json`. The exact bytes
-   stay outside the repo.
+   `docs/source-archive/hunter-water-annual-report.json`,
+   `docs/source-archive/essential-energy-annual-report.json` and
+   `docs/source-archive/forestry-corporation-annual-report.json`. The exact
+   bytes stay outside the repo.
 6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
 
 For the Cloudflare-blocked WaterNSW host, the live ingest can supply the exact
@@ -858,7 +949,8 @@ archive record the exact bytes and SHA-256 outside the repo.
 ## 7. How the remaining SOCs will plug in later
 
 `scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water,
-WaterNSW, Hunter Water, then Essential Energy) and an intentionally empty
+WaterNSW, Hunter Water, Essential Energy, then Forestry Corporation of NSW) and
+an intentionally empty
 `FUTURE_SOC_SOURCE_IDS`. A later phase
 should:
 

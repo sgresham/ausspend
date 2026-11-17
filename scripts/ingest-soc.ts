@@ -23,6 +23,17 @@ import {
   ESSENTIAL_ENERGY_UNIT,
   ESSENTIAL_ENERGY_UNIT_LABEL,
   ESSENTIAL_ENERGY_UNIT_TO_CENTS,
+  FORESTRY_CORPORATION_CAVEAT,
+  FORESTRY_CORPORATION_ENTITY,
+  FORESTRY_CORPORATION_ID,
+  FORESTRY_CORPORATION_JURISDICTION,
+  FORESTRY_CORPORATION_LICENSE,
+  FORESTRY_CORPORATION_NAME,
+  FORESTRY_CORPORATION_PUBLISHER,
+  FORESTRY_CORPORATION_SOURCE_URL,
+  FORESTRY_CORPORATION_UNIT,
+  FORESTRY_CORPORATION_UNIT_LABEL,
+  FORESTRY_CORPORATION_UNIT_TO_CENTS,
   HUNTER_WATER_CAVEAT,
   HUNTER_WATER_ENTITY,
   HUNTER_WATER_ID,
@@ -92,9 +103,9 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  */
 /**
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
- * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, then Essential
- * Energy). No other SOC adapter is implemented, and the four entity adapters are
- * never summed together.
+ * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
+ * then Forestry Corporation of NSW). No other SOC adapter is implemented, and
+ * the five entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
@@ -102,6 +113,7 @@ export const SOC_SOURCE_IDS = [
   WATERNSW_ID,
   HUNTER_WATER_ID,
   ESSENTIAL_ENERGY_ID,
+  FORESTRY_CORPORATION_ID,
 ] as const;
 
 /**
@@ -282,6 +294,40 @@ async function writeEssentialEnergyManifest(): Promise<void> {
   );
 }
 
+async function writeForestryCorporationManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: FORESTRY_CORPORATION_ID });
+  const manifestPath = path.resolve(
+    process.env.FORESTRY_CORPORATION_MANIFEST ??
+      'docs/source-archive/forestry-corporation-annual-report.json',
+  );
+  const manifest = {
+    entity: FORESTRY_CORPORATION_ENTITY,
+    jurisdiction: FORESTRY_CORPORATION_JURISDICTION,
+    dataset: FORESTRY_CORPORATION_NAME,
+    publisher: FORESTRY_CORPORATION_PUBLISHER,
+    discovery_page: FORESTRY_CORPORATION_SOURCE_URL,
+    license: FORESTRY_CORPORATION_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${FORESTRY_CORPORATION_UNIT_LABEL} (${FORESTRY_CORPORATION_UNIT}; x${FORESTRY_CORPORATION_UNIT_TO_CENTS} cents per unit)`,
+    caveat: FORESTRY_CORPORATION_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "Latest Forestry Corporation of NSW annual report discovered from the official annual-report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The statement of profit or loss and other comprehensive income prints an explicit $'000 unit. Total expenses is the explicit printed subtotal and is accepted only when the four printed expense lines, Note 5 Other income, Note 8 Other operating expenses, Note 9 Employee benefits, Note 10 Finance costs and the profit-before-tax/net-result bridges reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Forestry Corporation rows to government program spending, the PNFC benchmark, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -323,6 +369,7 @@ async function main(): Promise<void> {
     await writeWaterNswManifest();
     await writeHunterWaterManifest();
     await writeEssentialEnergyManifest();
+    await writeForestryCorporationManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -465,6 +512,33 @@ async function main(): Promise<void> {
     for (const group of eeByLine) {
       console.log(
         `[ingest:soc] ${ESSENTIAL_ENERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const fcRows = await MeasureModel.countDocuments({ source_id: FORESTRY_CORPORATION_ID });
+    const fcVerified = await MeasureModel.countDocuments({
+      source_id: FORESTRY_CORPORATION_ID,
+      verified: true,
+    });
+    const fcDoubleCount = await MeasureModel.countDocuments({
+      source_id: FORESTRY_CORPORATION_ID,
+      potential_double_count: true,
+    });
+    const fcByLine = await MeasureModel.aggregate([
+      { $match: { source_id: FORESTRY_CORPORATION_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const fcDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: FORESTRY_CORPORATION_ID,
+      status: 'deferred',
+    });
+    const fcArchived = await listArchivedRecords({ source_id: FORESTRY_CORPORATION_ID });
+    console.log(
+      `[ingest:soc] ${FORESTRY_CORPORATION_ID} rows=${fcRows} source_documents=${fcArchived.length} verified=${fcVerified} potential_double_count=${fcDoubleCount} deferred_documents=${fcDeferred} (entity-level SOC statement lines; no combined total is printed or computed)`,
+    );
+    for (const group of fcByLine) {
+      console.log(
+        `[ingest:soc] ${FORESTRY_CORPORATION_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(

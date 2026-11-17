@@ -139,10 +139,12 @@ const UNIT_PATTERNS: Array<{ kind: MoneyUnitKind; pattern: RegExp }> = [
   { kind: 'billions', pattern: /\$\s*(?:b|bn|bil|billion)\b|\b(?:billions?)\b/i },
   { kind: 'millions', pattern: /\$\s*(?:m|mn|million)\b|\b(?:millions?)\b/i },
   {
+    // Accept the straight quote and both curly quote glyphs (U+2018/U+2019)
+    // that PDF typesetters use for "$'000".
     kind: 'thousands',
-    pattern: /\$\s*['’]?0{3}\b|['’]000\b|\$\s*(?:k|thousand)\b|\bthousands?\b/i,
+    pattern: /\$\s*['’‘]?0{3}\b|['’‘]000\b|\$\s*(?:k|thousand)\b|\bthousands?\b/i,
   },
-  { kind: 'dollars', pattern: /\$\s*(?!['’0-9bmk])|\baud\b|\bdollars?\b/i },
+  { kind: 'dollars', pattern: /\$\s*(?!['’‘0-9bmk])|\baud\b|\bdollars?\b/i },
 ];
 
 /** Detect a money unit from header/unit text. Missing or conflicting units are ambiguous. */
