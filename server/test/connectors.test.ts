@@ -25,6 +25,7 @@ const LIVE_IDS = [
   'sutherland-shire-gpfs',
   'wollongong-gpfs',
   'newcastle-gpfs',
+  'lake-macquarie-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -43,9 +44,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships thirty-five connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(35);
-    expect(new Set(CONNECTOR_IDS).size).toBe(35);
+  it('ships thirty-six connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(36);
+    expect(new Set(CONNECTOR_IDS).size).toBe(36);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -161,6 +162,10 @@ describe('federal connector registry', () => {
     expect(getConnector('newcastle-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('newcastle-gpfs')?.source_url).toContain('newcastle.nsw.gov.au');
     expect(getConnector('newcastle-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('lake-macquarie-gpfs')?.status).toBe('active');
+    expect(getConnector('lake-macquarie-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('lake-macquarie-gpfs')?.source_url).toContain('lakemac.com.au');
+    expect(getConnector('lake-macquarie-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
