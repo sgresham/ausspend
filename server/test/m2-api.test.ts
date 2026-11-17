@@ -57,6 +57,9 @@ beforeAll(async () => {
       fiscal_year: '2024-25',
       measure_type: 'actual',
       amount_cents: 500_000,
+      project_name: 'New Dubbo Bridge',
+      description: 'Bridge construction across the Macquarie River',
+      delivery_entity: 'Transport for NSW',
     },
     {
       ...base,
@@ -65,6 +68,9 @@ beforeAll(async () => {
       fiscal_year: '2024-25',
       measure_type: 'budget',
       amount_cents: 600_000,
+      project_name: 'Health Facilities Program',
+      description: 'Regional hospital upgrades',
+      delivery_entity: 'NSW Health',
     },
     {
       ...base,
@@ -83,6 +89,9 @@ beforeAll(async () => {
       amount_cents: 100_000,
       jurisdiction_level: 'state',
       jurisdiction: 'NSW',
+      project_name: 'Regional Roads Upgrade',
+      description: 'Road resurfacing package',
+      delivery_entity: 'NSW Public Works',
     },
     {
       ...base,
@@ -350,6 +359,7 @@ describe('GET /api/spending', () => {
       postcode: null,
       expense_category: null,
       function: null,
+      q: null,
       region: null,
       area: null,
       min_amount: null,
@@ -428,6 +438,7 @@ describe('GET /api/spending', () => {
       postcode: null,
       expense_category: null,
       function: null,
+      q: null,
       region: null,
       area: null,
       min_amount: null,
@@ -482,6 +493,104 @@ describe('GET /api/spending', () => {
       min_amount: 200_000,
       max_amount: 500_000,
     });
+  });
+
+  it('matches a project or item name case-insensitively and echoes q', async () => {
+    const exact = await request(app).get('/api/spending?q=New%20Dubbo%20Bridge');
+    expect(exact.status).toBe(200);
+    expect(exact.body.summary).toMatchObject({ count: 1, mixed: false, total_cents: 500_000 });
+    expect(exact.body.data).toHaveLength(1);
+    expect(exact.body.data[0]).toMatchObject({
+      id: measureIds[0],
+      project_name: 'New Dubbo Bridge',
+      delivery_entity: 'Transport for NSW',
+    });
+    expect(exact.body.applied_filters).toMatchObject({ q: 'New Dubbo Bridge' });
+
+    const lower = await request(app).get('/api/spending?q=new%20dubbo%20bridge');
+    expect(lower.status).toBe(200);
+    expect(lower.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+
+    const trimmed = await request(app).get('/api/spending?q=%20%20New%20Dubbo%20Bridge%20');
+    expect(trimmed.status).toBe(200);
+    expect(trimmed.body.applied_filters.q).toBe('New Dubbo Bridge');
+    expect(trimmed.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+  });
+
+  it('matches description and delivery_entity, but never notes or source_url', async () => {
+    const description = await request(app).get('/api/spending?q=Macquarie');
+    expect(description.status).toBe(200);
+    expect(description.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+
+    const entity = await request(app).get('/api/spending?q=Transport%20for%20NSW');
+    expect(entity.status).toBe(200);
+    expect(entity.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+
+    const notes = await request(app).get('/api/spending?q=not%20real%20spending');
+    expect(notes.status).toBe(200);
+    expect(notes.body.data).toEqual([]);
+    expect(notes.body.summary.count).toBe(0);
+
+    const sourceUrl = await request(app).get('/api/spending?q=synthetic-seed');
+    expect(sourceUrl.status).toBe(200);
+    expect(sourceUrl.body.data).toEqual([]);
+  });
+
+  it('treats regex metacharacters literally and returns no fuzzy matches', async () => {
+    for (const literal of ['.*', '(', '[', 'Bridge.*']) {
+      const response = await request(app).get(`/api/spending?q=${encodeURIComponent(literal)}`);
+      expect(response.status, literal).toBe(200);
+      expect(response.body.data, literal).toEqual([]);
+    }
+
+    const noMatch = await request(app).get('/api/spending?q=zzzznothing');
+    expect(noMatch.status).toBe(200);
+    expect(noMatch.body.summary.count).toBe(0);
+    expect(noMatch.body.data).toEqual([]);
+  });
+
+  it('treats an empty q as no filter and keeps every existing filter', async () => {
+    const empty = await request(app).get('/api/spending?q=');
+    expect(empty.status).toBe(200);
+    expect(empty.body.summary.count).toBe(8);
+    expect(empty.body.applied_filters.q).toBeNull();
+
+    const whitespace = await request(app).get('/api/spending?q=%20%20');
+    expect(whitespace.status).toBe(200);
+    expect(whitespace.body.summary.count).toBe(8);
+    expect(whitespace.body.applied_filters.q).toBeNull();
+
+    const composed = await request(app).get(
+      '/api/spending?q=New%20Dubbo%20Bridge&function=07&measure_type=actual&fiscal_year=2024-25',
+    );
+    expect(composed.status).toBe(200);
+    expect(composed.body.summary.count).toBe(1);
+    expect(composed.body.applied_filters).toMatchObject({
+      q: 'New Dubbo Bridge',
+      function: '07',
+      measure_type: 'actual',
+      fiscal_year: '2024-25',
+    });
+
+    const disjoint = await request(app).get(`/api/spending?q=New%20Dubbo%20Bridge&region=${nswId}`);
+    expect(disjoint.status).toBe(200);
+    expect(disjoint.body.data).toEqual([]);
+
+    const noType = await request(app).get(
+      '/api/spending?q=New%20Dubbo%20Bridge&measure_type=budget',
+    );
+    expect(noType.status).toBe(200);
+    expect(noType.body.summary.count).toBe(0);
+  });
+
+  it('serves the same q filter on the /api/v1 alias and rejects an over-long q', async () => {
+    const alias = await request(app).get('/api/v1/spending?q=New%20Dubbo%20Bridge');
+    expect(alias.status).toBe(200);
+    expect(alias.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+
+    const long = await request(app).get(`/api/spending?q=${'a'.repeat(101)}`);
+    expect(long.status).toBe(400);
+    expect(long.body.error).toMatch(/at most 100/);
   });
 
   it('supports every documented sort', async () => {

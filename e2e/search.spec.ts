@@ -126,3 +126,36 @@ test('NSW state budget rows are shown and labelled Budgeted', async ({ page }) =
   await expect(rows).toContainText('Budgeted');
   await expect(rows).not.toContainText('No COFOG function');
 });
+
+test('a direct project/item q URL shows the New Dubbo Bridge row with a clearable chip', async ({
+  page,
+}) => {
+  await page.goto('/search?q=New%20Dubbo%20Bridge');
+
+  const rows = page.getByTestId('spending-rows');
+  await expect(rows).toContainText('New Dubbo Bridge');
+  await expect(rows).toContainText('nsw-budget');
+  await expect(rows).not.toContainText('Chichester Trunk Gravity Main');
+
+  const applied = page.getByTestId('applied-filters');
+  await expect(applied).toContainText('Project or item: “New Dubbo Bridge”');
+  await expect(page.getByLabel('Project or item')).toHaveValue('New Dubbo Bridge');
+});
+
+test('the project/item input applies q and the chip clears it', async ({ page }) => {
+  await page.goto('/search');
+
+  const input = page.getByLabel('Project or item');
+  await input.fill('New Dubbo Bridge');
+  await input.press('Enter');
+
+  await expect(page).toHaveURL(/q=New\+Dubbo\+Bridge/);
+  await expect(page.getByTestId('applied-filters')).toContainText(
+    'Project or item: “New Dubbo Bridge”',
+  );
+  await expect(page.getByTestId('spending-rows')).toContainText('New Dubbo Bridge');
+
+  await page.getByTestId('applied-filters').locator('.MuiChip-deleteIcon').click();
+  await expect(page).not.toHaveURL(/q=/);
+  await expect(page.getByTestId('spending-rows')).not.toContainText('New Dubbo Bridge');
+});

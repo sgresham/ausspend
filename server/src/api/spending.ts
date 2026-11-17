@@ -59,6 +59,11 @@ const SUMMARY_PROJECTION = {
   expense_category: 1,
 } as const;
 
+/** Escape a literal text filter so `.*`, `(` and friends match themselves. */
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const SORTS: Record<SpendingSort, Record<string, 1 | -1>> = {
   amount_desc: { amount_cents: -1, _id: 1 },
   amount_asc: { amount_cents: 1, _id: 1 },
@@ -351,6 +356,22 @@ export const listSpending: RequestHandler = async (req, res) => {
   if (regionId) mongoQuery.region_id = regionId;
   if (areaRegion)
     Object.assign(mongoQuery, areaQueries(areaRegion, areaRegion.parent_code ?? 'NSW').combined);
+  if (query.q && query.q.length > 0) {
+    // Literal, case-insensitive project/item text filter. Only the descriptive
+    // project fields match: never notes or source_url, and never a total.
+    const pattern = new RegExp(escapeRegex(query.q), 'i');
+    const textFilter = {
+      $or: [{ project_name: pattern }, { description: pattern }, { delivery_entity: pattern }],
+    };
+    if (mongoQuery.$or) {
+      // Area mode already uses $or; combine both with an explicit $and so the
+      // text filter composes with every existing filter instead of replacing it.
+      mongoQuery.$and = [{ $or: mongoQuery.$or }, textFilter];
+      delete mongoQuery.$or;
+    } else {
+      Object.assign(mongoQuery, textFilter);
+    }
+  }
   if (query.min_amount !== undefined || query.max_amount !== undefined) {
     mongoQuery.amount_cents = {
       ...(query.min_amount !== undefined ? { $gte: query.min_amount } : {}),
@@ -421,6 +442,7 @@ export const listSpending: RequestHandler = async (req, res) => {
     postcode: query.postcode ?? null,
     expense_category: query.expense_category ?? null,
     function: query.function ?? null,
+    q: query.q && query.q.length > 0 ? query.q : null,
     region: query.region ?? null,
     area: areaRegion ? regionSlug(areaRegion) : (query.area ?? null),
     min_amount: query.min_amount ?? null,

@@ -531,6 +531,27 @@ SPENDING_ROWS.push({
 });
 
 SPENDING_ROWS.push({
+  ...spendingRow('nsw-dubbo-bridge', NSW, '04', 'budget', '2025-26', 1_265_300_000),
+  id: 'nsw-dubbo-bridge',
+  source_id: 'nsw-budget',
+  source_url: 'https://www.budget.nsw.gov.au/budget-detail/open-data',
+  project_name: 'Newell Highway, New Dubbo Bridge (State and Federal Funded)',
+  description: 'New Dubbo Bridge — State and Federal funded',
+  delivery_entity: 'Transport for NSW',
+  jurisdiction_level: 'state',
+  jurisdiction: 'NSW',
+  source_dataset: 'NSW Budget 2025-26 Open Data',
+  data_quality_flag: 'provisional',
+  location: { state: 'NSW', lga_name: 'DUBBO' },
+  provenance: {
+    source_id: 'nsw-budget',
+    source_url: 'https://www.budget.nsw.gov.au/budget-detail/open-data',
+    verified: false,
+    notes: 'NSW Budget capital project; Budgeted 2025-26.',
+  },
+});
+
+SPENDING_ROWS.push({
   ...spendingRow('ckan-ram-1', NSW, '09', 'budget', '2025-26', 32_977_900),
   id: 'ckan-ram-1',
   source_id: 'data-nsw-ckan',
@@ -1011,9 +1032,19 @@ function spendingResponse(url: URL) {
   const jurisdictionLevel = url.searchParams.get('jurisdiction_level');
   const minAmount = url.searchParams.get('min_amount');
   const maxAmount = url.searchParams.get('max_amount');
+  const text = (url.searchParams.get('q') ?? '').trim();
   const sort = url.searchParams.get('sort') ?? 'amount_desc';
   const page = Number(url.searchParams.get('page') ?? '1');
   const pageSize = Number(url.searchParams.get('page_size') ?? '20');
+
+  // Literal, case-insensitive match over the descriptive project fields only.
+  const matchesText = (row: Record<string, unknown>) => {
+    if (!text) return true;
+    const needle = text.toLowerCase();
+    return [row.project_name, row.description, row.delivery_entity].some(
+      (value) => typeof value === 'string' && value.toLowerCase().includes(needle),
+    );
+  };
 
   if (functionCode && !FUNCTION_NAMES[functionCode]) {
     return { status: 404, body: { ok: false, error: `Unknown function code: ${functionCode}` } };
@@ -1026,7 +1057,7 @@ function spendingResponse(url: URL) {
       !ALL_REGIONS.some((region) => region._id === regionId) &&
       ['dubbo', 'nsw-dubbo'].includes((regionId ?? '').toLowerCase()));
   if (areaMode) {
-    let rows = [...AREA_COMBINED_ROWS];
+    let rows = [...AREA_COMBINED_ROWS].filter(matchesText);
     if (fiscalYear) rows = rows.filter((row) => row.fiscal_year === fiscalYear);
     if (measureType) rows = rows.filter((row) => row.measure_type === measureType);
     if (minAmount) rows = rows.filter((row) => row.amount_cents >= Number(minAmount));
@@ -1063,6 +1094,7 @@ function spendingResponse(url: URL) {
           measure_type: measureType,
           jurisdiction_level: jurisdictionLevel,
           function: functionCode,
+          q: text || null,
           region: regionId,
           area: 'dubbo',
           min_amount: minAmount ? Number(minAmount) : null,
@@ -1086,6 +1118,7 @@ function spendingResponse(url: URL) {
             (row) => 'jurisdiction_level' in row && row.jurisdiction_level === 'state',
           )
         : [...SPENDING_ROWS];
+  rows = rows.filter(matchesText);
   if (functionCode) rows = rows.filter((row) => row.function_code === functionCode);
   if (regionId) rows = rows.filter((row) => row.region_id === regionId);
   if (fiscalYear) rows = rows.filter((row) => row.fiscal_year === fiscalYear);
@@ -1159,6 +1192,7 @@ function spendingResponse(url: URL) {
         fiscal_year: fiscalYear,
         measure_type: measureType,
         function: functionCode,
+        q: text || null,
         region: regionId,
         min_amount: minAmount ? Number(minAmount) : null,
         max_amount: maxAmount ? Number(maxAmount) : null,
@@ -1202,6 +1236,7 @@ function emptySpendingResponse() {
       measure_type: null,
       jurisdiction_level: null,
       function: null,
+      q: null,
       region: null,
       min_amount: null,
       max_amount: null,

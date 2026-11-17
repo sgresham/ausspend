@@ -93,6 +93,7 @@ export function SearchPage() {
   );
 
   const functionCode = searchParams.get('function') ?? '';
+  const q = searchParams.get('q') ?? '';
   const regionId = searchParams.get('region') ?? '';
   const areaSlug = searchParams.get('area') ?? '';
   const fiscalYear = searchParams.get('fiscal_year') ?? '';
@@ -113,6 +114,7 @@ export function SearchPage() {
 
   const spendingQuery = buildQuery({
     function: functionCode || undefined,
+    q: q || undefined,
     region: regionId || undefined,
     area: areaSlug || undefined,
     fiscal_year: fiscalYear || undefined,
@@ -134,6 +136,7 @@ export function SearchPage() {
 
   const [regionOptions, setRegionOptions] = useState<RegionRef[]>([]);
   const [regionInput, setRegionInput] = useState('');
+  const [qDraft, setQDraft] = useState(q);
   const [minDraft, setMinDraft] = useState(minAmount !== null ? String(minAmount) : '');
   const [maxDraft, setMaxDraft] = useState(maxAmount !== null ? String(maxAmount) : '');
 
@@ -176,6 +179,10 @@ export function SearchPage() {
       clearTimeout(timer);
     };
   }, [regionInput]);
+
+  useEffect(() => {
+    setQDraft(q);
+  }, [q]);
 
   useEffect(() => {
     setMinDraft(minAmount !== null ? String(minAmount) : '');
@@ -221,6 +228,12 @@ export function SearchPage() {
     const parsed = Number(trimmed);
     if (!Number.isFinite(parsed) || parsed < 0) return;
     update({ [param]: String(parsed) });
+  };
+
+  const commitText = () => {
+    const trimmed = qDraft.trim();
+    if (trimmed === q) return;
+    update({ q: trimmed || null });
   };
 
   const applied: string[] = [];
@@ -411,6 +424,29 @@ export function SearchPage() {
             }}
           >
             <TextField
+              size="small"
+              label="Project or item"
+              value={qDraft}
+              onChange={(event) => setQDraft(event.target.value)}
+              onBlur={commitText}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  commitText();
+                }
+              }}
+              placeholder="e.g. New Dubbo Bridge"
+              helperText={
+                q
+                  ? state.data
+                    ? `${state.data.pagination.total} matching row${state.data.pagination.total === 1 ? '' : 's'}`
+                    : 'Matching project name, description or delivery entity'
+                  : 'Text match over project name, description or delivery entity — not fuzzy'
+              }
+              inputProps={{ maxLength: 100 }}
+            />
+
+            <TextField
               select
               size="small"
               label="Function"
@@ -563,12 +599,21 @@ export function SearchPage() {
           <Typography variant="h6" gutterBottom>
             Applied filters
           </Typography>
-          {applied.length === 0 ? (
+          {applied.length === 0 && !q ? (
             <Typography variant="body2" color="text.secondary">
               No filters applied — showing every measure in the database, whatever its source.
             </Typography>
           ) : (
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {q ? (
+                <Chip
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                  label={`Project or item: “${q}”`}
+                  onDelete={() => update({ q: null })}
+                />
+              ) : null}
               {applied.map((label) => (
                 <Chip key={label} size="small" label={label} />
               ))}
