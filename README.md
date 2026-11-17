@@ -520,6 +520,14 @@ official dataset provides GPFS statement-line granularity for all 128 councils, 
 one-council GPFS pilot before any bulk council ingestion. It is research only: no council
 ingestion, no cross-council totals, and council spending is never state spending.
 
+[docs/NSW_COUNCIL_DATA_NSW_SWEEP.md](./docs/NSW_COUNCIL_DATA_NSW_SWEEP.md) is the P4 data.nsw
+catalogue sweep, checked per CKAN organisation rather than by keyword. It records that data.nsw has
+**no** council financial-statement dataset in any format: the only council financial content is 63
+annual-report PDFs (single PDF each, agency-specified licence, archived OpenGov NSW snapshots) for
+10 of the 128 councils, and 118 councils have no annual-report package naming them at all. Eight
+councils have no data.nsw organisation. It recommends **no data.nsw extraction pilot**; the next step stays
+individual council GPFS batches from council websites. Research only: no ingestion, no DB writes.
+
 [docs/VIC_COUNCILS.md](./docs/VIC_COUNCILS.md) is the planning inventory for the 79 Victorian
 councils: the official September 2026 local government directory, the VLGGC annual questionnaire
 (VGC1/ABS1/ABS2-3), the Know Your Council/LGPRF data set, individual council annual reports/GPFS,

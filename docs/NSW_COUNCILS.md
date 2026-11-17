@@ -297,7 +297,9 @@ uses CC BY); the source register records a pointer, not a verified licence for e
 **Feasibility without double counting.** Not a council spending source. The safe rule: **never sum
 LGA-tagged state rows with council rows**; they are different reporting entities even when they
 share a place label. Searching CKAN is still worth doing per council for machine-readable GPFS, but
-do not assume a council's CKAN presence includes its financial statements.
+do not assume a council's CKAN presence includes its financial statements. The P4 per-organisation
+sweep found **no** council financial-statement dataset in any format (only 63 annual-report PDFs for
+10 councils); see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
 
 ### 4.5 Audit Office of NSW — context/validation, not a dataset
 
@@ -486,7 +488,8 @@ other source.
    machine-readable GPFS. Then regional cities, then rural. One adapter/mapping per council; never a
    blind 128-PDF batch.
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
-   financial data; most will not have it; do not infer.
+   financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
+   council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
 6. **Do not** ingest County Councils or Joint Organisations into the 128-council population. If they
    are ever added, model them as separate entity types with their own no-double-count rules.
 
