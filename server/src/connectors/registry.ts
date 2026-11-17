@@ -23,6 +23,7 @@ import { createShoalhavenGpfsConnector } from './shoalhaven-gpfs.js';
 import { createShellharbourGpfsConnector } from './shellharbour-gpfs.js';
 import { createWaverleyGpfsConnector } from './waverley-gpfs.js';
 import { createWilloughbyGpfsConnector } from './willoughby-gpfs.js';
+import { createInnerWestGpfsConnector } from './inner-west-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -304,6 +305,19 @@ export const CONNECTORS: readonly Connector[] = [
   // outside the repo. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
   createWilloughbyGpfsConnector(),
+  // GPFS expansion: twentieth council only (Inner West Council). Its audited
+  // FY2024-25 General Purpose Financial Statements are published inside the
+  // official "Annual Report 2024-25" (the Annual Report page states the report
+  // includes Council's financial report audited by the NSW Audit Office, and the
+  // PDF includes the independent auditor's report on the GPFS) and are a
+  // separate source id: every row is non-additive agency_detail, has no
+  // region/LGA allocation, and reconciles exactly to the printed Income
+  // Statement, B1-1 "Total functions and activities" and comprehensive-income
+  // totals. innerwest.nsw.gov.au serves plain HTTP, so the PDF is discovered
+  // from the official page with Node's fetch; the exact bytes are SHA-256
+  // archived outside the repo. Never summed with any other council, the Dubbo
+  // budget rows, the existing council GPFS rows or State rows.
+  createInnerWestGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),

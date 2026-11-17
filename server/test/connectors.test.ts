@@ -35,6 +35,7 @@ const LIVE_IDS = [
   'shellharbour-gpfs',
   'waverley-gpfs',
   'willoughby-gpfs',
+  'inner-west-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -53,9 +54,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships forty-five connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(45);
-    expect(new Set(CONNECTOR_IDS).size).toBe(45);
+  it('ships forty-six connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(46);
+    expect(new Set(CONNECTOR_IDS).size).toBe(46);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -211,6 +212,10 @@ describe('federal connector registry', () => {
     expect(getConnector('willoughby-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('willoughby-gpfs')?.source_url).toContain('willoughby.nsw.gov.au');
     expect(getConnector('willoughby-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('inner-west-gpfs')?.status).toBe('active');
+    expect(getConnector('inner-west-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('inner-west-gpfs')?.source_url).toContain('innerwest.nsw.gov.au');
+    expect(getConnector('inner-west-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
