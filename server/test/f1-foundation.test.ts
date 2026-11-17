@@ -240,7 +240,7 @@ describe('F1 extended measure shape and API', () => {
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(28);
+    ).toBe(29);
     expect(coverage.body.connector_status_counts.stub).toBe(4);
     expect([
       ...coverage.body.federal_ingestion.live,
