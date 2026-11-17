@@ -13,6 +13,18 @@ export const JurisdictionLevelSchema = z.enum(JURISDICTION_LEVELS);
 
 export type JurisdictionLevel = z.infer<typeof JurisdictionLevelSchema>;
 
+/**
+ * How a row participates in additive totals. Missing means `additive` for
+ * backwards compatibility. `agency_detail` rows (for example a single
+ * department's statement) are listed for provenance but must never be added to
+ * a consolidated series.
+ */
+export const AGGREGATION_ROLES = ['additive', 'agency_detail'] as const;
+
+export const AggregationRoleSchema = z.enum(AGGREGATION_ROLES);
+
+export type AggregationRole = z.infer<typeof AggregationRoleSchema>;
+
 export const EXTRACTION_CONFIDENCES = ['low', 'medium', 'high'] as const;
 
 export const ExtractionConfidenceSchema = z.enum(EXTRACTION_CONFIDENCES);
@@ -54,6 +66,7 @@ export const MeasureRecordSchema = z.object({
   source_dataset: z.string().min(1).optional(),
   source_date: z.string().min(1).optional(),
   data_quality_flag: z.string().min(1).optional(),
+  aggregation_role: AggregationRoleSchema.optional(),
   extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
   unspsc: z.string().min(1).optional(),

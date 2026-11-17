@@ -33,6 +33,7 @@ export interface MeasureDocument {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
+  aggregation_role?: 'additive' | 'agency_detail';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: SpendingLocationDocument;
   unspsc?: string;
@@ -88,6 +89,9 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     source_dataset: { type: String },
     source_date: { type: String },
     data_quality_flag: { type: String },
+    // Missing means additive for older sources. `agency_detail` rows are shown
+    // for provenance but excluded from every additive total by the API.
+    aggregation_role: { type: String, enum: ['additive', 'agency_detail'], index: true },
     extraction_confidence: { type: String, enum: ['low', 'medium', 'high'] },
     location: { type: LocationSchema },
     unspsc: { type: String, index: true },

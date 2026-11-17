@@ -29,6 +29,8 @@
     "clean:synthetic": "npm run build -w shared && tsx scripts/clean-synthetic.ts",
     "ingest:federal": "npm run build -w shared && tsx scripts/ingest-federal.ts",
     "ingest:nsw": "npm run build -w shared && tsx scripts/ingest-nsw.ts",
+    "ingest:phase4": "npm run build -w shared && tsx scripts/ingest-phase4.ts",
+    "archive:vic": "npm run build -w shared && tsx scripts/vic-source-archive.ts",
     "grantconnect:chunks": "npm run build -w shared && tsx scripts/grantconnect-chunks.ts",
     "archive:nsw": "npm run build -w shared && tsx scripts/nsw-source-archive.ts",
     "archive": "npm run build -w shared && tsx scripts/source-archive.ts",

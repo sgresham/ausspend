@@ -198,6 +198,7 @@ export interface MeasureRow {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
+  aggregation_role?: 'additive' | 'agency_detail';
   extraction_confidence?: ExtractionConfidence;
   location?: { state?: string; lga_name?: string };
   unspsc?: string;
@@ -212,6 +213,8 @@ export interface PerMeasureTypeTotal {
 
 export interface MeasureSummary {
   count: number;
+  additive_count?: number;
+  non_additive_count?: number;
   measure_types: MeasureType[];
   mixed: boolean;
   total_cents: number | null;
@@ -263,11 +266,22 @@ export interface FunctionDetail extends MeasureSummary {
   measures: MeasureRow[];
 }
 
+export interface AgencyDetailBlock {
+  label: string;
+  aggregation_role: 'agency_detail';
+  count: number;
+  mixed: boolean;
+  total_cents: number | null;
+  total_by_measure_type: PerMeasureTypeTotal[];
+  measures: MeasureRow[];
+}
+
 export interface RegionDetail extends MeasureSummary {
   region: RegionRef;
   filters: RegionFilters;
   by_function: FunctionGroup[];
   measures: MeasureRow[];
+  agency_detail?: AgencyDetailBlock;
   area_profile?: AreaProfile | null;
 }
 
@@ -338,6 +352,8 @@ export interface SpendingByRegion extends SpendingBreakdownBase {
 
 export interface SpendingSummary {
   count: number;
+  additive_count?: number;
+  non_additive_count?: number;
   currency: 'AUD';
   total_cents: number | null;
   total_measure_type: MeasureType | null;
