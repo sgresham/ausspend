@@ -17,7 +17,13 @@ import {
   type ArchivedSourceRecord,
 } from '../../source-archive.js';
 import { DeferredSocDocumentModel } from '../../../models/index.js';
-import type { Connector, RawRecord } from '../../types.js';
+import type { Connector, FetchStrategy, RawRecord } from '../../types.js';
+import {
+  pdfFilenameFromUrl,
+  resolveSocDocument,
+  type SocSourceDocument,
+} from './soc-document-fetch.js';
+import type { HeadlessPdfFetcher } from './headless.js';
 
 /**
  * NSW SOC Phase 6 — Forestry Corporation of NSW annual-report adapter.
@@ -1393,16 +1399,8 @@ export interface ForestryCorporationConnectorOptions {
   now?: () => Date;
   /** Test/CLI override; the live connector normally discovers the latest PDF. */
   document?: ForestryCorporationAnnualReportLink;
-}
-
-function documentFilename(url: string): string {
-  try {
-    const name = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '');
-    if (/\.pdf$/i.test(name)) return name.replace(/[^A-Za-z0-9._-]+/g, '-');
-  } catch {
-    // Fall through.
-  }
-  return 'forestry-corporation-annual-report.pdf';
+  /** Test-only injection point for the last-resort headless browser fetch. */
+  headlessFetch?: HeadlessPdfFetcher;
 }
 
 /**
@@ -1445,7 +1443,7 @@ function documentFromEnv(): ForestryCorporationAnnualReportLink | null {
 }
 
 async function recordDeferral(
-  document: ForestryCorporationAnnualReportLink,
+  document: Pick<ForestryCorporationAnnualReportLink, 'url' | 'fiscal_year' | 'title'>,
   archive: ArchivedSourceRecord | null,
   deferral: ForestryCorporationDeferral,
 ): Promise<void> {
@@ -1479,6 +1477,7 @@ export function createForestryCorporationConnector(
     recordsIngested: 0,
     errors: [] as string[],
     warnings: [] as string[],
+    fetchStrategy: null as FetchStrategy | null,
   };
 
   const connector: Connector = {
@@ -1495,47 +1494,75 @@ export function createForestryCorporationConnector(
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
-      const document =
-        options.document ??
-        documentFromEnv() ??
-        (await discoverForestryCorporationAnnualReport(fetchImpl));
+      metadata.fetchStrategy = null;
+      const override = options.document ?? documentFromEnv() ?? undefined;
       // The official host blocks this ingestion host at the CDN for both the
       // HTML page and the PDF. An operator may supply an exact-byte mirror
       // (e.g. a Parliament/archive copy); the row's source_url stays the
       // official PDF URL and the mirror is recorded as retrieved_from.
       const mirrorUrl = process.env.FORESTRY_CORPORATION_ANNUAL_REPORT_MIRROR_URL;
       const localFile = process.env.FORESTRY_CORPORATION_ANNUAL_REPORT_FILE;
-      const fetchUrl = mirrorUrl ?? document.url;
+      const directDocument = override
+        ? mirrorUrl
+          ? { ...override, download_url: mirrorUrl }
+          : override
+        : undefined;
       let bytes: Buffer;
-      let retrievedFrom = document.url;
+      let document: SocSourceDocument;
+      let strategy: FetchStrategy = 'direct';
+      let retrievedFrom: string;
+      let archivedFrom: 'direct' | 'other' = 'direct';
+      let filename: string;
+      let archiveNote: string;
       if (localFile) {
+        if (!override) {
+          throw new Error(
+            'FORESTRY_CORPORATION_ANNUAL_REPORT_FILE requires FORESTRY_CORPORATION_ANNUAL_REPORT_URL to name the official document',
+          );
+        }
         // Operator-supplied exact-byte copy of the official PDF (for example
         // the SHA-256-verified archive). The row's source_url stays official.
+        document = override;
         bytes = await readFile(localFile);
         retrievedFrom = `file://${localFile}`;
+        archivedFrom = 'other';
+        filename = pdfFilenameFromUrl(
+          `file://${localFile}`,
+          'forestry-corporation-annual-report.pdf',
+        );
+        archiveNote =
+          'Forestry Corporation of NSW annual-report PDF supplied as an operator-verified local exact-byte copy; archived for auditable extraction.';
       } else {
-        const response = await fetchImpl(fetchUrl, {
-          redirect: 'follow',
-          headers: BROWSER_HEADERS,
+        const resolved = await resolveSocDocument({
+          source_id: FORESTRY_CORPORATION_ID,
+          source_label: 'Forestry Corporation of NSW',
+          fetchImpl,
+          discoverDirect: async () =>
+            directDocument ?? (await discoverForestryCorporationAnnualReport(fetchImpl)),
+          directDocument,
+          discoveryPageUrl: FORESTRY_CORPORATION_SOURCE_URL,
+          headlessFetch: options.headlessFetch,
         });
-        if (!response.ok) {
-          throw new Error(`Forestry Corporation PDF fetch HTTP ${response.status} for ${fetchUrl}`);
-        }
-        bytes = Buffer.from(await response.arrayBuffer());
-        retrievedFrom = fetchUrl;
+        bytes = resolved.bytes;
+        document = resolved.document;
+        strategy = resolved.strategy;
+        retrievedFrom = resolved.retrieved_from;
+        archivedFrom = resolved.archived_from;
+        filename = resolved.filename;
+        archiveNote = resolved.note;
       }
+      metadata.fetchStrategy = strategy;
       const archived = await archiveSourceDocument({
         source_id: FORESTRY_CORPORATION_ID,
         title: document.title,
         original_url: document.url,
         retrieved_from: retrievedFrom,
-        archived_from: retrievedFrom === document.url ? 'direct' : 'other',
-        filename: documentFilename(document.url),
+        archived_from: archivedFrom,
+        filename,
         content_type: 'application/pdf',
         data: bytes,
         root: options.archiveRoot,
-        notes:
-          'Forestry Corporation of NSW annual-report PDF; archived for auditable NSW SOC entity-statement extraction.',
+        notes: archiveNote,
       });
       await verifySourceDocument(archived);
       const extraction = await extractArchivedPdf(archived);

@@ -14,6 +14,8 @@ export type ExtractionConfidence = 'low' | 'medium' | 'high';
 
 export type DataSourceStatus = 'stub' | 'active' | 'degraded';
 
+export type FetchStrategy = 'direct' | 'parliament_fallback' | 'headless';
+
 export interface DeferredResource {
   package_id: string;
   package_name: string;
@@ -40,6 +42,9 @@ export interface DataSource {
   notes?: string;
   status: DataSourceStatus;
   last_ingested_at: string | null;
+  fetch_strategy?: FetchStrategy | null;
+  last_successful_fetch?: string | null;
+  staleness_days?: number | null;
   records_ingested: number;
   errors: string[];
   deferred_resources?: DeferredResource[];
@@ -60,6 +65,9 @@ export interface ConnectorMetadata {
   records_ingested: number;
   errors: string[];
   deferred_resources?: DeferredResource[];
+  fetch_strategy?: FetchStrategy | null;
+  last_successful_fetch?: string | null;
+  staleness_days?: number | null;
 }
 
 export interface CoverageCounts {
@@ -149,6 +157,10 @@ export interface CoverageResponse {
       unit_label: string;
       records: number;
       last_ingested_at: string | null;
+      status?: DataSourceStatus;
+      fetch_strategy?: FetchStrategy | null;
+      last_successful_fetch?: string | null;
+      staleness_days?: number | null;
       caveat: string;
     }>;
     note: string;

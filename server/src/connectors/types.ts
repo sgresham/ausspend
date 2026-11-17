@@ -3,6 +3,15 @@ import type { DeferredResource } from '../models/data-source.js';
 
 export type ConnectorStatus = 'stub' | 'active' | 'degraded';
 
+/**
+ * How a source document was obtained on the most recent successful run.
+ * `direct` is a normal browser-like HTTP fetch from the publisher; `parliament_fallback`
+ * is the NSW Parliament tabled-paper artifact used when the publisher blocks the
+ * ingestion host; `headless` means a headless browser was required to pass a
+ * Cloudflare challenge before the exact bytes could be read.
+ */
+export type FetchStrategy = 'direct' | 'parliament_fallback' | 'headless';
+
 export type ConnectorJurisdictionLevel =
   'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'soc' | 'other';
 
@@ -35,6 +44,8 @@ export interface ConnectorRunMetadata {
    * skipped). They are logged but do not mark the source degraded.
    */
   warnings?: string[];
+  /** Set by the connector on a successful fetch; null when no document was obtained. */
+  fetchStrategy?: FetchStrategy | null;
 }
 
 /**
@@ -54,6 +65,11 @@ export interface ConnectorSummary extends ConnectorMetadata {
   records_ingested: number;
   errors: string[];
   deferred_resources: DeferredResource[];
+  fetch_strategy: FetchStrategy | null;
+  /** Last successful document fetch (not the last attempt). */
+  last_successful_fetch?: string | null;
+  /** Whole days since the last successful fetch; null when there has never been one. */
+  staleness_days?: number | null;
 }
 
 export function notImplemented(connector: Pick<ConnectorMetadata, 'id' | 'name'>): never {
@@ -74,5 +90,6 @@ export function connectorSummary(connector: Connector): ConnectorSummary {
     records_ingested: connector.metadata.recordsIngested,
     errors: [...connector.metadata.errors],
     deferred_resources: [...(connector.deferredResources ?? [])],
+    fetch_strategy: connector.metadata.fetchStrategy ?? null,
   };
 }

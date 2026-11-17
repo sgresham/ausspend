@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { SpendingRecordSchema, type SpendingRecord } from '@ausspend/shared';
 import { DataSourceModel, IngestionLogModel, MeasureModel } from '../models/index.js';
 import { CONNECTORS } from './registry.js';
-import type { Connector, ConnectorStatus } from './types.js';
+import type { Connector, ConnectorStatus, FetchStrategy } from './types.js';
 
 export interface ConnectorRunResult {
   source_id: string;
@@ -60,30 +60,76 @@ async function upsertRecord(record: SpendingRecord): Promise<void> {
   );
 }
 
-async function recordSourceState(
-  connector: Connector,
-  status: ConnectorStatus,
+const DAY_MS = 86_400_000;
+
+/** Whole days between a previous successful fetch and the current attempt. */
+export function stalenessDays(
+  lastSuccessfulFetch: Date | null | undefined,
   at: Date,
-  recordsUpserted: number,
-  errors: string[],
-): Promise<void> {
+): number | null {
+  if (!lastSuccessfulFetch) return null;
+  const elapsed = at.getTime() - new Date(lastSuccessfulFetch).getTime();
+  return Math.max(0, Math.floor(elapsed / DAY_MS));
+}
+
+interface SourceStateOptions {
+  status: ConnectorStatus;
+  at: Date;
+  recordsUpserted: number;
+  errors: string[];
+  fetchStrategy?: FetchStrategy | null;
+  /** True only when the connector fetched and transformed a fresh document. */
+  succeeded: boolean;
+}
+
+async function recordSourceState(connector: Connector, options: SourceStateOptions): Promise<void> {
+  const prior = await DataSourceModel.findOne({ source_id: connector.id }).lean();
+  let lastSuccessful: Date | null = prior?.last_successful_fetch ?? null;
+  if (options.succeeded) {
+    lastSuccessful = options.at;
+  } else if (!lastSuccessful) {
+    // Older rows predate last_successful_fetch. Derive it from the last good
+    // ingestion log rather than claiming a failed attempt was a success.
+    const lastGoodLog = await IngestionLogModel.findOne({
+      source_id: connector.id,
+      status: { $in: ['success', 'partial'] },
+    })
+      .sort({ finished_at: -1 })
+      .lean();
+    lastSuccessful = lastGoodLog?.finished_at ?? prior?.last_ingested_at ?? null;
+  }
+
+  const set: Record<string, unknown> = {
+    status: options.status,
+    // A failed refresh preserves the previous row count and every measure row;
+    // only a fresh successful fetch may change records_ingested.
+    records_ingested: options.succeeded ? options.recordsUpserted : (prior?.records_ingested ?? 0),
+    errors: options.errors,
+    deferred_resources: connector.deferredResources ?? [],
+    last_successful_fetch: lastSuccessful,
+    staleness_days: options.succeeded ? 0 : stalenessDays(lastSuccessful, options.at),
+    ...(connector.license ? { license: connector.license } : {}),
+    ...(connector.notes ? { notes: connector.notes } : {}),
+  };
+
+  if (options.succeeded) {
+    set.last_ingested_at = options.at;
+    set.fetch_strategy = options.fetchStrategy ?? null;
+  } else if (prior?.last_ingested_at) {
+    // Keep the last successful ingestion time; the failed attempt is recorded
+    // in ingestion_logs, not by overwriting this provenance field.
+    set.last_ingested_at = prior.last_ingested_at;
+  }
+
   await DataSourceModel.updateOne(
     { source_id: connector.id },
     {
-      $set: {
-        status,
-        last_ingested_at: at,
-        records_ingested: recordsUpserted,
-        errors,
-        deferred_resources: connector.deferredResources ?? [],
-        ...(connector.license ? { license: connector.license } : {}),
-        ...(connector.notes ? { notes: connector.notes } : {}),
-      },
+      $set: set,
       $setOnInsert: {
         name: connector.name,
         publisher: connector.publisher,
         source_url: connector.source_url,
-        retrieved_at: at.toISOString(),
+        retrieved_at: options.at.toISOString(),
         ...(connector.license ? {} : { license: 'Not yet verified — see connector metadata' }),
         verified: false,
         ...(connector.notes ? {} : { notes: 'Registered by the ausspend ingestion runner.' }),
@@ -123,7 +169,13 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         message: withChunk(message),
         ...(backupPath ? { backup_path: backupPath } : {}),
       });
-      await recordSourceState(connector, 'stub', now(), 0, []);
+      await recordSourceState(connector, {
+        status: 'stub',
+        at: now(),
+        recordsUpserted: 0,
+        errors: [],
+        succeeded: false,
+      });
       results.push({
         source_id: connector.id,
         name: connector.name,
@@ -179,13 +231,14 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         ),
         ...(backupPath ? { backup_path: backupPath } : {}),
       });
-      await recordSourceState(
-        connector,
-        errors.length > 0 ? 'degraded' : 'active',
-        finishedAt,
-        upserted,
+      await recordSourceState(connector, {
+        status: errors.length > 0 ? 'degraded' : 'active',
+        at: finishedAt,
+        recordsUpserted: upserted,
         errors,
-      );
+        fetchStrategy: connector.metadata.fetchStrategy ?? null,
+        succeeded: true,
+      });
       results.push({
         source_id: connector.id,
         name: connector.name,
@@ -212,7 +265,13 @@ export async function runIngestion(options: RunIngestionOptions = {}): Promise<I
         message: withChunk('source failed; run continues with the next connector'),
         ...(backupPath ? { backup_path: backupPath } : {}),
       });
-      await recordSourceState(connector, 'degraded', finishedAt, 0, [message]);
+      await recordSourceState(connector, {
+        status: 'degraded',
+        at: finishedAt,
+        recordsUpserted: 0,
+        errors: [message],
+        succeeded: false,
+      });
       results.push({
         source_id: connector.id,
         name: connector.name,

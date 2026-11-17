@@ -8,6 +8,10 @@ export const DataSourceStatusSchema = z.enum(['stub', 'active', 'degraded']);
 
 export type DataSourceStatus = z.infer<typeof DataSourceStatusSchema>;
 
+export const FetchStrategySchema = z.enum(['direct', 'parliament_fallback', 'headless']);
+
+export type FetchStrategy = z.infer<typeof FetchStrategySchema>;
+
 export const DataSourceSchema = z.object({
   source_id: z.string().min(1),
   name: z.string().min(1),
@@ -21,6 +25,9 @@ export const DataSourceSchema = z.object({
   last_ingested_at: z.string().nullable().optional(),
   records_ingested: z.number().int().nonnegative().optional(),
   errors: z.array(z.string()).optional(),
+  fetch_strategy: FetchStrategySchema.nullable().optional(),
+  last_successful_fetch: z.string().nullable().optional(),
+  staleness_days: z.number().int().nonnegative().nullable().optional(),
 });
 
 export type DataSourceRecord = z.infer<typeof DataSourceSchema>;

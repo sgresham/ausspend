@@ -100,6 +100,7 @@ describe('federal connector registry', () => {
       expect(Object.keys(summary).sort()).toEqual([
         'deferred_resources',
         'errors',
+        'fetch_strategy',
         'id',
         'jurisdiction_level',
         'last_fetched_at',

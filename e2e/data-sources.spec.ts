@@ -23,6 +23,26 @@ test('data sources shows the synthetic source, Unverified badge and anchor targe
   await expect(page.getByText('Provenance:').first()).toBeVisible();
 });
 
+test('degraded SOC source shows a stale warning and still displays its preserved rows', async ({
+  page,
+}) => {
+  await page.goto('/data-sources#waternsw');
+
+  const card = page.getByTestId('source-waternsw');
+  await expect(card).toBeVisible();
+  await expect(card.getByTestId('ingestion-status-waternsw')).toContainText('degraded');
+  await expect(card.getByTestId('ingestion-status-waternsw')).toContainText('47 record(s)');
+  await expect(card.getByTestId('ingestion-status-waternsw')).toContainText(
+    'fetch strategy parliament_fallback',
+  );
+
+  const stale = card.getByTestId('stale-waternsw');
+  await expect(stale).toBeVisible();
+  await expect(stale).toContainText('Stale data');
+  await expect(stale).toContainText('47 existing record(s) are preserved');
+  await expect(stale).toContainText('parliament_fallback');
+});
+
 test('data sources lists live connectors, open stubs and coverage limitations', async ({
   page,
 }) => {
