@@ -49,6 +49,11 @@ test('coverage banner reports that no synthetic rows are present', async ({ page
     'No synthetic seed rows are present.',
   );
   await expect(page.getByTestId('coverage-banner')).toContainText('0 synthetic seed rows');
+  await expect(page.getByTestId('coverage-banner')).toContainText('QLD QGIP 2018-19..2024-25');
+  await expect(page.getByTestId('coverage-banner')).toContainText('2019-20 partial');
+  await expect(page.getByTestId('coverage-banner')).toContainText(
+    'QGIP grants and contracts are never summed',
+  );
   await expect(page.getByTestId('coverage-banner')).not.toContainText(
     'next to the synthetic development seed',
   );

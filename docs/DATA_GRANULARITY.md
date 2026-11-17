@@ -3,7 +3,8 @@
 **Status: read-only planning audit (2026-11-17).** No ingestion was run, no schema/code/API change
 was made and no database write was performed. This document maps, for every active source, what
 detail the app stores today against what the publisher actually makes available and what is
-inherently aggregate.
+inherently aggregate. A separate execution note for P1 (QGIP earlier years) was added below; the
+audit body otherwise remains the pre-P1 snapshot described in the next paragraph.
 
 Snapshot database: `mongodb://10.10.10.30:27017/ausspend_dev`, **348,981 measures, 0 synthetic
 rows, 15 active data sources, 58 archived source documents**. Hunter Water landed before this audit
@@ -35,6 +36,29 @@ publish only summary tables, and some are inherently aggregate benchmarks.
 4. **ABS GFS and ABS PNFC are benchmarks.** They can be presented as published cells; they cannot be
    decomposed below the official COFOG/level or jurisdiction/flow tables without inventing detail.
 
+## P1 landed — QGIP earlier years (executed 2026-11-17)
+
+The P1 breadth recommendation below was executed after this audit. `qld-qgip` now holds
+**200,387 rows**: the original 34,000 for 2024-25 plus **166,387** for 2018-19..2023-24. One CSV
+is ingested per fiscal year with its own `fiscal_year` and a per-year natural key (CKAN resource id
+
+- row hash + year), so years cannot collide and a re-run is idempotent (the total was 515,407 both
+  times; 2024-25 stayed 34,000 and no other source count changed). Ingested rows by year: 2018-19
+  25,015; 2019-20 2,565; 2020-21 36,110; 2021-22 32,011; 2022-23 28,122; 2023-24 42,564. 2020-21 uses
+  only the corrected "updated DTMR data" resource, never both published files. Per-year source row
+  counts, rejected rows and SHA-256s are recorded in
+  [`docs/source-archive/qld-qgip-2018-19-2023-24.json`](source-archive/qld-qgip-2018-19-2023-24.json).
+
+**2019-20 is a partial-coverage year.** The publisher's 2019-20 file leaves `Financial year
+expenditure` blank on 22,530 of its 27,308 rows, while most of those rows still carry a cumulative
+total-to-date. That cumulative figure is not an annual payment, so it was not substituted or added:
+only the 2,565 rows with a published annual payment were ingested, and every 2019-20 record carries
+`data_quality_flag` ending `partial_year_source_gap`. The much lower 2019-20 total is therefore a
+source gap, not a real spending fall. Licence is CC BY 4.0; units are whole AUD confirmed by the
+archived Nov-2026 data dictionary; grants and contracts remain separate measure types and are never
+summed, and years are never merged. The snapshot figures in the rest of this document describe the
+pre-P1 audit (348,981 measures); the current baseline is **515,407**.
+
 ## Method and snapshot evidence
 
 Read-only commands used (no write operations):
@@ -62,23 +86,23 @@ Measure types: `actual` 128,000; `contract` 124,236; `grant_award` 89,786; `budg
 
 ## Current DB state, by source
 
-| Source | Rows | Measure type(s) | Aggregation role(s) | Fiscal year(s) | Stored granularity and key dimensions |
-| --- | ---: | --- | --- | --- | --- |
-| `aus-tender` | 117,894 | contract | none (treated additive) | 2024-25, 2025-26, 2026-27 | One row per OCDS release’s first contract; title/description, supplier, buyer, state, UNSPSC, contract dates, procurement method in notes. No function/category. |
-| `data-gov-au-pbs` | 1,231 | budget | none (treated additive) | 2025-26 | One row per PBS program-expense line item; portfolio, agency, outcome, program, expense/appropriation type in notes; COFOG only where the portfolio is defensible (1,020/1,231); location literally `Commonwealth`. |
-| `grantconnect` | 62,128 | grant_award | none (treated additive) | 2025-26 | One row per `GA ID` award; recipient, agency, activity, publish date, value; category, GO ID, activity dates and aggregate flags in notes; no location or function. |
-| `nsw-budget` | 1,115 | actual 173, budget 832, estimate 110 | none | 2000-01 to 2028-29 | 312 statement rows (GG/NFPS/PNFC Operating Statement and Table D/HFI expense lines) plus 803 ArcGIS capital projects with 2025-26 budget; project/agency/category/status/electorate in notes, LGA structured where usable; function only on 657 rows (capital agency map). |
-| `data-nsw-ckan` | 3,472 | budget 3,462, actual 10 | none | 2014-15, 2015-16, 2016-17, 2018-19, 2025-26 | 2,211 school-level RAM allocations; 1,251 Budget Paper 2 capital allocations (2014-15 to 2016-17); 10 fleet-invoice rows. Project/agency/LGA; function 3,224 via agency map. |
-| `dubbo-council` | 245 | budget 72, estimate 173 | none | 2025-26 to 2029-30 | One council, fund-level Income and Expenditure Summary: 124 income lines, 91 expense lines, 30 capital categories; LGA `Dubbo`; 19 capital rows have COFOG. Income rows are not spending. |
-| `vic-budget` | 28 | budget | additive 20, agency_detail 8 | 2025-26, 2026-27 | 20 COFOG-A general-government expense rows (10 functions × 2 budget years) plus 8 DTF departmental statement rows; statewide only. |
-| `qld-budget` | 1,051 | budget | additive 943, policy_measure 108 | 2026-27 | 943 BP3 capital projects (project/agency/asset type/SA4) plus 108 BP4 non-additive budget measures; no COFOG; only the 2026-27 amount is stored. |
-| `qld-qgip` | 34,000 | grant_award 27,658, contract 6,342 | additive | 2024-25 | One row per grant award or procured frontline-service payment; recipient, ABN, funding agency, category, agreement dates, total-to-date and service location in notes; LGA structured where supplied; no function. |
-| `acnc-charity` | 127,606 | actual | expense_total 43,108, expense_component 84,498 | 2022-23, 2023-24, 2024-25 | One total-expenses row plus up to five component rows per charity-year; explicit expense category; approximate program-operating state/postcode; no function. 2024 AIS edition spans three fiscal years because charities report different periods. |
-| `abs-gfs` | 169 | actual | benchmark | 2024-25 | Official COFOG-A expense cells for federal, state and local levels; function code on every row; no state field for the Commonwealth cells; no sub-state geography. |
-| `abs-gfs-pnfc` | 18 | actual | benchmark | 2024-25 | Nine jurisdictions × two flows (`revenue`, `expense`), totals only; no component lines, no COFOG, no location beyond jurisdiction. |
-| `sydney-water` | 10 | actual | agency_detail | 2024-25 | Entity statement lines: total revenue, other income, total expenses, employee, depreciation/amortisation, net result, four government-grant/contribution lines. |
-| `waternsw` | 8 | actual | agency_detail | 2024-25 | Entity statement lines: total revenue, total expenses, employee, depreciation/amortisation, net result, three government contribution/grant lines. |
-| `hunter-water` | 6 | actual | agency_detail | 2024-25 | Entity statement lines: total revenue, total expenses, employee, depreciation/amortisation, net result, government grants and rebates. |
+| Source            |    Rows | Measure type(s)                      | Aggregation role(s)                            | Fiscal year(s)                              | Stored granularity and key dimensions                                                                                                                                                                                                                                                                                         |
+| ----------------- | ------: | ------------------------------------ | ---------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `aus-tender`      | 117,894 | contract                             | none (treated additive)                        | 2024-25, 2025-26, 2026-27                   | One row per OCDS release’s first contract; title/description, supplier, buyer, state, UNSPSC, contract dates, procurement method in notes. No function/category.                                                                                                                                                              |
+| `data-gov-au-pbs` |   1,231 | budget                               | none (treated additive)                        | 2025-26                                     | One row per PBS program-expense line item; portfolio, agency, outcome, program, expense/appropriation type in notes; COFOG only where the portfolio is defensible (1,020/1,231); location literally `Commonwealth`.                                                                                                           |
+| `grantconnect`    |  62,128 | grant_award                          | none (treated additive)                        | 2025-26                                     | One row per `GA ID` award; recipient, agency, activity, publish date, value; category, GO ID, activity dates and aggregate flags in notes; no location or function.                                                                                                                                                           |
+| `nsw-budget`      |   1,115 | actual 173, budget 832, estimate 110 | none                                           | 2000-01 to 2028-29                          | 312 statement rows (GG/NFPS/PNFC Operating Statement and Table D/HFI expense lines) plus 803 ArcGIS capital projects with 2025-26 budget; project/agency/category/status/electorate in notes, LGA structured where usable; function only on 657 rows (capital agency map).                                                    |
+| `data-nsw-ckan`   |   3,472 | budget 3,462, actual 10              | none                                           | 2014-15, 2015-16, 2016-17, 2018-19, 2025-26 | 2,211 school-level RAM allocations; 1,251 Budget Paper 2 capital allocations (2014-15 to 2016-17); 10 fleet-invoice rows. Project/agency/LGA; function 3,224 via agency map.                                                                                                                                                  |
+| `dubbo-council`   |     245 | budget 72, estimate 173              | none                                           | 2025-26 to 2029-30                          | One council, fund-level Income and Expenditure Summary: 124 income lines, 91 expense lines, 30 capital categories; LGA `Dubbo`; 19 capital rows have COFOG. Income rows are not spending.                                                                                                                                     |
+| `vic-budget`      |      28 | budget                               | additive 20, agency_detail 8                   | 2025-26, 2026-27                            | 20 COFOG-A general-government expense rows (10 functions × 2 budget years) plus 8 DTF departmental statement rows; statewide only.                                                                                                                                                                                            |
+| `qld-budget`      |   1,051 | budget                               | additive 943, policy_measure 108               | 2026-27                                     | 943 BP3 capital projects (project/agency/asset type/SA4) plus 108 BP4 non-additive budget measures; no COFOG; only the 2026-27 amount is stored.                                                                                                                                                                              |
+| `qld-qgip`        | 200,387 | grant_award 169,311, contract 31,076 | additive                                       | 2018-19 to 2024-25                          | One row per grant award or procured frontline-service payment, one CSV per year; recipient, ABN, funding agency, category, agreement dates, total-to-date and service location in notes; LGA structured where supplied; no function. 2019-20 is partial (publisher left the annual payment blank on 82% of rows) and flagged. |
+| `acnc-charity`    | 127,606 | actual                               | expense_total 43,108, expense_component 84,498 | 2022-23, 2023-24, 2024-25                   | One total-expenses row plus up to five component rows per charity-year; explicit expense category; approximate program-operating state/postcode; no function. 2024 AIS edition spans three fiscal years because charities report different periods.                                                                           |
+| `abs-gfs`         |     169 | actual                               | benchmark                                      | 2024-25                                     | Official COFOG-A expense cells for federal, state and local levels; function code on every row; no state field for the Commonwealth cells; no sub-state geography.                                                                                                                                                            |
+| `abs-gfs-pnfc`    |      18 | actual                               | benchmark                                      | 2024-25                                     | Nine jurisdictions × two flows (`revenue`, `expense`), totals only; no component lines, no COFOG, no location beyond jurisdiction.                                                                                                                                                                                            |
+| `sydney-water`    |      10 | actual                               | agency_detail                                  | 2024-25                                     | Entity statement lines: total revenue, other income, total expenses, employee, depreciation/amortisation, net result, four government-grant/contribution lines.                                                                                                                                                               |
+| `waternsw`        |       8 | actual                               | agency_detail                                  | 2024-25                                     | Entity statement lines: total revenue, total expenses, employee, depreciation/amortisation, net result, three government contribution/grant lines.                                                                                                                                                                            |
+| `hunter-water`    |       6 | actual                               | agency_detail                                  | 2024-25                                     | Entity statement lines: total revenue, total expenses, employee, depreciation/amortisation, net result, government grants and rebates.                                                                                                                                                                                        |
 
 `null`/absent `aggregation_role` on the transaction and budget sources is the existing model’s
 “additive by convention” state; it does not mean those rows are comparable across sources or measure
@@ -323,7 +347,7 @@ types. The no-sum rules are listed in §4.
   series, not a complete QLD expense total. BP4 measures overlap the BP3 capital program (the
   ingestion doc records seven project names in both), so BP4 is non-additive by design.
 - **Deeper extraction:** **feasible, high value.** First half: add the published `Total Estimated
-  Cost` and `Expenditure to 30-06-26` as separate non-additive fields on the existing 943 projects
+Cost` and `Expenditure to 30-06-26` as separate non-additive fields on the existing 943 projects
   (not summable with the 2026-27 budget), and promote project status/asset type where already
   present. Second half: parse Budget Paper 2 / Service Delivery Statements for agency and output
   expense detail, reconciling each statement and keeping it separate from the BP3 capital series.
@@ -332,14 +356,15 @@ types. The no-sum rules are listed in §4.
   2026”. The BP3 CSV does not state its unit; the dictionary is the unit proof. SA4 text can contain
   multiple SA4s and is not an LGA. **Priority P6** (see Priority list).
 
-#### `qld-qgip` — 34,000 payment rows
+#### `qld-qgip` — 200,387 payment rows (2018-19..2024-25)
 
-- **In DB:** 27,658 grant awards and 6,342 procured frontline-service payments for 2024-25, each
-  `aggregation_role: additive`. Recipient legal entity, ABN, recipient type, program title, purpose,
-  category, assistance type, funding agency, money source, funding use, agreement duration/start/end,
-  total funding to date and service-delivery postcode/suburb/LGA are preserved in notes; the LGA is
-  structured where supplied (8,035 rows). No COFOG function. Units are whole AUD per the QGIP data
-  dictionary.
+- **In DB:** 169,311 grant awards and 31,076 procured frontline-service payments across 2018-19 to
+  2024-25 (including the original 34,000 for 2024-25), each `aggregation_role: additive`. One CSV is
+  ingested per year; each record keeps its own `fiscal_year` and a per-year natural key (resource id
+  - row hash + year). Recipient legal entity, ABN, recipient type, program title, purpose, category,
+    assistance type, funding agency, money source, funding use, agreement duration/start/end, total
+    funding to date and service-delivery postcode/suburb/LGA are preserved in notes; the LGA is
+    structured where supplied. No COFOG function. Units are whole AUD per the QGIP data dictionary.
 - **Available at source:** the official data.qld QGIP consolidated-view dataset
   (`https://www.data.qld.gov.au/dataset/queensland-government-investment-portal-expenditure-data-consolidated-view`)
   publishes yearly expenditure CSVs from 2013-14 through 2024-25, plus the data dictionary. The
@@ -347,19 +372,19 @@ types. The no-sum rules are listed in §4.
   annual updates and warns that program names/machinery-of-government changes make cross-year
   comparison imperfect. The CSV’s `Assistance type1` has five values: Grant, Frontline service
   procurement, Concession, Loan and Direct government investment. The connector ingests only the
-  first two; 1,031 out-of-scope rows and 21 zero-dollar in-scope rows were rejected. The current run
-  ingests only the latest 2024-25 file.
+  first two; out-of-scope (Concession/Loan/Direct government investment) and zero-dollar in-scope
+  rows are rejected per year. The connector ingests 2018-19..2024-25; 2013-14..2017-18 remain.
 - **Granularity:** **payment/award-level actual expenditure**, the most granular state spending in
   the app. It is still not a complete state budget: only grants and procured frontline services are
   in scope, and some recipient details are aggregated for privacy. `Total funding under this
-  agreement to date` is a multi-year cumulative amount, not the 2024-25 payment.
-- **Deeper extraction:** **feasible, highest value.** First half: ingest earlier annual CSVs
-  (2018-19 through 2023-24 first, then 2013-14 through 2017-18) with the same Grant/Frontline mapping
-  and each year’s own data dictionary, keeping `fiscal_year` and per-year natural keys. Second half:
-  add Concession, Loan and Direct government investment as explicitly separate non-grant,
-  non-contract series after a legal/semantic review; they are not the same kind of spending and must
-  never be summed with grants or contracts. Keep agreement-total-to-date in notes or a separate
-  non-additive field; never add it to the annual payment.
+agreement to date` is a multi-year cumulative amount, never the annual payment and never added to
+  it. 2019-20 is partial: the published file leaves the annual payment blank on 22,530 of 27,308
+  rows, so only the 2,565 published annual payments are stored and flagged.
+- **Deeper extraction:** **partly done.** 2018-19..2023-24 were ingested with the same
+  Grant/Frontline mapping and per-year natural keys. Remaining: add 2013-14 through 2017-18 (their
+  files are smaller and need the same check), then add Concession, Loan and Direct government
+  investment as explicitly separate non-grant, non-contract series after a legal/semantic review;
+  they are not the same kind of spending and must never be summed with grants or contracts.
 - **Licence / ambiguity:** CC BY 4.0; attribution “© State of Queensland (Queensland Treasury),
   2025”. The dataset page says individual-recipient details may be aggregated for privacy. Program
   names change across years; do not join years by name without a reviewed crosswalk. **Priority P1**
@@ -430,7 +455,7 @@ types. The no-sum rules are listed in §4.
 
 - **In DB:** nine jurisdictions (Australia all-levels plus the eight states/territories) × two flows
   (`total_revenue`, `total_expenses`) for FY2024-25, all `aggregation_role: benchmark`, `verified:
-  true`. Component lines are deliberately not ingested, so revenue/expense totals cannot be double
+true`. Component lines are deliberately not ingested, so revenue/expense totals cannot be double
   counted. Units are `$m`; revenue and expense are never summed.
 - **Available at source:** the ABS GFS Annual 2024-25 release publishes nine separate PNFC operating-
   statement cubes, one per jurisdiction. Each cube contains component lines (sales, subsidies,
@@ -502,21 +527,21 @@ page/table/reconciliation evidence.
 Every amount is stored as integer cents. The published unit is never inferred from magnitude; it is
 read from a workbook/PDF header, a CSV data dictionary or an explicit column/cell marker.
 
-| Source | Published unit | Stored conversion | Unit evidence |
-| --- | --- | --- | --- |
-| `aus-tender` | AUD decimal dollars | ×100 cents | `contracts[0].value.amount`, connector mapping |
-| `data-gov-au-pbs` | `$'000` in PBS tables | ×1,000 dollars, ×100 cents | referenced PBS table columns; CSV is bare integers |
-| `grantconnect` | `Value (AUD)` decimal dollars | ×100 cents | verified 15-column export |
-| `nsw-budget` | `$m` financial; `$b` HFI; `$'000` capital | ×100,000,000; ×100,000,000,000; ×100,000 cents | workbook headers / ArcGIS field name |
-| `data-nsw-ckan` | `$`, `$'000`, `$m`, `$b` per resource | per-resource multiplier | column header, cell format or closest published convention (BP2 flagged provisional) |
-| `dubbo-council` | `$'000` | ×100,000 cents | PDF header; sections rejected if unit ambiguous |
-| `vic-budget` | `$m` | ×100,000,000 cents | workbook sheet |
-| `qld-budget` | `$'000` | ×100,000 cents | archived BP3/BP4 dictionaries |
-| `qld-qgip` | whole AUD | ×100 cents | QGIP data dictionary |
-| `acnc-charity` | whole AUD | ×100 cents | ACNC explanatory notes |
-| `abs-gfs` | `$m` | ×100,000,000 cents | Key Tables workbook row 7 |
-| `abs-gfs-pnfc` | `$m` | ×100,000,000 cents | PNFC workbook row 6 |
-| `sydney-water` / `waternsw` / `hunter-water` | `$'000` | ×100,000 cents | printed statement header |
+| Source                                       | Published unit                            | Stored conversion                              | Unit evidence                                                                        |
+| -------------------------------------------- | ----------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `aus-tender`                                 | AUD decimal dollars                       | ×100 cents                                     | `contracts[0].value.amount`, connector mapping                                       |
+| `data-gov-au-pbs`                            | `$'000` in PBS tables                     | ×1,000 dollars, ×100 cents                     | referenced PBS table columns; CSV is bare integers                                   |
+| `grantconnect`                               | `Value (AUD)` decimal dollars             | ×100 cents                                     | verified 15-column export                                                            |
+| `nsw-budget`                                 | `$m` financial; `$b` HFI; `$'000` capital | ×100,000,000; ×100,000,000,000; ×100,000 cents | workbook headers / ArcGIS field name                                                 |
+| `data-nsw-ckan`                              | `$`, `$'000`, `$m`, `$b` per resource     | per-resource multiplier                        | column header, cell format or closest published convention (BP2 flagged provisional) |
+| `dubbo-council`                              | `$'000`                                   | ×100,000 cents                                 | PDF header; sections rejected if unit ambiguous                                      |
+| `vic-budget`                                 | `$m`                                      | ×100,000,000 cents                             | workbook sheet                                                                       |
+| `qld-budget`                                 | `$'000`                                   | ×100,000 cents                                 | archived BP3/BP4 dictionaries                                                        |
+| `qld-qgip`                                   | whole AUD                                 | ×100 cents                                     | QGIP data dictionary                                                                 |
+| `acnc-charity`                               | whole AUD                                 | ×100 cents                                     | ACNC explanatory notes                                                               |
+| `abs-gfs`                                    | `$m`                                      | ×100,000,000 cents                             | Key Tables workbook row 7                                                            |
+| `abs-gfs-pnfc`                               | `$m`                                      | ×100,000,000 cents                             | PNFC workbook row 6                                                                  |
+| `sydney-water` / `waternsw` / `hunter-water` | `$'000`                                   | ×100,000 cents                                 | printed statement header                                                             |
 
 **No-sum rules that any deeper extraction must preserve**
 
@@ -535,21 +560,21 @@ read from a workbook/PDF header, a CSV data dictionary or an explicit column/cel
 
 ## Licence and ambiguity register
 
-| Source | Licence | Ambiguity / action |
-| --- | --- | --- |
-| `aus-tender` | Source register: not verified; connector: none | Resolve official terms before treating as open data. Contract values are not annual spend. |
-| `data-gov-au-pbs` | CC BY 4.0 (official dataset page) | Source register still says not verified; correct it. CSV totals ≠ BP1 total. |
-| `grantconnect` | Register: CC BY 4.0 International; site footer: CC BY 3.0 AU | Reconcile the licence discrepancy. Manual export, >50,000 cap. |
-| `nsw-budget` | CC BY 3.0 AU | 2025-26 source is an archived snapshot; live page moved. Capital COFOG provisional. |
-| `data-nsw-ckan` | “CC BY per CKAN dataset” | Verify each selected dataset’s licence. BP2 unit is assumed `$'000` and provisional. |
-| `dubbo-council` | © Dubbo Regional Council; public-interest research | Income lines are stored as measures; separate income from spending before any total. |
-| `vic-budget` | CC BY 4.0 | Transport `045` mapping unconfirmed; do not roll into `04`. Only one department ingested. |
-| `qld-budget` | CC BY 4.0 | Project SA4 text can be multi-valued and is not an LGA. BP4 overlaps BP3. |
-| `qld-qgip` | CC BY 4.0 | Recipient details may be privacy-aggregated; program names change across years. |
-| `acnc-charity` | CC BY 3.0 Australia | Charity expenses are not government spending; location is approximate program location. |
-| `abs-gfs` | CC BY 4.0 | Benchmark; no sub-state or project decomposition. SDMX has no GFS dataflow. |
-| `abs-gfs-pnfc` | CC BY 4.0 | Benchmark; never add to SOC/entity/government data or across jurisdictions/flows. |
-| `sydney-water` / `waternsw` / `hunter-water` | © each corporation; public-interest research | Entity statement lines only; no program/project/LGA dollars. Never add to each other or to government spending. |
+| Source                                       | Licence                                                      | Ambiguity / action                                                                                              |
+| -------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `aus-tender`                                 | Source register: not verified; connector: none               | Resolve official terms before treating as open data. Contract values are not annual spend.                      |
+| `data-gov-au-pbs`                            | CC BY 4.0 (official dataset page)                            | Source register still says not verified; correct it. CSV totals ≠ BP1 total.                                    |
+| `grantconnect`                               | Register: CC BY 4.0 International; site footer: CC BY 3.0 AU | Reconcile the licence discrepancy. Manual export, >50,000 cap.                                                  |
+| `nsw-budget`                                 | CC BY 3.0 AU                                                 | 2025-26 source is an archived snapshot; live page moved. Capital COFOG provisional.                             |
+| `data-nsw-ckan`                              | “CC BY per CKAN dataset”                                     | Verify each selected dataset’s licence. BP2 unit is assumed `$'000` and provisional.                            |
+| `dubbo-council`                              | © Dubbo Regional Council; public-interest research           | Income lines are stored as measures; separate income from spending before any total.                            |
+| `vic-budget`                                 | CC BY 4.0                                                    | Transport `045` mapping unconfirmed; do not roll into `04`. Only one department ingested.                       |
+| `qld-budget`                                 | CC BY 4.0                                                    | Project SA4 text can be multi-valued and is not an LGA. BP4 overlaps BP3.                                       |
+| `qld-qgip`                                   | CC BY 4.0                                                    | Recipient details may be privacy-aggregated; program names change across years.                                 |
+| `acnc-charity`                               | CC BY 3.0 Australia                                          | Charity expenses are not government spending; location is approximate program location.                         |
+| `abs-gfs`                                    | CC BY 4.0                                                    | Benchmark; no sub-state or project decomposition. SDMX has no GFS dataflow.                                     |
+| `abs-gfs-pnfc`                               | CC BY 4.0                                                    | Benchmark; never add to SOC/entity/government data or across jurisdictions/flows.                               |
+| `sydney-water` / `waternsw` / `hunter-water` | © each corporation; public-interest research                 | Entity statement lines only; no program/project/LGA dollars. Never add to each other or to government spending. |
 
 ## Priority list — one source family per item
 
@@ -557,20 +582,20 @@ read from a workbook/PDF header, a CSV data dictionary or an explicit column/cel
 that needs more reconciliation or human review. No item below is authorised by this audit; this is a
 planning list only.
 
-| Priority | Source family | First half (lands first) | Second half | Guard |
-| --- | --- | --- | --- | --- |
-| **P1** | `qld-qgip` | Ingest 2018-19 to 2023-24 annual CSVs with the existing Grant/Frontline mapping and each year’s dictionary; keep per-year natural keys. | Add 2013-14 to 2017-18, then Concession/Loan/Direct government investment as separate non-grant, non-contract series after review. | Whole AUD; grants and contracts never summed; agreement total-to-date never added to the annual payment. |
-| **P2** | `aus-tender` | Map all `contracts[]` in each OCDS release (not only `contracts[0]`) with a contract-id natural key and reconcile to each contract value. | Add item-level UNSPSC/description rows where item values exist, flagged non-additive; add multiple-supplier/amendment handling. | Contract value is not annual spend; item sums must not be added to contract totals. Resolve licence first. |
-| **P3** | `nsw-budget` | Promote ArcGIS project status/electorate/region/sector/cluster/commencement/completion to structured fields; keep the 171 unallocated projects metadata-only. | Ingest Budget Paper 2/3 agency/program statements, reconciling each to its printed operating total; keep GG/PNFC/NFPS separate. | Never add sectors together; capital budget is not recurrent expense. |
-| **P4** | `vic-budget` | Ingest all departmental statement workbooks as `agency_detail`, each reconciled to its own statement. | Ingest the State Capital Program (BP4) at project level as a separate capital series; consider actual/revised columns as separate measure types. | Department rows overlap consolidated COFOG; capital is not recurrent; do not roll `045` into `04`. |
-| **P5** | `data-gov-au-pbs` | Promote `expense_type`, `appropriation_type`, `outcome` and all published year columns to explicit dimensions/series. | Parse Excel Table 2.X.2 program-component and Table 1.1 resource-statement tables with printed sub-total reconciliation. | PBS line items are not the federal total; entity sub-totals are non-additive; never sum years. |
-| **P6** | `qld-budget` | Add `Total Estimated Cost` and `Expenditure to 30-06-26` as separate non-additive fields on the existing 943 BP3 projects. | Parse Budget Paper 2 / Service Delivery Statements for agency/output expense detail. | BP3 capital ≠ complete QLD expense; BP4 overlaps BP3; never sum BP3+BP4. |
-| **P7** | `data-nsw-ckan` | Ingest the deferred media-expenditure DOCX via the shared PDF/DOCX foundation; verify its unit and licence. | Add earlier RAM/BP2 editions or further targeted datasets, each with its own mapping. | Do not harvest the whole portal; BP2 overlaps NSW capital at program level. |
-| **P8** | `dubbo-council` | Add a section/flow field so income and expense rows cannot be mixed; parse program/activity expense budgets if published. | Parse the individual capital project list with its own total reconciliation. | One council only; income is not spending; `$'000` unit/total gate stays. |
-| **P9** | `grantconnect` | Promote GO ID, category, activity dates, aggregate flag/reason and last-updated to structured fields from the existing export. | Extend cap-safe complete coverage to earlier periods. | No public API/scraper; partial coverage must stay visible; no location data available. |
-| **P10** | `acnc-charity` | Add structured AIS edition/charity size/registration/ABN and retain earlier AIS editions for comparison. | Add non-spending context fields (revenue/assets/employees) only as clearly separate context. | No program-level expense exists; total and components never summed; charity ≠ government. |
-| **P11** | `abs-gfs` / `abs-gfs-pnfc` | No spending-detail extraction. Optionally add the prior reference year as a benchmark comparison. | No decomposition. Keep the published cells and the no-sum rules. | Inherently aggregate; SDMX has no GFS/PNFC dataflow; never add to project/SOC data. |
-| **P12** | `sydney-water` / `waternsw` / `hunter-water` | Do not deepen as a spending breakdown. Keep the 24 entity statement lines, unit badge and no-total rule. | Only note-level components if a future item explicitly asks; never add components to totals. | Entity-level by law/reporting; no program/LGA/project dollars; WaterNSW deep detail is p67, not this item. |
+| Priority | Source family                                | First half (lands first)                                                                                                                                                                                                                                                            | Second half                                                                                                                                      | Guard                                                                                                      |
+| -------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| **P1**   | `qld-qgip`                                   | **Landed 2026-11-17:** 2018-19 to 2023-24 annual CSVs ingested with the existing Grant/Frontline mapping and per-year natural keys (166,387 rows; 200,387 total incl. 2024-25). 2019-20 is partial and flagged because its published annual-payment column is blank on 82% of rows. | Add 2013-14 to 2017-18, then Concession/Loan/Direct government investment as separate non-grant, non-contract series after review.               | Whole AUD; grants and contracts never summed; agreement total-to-date never added to the annual payment.   |
+| **P2**   | `aus-tender`                                 | Map all `contracts[]` in each OCDS release (not only `contracts[0]`) with a contract-id natural key and reconcile to each contract value.                                                                                                                                           | Add item-level UNSPSC/description rows where item values exist, flagged non-additive; add multiple-supplier/amendment handling.                  | Contract value is not annual spend; item sums must not be added to contract totals. Resolve licence first. |
+| **P3**   | `nsw-budget`                                 | Promote ArcGIS project status/electorate/region/sector/cluster/commencement/completion to structured fields; keep the 171 unallocated projects metadata-only.                                                                                                                       | Ingest Budget Paper 2/3 agency/program statements, reconciling each to its printed operating total; keep GG/PNFC/NFPS separate.                  | Never add sectors together; capital budget is not recurrent expense.                                       |
+| **P4**   | `vic-budget`                                 | Ingest all departmental statement workbooks as `agency_detail`, each reconciled to its own statement.                                                                                                                                                                               | Ingest the State Capital Program (BP4) at project level as a separate capital series; consider actual/revised columns as separate measure types. | Department rows overlap consolidated COFOG; capital is not recurrent; do not roll `045` into `04`.         |
+| **P5**   | `data-gov-au-pbs`                            | Promote `expense_type`, `appropriation_type`, `outcome` and all published year columns to explicit dimensions/series.                                                                                                                                                               | Parse Excel Table 2.X.2 program-component and Table 1.1 resource-statement tables with printed sub-total reconciliation.                         | PBS line items are not the federal total; entity sub-totals are non-additive; never sum years.             |
+| **P6**   | `qld-budget`                                 | Add `Total Estimated Cost` and `Expenditure to 30-06-26` as separate non-additive fields on the existing 943 BP3 projects.                                                                                                                                                          | Parse Budget Paper 2 / Service Delivery Statements for agency/output expense detail.                                                             | BP3 capital ≠ complete QLD expense; BP4 overlaps BP3; never sum BP3+BP4.                                   |
+| **P7**   | `data-nsw-ckan`                              | Ingest the deferred media-expenditure DOCX via the shared PDF/DOCX foundation; verify its unit and licence.                                                                                                                                                                         | Add earlier RAM/BP2 editions or further targeted datasets, each with its own mapping.                                                            | Do not harvest the whole portal; BP2 overlaps NSW capital at program level.                                |
+| **P8**   | `dubbo-council`                              | Add a section/flow field so income and expense rows cannot be mixed; parse program/activity expense budgets if published.                                                                                                                                                           | Parse the individual capital project list with its own total reconciliation.                                                                     | One council only; income is not spending; `$'000` unit/total gate stays.                                   |
+| **P9**   | `grantconnect`                               | Promote GO ID, category, activity dates, aggregate flag/reason and last-updated to structured fields from the existing export.                                                                                                                                                      | Extend cap-safe complete coverage to earlier periods.                                                                                            | No public API/scraper; partial coverage must stay visible; no location data available.                     |
+| **P10**  | `acnc-charity`                               | Add structured AIS edition/charity size/registration/ABN and retain earlier AIS editions for comparison.                                                                                                                                                                            | Add non-spending context fields (revenue/assets/employees) only as clearly separate context.                                                     | No program-level expense exists; total and components never summed; charity ≠ government.                  |
+| **P11**  | `abs-gfs` / `abs-gfs-pnfc`                   | No spending-detail extraction. Optionally add the prior reference year as a benchmark comparison.                                                                                                                                                                                   | No decomposition. Keep the published cells and the no-sum rules.                                                                                 | Inherently aggregate; SDMX has no GFS/PNFC dataflow; never add to project/SOC data.                        |
+| **P12**  | `sydney-water` / `waternsw` / `hunter-water` | Do not deepen as a spending breakdown. Keep the 24 entity statement lines, unit badge and no-total rule.                                                                                                                                                                            | Only note-level components if a future item explicitly asks; never add components to totals.                                                     | Entity-level by law/reporting; no program/LGA/project dollars; WaterNSW deep detail is p67, not this item. |
 
 ## Recommendation
 

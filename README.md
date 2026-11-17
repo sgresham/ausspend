@@ -176,10 +176,10 @@ nonzero before it changes anything.
 
 ## Backup, restore and the AusTender backfill gate
 
-The live baseline after the NSW SOC phase is **348,967 real measures and 0 synthetic rows**:
-AusTender 117,894, ACNC charity 127,606, GrantConnect 62,128, QLD QGIP 34,000, data.nsw.gov.au
-CKAN 3,472, PBS 1,231, NSW Budget 1,115, QLD Budget 1,051, Dubbo 245, ABS GFS 169, VIC Budget
-28, ABS GFS PNFC 18 and Sydney Water SOC 10.
+The live baseline after the QGIP earlier-years ingest is **515,407 real measures and 0 synthetic
+rows**: QLD QGIP 200,387, ACNC charity 127,606, AusTender 117,894, GrantConnect 62,128,
+data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115, QLD Budget 1,051, Dubbo 245, ABS GFS 169,
+WaterNSW 47, VIC Budget 28, ABS GFS PNFC 18, Sydney Water 10 and Hunter Water 6.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
@@ -388,9 +388,13 @@ rejects any file carrying the >50,000-result cap warning, combines complete date
 de-duplicates on `GA ID` and reports partial coverage honestly. It is not an API and not a
 scraper. **VIC Budget (`vic-budget`), QLD Budget (`qld-budget`), QLD QGIP
 (`qld-qgip`) and ACNC charity expenses (`acnc-charity`) are live as of Phase 4**. `qld-qgip`
-streams the latest annual consolidated QGIP expenditure CSV (2024-25, cp1252) and archives its
-data dictionary; only Grant (`grant_award`) and Frontline service procurement (`contract`) rows are
-ingested, and the two measure types are never summed. `acnc-charity` streams the latest ACNC Annual
+streams one annual consolidated QGIP expenditure CSV per fiscal year (2024-25 by default, and
+2018-19..2023-24 via `npm run ingest:qgip-years`; cp1252) and archives the data dictionary. Each
+year keeps its own `fiscal_year` and per-year natural key; 2020-21 uses only the corrected
+"updated DTMR data" file, and 2019-20 is explicitly partial because the publisher left the annual
+payment blank on 22,530 of 27,308 rows (the cumulative total-to-date is never substituted). Only
+Grant (`grant_award`) and Frontline service procurement (`contract`) rows are ingested, zero-dollar
+rows are rejected, and the two measure types are never summed and years are never merged. `acnc-charity` streams the latest ACNC Annual
 Information Statement CSV (2024), archives the programs CSV and explanatory notes, and stores one
 `expense_total` row per charity plus reconciled `expense_component` rows with an explicit
 `expense_category`; charity expenses are not government spending, have no COFOG function, and total

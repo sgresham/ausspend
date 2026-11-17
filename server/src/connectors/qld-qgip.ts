@@ -13,10 +13,26 @@ import type { Connector, RawRecord } from './types.js';
  * Queensland Government Investment Portal (QGIP) expenditure connector
  * (Phase 4, QLD only — distinct from the `qld-budget` BP3/BP4 source).
  *
- * One keyless data.qld CKAN CSV is ingested: the latest annual consolidated
- * QGIP expenditure file. Discovery goes through `package_search`, then
- * `package_show` on the consolidated-view package. The exact CSV and the
- * official data-dictionary PDF are SHA-256 archived outside the repo.
+ * By default one keyless data.qld CKAN CSV is ingested: the latest annual
+ * consolidated QGIP expenditure file. The connector can also be given explicit
+ * fiscal years (for example 2018-19..2023-24) and then ingests one CSV per
+ * requested year, each with its own `fiscal_year` and per-year natural key.
+ * Discovery goes through `package_search`, then `package_show` on the
+ * consolidated-view package. Every selected CSV and the official
+ * data-dictionary PDF are SHA-256 archived outside the repo.
+ *
+ * Year separation: the publisher changes program names and machinery of
+ * government across years, so years are never merged or cross-joined. Every
+ * record keeps the CSV's own fiscal year and a natural key that includes the
+ * year and the CKAN resource id; identical amounts in different years cannot
+ * collide. Re-running a year's unchanged file is idempotent.
+ *
+ * The 2019-20 published file leaves `Financial year expenditure` blank on
+ * 22,530 of its 27,308 rows even though most of those rows carry a
+ * total-to-date. The blank annual payment cannot be reconstructed from the
+ * cumulative total (that would be a double-count), so 2019-20 is ingested as
+ * a partial-coverage year: only its published annual payments are stored and
+ * every 2019-20 record is flagged `partial_year_source_gap`.
  *
  * Units are NOT inferred from magnitude: the QGIP data dictionary says
  * "Financial year expenditure ... Figures should be entered without
@@ -47,7 +63,27 @@ export const QGIP_ID = 'qld-qgip';
 export const QGIP_NAME = 'Queensland Government Investment Portal (QGIP) — Expenditure';
 export const QGIP_PUBLISHER = 'Queensland Treasury';
 export const QGIP_DATASET = 'Queensland Government Investment Portal (QGIP) — Expenditure';
+/** Latest annual consolidated file (the default single-year fetch). */
 export const QGIP_FISCAL_YEAR = '2024-25';
+/** Earlier published annual files landed by the P1 breadth item. */
+export const QGIP_EARLIER_YEARS = [
+  '2018-19',
+  '2019-20',
+  '2020-21',
+  '2021-22',
+  '2022-23',
+  '2023-24',
+] as const;
+/**
+ * Years whose published annual payment column is not complete. 2019-20 has a
+ * blank `Financial year expenditure` on 22,530/27,308 rows; its cumulative
+ * total-to-date is not a substitute. Records from these years are flagged so a
+ * lower annual total is never read as a real spending fall.
+ */
+export const QGIP_PARTIAL_YEARS: Readonly<Record<string, string>> = {
+  '2019-20':
+    'publisher left Financial year expenditure blank on 22,530 of 27,308 rows; only published annual payments are ingested',
+};
 export const QGIP_CKAN_API_BASE = 'https://www.data.qld.gov.au/api/3/action';
 export const QGIP_DATASET_ID = 'b102c881-2c7f-484a-a8b6-b056fe318964';
 export const QGIP_PACKAGE_NAME =
@@ -85,7 +121,13 @@ export const QGIP_SENTINEL_POSTCODES = {
   '1234': 'interstate / outside Queensland',
 } as const;
 
-/** Header order of the 2024-25 consolidated CSV (29 columns). */
+/**
+ * Header order of the consolidated CSV (29 columns), stable 2018-19..2024-25.
+ * 2023-24 prepends a helper `Name` column that is not part of the published
+ * schema and is ignored here; every other header is present (2019-20 pads the
+ * annual-expenditure header with spaces, which the case/space-insensitive
+ * column lookup normalises).
+ */
 export const QGIP_COLUMNS = [
   'Australian Business Number (ABN)',
   'Legal entity name',
@@ -132,9 +174,12 @@ export interface QgipResource {
 }
 
 export interface QgipSourceSelection {
+  /** Latest annual expenditure resource (default one-year ingestion). */
   annual: QgipResource;
-  /** All annual expenditure resources considered, newest first. */
+  /** One annual expenditure resource per fiscal year, newest first. */
   annualResources: QgipResource[];
+  /** Resources selected for this run: the requested years, or just the latest. */
+  selected: QgipResource[];
   dictionary: QgipResource;
 }
 
@@ -145,6 +190,7 @@ export interface QgipSourceMeta {
   url: string;
   source_sha256: string;
   source_date: string;
+  fiscal_year: string;
 }
 
 export interface QgipRaw extends Record<string, unknown> {
@@ -155,6 +201,8 @@ export interface QgipRaw extends Record<string, unknown> {
   url: string;
   source_sha256: string;
   source_date: string;
+  /** Fiscal year of the CSV this row came from, e.g. "2019-20". */
+  fiscal_year: string;
   /** 1-based data-row number (header is not counted). */
   row: number;
   row_hash: string;
@@ -198,6 +246,11 @@ export interface QgipTransformResult {
 export interface QgipConnectorOptions {
   fetchImpl?: typeof fetch;
   archiveRoot?: string;
+  /**
+   * Fiscal years to ingest, e.g. `QGIP_EARLIER_YEARS`. When omitted only the
+   * latest annual file is fetched (the original single-year behaviour).
+   */
+  years?: readonly string[];
   /** Delay between CKAN API calls; defaults to 500ms, set 0 in tests. */
   apiDelayMs?: number;
   /** Injected for unit tests; defaults to a cp1252 stream reader. */
@@ -332,6 +385,11 @@ export function qgipResourceYear(name: string): number | null {
   return match?.[1] ? Number(match[1]) : null;
 }
 
+/** Financial-year label from its start year (2024 -> "2024-25"). */
+export function qgipFiscalYearLabel(year: number): string {
+  return `${year}-${String((year + 1) % 100).padStart(2, '0')}`;
+}
+
 function toResource(pkg: CkanPackage, resource: CkanResource): QgipResource {
   const year = qgipResourceYear(resource.name) ?? 0;
   return {
@@ -349,13 +407,22 @@ function toResource(pkg: CkanPackage, resource: CkanResource): QgipResource {
 }
 
 /**
- * Choose the latest annual consolidated expenditure CSV from a package's
- * resources. Only CSV resources whose name carries a financial year and the
- * word "expenditure" qualify; program-funding and non-annual files are ignored.
+ * Choose annual consolidated expenditure CSVs from a package's resources. Only
+ * CSV resources whose name carries a financial year and the word "expenditure"
+ * qualify; program-funding and non-annual files are ignored.
+ *
+ * Where a year has more than one published resource (2020-21 has an original
+ * and an "updated DTMR data" file), only one is kept so the year cannot be
+ * double-counted: the one explicitly marked "updated" wins, then the newest
+ * metadata, then the resource id.
  */
-export function selectLatestAnnualResource(pkg: CkanPackage): {
+export function selectAnnualResources(
+  pkg: CkanPackage,
+  years?: readonly string[],
+): {
   annual: QgipResource;
   annualResources: QgipResource[];
+  selected: QgipResource[];
 } {
   const candidates = pkg.resources
     .filter((resource) => /csv/i.test(resource.format))
@@ -367,9 +434,42 @@ export function selectLatestAnnualResource(pkg: CkanPackage): {
       const am = a.metadata_modified.localeCompare(b.metadata_modified);
       return am !== 0 ? -am : a.resource_id.localeCompare(b.resource_id);
     });
-  const latest = candidates[0];
+
+  // One resource per fiscal year, preferring a corrected "updated" file.
+  const byYear = new Map<string, QgipResource>();
+  for (const resource of candidates) {
+    const label = qgipFiscalYearLabel(resource.year);
+    const existing = byYear.get(label);
+    if (!existing || (/updated/i.test(resource.name) && !/updated/i.test(existing.name))) {
+      byYear.set(label, resource);
+    }
+  }
+  const annualResources = [...byYear.values()].sort((a, b) => b.year - a.year);
+  const latest = annualResources[0];
   if (!latest) throw new Error(`data.qld package ${pkg.name} has no annual expenditure CSV`);
-  return { annual: latest, annualResources: candidates };
+
+  let selected: QgipResource[];
+  if (years && years.length > 0) {
+    const missing = years.filter((year) => !byYear.has(year));
+    if (missing.length > 0) {
+      throw new Error(
+        `data.qld package ${pkg.name} is missing annual expenditure CSV(s) for ${missing.join(', ')}`,
+      );
+    }
+    selected = years.map((year) => byYear.get(year) as QgipResource);
+  } else {
+    selected = [latest];
+  }
+  return { annual: latest, annualResources, selected };
+}
+
+/** Latest-resource helper retained for the original single-year callers/tests. */
+export function selectLatestAnnualResource(pkg: CkanPackage): {
+  annual: QgipResource;
+  annualResources: QgipResource[];
+} {
+  const { annual, annualResources } = selectAnnualResources(pkg);
+  return { annual, annualResources };
 }
 
 function selectDictionary(pkg: CkanPackage): QgipResource {
@@ -389,6 +489,7 @@ function selectDictionary(pkg: CkanPackage): QgipResource {
 export async function discoverQgipSource(
   fetchImpl: typeof fetch = fetch,
   delayMs: number = QGIP_API_DELAY_MS,
+  years?: readonly string[],
 ): Promise<QgipSourceSelection> {
   const found: string[] = [];
   for (const query of QGIP_SEARCH_QUERIES) {
@@ -418,8 +519,8 @@ export async function discoverQgipSource(
   if (pkg.name !== QGIP_PACKAGE_NAME) {
     throw new Error(`data.qld package_show returned ${pkg.name}, expected ${QGIP_PACKAGE_NAME}`);
   }
-  const { annual, annualResources } = selectLatestAnnualResource(pkg);
-  return { annual, annualResources, dictionary: selectDictionary(pkg) };
+  const { annual, annualResources, selected } = selectAnnualResources(pkg, years);
+  return { annual, annualResources, selected, dictionary: selectDictionary(pkg) };
 }
 
 /** cp1252 specials for bytes 0x80-0x9F (Node has no cp1252 decoder). */
@@ -592,9 +693,12 @@ function qgipLocation(raw: QgipRaw): SpendingRecord['location'] {
 
 function qgipDataQuality(raw: QgipRaw): string {
   const statewide = raw.statewide !== null && /^yes$/i.test(raw.statewide);
-  if (statewide) return 'provisional; statewide_only';
-  if (isApproximateLocation(raw)) return 'provisional; location_approximate';
-  return 'provisional';
+  const base = statewide
+    ? 'provisional; statewide_only'
+    : isApproximateLocation(raw)
+      ? 'provisional; location_approximate'
+      : 'provisional';
+  return QGIP_PARTIAL_YEARS[raw.fiscal_year] ? `${base}; partial_year_source_gap` : base;
 }
 
 function qgipRecord(raw: QgipRaw): SpendingRecord | null {
@@ -639,7 +743,10 @@ function qgipRecord(raw: QgipRaw): SpendingRecord | null {
       raw.total_notes ? `; notes "${raw.total_notes}"` : ''
     }`,
     `${locationNotes}${sentinelNote}`,
-    'Actual expenditure reported for FY2024-25 (cash accounting standard); unverified',
+    `Actual expenditure reported for FY${raw.fiscal_year} (cash accounting standard); unverified`,
+    ...(QGIP_PARTIAL_YEARS[raw.fiscal_year]
+      ? [`Coverage: FY${raw.fiscal_year} is partial — ${QGIP_PARTIAL_YEARS[raw.fiscal_year]}`]
+      : []),
     'Grant and contract rows are separate measure types and are never summed into one QLD total',
     `Source copy SHA-256: ${raw.source_sha256}`,
   ].join('; ');
@@ -647,11 +754,11 @@ function qgipRecord(raw: QgipRaw): SpendingRecord | null {
   return {
     amount_cents: amountCents,
     measure_type: measureType,
-    fiscal_year: QGIP_FISCAL_YEAR,
+    fiscal_year: raw.fiscal_year,
     source_id: QGIP_ID,
     source_url: raw.url,
     verified: false,
-    natural_key: qgipNaturalKey([raw.resource_id, raw.row_hash, QGIP_FISCAL_YEAR]),
+    natural_key: qgipNaturalKey([raw.resource_id, raw.row_hash, raw.fiscal_year]),
     jurisdiction_level: 'state',
     jurisdiction: 'QLD',
     source_dataset: QGIP_DATASET,
@@ -736,16 +843,18 @@ export interface QgipLoadedSource {
 }
 
 /**
- * Discover, archive and stream-parse the latest annual QGIP expenditure CSV and
- * the data dictionary. Both exact files are written outside the repo by the
- * shared source-archive helper; the repo only holds metadata.
+ * Discover, archive and stream-parse the selected annual QGIP expenditure CSVs
+ * and the data dictionary. Exactly one resource per fiscal year is selected, so
+ * the two published 2020-21 files cannot be double-counted. The exact files are
+ * written outside the repo by the shared source-archive helper; the repo only
+ * holds metadata.
  */
 export async function loadQgipSource(
   options: QgipConnectorOptions = {},
 ): Promise<QgipLoadedSource> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const delayMs = options.apiDelayMs ?? QGIP_API_DELAY_MS;
-  const selection = await discoverQgipSource(fetchImpl, delayMs);
+  const selection = await discoverQgipSource(fetchImpl, delayMs, options.years);
   const archive: ArchivedSourceRecord[] = [];
   const warnings: string[] = [];
 
@@ -769,36 +878,60 @@ export async function loadQgipSource(
     return record;
   }
 
-  const csvRecord = await archiveResource(selection.annual, `QGIP — ${selection.annual.name}`);
   await archiveResource(selection.dictionary, `QGIP — ${selection.dictionary.name}`);
 
-  const meta: QgipSourceMeta = {
-    resource_id: selection.annual.resource_id,
-    resource_name: selection.annual.name,
-    filename: selection.annual.filename,
-    url: selection.annual.url,
-    source_sha256: csvRecord.sha256,
-    source_date: selection.annual.metadata_modified,
-  };
+  const raw: QgipRaw[] = [];
+  let totalRows = 0;
+  const yearStats: Array<{ fiscalYear: string; sourceRows: number; parsedRows: number }> = [];
 
-  const { raw, totalRows } =
-    options.readCsv !== undefined
-      ? parseQgipCsv(await options.readCsv(csvRecord.local_path), meta)
-      : await streamQgipCsv(csvRecord.local_path, meta);
+  for (const resource of selection.selected) {
+    const fiscalYear = qgipFiscalYearLabel(resource.year);
+    const csvRecord = await archiveResource(resource, `QGIP — ${resource.name}`);
+    const meta: QgipSourceMeta = {
+      resource_id: resource.resource_id,
+      resource_name: resource.name,
+      filename: resource.filename,
+      url: resource.url,
+      source_sha256: csvRecord.sha256,
+      source_date: resource.metadata_modified,
+      fiscal_year: fiscalYear,
+    };
+    const parsed =
+      options.readCsv !== undefined
+        ? parseQgipCsv(await options.readCsv(csvRecord.local_path), meta)
+        : await streamQgipCsv(csvRecord.local_path, meta);
+    raw.push(...parsed.raw);
+    totalRows += parsed.totalRows;
+    yearStats.push({ fiscalYear, sourceRows: parsed.totalRows, parsedRows: parsed.raw.length });
+  }
 
   const result = transformQgipRaw(raw);
-  const outOfScope = raw.filter((entry) => qgipMeasureType(entry.assistance_type) === null).length;
-  const zeroInScope = raw.filter(
-    (entry) =>
-      qgipMeasureType(entry.assistance_type) !== null &&
-      qgipAmountToCents(entry.amount_dollars) === null,
-  ).length;
-  const rejected = outOfScope + zeroInScope + (totalRows - raw.length);
+  const recordsByYear = new Map<string, number>();
+  for (const record of result.records) {
+    recordsByYear.set(record.fiscal_year, (recordsByYear.get(record.fiscal_year) ?? 0) + 1);
+  }
+  const yearByFilename = new Map<string, string>();
+  for (const row of raw) yearByFilename.set(row.filename, row.fiscal_year);
+  const skippedByYear = new Map<string, number>();
+  for (const entry of result.skipped) {
+    const year = yearByFilename.get(entry.filename);
+    if (year) skippedByYear.set(year, (skippedByYear.get(year) ?? 0) + 1);
+  }
 
+  for (const stats of yearStats) {
+    const ingested = recordsByYear.get(stats.fiscalYear) ?? 0;
+    let rejected = skippedByYear.get(stats.fiscalYear) ?? 0;
+    rejected += stats.sourceRows - stats.parsedRows; // unparseable rows never reach transform
+    warnings.push(
+      `FY${stats.fiscalYear}: source rows=${stats.sourceRows}; parsed=${stats.parsedRows}; ` +
+        `ingested=${ingested}; rejected=${rejected}` +
+        (QGIP_PARTIAL_YEARS[stats.fiscalYear]
+          ? `; PARTIAL YEAR — ${QGIP_PARTIAL_YEARS[stats.fiscalYear]}`
+          : ''),
+    );
+  }
   warnings.push(
-    `source rows=${totalRows}; parsed=${raw.length}; ingested=${result.records.length}; ` +
-      `rejected=${rejected} (out-of-scope ${outOfScope} + zero/negative in-scope ${zeroInScope}` +
-      `${totalRows - raw.length > 0 ? ` + unparseable ${totalRows - raw.length}` : ''}); ` +
+    `total source rows=${totalRows}; ingested=${result.records.length}; ` +
       `duplicates=${result.duplicates}; units whole AUD confirmed by the archived data dictionary`,
   );
   warnings.push(
@@ -829,7 +962,11 @@ export function createQgipConnector(options: QgipConnectorOptions = {}): Connect
     status: 'active',
     jurisdiction_level: 'state',
     license: QGIP_LICENSE,
-    notes: `${QGIP_ATTRIBUTION} QGIP 2024-25 consolidated expenditure CSV from data.qld CKAN plus the archived data dictionary. Units are whole AUD per the dictionary. Only Grant (measure_type=grant_award) and Frontline service procurement (measure_type=contract) are ingested; Concession, Loan and Direct government investment are rejected, as are zero-dollar rows. Grants and contracts are kept as separate measure types and never summed. funding_source is the QLD funding agency; location is statewide or the supplied service-delivery postcode/suburb/LGA (sentinels treated as approximate). No COFOG function; provisional and unverified.`,
+    notes: `${QGIP_ATTRIBUTION} QGIP annual consolidated expenditure CSVs from data.qld CKAN plus the archived data dictionary: ${
+      options.years && options.years.length > 0
+        ? `${options.years.join(', ')} (one CSV per fiscal year; per-year fiscal_year and natural key)`
+        : `${QGIP_FISCAL_YEAR} (latest annual file)`
+    }. Units are whole AUD per the dictionary. Only Grant (measure_type=grant_award) and Frontline service procurement (measure_type=contract) are ingested; Concession, Loan and Direct government investment are rejected, as are zero-dollar rows. Grants and contracts are kept as separate measure types and never summed, and years are never merged. funding_source is the QLD funding agency; location is statewide or the supplied service-delivery postcode/suburb/LGA (sentinels treated as approximate). 2019-20 is partial: the publisher left the annual payment blank on 22,530/27,308 rows, so only published annual payments are stored and flagged. No COFOG function; provisional and unverified.`,
     async fetch(): Promise<RawRecord[]> {
       metadata.errors = [];
       const loaded = await loadQgipSource(options);
