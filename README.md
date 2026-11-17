@@ -5,10 +5,10 @@ and state. This repository is the Phase 1 application: an npm-workspace monorepo
 client, an Express API and shared TypeScript/Zod contracts.
 
 > The app runs on **real published feeds only**. The synthetic development seed has been retired:
-> the database holds **348,939 real measures** and **0 synthetic rows**. Real sources include
+> the database holds **515,467 real measures** and **0 synthetic rows**. Real sources include
 > **AusTender federal contracts**, **data.gov.au PBS budget line items**, **GrantConnect** grant
 > awards (a human-downloaded, SHA-256-archived XLSX export; no API and no scraper), NSW/VIC/QLD
-> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget, ACNC
+> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus its audited FY2024-25 GPFS, ACNC
 > charity expenses and the official ABS GFS COFOG-A benchmark. Project and charity rows are real
 > published records but remain unverified (`verified: false`); only the ABS GFS benchmark rows are
 > `verified: true` and they are never summed with project data. The app never sums across measure
@@ -177,11 +177,12 @@ nonzero before it changes anything.
 ## Backup, restore and the AusTender backfill gate
 
 The live baseline after the QGIP earlier-years, Essential Energy, Forestry Corporation of NSW,
-Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink ingests is **515,449 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
+Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink ingests plus the Dubbo GPFS
+pilot is **515,467 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
 AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115,
-QLD Budget 1,051, Dubbo 245, ABS GFS 169, WaterNSW 47, VIC Budget 28, ABS GFS PNFC 18, Sydney
-Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5, Sydney Trains
-6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
+QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, ABS GFS 169, WaterNSW 47, VIC Budget 28, ABS GFS PNFC
+18, Sydney Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5,
+Sydney Trains 6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
@@ -306,7 +307,7 @@ invalid query parameters return JSON `400`.
 connector status: true once AusTender/PBS ingest), `generated_at`,
 `counts {data_sources, regions, functions, measures, synthetic_measures, real_measures}`,
 `coverage_gaps` (the real national/state actual/estimate, COFOG, region and PBS gaps), distinct sorted
-`fiscal_years`, supported/observed `measure_types`, `region_levels`, the fourteen `connectors`
+`fiscal_years`, supported/observed `measure_types`, `region_levels`, the twenty-seven `connectors`
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
 `federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat, grantconnect_caveat, grantconnect_note}` and
@@ -373,7 +374,7 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 
 ### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers fourteen Australian public-spending sources. **AusTender
+`server/src/connectors` registers twenty-seven Australian public-spending sources, including the separate Dubbo GPFS pilot source (`dubbo-council-gpfs`). **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
@@ -512,7 +513,7 @@ ambiguities and a prioritised list of follow-up items. It records the current 34
 baseline and the no-sum rules for SOC, ABS GFS/PNFC, ACNC and overlapping budget series.
 
 [docs/NSW_COUNCILS.md](./docs/NSW_COUNCILS.md) is the planning inventory for the 128 NSW general
-purpose councils (plus county councils and Joint Organisations): the OLG *Your Council* time-series,
+purpose councils (plus county councils and Joint Organisations): the OLG _Your Council_ time-series,
 individual council General Purpose Financial Statements, Grants Commission allocations and data.nsw
 coverage, with units, licences, reporting dates and a double-count map. It records that no single
 official dataset provides GPFS statement-line granularity for all 128 councils, and recommends a

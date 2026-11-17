@@ -186,6 +186,20 @@ export const MeasureRecordSchema = z.object({
    */
   soc_printed_sign: z.enum(['positive', 'negative']).optional(),
   /**
+   * Council General Purpose Financial Statement provenance. `gpfs_line_item`
+   * is the stable line key, `gpfs_line_label` the exact printed label and
+   * `gpfs_unit` the printed unit (for Dubbo: AUD_thousands, printed "$'000").
+   * `gpfs_component_of` names the printed subtotal a component belongs to, so
+   * a component is never added to that subtotal. GPFS rows are non-additive
+   * agency detail and are never summed with council budget/summary rows.
+   */
+  gpfs_line_item: z.string().min(1).optional(),
+  gpfs_line_label: z.string().min(1).optional(),
+  gpfs_unit: z.string().min(1).optional(),
+  gpfs_section: z.enum(['revenue', 'expenses', 'result']).optional(),
+  gpfs_statement: z.string().min(1).optional(),
+  gpfs_component_of: z.string().min(1).optional(),
+  /**
    * True when the row's funding source names a government agency or a
    * separately disclosed government contribution/transfer. Such a row may
    * overlap government program spending, so the UI warns and the row is never

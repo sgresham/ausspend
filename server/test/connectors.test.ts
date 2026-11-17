@@ -16,6 +16,7 @@ const LIVE_IDS = [
   'nsw-budget',
   'data-nsw-ckan',
   'dubbo-council',
+  'dubbo-council-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -34,9 +35,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships twenty-six connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(26);
-    expect(new Set(CONNECTOR_IDS).size).toBe(26);
+  it('ships twenty-seven connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(27);
+    expect(new Set(CONNECTOR_IDS).size).toBe(27);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -116,6 +117,10 @@ describe('federal connector registry', () => {
     expect(getConnector('dubbo-council')?.status).toBe('active');
     expect(getConnector('dubbo-council')?.jurisdiction_level).toBe('local');
     expect(getConnector('dubbo-council')?.source_url).toContain('dubbo.nsw.gov.au');
+    expect(getConnector('dubbo-council-gpfs')?.status).toBe('active');
+    expect(getConnector('dubbo-council-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('dubbo-council-gpfs')?.source_url).toContain('dubbo.nsw.gov.au');
+    expect(getConnector('dubbo-council-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');

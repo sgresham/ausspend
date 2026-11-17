@@ -234,13 +234,13 @@ describe('F1 extended measure shape and API', () => {
     const coverage = await request(app).get('/api/v1/meta/coverage');
     expect(coverage.status).toBe(200);
     // ABS GFS, ABS GFS PNFC, AusTender, PBS, GrantConnect (manual export), NSW
-    // Budget, CKAN, Dubbo, VIC Budget, QLD Budget, QLD QGIP, ACNC charity and
+    // Budget, CKAN, Dubbo, Dubbo GPFS, VIC Budget, QLD Budget, QLD QGIP, ACNC charity and
     // Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation, Landcom,
     // Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink SOC are wired; the remaining four are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(22);
+    ).toBe(23);
     expect(coverage.body.connector_status_counts.stub).toBe(4);
     expect([
       ...coverage.body.federal_ingestion.live,

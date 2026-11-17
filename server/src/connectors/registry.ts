@@ -4,6 +4,7 @@ import { createAcncCharityConnector } from './acnc-charity.js';
 import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
 import { createDubboConnector } from './dubbo-council.js';
+import { createDubboGpfsConnector } from './dubbo-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -123,6 +124,12 @@ export const CONNECTORS: readonly Connector[] = [
   // PDF is archived and parsed by a Dubbo-specific adapter on top of the shared
   // PDF foundation. Other councils are not covered.
   createDubboConnector(),
+  // GPFS pilot: still one council only (Dubbo Regional Council). The audited
+  // FY2024-25 General Purpose Financial Statements are a separate source id
+  // from the budget/forecast PDF above: every row is non-additive
+  // agency_detail, has no region/LGA allocation, and reconciles exactly to the
+  // OLG FY2024-25 totals. Never summed with the 245 dubbo-council rows.
+  createDubboGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
