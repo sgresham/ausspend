@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   QGIP_COLUMNS,
   QGIP_DATASET_ID,
+  QGIP_EARLIER_YEARS,
   QGIP_FISCAL_YEAR,
   QGIP_ID,
+  QGIP_PARTIAL_YEARS,
   QGIP_UNIT,
   QGIP_UNIT_TO_CENTS,
   createQgipConnector,
@@ -12,11 +14,13 @@ import {
   isSentinelPostcode,
   parseQgipCsv,
   qgipAmountToCents,
+  qgipFiscalYearLabel,
   qgipMeasureType,
   qgipNaturalKey,
   qgipNumber,
   qgipResourceYear,
   qgipRowHash,
+  selectAnnualResources,
   selectLatestAnnualResource,
   transformQgipRaw,
   type QgipSourceMeta,
@@ -29,6 +33,7 @@ const meta: QgipSourceMeta = {
   url: 'https://example.test/2024-25-expenditure-consolidated.csv',
   source_sha256: 'sha-qgip',
   source_date: '2025-12-18',
+  fiscal_year: '2024-25',
 };
 
 type Cells = Partial<Record<(typeof QGIP_COLUMNS)[number], string>>;
@@ -232,6 +237,115 @@ describe('QGIP row parsing and mapping', () => {
     expect(raw[0]?.row_hash).not.toBe(raw[1]?.row_hash);
     const cells = { 'Legal entity name': 'X' } as Record<string, string>;
     expect(qgipRowHash(cells, 1)).not.toBe(qgipRowHash(cells, 2));
+  });
+});
+
+describe('QGIP earlier-year separation', () => {
+  function metaFor(fiscal_year: string): QgipSourceMeta {
+    return {
+      ...meta,
+      resource_id: `res-qgip-${fiscal_year}`,
+      resource_name: `${fiscal_year} consolidated QGIP expenditure`,
+      filename: `${fiscal_year}-expenditure-consolidated.csv`,
+      url: `https://example.test/${fiscal_year}.csv`,
+      fiscal_year,
+    };
+  }
+
+  it('labels resource start years and only requests the published years', () => {
+    expect(qgipFiscalYearLabel(2018)).toBe('2018-19');
+    expect(qgipFiscalYearLabel(2023)).toBe('2023-24');
+    const pkg = {
+      id: QGIP_DATASET_ID,
+      name: 'queensland-government-investment-portal-expenditure-data-consolidated-view',
+      title: 'QGIP consolidated',
+      resources: [
+        ...['2018-19', '2019-20', '2020-21', '2021-22', '2022-23', '2023-24', '2024-25'].map(
+          (year) => ({
+            id: `r-${year}`,
+            name: `${year} consolidated QGIP expenditure`,
+            format: 'CSV',
+            url: `https://x/${year}.csv`,
+          }),
+        ),
+        {
+          id: 'r-2020-21-updated',
+          name: '2020-21 consolidated QGIP expenditure (updated DTMR data 15122022)',
+          format: 'CSV',
+          url: 'https://x/2020-21-updated.csv',
+        },
+        {
+          id: 'r4',
+          name: 'QGIP expenditure data dictionary',
+          format: 'PDF',
+          url: 'https://x/dict.pdf',
+        },
+      ],
+    };
+    const selected = selectAnnualResources(pkg, QGIP_EARLIER_YEARS);
+    expect(selected.selected).toHaveLength(6);
+    expect(selected.selected.map((resource) => qgipFiscalYearLabel(resource.year))).toEqual([
+      ...QGIP_EARLIER_YEARS,
+    ]);
+    // Exactly one 2020-21 resource: the corrected "updated" file, never both.
+    const twenty = selected.selected.filter((resource) => resource.year === 2020);
+    expect(twenty.map((resource) => resource.resource_id)).toEqual(['r-2020-21-updated']);
+    expect(() => selectAnnualResources(pkg, ['2017-18'])).toThrow(/missing.*2017-18/);
+    expect(selectAnnualResources(pkg).selected).toHaveLength(1);
+  });
+
+  it('keeps each year separate: no cross-year natural-key collision', () => {
+    const first = transformQgipRaw(parseQgipCsv(CSV, metaFor('2018-19')).raw);
+    const second = transformQgipRaw(parseQgipCsv(CSV, metaFor('2019-20')).raw);
+    expect(first.records.every((record) => record.fiscal_year === '2018-19')).toBe(true);
+    expect(second.records.every((record) => record.fiscal_year === '2019-20')).toBe(true);
+    const keys = new Set([
+      ...first.records.map((record) => record.natural_key),
+      ...second.records.map((record) => record.natural_key),
+    ]);
+    expect(keys.size).toBe(first.records.length + second.records.length);
+
+    const combined = transformQgipRaw([
+      ...parseQgipCsv(CSV, metaFor('2018-19')).raw,
+      ...parseQgipCsv(CSV, metaFor('2019-20')).raw,
+    ]);
+    expect(combined.duplicates).toBe(0);
+    expect(combined.records).toHaveLength(first.records.length + second.records.length);
+    expect(new Set(combined.records.map((record) => record.fiscal_year))).toEqual(
+      new Set(['2018-19', '2019-20']),
+    );
+  });
+
+  it('is idempotent within a year and never adds total-to-date to the annual payment', () => {
+    const rows = parseQgipCsv(CSV, metaFor('2023-24')).raw;
+    const once = transformQgipRaw(rows);
+    const twice = transformQgipRaw(rows);
+    expect(twice.records.map((record) => record.natural_key)).toEqual(
+      once.records.map((record) => record.natural_key),
+    );
+    const grant = once.records.find((record) => record.measure_type === 'grant_award');
+    // The CSV fixture's only total-to-date is absent; the amount is the annual
+    // 150000 field, never a cumulative figure.
+    expect(grant?.amount_cents).toBe(15_000_000);
+    // Grant and contract rows stay separate measure types; no combined row.
+    expect(new Set(once.records.map((record) => record.measure_type))).toEqual(
+      new Set(['grant_award', 'contract']),
+    );
+    expect(once.records.every((record) => record.aggregation_role === 'additive')).toBe(true);
+  });
+
+  it('flags 2019-20 as a partial year but leaves 2024-25 unmarked', () => {
+    expect(QGIP_PARTIAL_YEARS['2019-20']).toMatch(/22,530 of 27,308/);
+    const partial = transformQgipRaw(parseQgipCsv(CSV, metaFor('2019-20')).raw);
+    expect(
+      partial.records.every((record) => /partial_year_source_gap/.test(record.data_quality_flag)),
+    ).toBe(true);
+    expect(partial.records[0]?.notes).toMatch(/Coverage: FY2019-20 is partial/);
+
+    const complete = transformQgipRaw(parseQgipCsv(CSV, metaFor('2024-25')).raw);
+    expect(
+      complete.records.some((record) => /partial_year_source_gap/.test(record.data_quality_flag)),
+    ).toBe(false);
   });
 });
 

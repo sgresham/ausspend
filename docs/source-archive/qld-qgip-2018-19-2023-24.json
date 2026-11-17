@@ -1,0 +1,170 @@
+{
+  "dataset": "Queensland Government Investment Portal (QGIP) — Expenditure",
+  "years": [
+    "2018-19",
+    "2019-20",
+    "2020-21",
+    "2021-22",
+    "2022-23",
+    "2023-24"
+  ],
+  "source_url": "https://www.data.qld.gov.au/dataset/queensland-government-investment-portal-expenditure-data-consolidated-view",
+  "license": "CC BY 4.0",
+  "attribution": "© State of Queensland (Queensland Treasury), 2025",
+  "retrieved_at": "2026-11-17T06:53:44.619Z",
+  "unit": "AUD dollars (x100 cents), confirmed by the archived data dictionary",
+  "files": [
+    {
+      "title": "QGIP — 2020-21 consolidated QGIP expenditure (updated DTMR data 15122022)",
+      "filename": "20-21-expenditure-data-consolidated-updated-dtmr-data-16122022.csv",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/99f2c9a4-0ddc-4434-95b4-1a9472aa88cf/download/20-21-expenditure-data-consolidated-updated-dtmr-data-16122022.csv",
+      "sha256": "2d46a47d84b8fd2e1c28506323b7a01473b3db48e4a08674a8d934843026be2e",
+      "bytes": 19494445,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — 2019-20 consolidated QGIP expenditure ",
+      "filename": "19-20-expenditure-data-consolidated.csv",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/644128d1-a836-4e1f-94b5-bacac234baf6/download/19-20-expenditure-data-consolidated.csv",
+      "sha256": "391698145a88975bc1dc31156678d79c3b9db949e631feaad2d3e7589e939022",
+      "bytes": 13220802,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — QGIP expenditure data dictionary",
+      "filename": "expenditure-data-dictionary-data-file-standards-september-2024.pdf",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/80e06969-7193-4b94-a425-f52e27ece371/download/expenditure-data-dictionary-data-file-standards-september-2024.pdf",
+      "sha256": "71c3660e423006ff017bd0f4f133af552cafb2e697968b89e8a46f9ad1cb112a",
+      "bytes": 811721,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — QGIP expenditure data dictionary",
+      "filename": "qgip-expenditure-data-file-standards-nov-2026.pdf",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/80e06969-7193-4b94-a425-f52e27ece371/download/qgip-expenditure-data-file-standards-nov-2026.pdf",
+      "sha256": "794e489647c37595eda7b466e0aa05bc9bee07267584e161de1a91f1351e6c1d",
+      "bytes": 923771,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — 2022-23 consolidated QGIP expenditure",
+      "filename": "2022-23-expenditure-consolidated.csv",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/991a217c-a57a-4125-81db-763ed79955f5/download/2022-23-expenditure-consolidated.csv",
+      "sha256": "902b83fba0b387d1bcb7f27ac76f7d0d923d63a6cd0954e872cbb8aa99253649",
+      "bytes": 14396557,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — 2023-24 consolidated QGIP expenditure",
+      "filename": "2023-24-expenditure-pq-consolidate.csv",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/66bfd607-0bb5-4c28-bc1e-1c40f2e9c2c1/download/2023-24-expenditure-pq-consolidate.csv",
+      "sha256": "9ee768c73ee205df2364504489223999cfeebf906de9d4bd037ba694fa7b6c63",
+      "bytes": 22678895,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — 2021-22 consolidated QGIP expenditure",
+      "filename": "21-22-expenditure-data-consolidated.csv",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/8c6d2513-7728-4173-bb53-f521daf2b3c0/download/21-22-expenditure-data-consolidated.csv",
+      "sha256": "c53b534ff347e2f1dce5e5df26280f7c8c71145d2aa64efeda2a27cfe22a44ac",
+      "bytes": 16323632,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — 2018-19 consolidated QGIP expenditure",
+      "filename": "18-19-expenditure-data-consolidated.csv",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/ba12f307-9d88-4690-b959-d9f7f88af7bf/download/18-19-expenditure-data-consolidated.csv",
+      "sha256": "fa5abeb140ac30493c127db649be0e84eb5230ca77566745a2063902bfd4960a",
+      "bytes": 12783068,
+      "archived_from": "direct"
+    }
+  ],
+  "per_year": [
+    {
+      "fiscal_year": "2018-19",
+      "measure_type": "contract",
+      "rows": 6530,
+      "cents": 464081675646
+    },
+    {
+      "fiscal_year": "2018-19",
+      "measure_type": "grant_award",
+      "rows": 18485,
+      "cents": 242645916857
+    },
+    {
+      "fiscal_year": "2019-20",
+      "measure_type": "contract",
+      "rows": 31,
+      "cents": 1586706200
+    },
+    {
+      "fiscal_year": "2019-20",
+      "measure_type": "grant_award",
+      "rows": 2534,
+      "cents": 22674248150
+    },
+    {
+      "fiscal_year": "2020-21",
+      "measure_type": "contract",
+      "rows": 5700,
+      "cents": 479309018700
+    },
+    {
+      "fiscal_year": "2020-21",
+      "measure_type": "grant_award",
+      "rows": 30410,
+      "cents": 283001924800
+    },
+    {
+      "fiscal_year": "2021-22",
+      "measure_type": "contract",
+      "rows": 4127,
+      "cents": 497852047958
+    },
+    {
+      "fiscal_year": "2021-22",
+      "measure_type": "grant_award",
+      "rows": 27884,
+      "cents": 411464932238
+    },
+    {
+      "fiscal_year": "2022-23",
+      "measure_type": "contract",
+      "rows": 4278,
+      "cents": 528685485125
+    },
+    {
+      "fiscal_year": "2022-23",
+      "measure_type": "grant_award",
+      "rows": 23844,
+      "cents": 311279672905
+    },
+    {
+      "fiscal_year": "2023-24",
+      "measure_type": "contract",
+      "rows": 4068,
+      "cents": 580203257909
+    },
+    {
+      "fiscal_year": "2023-24",
+      "measure_type": "grant_award",
+      "rows": 38496,
+      "cents": 406327004717
+    }
+  ],
+  "partial_years": {
+    "2019-20": "publisher left Financial year expenditure blank on 22,530 of 27,308 rows; only published annual payments are ingested"
+  },
+  "baseline": {
+    "total": 515407,
+    "qgip": 200387,
+    "latestYear": 34000
+  },
+  "after": {
+    "total": 515407,
+    "qgip": 200387,
+    "latestYear": 34000
+  },
+  "notes": "One consolidated QGIP expenditure CSV per fiscal year (2020-21 uses the corrected \"updated DTMR data\" file only). Existing 2024-25 rows are preserved untouched. Only Grant (grant_award) and Frontline service procurement (contract) are ingested; Concession, Loan and Direct government investment are rejected, as are zero-dollar rows. Grants and contracts are never summed, and years are never merged. 2019-20 is partial because the publisher left Financial year expenditure blank on 22,530/27,308 rows; the cumulative total-to-date is never added to or substituted for an annual payment. No COFOG function; provisional and unverified. Bytes are archived outside the repo."
+}
