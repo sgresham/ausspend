@@ -9,6 +9,7 @@ import { createCityOfSydneyGpfsConnector } from './city-of-sydney-gpfs.js';
 import { createBlacktownGpfsConnector } from './blacktown-gpfs.js';
 import { createParramattaGpfsConnector } from './parramatta-gpfs.js';
 import { createNorthernBeachesGpfsConnector } from './northern-beaches-gpfs.js';
+import { createCanterburyBankstownGpfsConnector } from './canterbury-bankstown-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -161,6 +162,13 @@ export const CONNECTORS: readonly Connector[] = [
   // comprehensive-income totals. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
   createNorthernBeachesGpfsConnector(),
+  // GPFS expansion: sixth council only (Canterbury-Bankstown Council). Its
+  // audited FY2024-25 General Purpose Financial Statements are a separate source
+  // id: every row is non-additive agency_detail, has no region/LGA allocation,
+  // and reconciles exactly to the printed Income Statement, B1-1 and
+  // comprehensive-income totals. Never summed with any other council, the
+  // Dubbo budget rows, the existing council GPFS rows or State rows.
+  createCanterburyBankstownGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
