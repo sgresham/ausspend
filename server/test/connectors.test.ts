@@ -23,6 +23,7 @@ const LIVE_IDS = [
   'northern-beaches-gpfs',
   'canterbury-bankstown-gpfs',
   'sutherland-shire-gpfs',
+  'wollongong-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -41,16 +42,16 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships thirty-three connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(33);
-    expect(new Set(CONNECTOR_IDS).size).toBe(33);
+  it('ships thirty-four connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(34);
+    expect(new Set(CONNECTOR_IDS).size).toBe(34);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
     );
   });
 
-  it('registers the federal/state/local/charity sources as live and the remaining four as stubs', () => {
+  it('registers the federal/state/local/charity sources as live and the remaining sources as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -151,6 +152,10 @@ describe('federal connector registry', () => {
       'sutherlandshire.nsw.gov.au',
     );
     expect(getConnector('sutherland-shire-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('wollongong-gpfs')?.status).toBe('active');
+    expect(getConnector('wollongong-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('wollongong-gpfs')?.source_url).toContain('wollongong.nsw.gov.au');
+    expect(getConnector('wollongong-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');

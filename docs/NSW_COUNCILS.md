@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Seven council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Eight council GPFS extractions have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -10,7 +10,9 @@ Blacktown City Council FY2024-25 GPFS (**§7.3**) then added exactly **17** `bla
 (**§7.5**) then added exactly **18** `northern-beaches-gpfs` rows (**515,519** → **515,537**);
 Canterbury-Bankstown Council FY2024-25 GPFS (**§7.6**) then added exactly **17**
 `canterbury-bankstown-gpfs` rows (**515,537** → **515,554**); Sutherland Shire Council FY2024-25
-GPFS (**§7.7**) then added exactly **17** `sutherland-shire-gpfs` rows (**515,554** → **515,571**).
+GPFS (**§7.7**) then added exactly **17** `sutherland-shire-gpfs` rows (**515,554** → **515,571**);
+Wollongong City Council FY2024-25 GPFS (**§7.8**) then added exactly **17** `wollongong-gpfs` rows
+(**515,571** → **515,588**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -881,6 +883,79 @@ still **18**; `dubbo-council` still **245**; `dubbo-council-gpfs` still **18**; 
 **3,472**; `data_sources` 32 → **33**. A second ingest run upserted the same 17 natural keys and left
 the DB total unchanged (idempotent). No deletes or updates to any other source.
 
+### 7.8 Eighth council — Wollongong City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official financial report page
+<https://www.wollongong.nsw.gov.au/council/council-documents/reports/financial-report>. Plain HTTP to
+`wollongong.nsw.gov.au` returns **HTTP 403** (Cloudflare managed challenge) for the home page, the
+reporting page and the PDF, which is not proof of absence. The documented headless Chromium/Playwright
+path (the same approach used for Sutherland Shire) loads the page, clears the challenge, and the
+connector parses the PDF link from the cleared HTML — no document URL is hard-coded. The FY2024-25
+anchor **"Financial Report for the Year Ended 30 June 2025 PDF, 7171.17 KB"** resolves to
+<https://www.wollongong.nsw.gov.au/__data/assets/pdf_file/0011/300404/Annual-Financial-Statements-year-ended-30-June-2025.pdf>
+(downloaded by the browser; 7,343,281 bytes). Exact bytes are archived outside the repo at
+`/home/steve/ausspend-source-archive/wollongong-gpfs/Annual-Financial-Statements-year-ended-30-June-2025.pdf`,
+SHA-256 `ae26b12b906a09ce17d1c353e4f36d8aec29b0de5e4b539cffe5a953aedc6ad3`, with the archive
+metadata record alongside. The printed unit is explicit `$ '000` on the Income Statement (printed
+p4 / PDF p15), the Statement of Comprehensive Income (printed p5 / PDF p16) and note B1-1 (printed
+p13 / PDF p24); a missing or conflicting unit rejects the whole extraction. Because the site blocks
+non-browser fetches, `scripts/ingest-nsw.ts --source wollongong-gpfs` supplies the browser-cleared
+listing HTML and PDF bytes through the connector's documented `listingHtml`/`pdfBytes` overrides; the
+connector still discovers the link from that HTML, SHA-256 verifies and re-archives the bytes.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before the
+line label, with Actual 2025 and Actual 2024 after it. The connector takes the first amount after
+each printed label (the FY2024-25 actual) and emits nothing unless all of these agree exactly:
+
+| Check                                                                                                                        |                              Printed / derived | Result                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------: | ------------------------------------------------------------------------------------------ |
+| Total income from continuing operations (Income Statement p4)                                                                |                            `$390,643` thousand | = `$390,643,000`                                                                           |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                            `$390,643` thousand | = printed total                                                                            |
+| Total expenses excluding depreciation (printed p4)                                                                           |                            `$302,785` thousand | = expense components sum (employee + materials + borrowing + other + net loss on disposal) |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$98,096`)                           |   `$302,785` + `$98,096` = `$400,881` thousand | = total expenses documented bridge (no "Total expenses" line is printed)                   |
+| B1-1 Total functions and activities — income / expenses / operating result                                                   | `$390,643` / `$400,881` / `$(10,238)` thousand | income and expenses equal the face bridge; operating result = Income Statement net result  |
+| B1-1 grants and contributions                                                                                                |                             `$77,119` thousand | = operating `$31,646` + capital `$45,473`                                                  |
+| Net operating result before capital grants                                                                                   |                           `$(55,711)` thousand | = `$(10,238) − $45,473` (negative; reconciliation evidence only)                           |
+| Statement of Comprehensive Income net result                                                                                 |                           `$(10,238)` thousand | = Income Statement net result                                                              |
+
+Total expenses is the documented bridge of two printed lines (`$302,785 + $98,096 = $400,881`),
+**not** a sum of the nature components on its own and **not** the separate printed
+expenses-excluding-depreciation line. The printed B1-1 expense total equals that face bridge
+exactly, so there is no disposal gross-up. The connector does **not** use OLG all-rights data: the
+reconciliation is internal to the audited document. The printed net result and before-capital result
+are both negative; the model stores non-negative cents, so the net result is emitted as a
+non-negative magnitude with `gpfs_printed_sign: "negative"` (reconciliation uses the printed sign),
+and the before-capital result is kept in reconciliation evidence only.
+
+**Rows.** **17 rows**, source id `wollongong-gpfs`, `source_dataset` "Wollongong City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Wollongong City Council"` (the exact published entity name
+in the audited statements), `data_quality_flag: "provisional/local_government"`, `verified: false`.
+The minimum lines are total revenue `$390,643,000`, total expenses `$400,881,000`, employee expenses
+`$153,272,000`, depreciation/amortisation/impairment `$98,096,000`, operating government grants
+`$31,646,000`, capital government grants `$45,473,000`, net loss on disposal of assets `$6,276,000`
+and net result `$10,238,000` (printed negative, stored with `gpfs_printed_sign:
+"negative"`); the printed face-statement revenue and expense components are included for provenance.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and area panels therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into any other council or state rows. The 7 pre-existing rows that exactly name the council are **4 exact-case "Wollongong City Council"
+GrantConnect grants, 1 mixed-case "Wollongong City Council" AusTender contract and 2 uppercase
+"WOLLONGONG CITY COUNCIL" AusTender variants** (not council financial rows); the 114 ACNC rows and 3
+data.nsw school rows that merely mention Wollongong use different `delivery_entity` values. Their per-source counts are identical
+before and after the ingest, and they are never summed with the GPFS rows. Government grant rows
+carry `potential_double_count: true` because they may overlap government program data; they are not
+added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,571 → **515,588** (exactly +17);
+`wollongong-gpfs` **17**; `sutherland-shire-gpfs` still **17**; `canterbury-bankstown-gpfs` still
+**17**; `northern-beaches-gpfs` still **18**; `parramatta-gpfs` still **17**; `blacktown-gpfs` still
+**17**; `city-of-sydney-gpfs` still **18**; `dubbo-council` still **245**; `dubbo-council-gpfs`
+still **18**; `data-nsw-ckan` still **3,472**; `data_sources` 33 → **34**. A second ingest run
+upserted the same 17 natural keys and left the DB total unchanged (idempotent). No deletes or
+updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -1066,6 +1141,29 @@ differ); always show the source, year, measure type and fund/basis.
   `city-of-sydney-gpfs` still 18; `dubbo-council` still 245; the 4 pre-existing
   Sutherland-delivery-entity rows unchanged; a second run upserted the same 17 natural keys with no
   count change.
+
+**GPFS eighth-council checks (2026-11-18):**
+
+- Wollongong City Council official financial report page fetched via a real headless Chromium
+  browser because plain HTTP returns HTTP 403 (Cloudflare managed challenge); the FY2024-25 "Financial
+  Report for the Year Ended 30 June 2025" PDF was parsed from the cleared page HTML; no document URL
+  is hard-coded.
+- GPFS PDF downloaded by the browser (7,343,281 bytes) and SHA-256 archived outside the repo; SHA-256
+  `ae26b12b906a09ce17d1c353e4f36d8aec29b0de5e4b539cffe5a953aedc6ad3`.
+- Printed `$ '000` unit detected on the income statement, comprehensive-income statement and B1-1;
+  the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$390,643,000`, expenses `$400,881,000` (documented bridge of printed expenses excluding
+  depreciation `$302,785,000` plus depreciation `$98,096,000`), net result `$(10,238,000)`; B1-1
+  income `$390,643,000`, expenses `$400,881,000`, operating result `$(10,238,000)` and grants
+  `$77,119,000`; before-capital result `$(55,711,000)` (reconciliation evidence only). The negative
+  net result is stored as a non-negative magnitude with `gpfs_printed_sign: "negative"`.
+- `wollongong-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: measures 515,571 → 515,588 (+17 only); `sutherland-shire-gpfs` still 17;
+  `canterbury-bankstown-gpfs` still 17; `northern-beaches-gpfs` still 18; `parramatta-gpfs` still
+  17; `blacktown-gpfs` still 17; `city-of-sydney-gpfs` still 18; `dubbo-council` still 245; the 7 rows that exactly name the council
+  unchanged; a second run upserted the same 17
+  natural keys with no count change.
 
 **Workbook checks run (read-only, local):**
 

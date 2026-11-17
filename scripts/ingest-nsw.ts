@@ -1,6 +1,14 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import { ensureDubboRegion, getConnector, runIngestion } from '../server/src/connectors/index.js';
+import {
+  WOLLONGONG_GPFS_ID,
+  createWollongongGpfsConnector,
+  ensureDubboRegion,
+  getConnector,
+  runIngestion,
+} from '../server/src/connectors/index.js';
+import type { Connector } from '../server/src/connectors/types.js';
+import { fetchWollongongGpfsViaBrowser } from './wollongong-gpfs-browser.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -20,11 +28,12 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - northern-beaches-gpfs  GPFS expansion: Northern Beaches Council's audited FY2024-25 GPFS
  *   - canterbury-bankstown-gpfs  GPFS expansion: Canterbury-Bankstown Council's audited FY2024-25 GPFS
  *   - sutherland-shire-gpfs  GPFS expansion: Sutherland Shire Council's audited FY2024-25 GPFS
+ *   - wollongong-gpfs      GPFS expansion: Wollongong City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
- * Northern Beaches Council, Canterbury-Bankstown Council and Sutherland Shire
- * Council. No other councils,
+ * Northern Beaches Council, Canterbury-Bankstown Council, Sutherland Shire
+ * Council and Wollongong City Council. No other councils,
  * states/territories, SOC/charity or live state connectors are touched. The
  * runner upserts on natural_key, so re-running is idempotent and never deletes
  * existing federal/synthetic rows.
@@ -40,6 +49,7 @@ export const NSW_SOURCE_IDS = [
   'northern-beaches-gpfs',
   'canterbury-bankstown-gpfs',
   'sutherland-shire-gpfs',
+  'wollongong-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -56,7 +66,24 @@ async function main(): Promise<void> {
   const databaseName = assertSeedTarget(mongoUrl);
   const requested = requestedSource(process.argv.slice(2));
   const sourceIds = requested ? [requested] : [...NSW_SOURCE_IDS];
-  const connectors = sourceIds.map((id) => {
+  const connectors: Connector[] = [];
+  for (const id of sourceIds) {
+    if (id === WOLLONGONG_GPFS_ID) {
+      // Wollongong's site enforces a Cloudflare managed challenge that returns
+      // HTTP 403 to non-browser clients; the documented headless Chromium path
+      // clears it, and the connector still discovers the PDF link from the
+      // cleared HTML and re-verifies the bytes.
+      console.log('[ingest:nsw] wollongong-gpfs: browser discovery/download starting');
+      const fetched = await fetchWollongongGpfsViaBrowser();
+      console.log(`[ingest:nsw] wollongong-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createWollongongGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
     const connector = getConnector(id);
     if (!connector) {
       throw new Error(`unknown NSW source "${id}"; expected one of ${NSW_SOURCE_IDS.join(', ')}`);
@@ -65,8 +92,8 @@ async function main(): Promise<void> {
       throw new Error(`${id} is not a state/local source (${connector.jurisdiction_level})`);
     }
     if (connector.status !== 'active') throw new Error(`${id} connector is ${connector.status}`);
-    return connector;
-  });
+    connectors.push(connector);
+  }
 
   await mongoose.connect(mongoUrl as string, { serverSelectionTimeoutMS: 5_000 });
   try {

@@ -200,6 +200,12 @@ export const MeasureRecordSchema = z.object({
   gpfs_statement: z.string().min(1).optional(),
   gpfs_component_of: z.string().min(1).optional(),
   /**
+   * Printed sign when the published figure is negative but `amount_cents` is
+   * stored as a non-negative magnitude. Wollongong's FY2024-25 net result is
+   * printed as `(10,238)` thousand; the magnitude is stored with this marker.
+   */
+  gpfs_printed_sign: z.enum(['positive', 'negative']).optional(),
+  /**
    * True when the row's funding source names a government agency or a
    * separately disclosed government contribution/transfer. Such a row may
    * overlap government program spending, so the UI warns and the row is never
