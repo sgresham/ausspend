@@ -28,6 +28,7 @@ import { createBaysideGpfsConnector } from './bayside-gpfs.js';
 import { createRandwickGpfsConnector } from './randwick-gpfs.js';
 import { createRydeGpfsConnector } from './ryde-gpfs.js';
 import { createNorthSydneyGpfsConnector } from './north-sydney-gpfs.js';
+import { createCanadaBayGpfsConnector } from './canada-bay-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -374,6 +375,17 @@ export const CONNECTORS: readonly Connector[] = [
   // the repo. Never summed with any other council, the Dubbo budget rows, the
   // existing council GPFS rows or State rows.
   createNorthSydneyGpfsConnector(),
+  // GPFS expansion: twenty-fifth council only (City of Canada Bay Council). Its
+  // audited FY2024-25 General Purpose Financial Statements are published inside
+  // the official "Annual Report 2024-2025" PDF linked from the council's Our
+  // Reporting page, and are a separate source id: every row is non-additive
+  // agency_detail, has no region/LGA allocation, and reconciles exactly to the
+  // printed Income Statement, B1-1 "Total functions and activities", note B3-4
+  // and comprehensive-income totals. The PDF URL is discovered from the official
+  // page (no hard-coded document URL); the exact bytes are SHA-256 archived
+  // outside the repo. Never summed with any other council, the Dubbo budget
+  // rows, the existing council GPFS rows or State rows.
+  createCanadaBayGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),

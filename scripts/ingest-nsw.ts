@@ -69,6 +69,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - randwick-gpfs  GPFS expansion: Randwick City Council's audited FY2024-25 GPFS
  *   - ryde-gpfs  GPFS expansion: Council of the City of Ryde's audited FY2024-25 GPFS
  *   - north-sydney-gpfs  GPFS expansion: North Sydney Council's audited FY2024-25 GPFS
+ *   - canada-bay-gpfs  GPFS expansion: City of Canada Bay Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -78,7 +79,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Port Macquarie-Hastings Council, Tweed Shire Council, Shoalhaven City
  * Council, Shellharbour City Council, Waverley Council, Willoughby City
  * Council, Inner West Council, Bayside Council, Randwick City Council, the
- * Council of the City of Ryde and North Sydney Council. No other councils, states/territories,
+ * Council of the City of Ryde, North Sydney Council and the City of Canada Bay
+ * Council. No other councils, states/territories,
  * SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
@@ -111,6 +113,7 @@ export const NSW_SOURCE_IDS = [
   'randwick-gpfs',
   'ryde-gpfs',
   'north-sydney-gpfs',
+  'canada-bay-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
