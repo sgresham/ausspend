@@ -1,17 +1,19 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Four council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Five council GPFS extractions have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
 Blacktown City Council FY2024-25 GPFS (**§7.3**) then added exactly **17** `blacktown-gpfs` rows
 (**515,485** → **515,502**); the City of Parramatta FY2024-25 GPFS (**§7.4**) then added exactly
-**17** `parramatta-gpfs` rows (**515,502** → **515,519**). The existing 245 `dubbo-council`
-budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
-happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
-happens to be "Blacktown City Council", the 215 AusTender/data.nsw/GrantConnect/QGIP/ACNC rows whose
-`delivery_entity` mentions "Parramatta", and every other source are preserved untouched and are
-never summed with the GPFS rows.
+**17** `parramatta-gpfs` rows (**515,502** → **515,519**); Northern Beaches Council FY2024-25 GPFS
+(**§7.5**) then added exactly **18** `northern-beaches-gpfs` rows (**515,519** → **515,537**). The
+existing 245 `dubbo-council` budget/estimate rows, the 2 pre-existing AusTender federal contract rows
+whose `delivery_entity` happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose
+`delivery_entity` happens to be "Blacktown City Council", the 215
+AusTender/data.nsw/GrantConnect/QGIP/ACNC rows whose `delivery_entity` mentions "Parramatta", the 179
+AusTender/data.nsw/GrantConnect/QGIP/ACNC rows whose `delivery_entity` mentions "Northern Beaches",
+and every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 17 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -206,10 +208,11 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 70 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 88 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
-for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3) and 17 for City of Parramatta FY2024-25
-(`parramatta-gpfs`, §7.4) — all separate source ids. The
+for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
+(`parramatta-gpfs`, §7.4) and 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
+§7.5) — all separate source ids. The
 existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS actuals, and
 are not touched or summed with the GPFS rows.
 
@@ -666,6 +669,76 @@ to expenditure.
 **30**. A second ingest run upserted the same 17 natural keys and left the DB total unchanged
 (idempotent). No deletes or updates to any other source.
 
+### 7.5 Fifth council — Northern Beaches Council FY2024-25 GPFS (landed 2026-11-17)
+
+**Source.** Discovered from the official annual-report page
+<https://www.northernbeaches.nsw.gov.au/council/publications/annual-report> (fetched, HTTP 200; no
+hard-coded document URL). The page's "Financial Statements 2024/25" link
+(`href="/media/69522?1794917647"`, `class="pdf"`, distinct from the separate "Annual Report
+2024/25" link) resolves to
+<https://www.northernbeaches.nsw.gov.au/sites/default/files/media/files/2025-11/financial-statements-202425.pdf?1794917679>
+(HTTP 200, 2,106,256 bytes). Exact bytes archived outside the repo at
+`~/ausspend-source-archive/northern-beaches-gpfs/northern-beaches-financial-statements-2024-25.pdf`,
+SHA-256 `58f68d6fa2a8487ed66f532c0f2c3432ac41fff227d1892b9518c76af952faf6`. The printed unit is
+explicit `$ '000` (thousands) on the Income Statement (printed p19 / PDF p20), the Statement of
+Comprehensive Income (printed p20 / PDF p21) and note B1-1 (printed p29 / PDF p30); a missing or
+conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Northern Beaches income statement prints the Original unaudited
+budget column before the line label, with Actual 2025 and Actual 2024 after it. The connector takes
+the first amount after each printed label (the FY2024-25 actual) and emits nothing unless all of
+these agree exactly:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ------------------------------------------------------------------------------------------ |
+| Total income from continuing operations (Income Statement p19)                                                               |                          `$477,551` thousand | = `$477,551,000`                                                                           |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$477,551` thousand | = printed total (printed net gain on disposal is a nil dash)                               |
+| Total expenses excluding depreciation (printed p19)                                                                          |                          `$362,588` thousand | = expense components sum (employee + materials + borrowing + other + net loss on disposal) |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$53,471`)                           | `$362,588` + `$53,471` = `$416,059` thousand | = total expenses documented bridge (no "Total expenses" line is printed)                   |
+| B1-1 Total functions and activities — income / expenses / operating result                                                   | `$478,940` / `$417,448` / `$61,492` thousand | operating result = Income Statement net result                                             |
+| B1-1 income − face total income = B1-1 expenses − face total expenses                                                        |                 `$1,389` = `$1,389` thousand | equal and opposite printed disposal gross-up (B1-1 note 4)                                 |
+| B1-1 grants and contributions                                                                                                |                           `$68,856` thousand | = operating `$24,526` + capital `$44,330`                                                  |
+| Net operating result before capital grants                                                                                   |                           `$17,162` thousand | = `$61,492 − $44,330`                                                                      |
+| Statement of Comprehensive Income net result                                                                                 |                           `$61,492` thousand | = Income Statement net result                                                              |
+
+The printed consolidated net result `$61,492` thousand includes `$204` thousand attributable to
+non-controlling interests; the Statement of Changes in Equity shows `$61,288` thousand attributable
+to Council. The connector emits the printed consolidated net result and records the non-controlling
+interest split in the row notes. Total expenses is the documented bridge of two printed lines
+(`$362,588 + $53,471`), **not** a sum of the nature components and **not** the B1-1 `$417,448`
+figure; the `$1,389` thousand difference is the printed disposal gross-up and is reconciled
+explicitly rather than hidden. The connector does **not** use OLG all-rights data as an anchor: the
+reconciliation is internal to the audited document.
+
+**Rows.** **18 rows**, source id `northern-beaches-gpfs`, `source_dataset` "Northern Beaches Council
+GPFS 2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Northern Beaches Council"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$477,551,000`, total expenses `$416,059,000`, employee expenses `$166,906,000`,
+depreciation/amortisation/impairment `$53,471,000`, operating government grants `$24,526,000`,
+capital government grants `$44,330,000`, net loss on disposal of assets `$532,000`, net result
+`$61,492,000` and net result before capital grants `$17,162,000`; the printed face-statement revenue
+and expense components are included for provenance. Because both the net result and the
+before-capital result are positive, all 18 rows are emitted (unlike Blacktown and Parramatta, whose
+negative before-capital result is kept in reconciliation evidence only).
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and area panels therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into any other council or state rows. The 179 pre-existing rows whose `delivery_entity` contains
+"Northern Beaches" are **85 ACNC charity rows, 4 AusTender contracts, 5 data.nsw rows, 20
+GrantConnect grants and 65 QGIP rows** (not council financial rows); their per-source counts are
+identical before and after the ingest, and they are never summed with the GPFS rows. Government
+grant rows carry `potential_double_count: true` because they may overlap government program data;
+they are not added to expenditure.
+
+**Database evidence (2026-11-17).** `measures` 515,519 → **515,537** (exactly +18);
+`northern-beaches-gpfs` **18**; `parramatta-gpfs` still **17**; `blacktown-gpfs` still **17**;
+`city-of-sydney-gpfs` still **18**; `dubbo-council` still **245**; `dubbo-council-gpfs` still **18**;
+`data-nsw-ckan` still **3,472**; `data_sources` 30 → **31**. A second ingest run upserted the same 18
+natural keys and left the DB total unchanged (idempotent). No deletes or updates to any other
+source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -683,7 +756,8 @@ to expenditure.
    blind 128-PDF batch. **First expansion landed 2026-11-17:** City of Sydney FY2024-25 GPFS, 18
    non-additive rows (§7.2). **Second expansion landed 2026-11-17:** Blacktown City Council
    FY2024-25 GPFS, 17 non-additive rows (§7.3). **Third expansion landed 2026-11-17:** City of
-   Parramatta FY2024-25 GPFS, 17 non-additive rows (§7.4).
+   Parramatta FY2024-25 GPFS, 17 non-additive rows (§7.4). **Fourth expansion landed 2026-11-17:**
+   Northern Beaches Council FY2024-25 GPFS, 18 non-additive rows (§7.5).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -721,6 +795,10 @@ differ); always show the source, year, measure type and fund/basis.
   <https://www.cityofparramatta.nsw.gov.au/council/performance-and-reporting/financial-statements>
 - City of Parramatta FY2024-25 GPFS PDF — URL above (4,098,410 bytes; SHA-256
   `9dad166100cdf224a2c34d210b12673450b8b134fe2a7e257dec350e65c1be59`)
+- Northern Beaches Council annual-report page —
+  <https://www.northernbeaches.nsw.gov.au/council/publications/annual-report>
+- Northern Beaches Council FY2024-25 GPFS PDF — URL above (2,106,256 bytes; SHA-256
+  `58f68d6fa2a8487ed66f532c0f2c3432ac41fff227d1892b9518c76af952faf6`)
 - Audit Office reports — <https://www.audit.nsw.gov.au/our-work/reports>
 - data.nsw CKAN API — `package_search` queries for "local government council", "local government
   financial", "time series council", "council expenditure", "financial data return", "grants
@@ -771,6 +849,27 @@ differ); always show the source, year, measure type and fund/basis.
 - DB: measures 515,502 → 515,519 (+17 only); `blacktown-gpfs` still 17; `city-of-sydney-gpfs` still
   18; `dubbo-council` still 245; the 215 pre-existing Parramatta-delivery-entity rows unchanged; a
   second run upserted the same 17 natural keys with no count change.
+
+**GPFS fifth-council checks (2026-11-17):**
+
+- Northern Beaches Council official annual-report page fetched (HTTP 200); the FY2024-25
+  "Financial Statements 2024/25" link (`href="/media/69522?1794917647"`, `class="pdf"`, distinct
+  from the separate Annual Report link) resolves to the statements PDF; no document URL is
+  hard-coded.
+- GPFS PDF fetched (HTTP 200, 2,106,256 bytes) and SHA-256 archived outside the repo; SHA-256
+  `58f68d6fa2a8487ed66f532c0f2c3432ac41fff227d1892b9518c76af952faf6`.
+- Printed `$ '000` unit detected on the income statement, comprehensive-income statement and B1-1;
+  the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$477,551,000`, expenses `$416,059,000` (documented bridge of printed expenses excluding
+  depreciation `$362,588,000` plus depreciation `$53,471,000`), net result `$61,492,000`; B1-1
+  income `$478,940,000`, expenses `$417,448,000` and the equal `$1,389,000` disposal gross-up
+  reconcile; before-capital result `$17,162,000`.
+- `northern-beaches-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: measures 515,519 → 515,537 (+18 only); `parramatta-gpfs` still 17; `blacktown-gpfs` still 17;
+  `city-of-sydney-gpfs` still 18; `dubbo-council` still 245; the 179 pre-existing
+  Northern Beaches-delivery-entity rows unchanged; a second run upserted the same 18 natural keys with
+  no count change.
 
 **Workbook checks run (read-only, local):**
 
