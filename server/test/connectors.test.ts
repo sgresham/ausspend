@@ -21,13 +21,14 @@ const LIVE_IDS = [
   'qld-qgip',
   'acnc-charity',
   'sydney-water',
+  'waternsw',
 ];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships seventeen connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(17);
-    expect(new Set(CONNECTOR_IDS).size).toBe(17);
+  it('ships eighteen connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(18);
+    expect(new Set(CONNECTOR_IDS).size).toBe(18);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),

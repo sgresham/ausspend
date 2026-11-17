@@ -9,6 +9,15 @@ import {
   SYDNEY_WATER_UNIT,
   SYDNEY_WATER_UNIT_LABEL,
   SYDNEY_WATER_UNIT_TO_CENTS,
+  WATERNSW_CAVEAT,
+  WATERNSW_ENTITY,
+  WATERNSW_ID,
+  WATERNSW_JURISDICTION,
+  WATERNSW_NAME,
+  WATERNSW_SOURCE_URL,
+  WATERNSW_UNIT,
+  WATERNSW_UNIT_LABEL,
+  WATERNSW_UNIT_TO_CENTS,
 } from '../connectors/index.js';
 import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
 
@@ -21,8 +30,35 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending.
+ * program spending. Each SOC entity (Sydney Water, WaterNSW) is a separate
+ * source and is never summed with the other.
  */
+
+const SOC_SOURCES = [
+  {
+    source_id: SYDNEY_WATER_ID,
+    name: SYDNEY_WATER_NAME,
+    entity: SYDNEY_WATER_ENTITY,
+    jurisdiction: SYDNEY_WATER_JURISDICTION,
+    discovery_page: SYDNEY_WATER_SOURCE_URL,
+    unit: SYDNEY_WATER_UNIT,
+    unit_label: SYDNEY_WATER_UNIT_LABEL,
+    unit_to_cents: SYDNEY_WATER_UNIT_TO_CENTS,
+    caveat: SYDNEY_WATER_CAVEAT,
+  },
+  {
+    source_id: WATERNSW_ID,
+    name: WATERNSW_NAME,
+    entity: WATERNSW_ENTITY,
+    jurisdiction: WATERNSW_JURISDICTION,
+    discovery_page: WATERNSW_SOURCE_URL,
+    unit: WATERNSW_UNIT,
+    unit_label: WATERNSW_UNIT_LABEL,
+    unit_to_cents: WATERNSW_UNIT_TO_CENTS,
+    caveat: WATERNSW_CAVEAT,
+  },
+] as const;
+
 export const getSoc: RequestHandler = async (req, res) => {
   const requestedYear =
     typeof req.query.fiscal_year === 'string' && /^\d{4}-\d{2}$/.test(req.query.fiscal_year)
@@ -44,7 +80,7 @@ export const getSoc: RequestHandler = async (req, res) => {
   const fiscalYear = requestedYear ?? years.at(-1) ?? null;
 
   const query = { ...baseQuery, ...(fiscalYear ? { fiscal_year: fiscalYear } : {}) };
-  const rows = await MeasureModel.find(query).sort({ soc_line_item: 1 }).lean();
+  const rows = await MeasureModel.find(query).sort({ delivery_entity: 1, soc_line_item: 1 }).lean();
 
   const series = rows.map((row) => ({
     id: row._id.toString(),
@@ -80,26 +116,35 @@ export const getSoc: RequestHandler = async (req, res) => {
     if (row.potential_double_count) doubleCountRows += 1;
   }
 
-  const entities = [...new Set(series.map((row) => row.delivery_entity))].sort();
+  // Registered SOC entities stay selectable even before they have rows, so
+  // Sydney Water and WaterNSW are always distinguishable in the UI.
+  const entities = [
+    ...new Set([
+      ...SOC_SOURCES.map((source) => source.entity),
+      ...series.map((row) => row.delivery_entity),
+    ]),
+  ].sort();
+  const sources = SOC_SOURCES.map((source) => ({
+    ...source,
+    jurisdiction_level: 'soc' as const,
+    label: 'SOC entity statement — never add to government program spending',
+    records: series.filter((row) => row.source_id === source.source_id).length,
+  }));
+  // Preserve the single-source shape: the requested source/entity wins, then
+  // the first registered SOC source. The `sources` array is the full register.
+  const source =
+    sources.find((entry) => entry.source_id === requestedSource) ??
+    (requestedEntity ? sources.find((entry) => entry.entity === requestedEntity) : undefined) ??
+    sources[0]!;
+
   const deferred = await DeferredSocDocumentModel.find({ status: 'deferred' })
     .sort({ discovered_at: -1 })
     .lean();
 
   res.set('Cache-Control', 'no-store');
   res.json({
-    source: {
-      source_id: SYDNEY_WATER_ID,
-      name: SYDNEY_WATER_NAME,
-      entity: SYDNEY_WATER_ENTITY,
-      jurisdiction: SYDNEY_WATER_JURISDICTION,
-      jurisdiction_level: 'soc' as const,
-      discovery_page: SYDNEY_WATER_SOURCE_URL,
-      unit: SYDNEY_WATER_UNIT,
-      unit_label: SYDNEY_WATER_UNIT_LABEL,
-      unit_to_cents: SYDNEY_WATER_UNIT_TO_CENTS,
-      caveat: SYDNEY_WATER_CAVEAT,
-      label: 'SOC entity statement — never add to government program spending',
-    },
+    source,
+    sources,
     fiscal_years: years,
     entities,
     series,
@@ -122,6 +167,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines from a published annual report. No total is computed here: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, or another SOC line. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water and WaterNSW). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, or another SOC line. Every row is provisional and unverified until a human spot-check.',
   });
 };

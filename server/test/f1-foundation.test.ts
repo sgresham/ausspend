@@ -235,11 +235,11 @@ describe('F1 extended measure shape and API', () => {
     expect(coverage.status).toBe(200);
     // ABS GFS, ABS GFS PNFC, AusTender, PBS, GrantConnect (manual export), NSW
     // Budget, CKAN, Dubbo, VIC Budget, QLD Budget, QLD QGIP, ACNC charity and
-    // Sydney Water SOC are wired; the remaining four are stubs.
+    // Sydney Water and WaterNSW SOC are wired; the remaining four are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(13);
+    ).toBe(14);
     expect(coverage.body.connector_status_counts.stub).toBe(4);
     expect([
       ...coverage.body.federal_ingestion.live,

@@ -141,6 +141,16 @@ export interface CoverageResponse {
     unit_label: string;
     caveat: string;
     label: string;
+    entities?: Array<{
+      source_id: string;
+      entity: string;
+      jurisdiction: string;
+      unit: string;
+      unit_label: string;
+      records: number;
+      last_ingested_at: string | null;
+      caveat: string;
+    }>;
     note: string;
   };
   local_ingestion?: {
@@ -438,20 +448,27 @@ export interface SocDeferredDocument {
   status: 'deferred' | 'resolved';
 }
 
+export interface SocSource {
+  source_id: string;
+  name: string;
+  entity: string;
+  jurisdiction: string;
+  jurisdiction_level: 'soc';
+  discovery_page: string;
+  unit: string;
+  unit_label: string;
+  unit_to_cents: number;
+  caveat: string;
+  label: string;
+  /** Rows for this source in the current response (a count, never a sum). */
+  records: number;
+}
+
 export interface SocResponse {
-  source: {
-    source_id: string;
-    name: string;
-    entity: string;
-    jurisdiction: string;
-    jurisdiction_level: 'soc';
-    discovery_page: string;
-    unit: string;
-    unit_label: string;
-    unit_to_cents: number;
-    caveat: string;
-    label: string;
-  };
+  /** The requested or sole entity's source (kept for single-source callers). */
+  source: SocSource;
+  /** Every registered SOC entity source, so Sydney Water and WaterNSW stay distinct. */
+  sources: SocSource[];
   fiscal_years: string[];
   entities: string[];
   series: SocSeriesRow[];

@@ -14,6 +14,12 @@ import {
   SYDNEY_WATER_JURISDICTION,
   SYDNEY_WATER_UNIT,
   SYDNEY_WATER_UNIT_LABEL,
+  WATERNSW_CAVEAT,
+  WATERNSW_ENTITY,
+  WATERNSW_ID,
+  WATERNSW_JURISDICTION,
+  WATERNSW_UNIT,
+  WATERNSW_UNIT_LABEL,
   connectorSummary,
 } from '../connectors/index.js';
 import { pingDatabase, type DbStatus } from '../db.js';
@@ -223,7 +229,15 @@ export function createCoverageHandler(
     const absGfsPnfc = dataSourceById.get(ABS_GFS_PNFC_ID);
     const pnfcBenchmarkLive = absGfsPnfc?.status === 'active' || absGfsPnfc?.status === 'degraded';
     const sydneyWater = dataSourceById.get(SYDNEY_WATER_ID);
-    const socLive = sydneyWater?.status === 'active' || sydneyWater?.status === 'degraded';
+    const waterNsw = dataSourceById.get(WATERNSW_ID);
+    const socLiveIds = [SYDNEY_WATER_ID, WATERNSW_ID].filter((id) => {
+      const source = dataSourceById.get(id);
+      return source?.status === 'active' || source?.status === 'degraded';
+    });
+    const socLive = socLiveIds.length > 0;
+    const socLastIngested = [sydneyWater?.last_ingested_at, waterNsw?.last_ingested_at]
+      .filter((value) => value !== null && value !== undefined)
+      .sort((a, b) => new Date(b as Date).getTime() - new Date(a as Date).getTime())[0];
     const phaseBase = liveIngestion
       ? pbsLive
         ? stateLive
@@ -240,7 +254,14 @@ export function createCoverageHandler(
         charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
         benchmarkLive ? '+ ABS GFS benchmark' : null,
         pnfcBenchmarkLive ? '+ ABS GFS PNFC benchmark' : null,
-        socLive ? '+ NSW SOC (Sydney Water)' : null,
+        socLive
+          ? `+ NSW SOC (${[
+              socLiveIds.includes(SYDNEY_WATER_ID) ? 'Sydney Water' : null,
+              socLiveIds.includes(WATERNSW_ID) ? 'WaterNSW' : null,
+            ]
+              .filter(Boolean)
+              .join(' + ')})`
+          : null,
       ]
         .filter(Boolean)
         .join(' '),
@@ -357,19 +378,47 @@ export function createCoverageHandler(
         note: 'ABS GFS Public Non-Financial Corporations operating statements from nine official Annual 2024-25 XLSX data cubes (Australia all levels plus the eight states/territories). The ABS SDMX API has no PNFC/GFS dataflow; this is the approved XLSX fallback. Only the published Total GFS revenue and Total GFS expenses rows are ingested, as separate flows. Every row is jurisdiction_level "pnfc", verified true, aggregation_role benchmark, and is exposed only through /api/benchmark/pnfc. It is a sector aggregate, never added to SOC/entity, government, charity or project data, and never summed across jurisdictions or flows.',
       },
       soc_ingestion: {
-        live: socLive && sydneyWater ? [SYDNEY_WATER_ID] : [],
-        degraded: sydneyWater?.status === 'degraded' ? [SYDNEY_WATER_ID] : [],
-        last_ingested_at: sydneyWater?.last_ingested_at
-          ? new Date(sydneyWater.last_ingested_at).toISOString()
-          : null,
-        records: sydneyWater?.records_ingested ?? 0,
+        live: socLiveIds,
+        degraded: [SYDNEY_WATER_ID, WATERNSW_ID].filter(
+          (id) => dataSourceById.get(id)?.status === 'degraded',
+        ),
+        last_ingested_at: socLastIngested ? new Date(socLastIngested).toISOString() : null,
+        // Row counts only; entity amounts are never combined into a total.
+        records: (sydneyWater?.records_ingested ?? 0) + (waterNsw?.records_ingested ?? 0),
+        // Kept for the single-source shape: the first SOC entity.
         entity: SYDNEY_WATER_ENTITY,
         jurisdiction: SYDNEY_WATER_JURISDICTION,
         unit: SYDNEY_WATER_UNIT,
         unit_label: SYDNEY_WATER_UNIT_LABEL,
-        caveat: SYDNEY_WATER_CAVEAT,
+        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW is a separate SOC entity; its rows are never added to Sydney Water's or to any other total.`,
         label: 'SOC entity statement — never add to government program spending',
-        note: 'Entity-level NSW State Owned Corporation statement lines from Sydney Water\'s latest annual report. The PDF is discovered from the official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed $’000 unit is explicit and total expenses reconciles exactly to the printed profit-before-tax bridge. Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other. Government-named funding rows carry potential_double_count.',
+        entities: [
+          {
+            source_id: SYDNEY_WATER_ID,
+            entity: SYDNEY_WATER_ENTITY,
+            jurisdiction: SYDNEY_WATER_JURISDICTION,
+            unit: SYDNEY_WATER_UNIT,
+            unit_label: SYDNEY_WATER_UNIT_LABEL,
+            records: sydneyWater?.records_ingested ?? 0,
+            last_ingested_at: sydneyWater?.last_ingested_at
+              ? new Date(sydneyWater.last_ingested_at).toISOString()
+              : null,
+            caveat: SYDNEY_WATER_CAVEAT,
+          },
+          {
+            source_id: WATERNSW_ID,
+            entity: WATERNSW_ENTITY,
+            jurisdiction: WATERNSW_JURISDICTION,
+            unit: WATERNSW_UNIT,
+            unit_label: WATERNSW_UNIT_LABEL,
+            records: waterNsw?.records_ingested ?? 0,
+            last_ingested_at: waterNsw?.last_ingested_at
+              ? new Date(waterNsw.last_ingested_at).toISOString()
+              : null,
+            caveat: WATERNSW_CAVEAT,
+          },
+        ],
+        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water and WaterNSW. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed $’000 unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the two entities are never summed together. Government-named funding rows carry potential_double_count.',
       },
       local_ingestion: {
         live: localConnectors

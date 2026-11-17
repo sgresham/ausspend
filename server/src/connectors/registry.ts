@@ -10,6 +10,7 @@ import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { createQldBudgetConnector } from './qld-budget.js';
 import { createQgipConnector } from './qld-qgip.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
+import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
@@ -137,6 +138,12 @@ export const CONNECTORS: readonly Connector[] = [
   // aggregation_role "agency_detail"). Never added to government program
   // spending or to the PNFC benchmark. Other SOCs are not implemented.
   createSydneyWaterConnector(),
+  // SOC Phase 3: second NSW state-owned corporation — WaterNSW (Water NSW).
+  // Latest annual report discovered, SHA-256 archived and parsed as
+  // entity-level SOC statement lines. Never added to government program
+  // spending, the PNFC benchmark, or Sydney Water. Other SOCs are not
+  // implemented.
+  createWaterNswConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',
