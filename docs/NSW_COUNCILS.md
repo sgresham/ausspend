@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Twelve council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Fourteen council GPFS sources have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -18,7 +18,9 @@ GPFS (**§7.10**) then added exactly **17** `lake-macquarie-gpfs` rows (**515,60
 Maitland City Council FY2024-25 GPFS (**§7.11**) then added exactly **7** `maitland-gpfs` rows
 (**515,622** → **515,629**); Coffs Harbour City Council FY2024-25 GPFS (**§7.12**) then added exactly
 **17** `coffs-harbour-gpfs` rows (**515,629** → **515,646**); MidCoast Council FY2024-25 GPFS
-(**§7.13**) then added exactly **17** `mid-coast-gpfs` rows (**515,646** → **515,663**).
+(**§7.13**) then added exactly **17** `mid-coast-gpfs` rows (**515,646** → **515,663**); Port
+Macquarie-Hastings Council FY2024-25 GPFS (**§7.14**) then added exactly **17**
+`port-macquarie-hastings-gpfs` rows (**515,663** → **515,680**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -1356,6 +1358,92 @@ left the DB total unchanged (idempotent). No deletes or updates to any other sou
 
 ---
 
+### 7.14 Fourteenth council — Port Macquarie-Hastings Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official "Annual reports and statements" page
+<https://www.pmhc.nsw.gov.au/Your-Council/Council-reports/Annual-reports-and-statements>.
+Node's direct HTTP fetch to `pmhc.nsw.gov.au` is rejected by an Akamai-style edge with **HTTP 403**
+("Access Denied"), which is not proof of absence; the documented headless Chromium/Playwright path
+(`scripts/port-macquarie-hastings-gpfs-browser.ts`) clears it and the connector still discovers the
+FY2024-25 link from the cleared page HTML (never hard-coded). The FY2024-25 anchor **"Part 2 |
+Financial Statements (PDF, 8MB)"** (title "Part 2 Financial Statements") resolves to
+<https://www.pmhc.nsw.gov.au/files/assets/public/v/1/document-files/your-council/election/annualreports/2024-2025/part-2-financial-statements.pdf>
+(8,407,089 bytes). The older years ("Part 2 | Financial Statements (PDF, 38MB)" for 2023-24 and the
+2022-23 statements) are discovered but not selected. Exact bytes are archived outside the repo at
+`/home/steve/ausspend-source-archive/port-macquarie-hastings-gpfs/part-2-financial-statements.pdf`,
+SHA-256 `e73a1cd805f9431001da032e88c2408fb8ad19eed083d2adc46e7850cb16618c`, with the archive
+metadata record alongside (`hash_verified: true`) and the cleared listing HTML. The printed unit is
+explicit `$ '000` on the Income Statement (PDF page 7, printed p4), the Statement of Comprehensive
+Income (PDF page 8, printed p5), note B1-1 (PDF page 16, printed p13) and note B3-4 (PDF page 26,
+printed p23); a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before
+each line label, so each emitted value is the first amount after the printed label (the FY2024-25
+actual). The Income Statement does not print a combined "Total expenses" line. Total expenses is the
+printed B1-1 "Total functions and activities" expense total `$229,835` thousand, which equals the
+printed expenses-excluding-depreciation line `$167,671` thousand plus the printed
+depreciation/impairment line `$62,164` thousand, and equals printed total income `$307,229` thousand
+less the printed operating result `$77,394` thousand. The printed net result equals the printed
+operating result (there are no discontinued operations) and the Statement of Comprehensive Income
+repeats it. Those top-level printed totals reconcile exactly:
+
+| Check                                                                                                                       |              Printed / derived | Result                                                                  |
+| --------------------------------------------------------------------------------------------------------------------------- | -----------------------------: | ----------------------------------------------------------------------- |
+| Total income from continuing operations (Income Statement p4)                                                               |            `$307,229` thousand | = `$307,229,000`                                                        |
+| Revenue components sum (rates + user charges + other revenue + operating grants + capital grants + interest + other income) |            `$307,229` thousand | = printed total income                                                  |
+| Total expenses (printed B1-1 p13; equals expenses excluding depreciation + depreciation/impairment)                         |            `$229,835` thousand | = `$167,671 + $62,164`                                                  |
+| Expenses excluding depreciation = expense-by-nature components sum                                                          |            `$167,671` thousand | exact (employee + materials + borrowing + other + net loss on disposal) |
+| Employee benefits and on-costs                                                                                              |             `$74,948` thousand | printed                                                                 |
+| Depreciation and impairment of non-financial assets (Income Statement p4) = note B3-4 total                                 |             `$62,164` thousand | exact                                                                   |
+| Operating grants / capital grants                                                                                           | `$15,089` / `$92,780` thousand | B1-1 grants `$107,869` = `$15,089 + $92,780`                            |
+| Operating result from continuing operations (Income Statement p4)                                                           |             `$77,394` thousand | = printed total income − printed total expenses                         |
+| Net operating result for the year attributable to Council (Income Statement p4)                                             |             `$77,394` thousand | = printed operating result (no discontinued operations)                 |
+| Statement of Comprehensive Income net result (p5)                                                                           |             `$77,394` thousand | = Income Statement net result                                           |
+| Net result before capital grants                                                                                            |           `$(15,386)` thousand | = `$77,394 − $92,780` (negative; evidence only)                         |
+
+The connector emits only the printed Income Statement categories; printed totals are never recomputed
+from components. The positive net result is stored as a non-negative magnitude; the negative
+before-capital result is reconciliation evidence only and is never a stored row. The connector does
+**not** use OLG all-rights data or any data.nsw fallback.
+
+**Rows.** **17 rows**, source id `port-macquarie-hastings-gpfs`, `source_dataset` "Port
+Macquarie-Hastings Council GPFS 2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`,
+`jurisdiction_level: "local"`, `jurisdiction: "NSW"`, `delivery_entity: "Port Macquarie-Hastings
+Council"` (the exact published entity name in the audited statements), `data_quality_flag:
+"provisional/local_government"`, `verified: false`. Only printed Income Statement categories are
+emitted: total revenue `$307,229,000`, total expenses `$229,835,000`, total expenses excluding
+depreciation `$167,671,000`, employee expenses `$74,948,000`, materials and services `$76,589,000`,
+borrowing costs `$614,000`, other expenses `$8,733,000`, net loss from disposal of assets
+`$6,787,000`, depreciation/impairment `$62,164,000`, rates and annual charges `$122,578,000`, user
+charges and fees `$47,803,000`, other revenues `$8,149,000`, operating government grants
+`$15,089,000`, capital government grants `$92,780,000`, interest and investment income
+`$15,263,000`, other income `$5,567,000` and net result `$77,394,000`. No B1-1 function split and no
+region/LGA allocation are emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`; the generic additive API and area panels exclude them. The rows have **no
+`region_id` and no `location`/LGA allocation**, so they cannot be summed into any other council or
+state rows. There were **no pre-existing rows whose `delivery_entity` is exactly "Port
+Macquarie-Hastings Council"** before this ingest (0 → 17, all GPFS). **2 pre-existing GrantConnect
+rows use the uppercase, hyphen-less string "PORT MACQUARIE HASTINGS COUNCIL"**; they share the
+entity but a different `source_id` and string, are preserved untouched, and are never summed with the
+17 GPFS rows. In total **147 pre-existing non-GPFS rows mention "Port Macquarie"** under other
+delivery_entity strings (including those 2 GrantConnect rows, plus ACNC charities, GrantConnect
+schools/clubs and a handful of data.nsw/AusTender rows); their per-source counts are identical before
+and after the ingest and they are never summed with the GPFS rows. Government grant
+rows carry `potential_double_count: true` because they may overlap government program data; they are
+not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,663 → **515,680** (exactly +17);
+`port-macquarie-hastings-gpfs` **17**; `mid-coast-gpfs` still **17**; `coffs-harbour-gpfs` still
+**17**; `maitland-gpfs` still **7**; `lake-macquarie-gpfs` still **17**; `newcastle-gpfs` still
+**17**; `wollongong-gpfs` still **17**; `data-nsw-ckan` still **3,472**; `dubbo-council` still
+**245**; exact "Port Macquarie-Hastings Council" rows 0 → **17**; `data_sources` 39 → **40**. A
+second ingest run upserted the same 17 natural keys and left the DB total unchanged (idempotent). No
+deletes or updates to any other source.
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -1382,7 +1470,8 @@ left the DB total unchanged (idempotent). No deletes or updates to any other sou
    2026-11-18:** Maitland City Council FY2024-25 GPFS, 7 non-additive rows (§7.11). **Eleventh
    expansion landed 2026-11-18:** Coffs Harbour City Council FY2024-25 GPFS, 17 non-additive rows
    (§7.12). **Twelfth expansion landed 2026-11-18:** MidCoast Council FY2024-25 GPFS, 17
-   non-additive rows (§7.13).
+   non-additive rows (§7.13). **Thirteenth expansion landed 2026-11-18:** Port Macquarie-Hastings
+   Council FY2024-25 GPFS, 17 non-additive rows (§7.14).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).

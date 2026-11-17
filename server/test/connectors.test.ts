@@ -29,6 +29,7 @@ const LIVE_IDS = [
   'maitland-gpfs',
   'coffs-harbour-gpfs',
   'mid-coast-gpfs',
+  'port-macquarie-hastings-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -47,9 +48,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships thirty-nine connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(39);
-    expect(new Set(CONNECTOR_IDS).size).toBe(39);
+  it('ships forty connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(40);
+    expect(new Set(CONNECTOR_IDS).size).toBe(40);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -181,6 +182,10 @@ describe('federal connector registry', () => {
     expect(getConnector('mid-coast-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('mid-coast-gpfs')?.source_url).toContain('midcoast.nsw.gov.au');
     expect(getConnector('mid-coast-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('port-macquarie-hastings-gpfs')?.status).toBe('active');
+    expect(getConnector('port-macquarie-hastings-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('port-macquarie-hastings-gpfs')?.source_url).toContain('pmhc.nsw.gov.au');
+    expect(getConnector('port-macquarie-hastings-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
