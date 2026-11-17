@@ -426,6 +426,15 @@ export function DataSourcesPage() {
           </CardContent>
         </Card>
       ) : null}
+
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
+        Licence, copyright and attribution rules — including sources that are not CC BY — are
+        explained in the{' '}
+        <Link component={RouterLink} to="/legal#copyright">
+          legal, copyright and privacy notices
+        </Link>
+        .
+      </Typography>
     </Box>
   );
 }
