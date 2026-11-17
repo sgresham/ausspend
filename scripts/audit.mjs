@@ -53,6 +53,7 @@ const KNOWN_SOURCE_IDS = [
   'georges-river-gpfs',
   'fairfield-gpfs',
   'liverpool-gpfs',
+  'ku-ring-gai-gpfs',
   'grantconnect',
   'vic-budget',
   'qld-budget',

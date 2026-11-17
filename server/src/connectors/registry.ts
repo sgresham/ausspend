@@ -33,6 +33,7 @@ import { createCumberlandGpfsConnector } from './cumberland-gpfs.js';
 import { createGeorgesRiverGpfsConnector } from './georges-river-gpfs.js';
 import { createFairfieldGpfsConnector } from './fairfield-gpfs.js';
 import { createLiverpoolGpfsConnector } from './liverpool-gpfs.js';
+import { createKuRingGaiGpfsConnector } from './ku-ring-gai-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -438,6 +439,22 @@ export const CONNECTORS: readonly Connector[] = [
   // silently reconciled. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
   createLiverpoolGpfsConnector(),
+  // Thirtieth council GPFS source: Ku-ring-gai Council's audited FY2024-25
+  // General Purpose Financial Statements are the official "Financial statements
+  // 2024-2025" PDF linked from the council's Finance page, and are a separate
+  // source id: every row is non-additive agency_detail, has no region/LGA
+  // allocation, and reconciles exactly to the printed Income Statement, B1-1
+  // "Total functions and activities", note B3-4 and comprehensive-income
+  // totals. The site returns HTTP 403 to non-browser clients, so the documented
+  // headless Chromium path loads it; the PDF URL is discovered from the cleared
+  // HTML (no hard-coded document URL) and the exact bytes are SHA-256 archived
+  // outside the repo. The auditor's Report on the Conduct of the Audit prints a
+  // one-decimal-million table whose 2025 operating result (21.9) contradicts its
+  // own text (0.31 higher than 21.7, implying 22.0) and graph (21.99) and the
+  // GPFS (21,997); that internal printed discrepancy is retained and flagged for
+  // a human spot check, never silently reconciled. Never summed with any other
+  // council, the Dubbo budget rows, the existing council GPFS rows or State rows.
+  createKuRingGaiGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
