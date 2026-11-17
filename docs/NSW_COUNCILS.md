@@ -752,7 +752,7 @@ URL). The page's "Financial Statements 2024-25 and Auditor's Reports PDF (3.36 M
 (`href="https://haveyoursay.cbcity.nsw.gov.au/download_file/7155/2442"`, distinct from the separate
 2024/25 Annual Report link) resolves to the statements PDF (HTTP 200, 3,526,499 bytes). Exact bytes
 are archived outside the repo at
-`/home/steve/.pool-worktrees/ausspend/_source-archive/canterbury-bankstown-gpfs/canterbury-bankstown-financial-statements-2024-25.pdf`,
+`/home/steve/ausspend-source-archive/canterbury-bankstown-gpfs/canterbury-bankstown-financial-statements-2024-25.pdf`,
 SHA-256 `d195790e10452808497fdc0eb95589e751ae6a64a50fc8d076ce467ac0ce8650`. The printed unit is
 explicit `$ '000` (thousands) on the Income Statement (printed p4 / PDF p4), the Statement of
 Comprehensive Income (printed p5 / PDF p5) and note B1-1 (printed p14 / PDF p14); a missing or

@@ -65,7 +65,7 @@ const CONTEXT: CanterburyBankstownGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/.pool-worktrees/ausspend/_source-archive/canterbury-bankstown-gpfs/canterbury-bankstown-financial-statements-2024-25.pdf',
+      '/home/steve/ausspend-source-archive/canterbury-bankstown-gpfs/canterbury-bankstown-financial-statements-2024-25.pdf',
     sha256: 'd195790e10452808497fdc0eb95589e751ae6a64a50fc8d076ce467ac0ce8650',
     bytes: 3_526_499,
     fetched_at: '2026-11-17T00:00:00.000Z',
