@@ -11,6 +11,7 @@ const LIVE_IDS = [
   'abs-gfs',
   'abs-gfs-pnfc',
   'aihw-health-expenditure',
+  'wa-budget',
   'aus-tender',
   'data-gov-au-pbs',
   'grantconnect',

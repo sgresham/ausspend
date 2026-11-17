@@ -281,6 +281,10 @@ export const MeasureRecordSchema = z.object({
   aihw_area_of_expenditure: z.string().min(1).optional(),
   aihw_printed_sign: z.enum(['positive', 'negative']).optional(),
   aihw_unit: z.string().min(1).optional(),
+  /** WA Budget provenance: measure kind, table and printed sign. */
+  wa_budget_measure: z.enum(['asset_investment', 'major_spending_change']).optional(),
+  wa_budget_table: z.string().min(1).optional(),
+  wa_printed_sign: z.enum(['positive', 'negative']).optional(),
   /** Exact published detailed funding source. */
   aihw_detailed_source_of_funding: z.string().min(1).optional(),
   /** State/territory code the published table applies to. */

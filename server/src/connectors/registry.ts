@@ -1,4 +1,5 @@
 import { createAbsGfsConnector } from './abs-gfs.js';
+import { createWaBudgetConnector } from './wa-budget.js';
 import { createAihwHealthExpenditureConnector } from './aihw-health-expenditure.js';
 import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
@@ -565,14 +566,13 @@ export const CONNECTORS: readonly Connector[] = [
   // Never added to government program spending, the PNFC benchmark, or any
   // other SOC. Other SOCs are not implemented.
   createNswTrainlinkConnector(),
-  stub({
-    id: 'wa-budget',
-    name: 'Western Australian Budget',
-    publisher: 'Western Australian Department of Treasury',
-    source_url: 'https://www.wa.gov.au/organisation/department-of-treasury/budget',
-    jurisdiction_level: 'state',
-    // TODO: ingest WA Budget papers and Treasury data tables (XLSX).
-  }),
+  // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
+  // CKAN. No machine-readable BP2 agency-expense dataset is published; the
+  // connector ingests the strongest clean EFO tables (Chapter 5 major spending
+  // changes as provisional non-additive policy measures; Chapter 6 Table 1
+  // asset investment by agency reconciled to its printed Total). Unit guard
+  // requires $m; no COFOG mapping is invented.
+  createWaBudgetConnector(),
 ];
 
 export const CONNECTOR_IDS = CONNECTORS.map((connector) => connector.id);

@@ -277,6 +277,9 @@ export interface MeasureRow {
   aihw_area_of_expenditure?: string;
   aihw_printed_sign?: 'positive' | 'negative';
   aihw_unit?: string;
+  wa_budget_measure?: 'asset_investment' | 'major_spending_change';
+  wa_budget_table?: string;
+  wa_printed_sign?: 'positive' | 'negative';
 }
 
 /** Per-measure-type count and sum. The API never sums across types. */

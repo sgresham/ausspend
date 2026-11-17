@@ -194,6 +194,9 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
       : {}),
     ...(measure.aihw_printed_sign ? { aihw_printed_sign: measure.aihw_printed_sign } : {}),
     ...(measure.aihw_unit ? { aihw_unit: measure.aihw_unit } : {}),
+    ...(measure.wa_budget_measure ? { wa_budget_measure: measure.wa_budget_measure } : {}),
+    ...(measure.wa_budget_table ? { wa_budget_table: measure.wa_budget_table } : {}),
+    ...(measure.wa_printed_sign ? { wa_printed_sign: measure.wa_printed_sign } : {}),
     ...(measure.aihw_detailed_source_of_funding
       ? { aihw_detailed_source_of_funding: measure.aihw_detailed_source_of_funding }
       : {}),
