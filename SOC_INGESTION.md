@@ -1,18 +1,18 @@
-# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE)
+# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains)
 
 **Status:** the ABS GFS Public Non-Financial Corporations (PNFC) sector
-benchmark is implemented, and eight NSW per-entity State Owned Corporation (SOC)
+benchmark is implemented, and nine NSW per-entity State Owned Corporation (SOC)
 adapters are implemented: **Sydney Water Corporation**, **WaterNSW (Water NSW)**,
 **Hunter Water Corporation**, **Essential Energy**, **Forestry Corporation of
-NSW**, **Landcom**, **Port Authority of NSW** and **TAHE (Transport Asset
-Holding Entity of New South Wales)**. Per-entity NSW SOC extraction for any
+NSW**, **Landcom**, **Port Authority of NSW**, **TAHE (Transport Asset
+Holding Entity of New South Wales)** and **Sydney Trains**. Per-entity NSW SOC extraction for any
 other entity, BP1 Chapter 9, VIC/QLD SOC and any synthetic SOC rows are out of
-scope and are not implemented. The eight SOC entities are separate sources and
+scope and are not implemented. The nine SOC entities are separate sources and
 are never summed with each other.
 
 `npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW, then
 Hunter Water, then Essential Energy, then Forestry Corporation of NSW, then
-Landcom, then Port Authority of NSW, then TAHE**, logging each source's
+Landcom, then Port Authority of NSW, then TAHE, then Sydney Trains**, logging each source's
 success/failure and continuing after a source error.
 
 ## 1. Source: ABS GFS PNFC (Annual 2024-25 data cubes)
@@ -1109,6 +1109,112 @@ to another SOC row, the PNFC benchmark or government program spending.
 Both rows carry `human_spot_check: required` in their notes. No TAHE row is
 marked verified in this phase.
 
+## 2H. Source: Sydney Trains (ninth NSW SOC entity)
+
+Sydney Trains is a New South Wales State Owned Corporation reported within the
+Transport portfolio. Source id: `sydney-trains`. Name: `Sydney Trains — Annual
+Report`. Publisher: Sydney Trains (Transport for NSW). Canonical
+`delivery_entity`: `Sydney Trains`.
+
+The connector starts at the official Transport for NSW page
+(`https://www.transport.nsw.gov.au/news-and-events/reports-and-publications/sydney-trains-annual-reports`)
+and selects the latest report year. No PDF URL is hard-coded. Sydney Trains
+publishes its annual report in two volumes; the audited Statement of
+comprehensive income is in Volume 2 (audited financial statements), so discovery
+selects the financial-statements volume of the latest report year. Older report
+years published as a single PDF fall back to that single file.
+
+- Document: `Sydney Trains Annual Report 2024–25, Volume 2 — audited financial
+statements` — the latest report published on the official page at retrieval
+  (2026-11-17).
+- Official PDF:
+  `https://www.transport.nsw.gov.au/system/files/media/documents/2025/sydney-trains-annual-report-2024%E2%80%9325-volume-2.pdf`
+- Bytes: `2,104,788` (SHA-256
+  `676354a52c69dac616e9de05a62102ac3949c551fa0f4fae8490afef130d4eb0`)
+- Printed unit: **`$'000`** (thousands), stated on the audited face statement.
+  `AUD_thousands`; `amount_cents = $'000 × 100,000`. A table read as dollars or
+  millions is rejected and the document is deferred.
+- Statement: Statement of comprehensive income for the year ended 30 June 2025
+  (audited financial statements, PDF page 6). The same volume contains the
+  signed Chief Executive statement (3 October 2025) and the signed independent
+  auditor's report (7 October 2025); the report was first published in November 2025.
+- Provenance caveat: the published Volume 2 PDF carries a **“Draft for year end
+  June 2025”** footer on every page. Because the document is the officially
+  published FY2024–25 release and contains the signed declarations, that footer
+  is recorded as a provenance caveat on every row and flagged for human
+  spot-check rather than silently ignored.
+
+### Exact reconciliation (zero tolerance, printed 2025 column, $'000)
+
+| Printed line                                                  |  2025 ($'000) |
+| ------------------------------------------------------------- | ------------: |
+| Sale of goods and services from contracts with customers      |     1,247,953 |
+| Investment revenue                                            |        69,173 |
+| Major rail project revenue                                    |       434,663 |
+| Other income                                                  |         7,263 |
+| **Total revenue**                                             | **1,759,052** |
+| Employee-related expenses                                     |     1,997,053 |
+| Personnel services                                            |       112,917 |
+| Other operating expenses                                      |     2,264,961 |
+| Major rail project expenses                                   |       434,663 |
+| Depreciation and amortisation                                 |       321,716 |
+| Finance costs                                                 |       245,120 |
+| **Total expenses excluding losses**                           | **5,376,430** |
+| Deficit from operations before grants and other contributions |   (3,617,378) |
+| Grants and contributions                                      |     3,500,212 |
+| (Deficit)/surplus from operations                             |     (117,166) |
+| Gains/(losses) on disposal                                    |      (11,376) |
+| Other gains/(losses)                                          |           179 |
+| Impairment reversals/(losses) on financial assets             |            86 |
+| **Net result**                                                | **(128,277)** |
+
+The statement prints an explicit Total revenue and an explicit Total expenses
+excluding losses subtotal. Both are accepted only when every printed bridge
+reconciles:
+
+1. Total revenue: `1,247,953 + 69,173 + 434,663 + 7,263 = 1,759,052`.
+2. Total expenses excluding losses:
+   `1,997,053 + 112,917 + 2,264,961 + 434,663 + 321,716 + 245,120 = 5,376,430`.
+3. Deficit before grants: `1,759,052 − 5,376,430 = (3,617,378)`.
+4. Operations result: `(3,617,378) + 3,500,212 = (117,166)`.
+5. Net result: `(117,166) + (11,376) + 179 + 86 = (128,277)`.
+
+Any one-thousand-dollar mismatch defers the whole document; no partial rows are
+ingested. Grants and contributions are presented **below** Total revenue and are
+not part of it; they are included in the net-result bridge and emitted as a
+separate grant row with `potential_double_count: true`. The below-the-line
+Gains/(losses) on disposal, Other gains/(losses) and Impairment
+reversals/(losses) are excluded from Total expenses excluding losses and are
+included only in the net-result bridge.
+
+### Ingested line items (6 rows)
+
+| `soc_line_item`             | Printed source                                    |  2025 ($'000) | `funding_source`                   | `potential_double_count` |
+| --------------------------- | ------------------------------------------------- | ------------: | ---------------------------------- | ------------------------ |
+| `total_revenue`             | Printed statement Total revenue                   |     1,759,052 | Sydney Trains                      | false                    |
+| `total_expenses`            | Printed statement Total expenses excluding losses | **5,376,430** | Sydney Trains                      | false                    |
+| `employee_expenses`         | Statement Employee-related expenses               |     1,997,053 | Sydney Trains                      | false                    |
+| `depreciation_amortisation` | Statement Depreciation and amortisation           |       321,716 | Sydney Trains                      | false                    |
+| `government_grants`         | Statement Grants and contributions (Note 2(c))    |     3,500,212 | NSW Government — Transport for NSW | true                     |
+| `net_result`                | Printed statement Net result                      | **(128,277)** | Sydney Trains                      | false                    |
+
+`total_revenue` is the four printed revenue lines and excludes grants;
+`total_expenses` is the six printed expense lines and excludes the below-the-line
+gains/losses; `net_result` is a result. None of the six rows may be added to
+another SOC row, the PNFC benchmark or government program spending.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (5,376,430 $'000)** — the printed Total expenses excluding
+   losses subtotal. Confirm that excluding the below-the-line gains/losses is the
+   intended total-expenses definition, and that the Volume 2 “Draft” footer is a
+   document-control artefact.
+2. **`net_result` ((128,277) $'000)** — confirm the printed deficit is the
+   intended result, retained with a negative sign.
+
+Both rows carry `human_spot_check: required` in their notes. No Sydney Trains
+row is marked verified in this phase.
+
 ## 3. Mapping (PNFC and SOC)
 
 | Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             | Hunter Water SOC                                         |
@@ -1134,6 +1240,8 @@ Port Authority of NSW follows the same SOC mapping with `natural_key` prefix `po
 
 TAHE follows the same SOC mapping with `natural_key` prefix `tahe:`, `delivery_entity` `TAHE`, `funding_source` `TAHE` for its own rows, and `source_dataset` `TAHE Annual Report 2023-24`. Its separately disclosed Grants and contributions row is `potential_double_count: true` with `funding_source` `NSW Government (agency not itemised)`.
 
+Sydney Trains follows the same SOC mapping with `natural_key` prefix `sydney-trains:`, `delivery_entity` `Sydney Trains`, `funding_source` `Sydney Trains` for its own rows, and `source_dataset` `Sydney Trains Annual Report 2024-25`. Its separately disclosed Grants and contributions row is `potential_double_count: true` with `funding_source` `NSW Government — Transport for NSW`.
+
 Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`/`location` NSW, `amount_cents = $’000 × 100,000`, `measure_type` `actual`, `aggregation_role` `agency_detail`, `verified` `false`, `data_quality_flag` `provisional`, `soc_unit` `AUD_thousands`, and `natural_key` prefix `forestry-corporation:`. Both grant rows are `potential_double_count: true`.
 
 ## 4. No-sum and double-count invariants (critical)
@@ -1149,12 +1257,12 @@ Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `
   includes employee, depreciation/amortisation and transfer lines; `net_result`
   is a result, not an expense. Summing any of them is invalid.
 - Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry
-  Corporation of NSW, Landcom, Port Authority of NSW and TAHE are **separate
-  sources and separate entities**. The API returns a `sources` array and an
+  Corporation of NSW, Landcom, Port Authority of NSW, TAHE and Sydney Trains are
+  **separate sources and separate entities**. The API returns a `sources` array and an
   `entities` filter; the UI shows an entity column and an entity selector.
   WaterNSW, Hunter Water, Essential Energy, Forestry Corporation, Landcom, Port
-  Authority of NSW and TAHE rows are never added to Sydney Water's rows or to
-  each other.
+  Authority of NSW, TAHE and Sydney Trains rows are never added to Sydney Water's
+  rows or to each other.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
@@ -1183,7 +1291,7 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW and TAHE, in order.
+1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE and Sydney Trains, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
@@ -1195,9 +1303,10 @@ The runner:
    `docs/source-archive/essential-energy-annual-report.json` and
    `docs/source-archive/forestry-corporation-annual-report.json`,
    `docs/source-archive/landcom-annual-report.json`,
-   `docs/source-archive/port-authority-annual-report.json` and
-   `docs/source-archive/tahe-annual-report.json`. The exact bytes stay outside
-   the repo.
+   `docs/source-archive/port-authority-annual-report.json`,
+   `docs/source-archive/tahe-annual-report.json` and
+   `docs/source-archive/sydney-trains-annual-report.json`. The exact bytes stay
+   outside the repo.
 6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
 
 For the Cloudflare-blocked WaterNSW host, the live ingest can supply the exact
@@ -1231,7 +1340,7 @@ archive record the exact bytes and SHA-256 outside the repo.
 
 `scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water,
 WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom,
-Port Authority of NSW, then TAHE) and
+Port Authority of NSW, TAHE, then Sydney Trains) and
 an intentionally empty
 `FUTURE_SOC_SOURCE_IDS`. A later phase
 should:

@@ -184,7 +184,7 @@ describe('GET /api/meta/coverage', () => {
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
-    expect(response.body.connectors).toHaveLength(24);
+    expect(response.body.connectors).toHaveLength(25);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'abs-gfs' ||
@@ -206,7 +206,8 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'forestry-corporation' ||
           connector.id === 'landcom' ||
           connector.id === 'port-authority-nsw' ||
-          connector.id === 'tahe'
+          connector.id === 'tahe' ||
+          connector.id === 'sydney-trains'
           ? 'active'
           : 'stub',
       );

@@ -54,6 +54,15 @@ import {
   SYDNEY_WATER_UNIT,
   SYDNEY_WATER_UNIT_LABEL,
   SYDNEY_WATER_UNIT_TO_CENTS,
+  SYDNEY_TRAINS_CAVEAT,
+  SYDNEY_TRAINS_ENTITY,
+  SYDNEY_TRAINS_ID,
+  SYDNEY_TRAINS_JURISDICTION,
+  SYDNEY_TRAINS_NAME,
+  SYDNEY_TRAINS_SOURCE_URL,
+  SYDNEY_TRAINS_UNIT,
+  SYDNEY_TRAINS_UNIT_LABEL,
+  SYDNEY_TRAINS_UNIT_TO_CENTS,
   TAHE_CAVEAT,
   TAHE_ENTITY,
   TAHE_ID,
@@ -84,7 +93,7 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE) is a separate
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains) is a separate
  * source and is never summed with the others.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
@@ -182,6 +191,17 @@ const SOC_SOURCES = [
     unit_label: TAHE_UNIT_LABEL,
     unit_to_cents: TAHE_UNIT_TO_CENTS,
     caveat: TAHE_CAVEAT,
+  },
+  {
+    source_id: SYDNEY_TRAINS_ID,
+    name: SYDNEY_TRAINS_NAME,
+    entity: SYDNEY_TRAINS_ENTITY,
+    jurisdiction: SYDNEY_TRAINS_JURISDICTION,
+    discovery_page: SYDNEY_TRAINS_SOURCE_URL,
+    unit: SYDNEY_TRAINS_UNIT,
+    unit_label: SYDNEY_TRAINS_UNIT_LABEL,
+    unit_to_cents: SYDNEY_TRAINS_UNIT_TO_CENTS,
+    caveat: SYDNEY_TRAINS_CAVEAT,
   },
 ] as const;
 

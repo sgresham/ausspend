@@ -78,6 +78,17 @@ import {
   SYDNEY_WATER_UNIT,
   SYDNEY_WATER_UNIT_LABEL,
   SYDNEY_WATER_UNIT_TO_CENTS,
+  SYDNEY_TRAINS_CAVEAT,
+  SYDNEY_TRAINS_ENTITY,
+  SYDNEY_TRAINS_ID,
+  SYDNEY_TRAINS_JURISDICTION,
+  SYDNEY_TRAINS_LICENSE,
+  SYDNEY_TRAINS_NAME,
+  SYDNEY_TRAINS_PUBLISHER,
+  SYDNEY_TRAINS_SOURCE_URL,
+  SYDNEY_TRAINS_UNIT,
+  SYDNEY_TRAINS_UNIT_LABEL,
+  SYDNEY_TRAINS_UNIT_TO_CENTS,
   TAHE_CAVEAT,
   TAHE_ENTITY,
   TAHE_ID,
@@ -137,9 +148,9 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
- * Forestry Corporation of NSW, Landcom, then Port Authority of NSW, then TAHE).
- * No other SOC adapter is implemented, and the eight entity adapters are never
- * summed together.
+ * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, then
+ * Sydney Trains). No other SOC adapter is implemented, and the nine entity
+ * adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
@@ -151,6 +162,7 @@ export const SOC_SOURCE_IDS = [
   LANDCOM_ID,
   PORT_AUTHORITY_ID,
   TAHE_ID,
+  SYDNEY_TRAINS_ID,
 ] as const;
 
 /**
@@ -464,6 +476,39 @@ async function writeTaheManifest(): Promise<void> {
   );
 }
 
+async function writeSydneyTrainsManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: SYDNEY_TRAINS_ID });
+  const manifestPath = path.resolve(
+    process.env.SYDNEY_TRAINS_MANIFEST ?? 'docs/source-archive/sydney-trains-annual-report.json',
+  );
+  const manifest = {
+    entity: SYDNEY_TRAINS_ENTITY,
+    jurisdiction: SYDNEY_TRAINS_JURISDICTION,
+    dataset: SYDNEY_TRAINS_NAME,
+    publisher: SYDNEY_TRAINS_PUBLISHER,
+    discovery_page: SYDNEY_TRAINS_SOURCE_URL,
+    license: SYDNEY_TRAINS_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${SYDNEY_TRAINS_UNIT_LABEL} (${SYDNEY_TRAINS_UNIT}; x${SYDNEY_TRAINS_UNIT_TO_CENTS} cents per unit)`,
+    caveat: SYDNEY_TRAINS_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "Latest Sydney Trains annual report discovered from the official Transport for NSW Sydney Trains annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. Sydney Trains publishes two volumes; the audited Statement of comprehensive income is in Volume 2, so discovery selects the latest report year's financial-statements volume. The statement prints an explicit $'000 unit and explicit Total revenue and Total expenses excluding losses subtotals. Both printed totals are accepted only when the printed revenue lines, expense lines, deficit-before-grants bridge, operations-result bridge (adding Grants and contributions) and net-result bridge (adding gains/losses on disposal, other gains/losses and impairment reversals) reconcile exactly. Grants and contributions are separately disclosed, so one grant row carries potential_double_count=true. The published Volume 2 PDF carries a 'Draft for year end June 2025' footer even though it includes the signed Chief Executive statement and signed independent auditor's report; that provenance caveat is recorded and two lines are flagged for human spot-check. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Sydney Trains rows to government program spending, the PNFC benchmark, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -509,6 +554,7 @@ async function main(): Promise<void> {
     await writeLandcomManifest();
     await writePortAuthorityManifest();
     await writeTaheManifest();
+    await writeSydneyTrainsManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });

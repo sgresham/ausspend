@@ -121,6 +121,18 @@ separately disclosed Grants and contributions line is flagged potential double c
 result is dominated by a $17.8bn valuation increment and a grants-recognition change, so it is not
 comparable with prior years.
 
+After SOC phase 10 (Sydney Trains, 6 new rows) the current baseline is **515,443** measures and **99
+SOC rows**; `sydney-trains` contributes 6 rows (total revenue 1,759,052, total expenses 5,376,430,
+employee 1,997,053, depreciation/amortisation 321,716, government grants/contributions 3,500,212 and
+net result -128,277 $’000) and every per-source count above is unchanged (no deletes). The 515,437
+measures before this phase are all preserved; Sydney Trains adds six provisional, unverified rows.
+Its separately disclosed Grants and contributions line is flagged potential double count. Total
+revenue excludes grants (presented below the deficit line); Total expenses is the printed “Total
+expenses excluding losses” subtotal, with the below-the-line gains/losses included only in the
+net-result bridge. The published Volume 2 PDF carries a “Draft for year end June 2025” footer
+alongside its signed declarations; that provenance caveat is recorded and two lines are flagged for
+human spot-check.
+
 ## Method and snapshot evidence
 
 Read-only commands used (no write operations):
