@@ -346,10 +346,13 @@ region `_id` returns `404`. The envelope is `{ data, summary, pagination, applie
 `pagination` is `{page, page_size, total, total_pages, has_next}` and `applied_filters` echoes the
 normalised query (absent filters as `null`).
 
-The `q` filter is a **literal text match**, not a fuzzy search: regex metacharacters such as `.*`
-and `(` match themselves, and only `project_name`, `description` and `delivery_entity` are searched
-(never `notes` or `source_url`). It composes with every other filter and contributes **no total of
-its own** — the same summary rules apply. For example,
+The `q` filter is **tokenised AND**, not fuzzy: `q` is split on whitespace (case-insensitive,
+repeated words collapsed, bounded to 8 words) and **every word** must appear in at least one of
+`project_name`, `description` and `delivery_entity` (AND across words, OR across fields). Word order
+therefore does not matter: `q=dubbo new bridge` and `q=bridge dubbo new` both find the New Dubbo
+Bridge row. Regex metacharacters such as `.*` and `(` match themselves, and only those three fields
+are searched (never `notes` or `source_url`). It composes with every other filter and contributes
+**no total of its own** — the same summary rules apply. For example,
 `GET /api/spending?q=New%20Dubbo%20Bridge` returns the nsw-budget New Dubbo Bridge row, and
 `GET /api/v1/spending?q=New%20Dubbo%20Bridge` is the versioned alias of the same filter.
 
@@ -583,24 +586,26 @@ navigating.
 `/search` keeps all state in the query string, so reload and browser back/forward restore the same
 view. Every filter change resets `page` to 1; pagination and page size preserve the filters.
 
-| Parameter                 | UI / wire behaviour                                                                           |
-| ------------------------- | --------------------------------------------------------------------------------------------- |
-| `function`                | two- or three-digit COFOG code from `GET /api/functions`                                      |
-| `q`                       | "Project or item" text box; literal match over project/description/delivery entity, not fuzzy |
-| `region`                  | region `_id` chosen from autocomplete over `GET /api/regions`                                 |
-| `fiscal_year`             | one of the coverage metadata's distinct fiscal years                                          |
-| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                                   |
-| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                                           |
-| `min_amount`/`max_amount` | dollars in the URL/UI; converted to integer cents on the wire                                 |
-| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc`                  |
-| `page`/`page_size`        | pagination; page size is one of 10/20/50/100                                                  |
+| Parameter                 | UI / wire behaviour                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| `function`                | two- or three-digit COFOG code from `GET /api/functions`                                |
+| `q`                       | "Project or item"; every word must match project/description/delivery entity, any order |
+| `region`                  | region `_id` chosen from autocomplete over `GET /api/regions`                           |
+| `fiscal_year`             | one of the coverage metadata's distinct fiscal years                                    |
+| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                             |
+| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                                     |
+| `min_amount`/`max_amount` | dollars in the URL/UI; converted to integer cents on the wire                           |
+| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc`            |
+| `page`/`page_size`        | pagination; page size is one of 10/20/50/100                                            |
 
 The page shows the API's whole-set summary (count, per-measure-type totals and function/region
 breakdowns), then one page of rows with function, region, year, measure type, amount and per-row
 source/verification. The "Project or item" field sends `q` and shows the matching row count; its
-chip can be removed to clear the text filter. This is a text match over project name, description
-and delivery entity — not a fuzzy search, and not a total. Empty, loading, `400`, `404` and network
-failures each render a visible state. A reset button clears the query string. Each
+chip can be removed to clear the text filter. This is a tokenised AND match over project name,
+description and delivery entity — every word must occur somewhere in one of those fields, in any
+order, and it is neither a substring phrase search nor fuzzy, and never a total. Empty, loading,
+`400`, `404` and network failures each render a visible state. A reset button clears the query
+string. Each
 function/region/state detail page has an “Explore this in the spending search” link that prefills
 the relevant filters.
 

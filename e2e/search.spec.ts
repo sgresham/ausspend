@@ -142,6 +142,22 @@ test('a direct project/item q URL shows the New Dubbo Bridge row with a clearabl
   await expect(page.getByLabel('Project or item')).toHaveValue('New Dubbo Bridge');
 });
 
+test('a word-order variant of the project/item q URL still shows the bridge row', async ({
+  page,
+}) => {
+  await page.goto('/search?q=dubbo%20new%20bridge');
+
+  const rows = page.getByTestId('spending-rows');
+  await expect(rows).toContainText('New Dubbo Bridge');
+  await expect(rows).toContainText('nsw-budget');
+  await expect(rows).not.toContainText('Chichester Trunk Gravity Main');
+
+  const applied = page.getByTestId('applied-filters');
+  await expect(applied).toContainText('Project or item: “dubbo new bridge”');
+  await expect(page.getByLabel('Project or item')).toHaveValue('dubbo new bridge');
+  await expect(page.getByText('every word', { exact: false })).toBeVisible();
+});
+
 test('the project/item input applies q and the chip clears it', async ({ page }) => {
   await page.goto('/search');
 
