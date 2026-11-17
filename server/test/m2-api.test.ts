@@ -81,6 +81,8 @@ beforeAll(async () => {
       fiscal_year: '2024-25',
       measure_type: 'actual',
       amount_cents: 100_000,
+      jurisdiction_level: 'state',
+      jurisdiction: 'NSW',
     },
     {
       ...base,
@@ -89,6 +91,8 @@ beforeAll(async () => {
       fiscal_year: '2023-24',
       measure_type: 'budget',
       amount_cents: 150_000,
+      jurisdiction_level: 'state',
+      jurisdiction: 'NSW',
     },
     {
       ...base,
@@ -170,7 +174,7 @@ describe('GET /api/meta/coverage', () => {
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
-    expect(response.body.connectors).toHaveLength(13);
+    expect(response.body.connectors).toHaveLength(14);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'aus-tender' ||
@@ -180,7 +184,8 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'data-nsw-ckan' ||
           connector.id === 'dubbo-council' ||
           connector.id === 'vic-budget' ||
-          connector.id === 'qld-budget'
+          connector.id === 'qld-budget' ||
+          connector.id === 'qld-qgip'
           ? 'active'
           : 'stub',
       );
@@ -195,6 +200,7 @@ describe('GET /api/meta/coverage', () => {
       'data-nsw-ckan',
       'vic-budget',
       'qld-budget',
+      'qld-qgip',
     ]);
     expect(response.body.state_ingestion.stubs).toEqual(expect.arrayContaining(['wa-budget']));
     expect(response.body.federal_ingestion.pending).toEqual([]);

@@ -201,6 +201,92 @@ export function summarizeMeasures(measures: readonly LeanMeasure[]): MeasureSumm
   };
 }
 
+/**
+ * Count and sum the ENTIRE match set in Mongo, independent of the page/row
+ * limit. Region/state detail must never compute a headline total from the
+ * capped `measures` page: a 34,000-row source would otherwise be reported as a
+ * 2,000-row partial total. `measures` is for row display only.
+ *
+ * Semantics are identical to `summarizeMeasures`: only additive rows feed
+ * totals, a headline total exists only when exactly one additive measure type
+ * is present, and per-type totals are never added together.
+ */
+export async function summarizeMeasureQuery(
+  baseQuery: Record<string, unknown>,
+): Promise<MeasureSummary> {
+  const groups = await MeasureModel.aggregate<{
+    _id: { measure_type: MeasureDocument['measure_type']; role: string };
+    count: number;
+    cents: number;
+  }>([
+    { $match: baseQuery },
+    {
+      $group: {
+        _id: {
+          measure_type: '$measure_type',
+          role: { $ifNull: ['$aggregation_role', 'additive'] },
+        },
+        count: { $sum: 1 },
+        cents: { $sum: '$amount_cents' },
+      },
+    },
+  ]);
+
+  const allTypes = new Set<MeasureDocument['measure_type']>();
+  const additiveByType = new Map<
+    MeasureDocument['measure_type'],
+    { count: number; cents: number }
+  >();
+  let count = 0;
+  let additiveCount = 0;
+  let nonAdditiveCount = 0;
+
+  for (const group of groups) {
+    const { measure_type, role } = group._id;
+    const groupCount = group.count ?? 0;
+    const groupCents = group.cents ?? 0;
+    if (!Number.isSafeInteger(groupCents)) {
+      throw new Error('amount total exceeds safe integer range');
+    }
+    count += groupCount;
+    allTypes.add(measure_type);
+    if (role === 'additive') {
+      additiveCount += groupCount;
+      const entry = additiveByType.get(measure_type) ?? { count: 0, cents: 0 };
+      entry.count += groupCount;
+      entry.cents += groupCents;
+      additiveByType.set(measure_type, entry);
+    } else {
+      nonAdditiveCount += groupCount;
+    }
+  }
+
+  const additiveTypes = [...additiveByType.keys()].sort();
+  const mixed = additiveTypes.length > 1;
+  const singleType = additiveTypes.length === 1 ? additiveTypes[0]! : null;
+  const additiveCents = [...additiveByType.values()].reduce((sum, entry) => sum + entry.cents, 0);
+  if (!Number.isSafeInteger(additiveCents)) {
+    throw new Error('amount total exceeds safe integer range');
+  }
+
+  return {
+    count,
+    additive_count: additiveCount,
+    non_additive_count: nonAdditiveCount,
+    measure_types: [...allTypes].sort(),
+    mixed,
+    total_cents: additiveCount === 0 || mixed ? null : additiveCents,
+    total_measure_type: singleType,
+    total_by_measure_type: [...additiveByType.entries()]
+      .map(([measureType, entry]) => ({
+        measure_type: measureType,
+        count: entry.count,
+        total_cents: entry.cents,
+      }))
+      .sort((a, b) => a.measure_type.localeCompare(b.measure_type)),
+  };
+}
+
 export async function loadRegions(
   ids: readonly mongoose.Types.ObjectId[],
 ): Promise<Map<string, LeanRegion>> {

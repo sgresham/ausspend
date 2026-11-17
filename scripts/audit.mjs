@@ -27,6 +27,8 @@ const KNOWN_SOURCE_IDS = [
   'dubbo-council',
   'grantconnect',
   'vic-budget',
+  'qld-budget',
+  'qld-qgip',
 ];
 
 const results = [];

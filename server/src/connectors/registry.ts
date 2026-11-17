@@ -5,6 +5,7 @@ import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { createQldBudgetConnector } from './qld-budget.js';
+import { createQgipConnector } from './qld-qgip.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
@@ -110,6 +111,12 @@ export const CONNECTORS: readonly Connector[] = [
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),
+  // Phase 4: live data.qld CKAN ingestion of the latest annual QGIP
+  // consolidated expenditure CSV (2024-25) plus its data dictionary. This is a
+  // separate source from qld-budget: grant awards and procured frontline
+  // services are actual expenditure, never budget measures, and the two measure
+  // types are never summed together.
+  createQgipConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

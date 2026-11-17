@@ -299,7 +299,7 @@ invalid query parameters return JSON `400`.
 connector status: true once AusTender/PBS ingest), `generated_at`,
 `counts {data_sources, regions, functions, measures, synthetic_measures, real_measures}`,
 `coverage_gaps` (the real national/state actual/estimate, COFOG, region and PBS gaps), distinct sorted
-`fiscal_years`, supported/observed `measure_types`, `region_levels`, the thirteen `connectors`
+`fiscal_years`, supported/observed `measure_types`, `region_levels`, the fourteen `connectors`
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
 `federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat, grantconnect_caveat, grantconnect_note}` and
@@ -355,7 +355,7 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 
 ### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers thirteen Australian public-spending sources. **AusTender
+`server/src/connectors` registers fourteen Australian public-spending sources. **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
@@ -370,8 +370,12 @@ fleet-vehicle XLSX); PDF/DOCX resources are recorded as deferred, not ingested.
 a human downloads public `DownloadResult` XLSX exports, the importer archives each with SHA-256,
 rejects any file carrying the >50,000-result cap warning, combines complete date-range chunks,
 de-duplicates on `GA ID` and reports partial coverage honestly. It is not an API and not a
-scraper. The other seven connectors are stubs (`status: "stub"`; `fetch()` rejects with
-"not implemented" and `transform()` returns no records); VIC/QLD/WA remain stubs.
+scraper. **VIC Budget (`vic-budget`), QLD Budget (`qld-budget`) and QLD QGIP
+(`qld-qgip`) are live as of Phase 4**. `qld-qgip` streams the latest annual consolidated QGIP
+expenditure CSV (2024-25, cp1252) and archives its data dictionary; only Grant (`grant_award`) and
+Frontline service procurement (`contract`) rows are ingested, and the two measure types are never
+summed. The other five connectors are stubs (`status: "stub"`; `fetch()` rejects with
+"not implemented" and `transform()` returns no records); WA remains a stub.
 
 `npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
 selected connectors sequentially, writes an `ingestion_logs` row per source, upserts on
