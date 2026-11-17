@@ -17,6 +17,7 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DatasetIcon from '@mui/icons-material/Dataset';
 import InfoIcon from '@mui/icons-material/Info';
 import { CoverageBanner } from './CoverageBanner';
+import { Footer } from './Footer';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import HomeIcon from '@mui/icons-material/Home';
 import MapIcon from '@mui/icons-material/Map';
@@ -153,6 +154,7 @@ export function Layout() {
         <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
           <CoverageBanner />
           <Outlet />
+          <Footer />
         </Box>
       </Box>
     </Box>

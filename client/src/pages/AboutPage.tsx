@@ -118,6 +118,23 @@ export function AboutPage() {
         </CardContent>
       </Card>
 
+      <Card variant="outlined" sx={{ mb: 3 }}>
+        <CardContent>
+          <Typography variant="h5" component="h2" gutterBottom>
+            Legal, privacy and data notices
+          </Typography>
+          <Typography variant="body2">
+            The full disclaimer, copyright and attribution, data explainer and privacy note are on
+            the{' '}
+            <Link component={RouterLink} to="/legal">
+              legal, privacy and data notices
+            </Link>{' '}
+            page. It is general information, not legal advice, and ausspend is not an official
+            government publication.
+          </Typography>
+        </CardContent>
+      </Card>
+
       {coverage.data ? (
         <Card variant="outlined" sx={{ mb: 3 }}>
           <CardContent>

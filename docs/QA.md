@@ -25,8 +25,27 @@ npm run test:e2e
 ```
 
 Expected: all green. `npm test` runs the shared + server Vitest suites (73 tests at M4 + F1).
-`npm run test:e2e` runs the mocked UI specs (20 tests at M4) with `page.route`; it needs no
+`npm run test:e2e` runs the mocked UI specs (40 tests) with `page.route`; it needs no
 database. The audit below is the only live check.
+
+### Legal / About content check
+
+The legal specs mock `/api`, so they need only the Vite client on an alt port (never 3001/5173):
+
+```bash
+node_modules/.bin/vite client --port 5174 --strictPort
+npx playwright test --config=e2e/playwright.alt.config.ts legal.spec.ts
+```
+
+Expected: 3 passed. The spec asserts that the footer notice appears on `/`, `/about` and
+`/data-sources` and links to `/legal`; that all five notice blocks render; and that the factual
+corrections are present — source data is not created/audited but derived totals are documented and
+labelled, not all sources are CC BY (publisher terms, Dubbo public-interest use, retained CC BY
+example), the privacy contact is marked "contact to be confirmed", the text says it is general
+information and not legal advice, `measure_type`/provenance and double-count risks are explained,
+and no official-government-publication claim is made. It also asserts that visiting `/legal` makes
+no non-GET `/api` request. This is a content/UI check only: it is not legal review and it does not
+touch the database.
 
 ## Compose stack checks
 

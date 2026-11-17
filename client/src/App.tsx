@@ -6,6 +6,7 @@ import { BenchmarkPage } from './pages/BenchmarkPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
 import { FunctionsPage } from './pages/FunctionsPage';
 import { HomePage } from './pages/HomePage';
+import { LegalPage } from './pages/LegalPage';
 import { RegionsPage } from './pages/RegionsPage';
 import { SearchPage } from './pages/SearchPage';
 import { SocPage } from './pages/SocPage';
@@ -30,6 +31,7 @@ export function App() {
           <Route path="/benchmark" element={<BenchmarkPage />} />
           <Route path="/soc" element={<SocPage />} />
           <Route path="/data-sources" element={<DataSourcesPage />} />
+          <Route path="/legal" element={<LegalPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Route>
       </Routes>

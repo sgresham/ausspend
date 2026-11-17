@@ -553,7 +553,8 @@ The mocked `npm run test:e2e` run stays database-free; the audit script is not a
 
 ## Pages
 
-Eight routes render API data. Every page, including `/about`, shows a persistent coverage banner
+Eight routes render API data, and a static `/legal` page carries the legal notices. Every page,
+including `/about`, shows a persistent coverage banner
 driven by `GET /api/meta/coverage`: the real sources and their counts, all project/charity figures
 unverified, 0 synthetic seed rows, plus a link to the source register. If coverage metadata cannot
 be loaded the banner falls back to a neutral unverified-data warning rather than disappearing.
@@ -566,6 +567,7 @@ be loaded the banner falls back to a neutral unverified-data warning rather than
 | `/regions/:regionId?` | Region directory from `GET /api/regions` and detail by region `_id`          |
 | `/states/:code?`      | State/territory directory and detail by abbreviation                         |
 | `/data-sources`       | Source register, connector status/last-ingested and limitations              |
+| `/legal`              | Disclaimer, copyright/attribution, data explainer and privacy notices        |
 | `/about`              | What ausspend is, Phase 1 scope, provenance and mixed-measure rules          |
 
 The client has a small typed API layer in `client/src/api` (fetch + error normalisation), a shared
@@ -621,7 +623,10 @@ records ingested; stubs are marked **stub — not wired**. It also shows the API
 lines for Sydney Water only, with a `$’000` unit badge, Unverified badge, provenance link, a
 no-total rule and a **potential double count** chip for government-named funding rows. The `/about`
 page explains the current real-only scope, how provenance is attached, and why mixed measures never
-get a headline total.
+get a headline total. Every page also shows a site-wide footer notice linking to `/legal`, which
+carries the full disclaimer, copyright/attribution (including sources that are not CC BY), the
+`measure_type`/provenance and double-count explainer, and the privacy note. The notices are general
+information, not legal advice, and ausspend is not an official government publication.
 
 ### Measure-type and provenance rules
 
