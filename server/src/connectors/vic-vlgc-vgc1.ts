@@ -144,6 +144,10 @@ export interface Vgc1Raw extends Record<string, unknown> {
    * the normal pilot-A rule applies.
    */
   reconciliation_status?: string;
+  /** Free-text reconciliation caveat appended to the row note. */
+  reconciliation_note?: string;
+  /** Human confirmation required; never a silent pass. */
+  human_spot_check?: string;
   section: Vgc1Section;
   line_type: Vgc1LineType;
   function_name: string | null;
@@ -717,7 +721,9 @@ function mapRawRecord(raw: Vgc1Raw): SpendingRecord | null {
     'Council-supplied VLGGC questionnaire, unaudited; provisional/local_government; verified=false',
     reconciliationStatus === 'reconciled_to_gpfs'
       ? `Reconciliation: City of Greater Bendigo total ${raw.section} reconciles to its audited ${fiscalYear} GPFS at the printed $1,000 rounding (VGC whole AUD vs GPFS $'000); reconciliation_status=reconciled_to_gpfs`
-      : 'Reconciliation: questionnaire_unaudited; no GPFS reconciliation for this row',
+      : reconciliationStatus === 'bridged_to_gpfs'
+        ? `Reconciliation: ${raw.reconciliation_note ?? `City of Greater Bendigo total ${raw.section} matches the audited ${fiscalYear} GPFS subject to a documented nonzero delta (not forced to zero)`}; reconciliation_status=bridged_to_gpfs; human_spot_check=${raw.human_spot_check ?? 'required'}`
+        : 'Reconciliation: questionnaire_unaudited; no GPFS reconciliation for this row',
     'NON-ADDITIVE: function totals, the five expense natures, printed bridges and totals are separate printed cuts and are never summed together; no cross-council total; never mixed with vic-budget, ABS GFS, LGPRF, waste or NSW council rows',
   ]
     .filter(Boolean)
@@ -744,6 +750,7 @@ function mapRawRecord(raw: Vgc1Raw): SpendingRecord | null {
     location: { state: 'VIC', lga_name: raw.council_name },
     statement: 'income',
     reconciliation_status: reconciliationStatus,
+    ...(raw.human_spot_check ? { human_spot_check: raw.human_spot_check } : {}),
     vlgc_section: raw.section,
     vlgc_measure: measure,
     ...(raw.function_name ? { vlgc_function: raw.function_name } : {}),

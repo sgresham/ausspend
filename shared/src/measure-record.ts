@@ -220,6 +220,14 @@ export const MeasureRecordSchema = z.object({
    */
   statement: z.string().min(1).optional(),
   reconciliation_status: z.string().min(1).optional(),
+  /**
+   * A printed source-vs-comparator variance that a human must confirm. It is
+   * never a silent pass: rows carrying this are not treated as exactly
+   * reconciled. Present on the VLGGC FY2023-24 Bendigo totals, whose whole-AUD
+   * values differ from the audited GPFS by $1,023.18 (expenditure) and
+   * $2,475.92 (revenue).
+   */
+  human_spot_check: z.string().min(1).optional(),
   vlgc_section: z.enum(['expense', 'revenue']).optional(),
   vlgc_measure: z.string().min(1).optional(),
   vlgc_function: z.string().min(1).optional(),
