@@ -26,6 +26,7 @@ const LIVE_IDS = [
   'wollongong-gpfs',
   'newcastle-gpfs',
   'lake-macquarie-gpfs',
+  'maitland-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -44,9 +45,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships thirty-six connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(36);
-    expect(new Set(CONNECTOR_IDS).size).toBe(36);
+  it('ships thirty-seven connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(37);
+    expect(new Set(CONNECTOR_IDS).size).toBe(37);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -166,6 +167,10 @@ describe('federal connector registry', () => {
     expect(getConnector('lake-macquarie-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('lake-macquarie-gpfs')?.source_url).toContain('lakemac.com.au');
     expect(getConnector('lake-macquarie-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('maitland-gpfs')?.status).toBe('active');
+    expect(getConnector('maitland-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('maitland-gpfs')?.source_url).toContain('maitland.nsw.gov.au');
+    expect(getConnector('maitland-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');

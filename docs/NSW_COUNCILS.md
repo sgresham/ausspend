@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Ten council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Eleven council GPFS extractions have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -14,7 +14,9 @@ GPFS (**§7.7**) then added exactly **17** `sutherland-shire-gpfs` rows (**515,5
 Wollongong City Council FY2024-25 GPFS (**§7.8**) then added exactly **17** `wollongong-gpfs` rows
 (**515,571** → **515,588**); Newcastle City Council FY2024-25 GPFS (**§7.9**) then added exactly
 **17** `newcastle-gpfs` rows (**515,588** → **515,605**); Lake Macquarie City Council FY2024-25
-GPFS (**§7.10**) then added exactly **17** `lake-macquarie-gpfs` rows (**515,605** → **515,622**).
+GPFS (**§7.10**) then added exactly **17** `lake-macquarie-gpfs` rows (**515,605** → **515,622**);
+Maitland City Council FY2024-25 GPFS (**§7.11**) then added exactly **7** `maitland-gpfs` rows
+(**515,622** → **515,629**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -28,8 +30,10 @@ exact-case GrantConnect rows and 1 uppercase AusTender row), the 4 AusTender/Gra
 uppercase AusTender contract and 2 uppercase GrantConnect grants) plus the separate "City of
 Newcastle" GrantConnect row, the 4 AusTender/GrantConnect rows whose `delivery_entity` exactly names
 "Lake Macquarie City Council" (1 exact-case GrantConnect grant, 1 uppercase AusTender contract and 2
-uppercase GrantConnect grants), and every other source are preserved untouched and are never summed
-with the GPFS rows.
+uppercase GrantConnect grants), the 1 GrantConnect row whose `delivery_entity` exactly names
+"MAITLAND CITY COUNCIL" (an uppercase grant), the 205 AusTender/data.nsw/GrantConnect/ACNC rows whose
+`delivery_entity` merely mentions Maitland, the NSW Budget rows whose `project_name` mentions
+Maitland, and every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 18 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -224,15 +228,15 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 173 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 180 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
 §7.5), 17 for Canterbury-Bankstown Council FY2024-25 (`canterbury-bankstown-gpfs`, §7.6), 17 for
 Sutherland Shire Council FY2024-25 (`sutherland-shire-gpfs`, §7.7), 17 for Wollongong City Council
 FY2024-25 (`wollongong-gpfs`, §7.8), 17 for Newcastle City Council FY2024-25 (`newcastle-gpfs`,
-§7.9) and 17 for Lake Macquarie City Council FY2024-25 (`lake-macquarie-gpfs`, §7.10) — all separate
-source ids. The existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS
+§7.9), 17 for Lake Macquarie City Council FY2024-25 (`lake-macquarie-gpfs`, §7.10) and 7 for Maitland
+City Council FY2024-25 (`maitland-gpfs`, §7.11) — all separate source ids. The existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS
 actuals, and are not touched or summed with the GPFS rows.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
@@ -1105,6 +1109,78 @@ because they may overlap government program data; they are not added to expendit
 `data-nsw-ckan` still **3,472**; `data_sources` 35 → **36**. A second ingest run upserted the same
 17 natural keys and left the DB total unchanged (idempotent). No deletes or updates to any other
 source.
+
+### 7.11 Eleventh council — Maitland City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official "Financial reports and plans" page
+<https://www.maitland.nsw.gov.au/council/about-council/financial-reports-and-plans>. The page is
+served over plain HTTP (no Cloudflare/Akamai challenge was observed), so discovery and the PDF
+download use direct fetch. The page's FY2024-25 anchor **"General Purpose Financial Report
+2024-25"** resolves to
+<https://www.maitland.nsw.gov.au/sites/default/files/documents/2025-11/Financial%20Statements%202024-25%20Final.pdf>
+(1,196,382 bytes; HTTP 200 `application/pdf`). The URL is parsed from the page HTML, never
+hard-coded. Exact bytes are archived outside the repo at
+`/home/steve/ausspend-source-archive/maitland-gpfs/Financial-Statements-2024-25-Final.pdf`,
+SHA-256 `bc67c592a9cb0bade12b62e88457b3f67dad434442ec3bc59b15ea7c8aafbda8`, with the archive
+metadata record alongside (`hash_verified: true`). The printed unit is explicit `$'000` on the
+Income Statement (p4), the Statement of Comprehensive Income (p5) and note B1-1 (p12); a missing or
+conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before
+each line label. Maitland's plain-text stream therefore interleaves the budget column and places
+the depreciation label after its amounts, so the connector reads positioned text items (x/y) and
+takes the amount in the Actual 2025 column after each printed label. The Income Statement does not
+print a combined "Total expenses" line: the printed B1-1 "Net operating result for the year" row
+prints total expenses `$169,995` thousand, which equals printed total income `$219,016` thousand
+less the printed net result `$49,021` thousand. Those top-level printed totals reconcile exactly:
+
+| Check                                                                                           |                            Printed / derived | Result                                          |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------: | ----------------------------------------------- |
+| Total income from continuing operations (Income Statement p4)                                   |                          `$219,016` thousand | = `$219,016,000`                                |
+| Total expenses (B1-1 p12 printed expenses; equals printed total income less printed net result) |                          `$169,995` thousand | = `$219,016,000 − $49,021,000`                  |
+| Net operating result for the year attributable to Council (Income Statement p4)                 |                           `$49,021` thousand | = printed total income − printed total expenses |
+| B1-1 Total (income / expenses / operating result)                                               | `$219,016` / `$169,995` / `$49,021` thousand | equals the face statement                       |
+| Statement of Comprehensive Income net result (p5)                                               |                           `$49,021` thousand | = Income Statement net result                   |
+| Income Statement expenses excluding depreciation = expense-by-nature components sum             |                          `$137,168` thousand | exact                                           |
+| Income Statement depreciation line = note B3-3 total                                            |                           `$32,828` thousand | exact                                           |
+
+The published actual/prior columns carry a **+/-$1 thousand rounding** in the component lines:
+revenue components sum to `$219,017` (vs `$219,016`); printed expenses excluding depreciation
+`$137,168` plus printed depreciation `$32,828` = `$169,996` (vs the printed B1-1 `$169,995`);
+printed operating + capital grants `$75,738` (vs B1-1 `$75,739`); the printed before-capital result
+is `$(15,562)` (vs net result less capital grants `$(15,561)`). The connector verifies that rounding
+is at most 1 thousand, retains it as reconciliation evidence, and **does not emit the component
+rows** (so components are never summed). The connector does **not** use OLG all-rights data.
+
+**Rows.** **7 rows**, source id `maitland-gpfs`, `source_dataset` "Maitland City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Maitland City Council"` (the exact published entity name in
+the audited statements), `data_quality_flag: "provisional/local_government"`, `verified: false`.
+Only the printed top-level categories that reconcile exactly are emitted: total revenue
+`$219,016,000`, total expenses `$169,995,000`, employee expenses `$64,466,000`,
+depreciation/amortisation/impairment `$32,828,000`, operating government grants `$11,156,000`,
+capital government grants `$64,582,000` and net result `$49,021,000`. No revenue/expense component
+rows and no region/LGA allocation are emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`; the generic additive API and area panels exclude them. The rows have **no
+`region_id` and no `location`/LGA allocation**, so they cannot be summed into any other council or
+state rows. The 1 pre-existing row whose `delivery_entity` exactly names "MAITLAND CITY COUNCIL" is
+an uppercase GrantConnect grant (`grantconnect:GA521629`); the 205 other rows that merely mention
+Maitland in `delivery_entity` (ACNC 134, GrantConnect 61, AusTender 6, data.nsw 4) and the NSW
+Budget rows whose `project_name` mentions Maitland use different entities. Their per-source counts
+are identical before and after the ingest, and they are never summed with the GPFS rows. Government
+grant rows carry `potential_double_count: true` because they may overlap government program data;
+they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,622 → **515,629** (exactly +7);
+`maitland-gpfs` **7**; `lake-macquarie-gpfs` still **17**; `newcastle-gpfs` still **17**;
+`wollongong-gpfs` still **17**; `sutherland-shire-gpfs` still **17**; `canterbury-bankstown-gpfs`
+still **17**; `northern-beaches-gpfs` still **18**; `parramatta-gpfs` still **17**; `blacktown-gpfs`
+still **17**; `city-of-sydney-gpfs` still **18**; `dubbo-council` still **245**; `dubbo-council-gpfs`
+still **18**; `data-nsw-ckan` still **3,472**; `data_sources` 36 → **37**. A second ingest run
+upserted the same 7 natural keys and left the DB total unchanged (idempotent). No deletes or updates
+to any other source.
 
 ---
 
