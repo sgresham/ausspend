@@ -6,12 +6,14 @@ import {
   MID_COAST_GPFS_ID,
   PORT_MACQUARIE_HASTINGS_GPFS_ID,
   WAVERLEY_GPFS_ID,
+  WILLOUGHBY_GPFS_ID,
   WOLLONGONG_GPFS_ID,
   createCoffsHarbourGpfsConnector,
   createLakeMacquarieGpfsConnector,
   createMidCoastGpfsConnector,
   createPortMacquarieHastingsGpfsConnector,
   createWaverleyGpfsConnector,
+  createWilloughbyGpfsConnector,
   createWollongongGpfsConnector,
   ensureDubboRegion,
   getConnector,
@@ -23,6 +25,7 @@ import { fetchLakeMacquarieGpfsViaBrowser } from './lake-macquarie-gpfs-browser.
 import { fetchMidCoastGpfsViaBrowser } from './mid-coast-gpfs-browser.js';
 import { fetchPortMacquarieHastingsGpfsViaBrowser } from './port-macquarie-hastings-gpfs-browser.js';
 import { fetchWaverleyGpfsViaBrowser } from './waverley-gpfs-browser.js';
+import { fetchWilloughbyGpfsViaBrowser } from './willoughby-gpfs-browser.js';
 import { fetchWollongongGpfsViaBrowser } from './wollongong-gpfs-browser.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
@@ -54,6 +57,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - shoalhaven-gpfs  GPFS expansion: Shoalhaven City Council's audited FY2024-25 GPFS
  *   - shellharbour-gpfs  GPFS expansion: Shellharbour City Council's audited FY2024-25 GPFS
  *   - waverley-gpfs  GPFS expansion: Waverley Council's audited FY2024-25 GPFS
+ *   - willoughby-gpfs  GPFS expansion: Willoughby City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -61,7 +65,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Council, Wollongong City Council, Newcastle City Council, Lake Macquarie City
  * Council, Maitland City Council, Coffs Harbour City Council, MidCoast Council,
  * Port Macquarie-Hastings Council, Tweed Shire Council, Shoalhaven City
- * Council, Shellharbour City Council and Waverley Council. No other councils,
+ * Council, Shellharbour City Council, Waverley Council and Willoughby City
+ * Council. No other councils,
  * states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
@@ -88,6 +93,7 @@ export const NSW_SOURCE_IDS = [
   'shoalhaven-gpfs',
   'shellharbour-gpfs',
   'waverley-gpfs',
+  'willoughby-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -196,6 +202,22 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] waverley-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createWaverleyGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === WILLOUGHBY_GPFS_ID) {
+      // Willoughby's site rejects Node's direct HTTP fetch with a Cloudflare
+      // 403; the documented headless Chromium path clears it, and the connector
+      // still discovers the FY2024-25 audited financial-statements link from the
+      // cleared Annual Financial Statements HTML and re-verifies the bytes.
+      console.log('[ingest:nsw] willoughby-gpfs: browser discovery/download starting');
+      const fetched = await fetchWilloughbyGpfsViaBrowser();
+      console.log(`[ingest:nsw] willoughby-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createWilloughbyGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
