@@ -18,6 +18,9 @@ const IngestionLogQuerySchema = z.object({
 
 /** GET /api/ingestion-logs — newest-first ingestion run history. */
 export const listIngestionLogs: RequestHandler = async (req, res) => {
+  // backup_path is a host filesystem path: omit unless explicitly enabled. The
+  // production edge 404s this route publicly (deploy/nginx/ausspend.conf).
+  const exposePaths = process.env.EXPOSE_SOURCE_PATHS === 'true';
   const parsed = IngestionLogQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     throw badRequest(parsed.error.issues[0]?.message ?? 'Invalid ingestion-log query');
@@ -42,7 +45,7 @@ export const listIngestionLogs: RequestHandler = async (req, res) => {
       records_upserted: log.records_upserted,
       errors: log.errors,
       ...(log.message ? { message: log.message } : {}),
-      ...(log.backup_path ? { backup_path: log.backup_path } : {}),
+      ...(exposePaths && log.backup_path ? { backup_path: log.backup_path } : {}),
     })),
     count: logs.length,
   });
