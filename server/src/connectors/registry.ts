@@ -50,6 +50,7 @@ import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createTaheConnector } from './soc/nsw/tahe.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
+import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -458,6 +459,14 @@ export const CONNECTORS: readonly Connector[] = [
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
+  // VIC council pilot A: the VLGGC 2024-25 VGC1 questionnaire workbook covers all
+  // 79 Victorian councils at income-statement function/nature granularity. It is
+  // council-supplied and unaudited, and VLGGC is attribution/permission, NOT
+  // CC BY. Every row is non-additive agency_detail, provisional/local_government
+  // and unverified; the source Totals row is suppressed and no cross-council
+  // total is emitted. Never mixed with vic-budget, ABS GFS, LGPRF, waste or NSW
+  // council data.
+  createVgc1Connector(),
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),

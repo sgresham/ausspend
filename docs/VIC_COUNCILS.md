@@ -1,8 +1,10 @@
 # Victorian local councils — source inventory, double-count review and pilot plan
 
-**Status:** planning and research only. This document starts no ingestion, creates no schema/API/DB
-rows and queues no council PDF jobs. The database baseline is **515,449 measures**, unchanged; this
-work touched docs only.
+**Status (updated 18 November 2026):** the inventory in §§0–10 is the original research/planning
+pass. **VIC council pilot A is now implemented** as source `vic-vlgc-vgc1`: 5,401 non-additive VGC1
+2024-25 rows across all 79 councils (see §11). The planning pass touched docs only; pilot A is a
+separate ingestion item. The database was **515,449 measures** at planning time, **515,955** on the
+eve of pilot A, and **521,356** after it (exact delta +5,401). No council PDFs were queued.
 
 **As at:** 17 November 2026. **Scope:** Victorian local government — the 79 councils — not state
 government, and not a cross-council spending total.
@@ -35,14 +37,14 @@ There are two different claims inside the premise, and they have different answe
 FY2024-25**, the bulk VLGGC workbooks reconcile **exactly** to the audited GPFS (all figures
 `$'000` in the GPFS, whole dollars in VLGGC):
 
-| Line | VLGGC bulk workbook | Audited GPFS | Result |
-| --- | ---: | ---: | --- |
-| Total expenditure / total expenses | `$252,760,999.96` (VGC1) | `$252,761k` | matches to $0.04 |
-| Total revenue / total income | `$277,002,000.17` (VGC1) | `$277,002k` | matches to $0.17 |
-| Total assets | `$2,595,603,000` (ABS2) | `$2,595,603k` | exact |
-| Total liabilities | `$123,597,000` (ABS2) | `$123,597k` | exact |
-| Total equity | `$2,472,006,000` (ABS2) | `$2,472,006k` | exact |
-| Capital outlays | `$56,221,353.20` (ABS1) | cash-flow payments `$55,748k` | **differs by `$473,353` (0.85%)** |
+| Line                               |      VLGGC bulk workbook |                  Audited GPFS | Result                            |
+| ---------------------------------- | -----------------------: | ----------------------------: | --------------------------------- |
+| Total expenditure / total expenses | `$252,760,999.96` (VGC1) |                   `$252,761k` | matches to $0.04                  |
+| Total revenue / total income       | `$277,002,000.17` (VGC1) |                   `$277,002k` | matches to $0.17                  |
+| Total assets                       |  `$2,595,603,000` (ABS2) |                 `$2,595,603k` | exact                             |
+| Total liabilities                  |    `$123,597,000` (ABS2) |                   `$123,597k` | exact                             |
+| Total equity                       |  `$2,472,006,000` (ABS2) |                 `$2,472,006k` | exact                             |
+| Capital outlays                    |  `$56,221,353.20` (ABS1) | cash-flow payments `$55,748k` | **differs by `$473,353` (0.85%)** |
 
 So the bulk dataset is not merely “near” at the totals: for the one council-year tested it is exact
 on the income statement and balance sheet. It still is **not** the GPFS: it is a **council-supplied,
@@ -64,8 +66,8 @@ The count of **79** is verified from three independent official artefacts in thi
   entries, from Alpine Shire Council to Yarriambiack Shire Council, including the Borough of
   Queenscliffe. Linked from <https://www.vic.gov.au/local-government-contacts-and-information>
   (fetched, HTTP 200).
-- **Know Your Council** front page (fetched, HTTP 200): *“Find information about Victoria's 79
-  councils.”* (<https://www.vic.gov.au/know-your-council>)
+- **Know Your Council** front page (fetched, HTTP 200): _“Find information about Victoria's 79
+  councils.”_ (<https://www.vic.gov.au/know-your-council>)
 - **LGPRF full data set 2020-25** (XLSX): **79** distinct council names in every year sheet
   (verified locally; see §3.2).
 
@@ -76,13 +78,13 @@ The Know Your Council dashboard groups the 79 for comparison
 26 August 2025). The groups are a **presentation device, not a funding or legal classification**;
 do not use them to create a “group total”.
 
-| Group | # | Councils (official directory names) |
-| --- | ---: | --- |
-| Metropolitan | 22 | Banyule City, Bayside City, Boroondara City, Brimbank City, Darebin City, Frankston City, Glen Eira City, Greater Dandenong City, Hobsons Bay City, Kingston City, Knox City, Manningham City, Maribyrnong City, Maroondah City, Melbourne City, Merri-bek City, Monash City, Moonee Valley City, Port Phillip City, Stonnington City, Whitehorse City, Yarra City |
-| Regional | 10 | Ballarat City, Greater Bendigo City, Greater Geelong City, Greater Shepparton City, Horsham Rural City, Latrobe City, Mildura Rural City, Wangaratta Rural City, Warrnambool City, Wodonga City |
-| Large shire | 19 | Bass Coast Shire, Baw Baw Shire, Campaspe Shire, Colac Otway Shire, Corangamite Shire, East Gippsland Shire, Glenelg Shire, Golden Plains Shire, Macedon Ranges Shire, Mitchell Shire, Moira Shire, Moorabool Shire, Mount Alexander Shire, Moyne Shire, South Gippsland Shire, Southern Grampians Shire, Surf Coast Shire, Swan Hill Rural City, Wellington Shire |
-| Small shire | 19 | Alpine Shire, Ararat Rural City, Benalla Rural City, Buloke Shire, Central Goldfields Shire, Gannawarra Shire, Hepburn Shire, Hindmarsh Shire, Indigo Shire, Loddon Shire, Mansfield Shire, Murrindindi Shire, Northern Grampians Shire, Pyrenees Shire, Borough of Queenscliffe, Strathbogie Shire, Towong Shire, West Wimmera Shire, Yarriambiack Shire |
-| Interface | 9 | Cardinia Shire, Casey City, Hume City, Melton City, Mornington Peninsula Shire, Nillumbik Shire, Whittlesea City, Wyndham City, Yarra Ranges Shire |
+| Group        |   # | Councils (official directory names)                                                                                                                                                                                                                                                                                                                                |
+| ------------ | --: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Metropolitan |  22 | Banyule City, Bayside City, Boroondara City, Brimbank City, Darebin City, Frankston City, Glen Eira City, Greater Dandenong City, Hobsons Bay City, Kingston City, Knox City, Manningham City, Maribyrnong City, Maroondah City, Melbourne City, Merri-bek City, Monash City, Moonee Valley City, Port Phillip City, Stonnington City, Whitehorse City, Yarra City |
+| Regional     |  10 | Ballarat City, Greater Bendigo City, Greater Geelong City, Greater Shepparton City, Horsham Rural City, Latrobe City, Mildura Rural City, Wangaratta Rural City, Warrnambool City, Wodonga City                                                                                                                                                                    |
+| Large shire  |  19 | Bass Coast Shire, Baw Baw Shire, Campaspe Shire, Colac Otway Shire, Corangamite Shire, East Gippsland Shire, Glenelg Shire, Golden Plains Shire, Macedon Ranges Shire, Mitchell Shire, Moira Shire, Moorabool Shire, Mount Alexander Shire, Moyne Shire, South Gippsland Shire, Southern Grampians Shire, Surf Coast Shire, Swan Hill Rural City, Wellington Shire |
+| Small shire  |  19 | Alpine Shire, Ararat Rural City, Benalla Rural City, Buloke Shire, Central Goldfields Shire, Gannawarra Shire, Hepburn Shire, Hindmarsh Shire, Indigo Shire, Loddon Shire, Mansfield Shire, Murrindindi Shire, Northern Grampians Shire, Pyrenees Shire, Borough of Queenscliffe, Strathbogie Shire, Towong Shire, West Wimmera Shire, Yarriambiack Shire          |
+| Interface    |   9 | Cardinia Shire, Casey City, Hume City, Melton City, Mornington Peninsula Shire, Nillumbik Shire, Whittlesea City, Wyndham City, Yarra Ranges Shire                                                                                                                                                                                                                 |
 
 **Count:** 22 + 10 + 19 + 19 + 9 = **79**.
 
@@ -90,20 +92,20 @@ do not use them to create a “group total”.
 
 The September 2026 directory names split as follows (counted from the XLSX):
 
-| Class in the official name | # | Notes |
-| --- | ---: | --- |
-| `… City Council` | 34 | Includes Melbourne City (capital city) and four “Greater” cities: Greater Bendigo, Greater Dandenong, Greater Geelong, Greater Shepparton. |
-| `… Rural City Council` | 6 | Ararat, Benalla, Horsham, Mildura, Swan Hill, Wangaratta. Still a city class, not a shire. |
-| `… Shire Council` | 38 | The ordinary rural/urban-fringe shire class. |
-| `Borough of Queenscliffe` | **1** | The **only** borough in Victoria; do not normalise it to “Shire”. |
-| **Total** | **79** | |
+| Class in the official name |      # | Notes                                                                                                                                      |
+| -------------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `… City Council`           |     34 | Includes Melbourne City (capital city) and four “Greater” cities: Greater Bendigo, Greater Dandenong, Greater Geelong, Greater Shepparton. |
+| `… Rural City Council`     |      6 | Ararat, Benalla, Horsham, Mildura, Swan Hill, Wangaratta. Still a city class, not a shire.                                                 |
+| `… Shire Council`          |     38 | The ordinary rural/urban-fringe shire class.                                                                                               |
+| `Borough of Queenscliffe`  |  **1** | The **only** borough in Victoria; do not normalise it to “Shire”.                                                                          |
+| **Total**                  | **79** |                                                                                                                                            |
 
 **Name-matching traps.** The official directory and Know Your Council do not always spell names
 the same way. Examples: `Colac Otway Shire Council` (directory) vs `Colac-Otway Shire` (KYC);
 `Greater Shepparton City Council` (directory) vs `Greater Shepparton` (KYC); `Borough of
 Queenscliffe` (directory) vs `Borough of Queenscliffe Council` (KYC page title). The directory also
-carries the note: *“From 26 Sept 2022 - Moreland City Councils change name to Merri-bek City
-Council”*. Build a name-alias table before any join; never match on display name alone.
+carries the note: _“From 26 Sept 2022 - Moreland City Councils change name to Merri-bek City
+Council”_. Build a name-alias table before any join; never match on display name alone.
 
 ### 1.3 Non-standard entities that are **not** one of the 79
 
@@ -111,15 +113,15 @@ These are often mistaken for councils because they have “local government” i
 funded by councils. They are **not** in the 79-council directory and must not be added to council
 totals.
 
-| Entity class | Examples (not exhaustive) | Why it is not a council |
-| --- | --- | --- |
-| Alpine resort management boards | Falls Creek, Lake Mountain, Mount Buller, Mount Hotham, Mount Stirling | Statutory resort managers under the Alpine Resorts (Management) Act 1997; not municipal councils. **Not re-verified this pass.** |
-| Regional waste management groups / Metropolitan Waste and Resource Recovery Group | Grampians, Gippsland, Barwon South West, Loddon Mallee, Metropolitan | Statutory waste-planning bodies funded by member councils; not councils. **Not re-verified this pass.** |
-| Catchment management authorities | Ten CMAs (e.g. North East, Goulburn Broken) | Natural-resource statutory authorities; not councils. **Not re-verified this pass.** |
-| Water corporations | 19 Victorian water corporations | State-owned water businesses; not councils. **Not re-verified this pass.** |
-| Regional library corporations | e.g. Geelong Regional Libraries | Library service corporations funded by councils/state; not councils. **Not re-verified this pass.** |
-| Peak/regional bodies | Municipal Association of Victoria (MAV), Victorian Local Governance Association (VLGA) | Membership/advocacy bodies; not councils. |
-| State regulator | Local Government Victoria (LGV), Department of Government Services | State government; not a council. |
+| Entity class                                                                      | Examples (not exhaustive)                                                              | Why it is not a council                                                                                                          |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Alpine resort management boards                                                   | Falls Creek, Lake Mountain, Mount Buller, Mount Hotham, Mount Stirling                 | Statutory resort managers under the Alpine Resorts (Management) Act 1997; not municipal councils. **Not re-verified this pass.** |
+| Regional waste management groups / Metropolitan Waste and Resource Recovery Group | Grampians, Gippsland, Barwon South West, Loddon Mallee, Metropolitan                   | Statutory waste-planning bodies funded by member councils; not councils. **Not re-verified this pass.**                          |
+| Catchment management authorities                                                  | Ten CMAs (e.g. North East, Goulburn Broken)                                            | Natural-resource statutory authorities; not councils. **Not re-verified this pass.**                                             |
+| Water corporations                                                                | 19 Victorian water corporations                                                        | State-owned water businesses; not councils. **Not re-verified this pass.**                                                       |
+| Regional library corporations                                                     | e.g. Geelong Regional Libraries                                                        | Library service corporations funded by councils/state; not councils. **Not re-verified this pass.**                              |
+| Peak/regional bodies                                                              | Municipal Association of Victoria (MAV), Victorian Local Governance Association (VLGA) | Membership/advocacy bodies; not councils.                                                                                        |
+| State regulator                                                                   | Local Government Victoria (LGV), Department of Government Services                     | State government; not a council.                                                                                                 |
 
 The **VLGGC questionnaire data and the LGPRF both cover the 79 councils only**; they do not make
 these bodies into councils. Keep them out of the population even if a future source lists them.
@@ -128,17 +130,17 @@ these bodies into councils. Keep them out of the population even if a future sou
 
 ## 2. Source coverage at a glance
 
-| Source | All 79 councils? | Audited GPFS line items? | Financial categories? | Capital $? | Grants $? | Open licence? | In DB now |
-| --- | --- | --- | --- | --- | --- | --- | ---: |
-| **VLGGC annual questionnaire** (VGC1/ABS1/ABS2-3 XLSX) | **Yes (79)** | **No** (council-supplied, unaudited) | **Yes** — 9 functions × 5 expense natures; revenue by source; balance sheet; cash flow; income statement categories | **Yes** — asset class × function | **Yes** — state/Cwlth recurrent & non-recurrent by function | **No** — attribution condition, no CC licence | 0 |
-| **LGPRF / Know Your Council** full data set | **Yes (79)** | No | Ratios/per-head only (59 measures) | No dollar total (asset-renewal ratio only) | Grants per head only | **CC BY 4.0** | 0 |
-| **Individual council annual reports / GPFS** | Yes, one per council | **Yes** | Yes — full statements, notes, special schedules | Yes | Yes | Per council; usually **not** open | 0 (no VIC council source) |
-| **VLGGC Annual Allocation Report** (FAG) | Yes | No | No | No | **Yes** — Commonwealth Financial Assistance Grant allocations | Attribution condition | 0 |
-| **data.vic CKAN** | No GPFS | No | LGPRF, waste, LGA profiles only | No | No | Per dataset, usually CC BY | 0 council financial |
-| **Victorian local government waste data** | Yes (surveyed councils) | No | Service tonnages and costs | No | No | **CC BY 4.0** | 0 |
-| **VAGO local government audits** | Selected councils | No | Narrative/aggregate | Occasionally | Occasionally | VAGO terms | 0 |
-| **ABS GFS** | No (local-government aggregate) | No | COFOG/GFS aggregate | No | No | CC BY | 169 rows, aggregate |
-| **VIC Budget (`vic-budget`)** | No (state) | No | State COFOG/agency statements | State capital | No | CC BY 4.0 | 28 rows, not council |
+| Source                                                 | All 79 councils?                | Audited GPFS line items?             | Financial categories?                                                                                               | Capital $?                                 | Grants $?                                                     | Open licence?                                 |                 In DB now |
+| ------------------------------------------------------ | ------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------------------- | --------------------------------------------- | ------------------------: |
+| **VLGGC annual questionnaire** (VGC1/ABS1/ABS2-3 XLSX) | **Yes (79)**                    | **No** (council-supplied, unaudited) | **Yes** — 9 functions × 5 expense natures; revenue by source; balance sheet; cash flow; income statement categories | **Yes** — asset class × function           | **Yes** — state/Cwlth recurrent & non-recurrent by function   | **No** — attribution condition, no CC licence |                         0 |
+| **LGPRF / Know Your Council** full data set            | **Yes (79)**                    | No                                   | Ratios/per-head only (59 measures)                                                                                  | No dollar total (asset-renewal ratio only) | Grants per head only                                          | **CC BY 4.0**                                 |                         0 |
+| **Individual council annual reports / GPFS**           | Yes, one per council            | **Yes**                              | Yes — full statements, notes, special schedules                                                                     | Yes                                        | Yes                                                           | Per council; usually **not** open             | 0 (no VIC council source) |
+| **VLGGC Annual Allocation Report** (FAG)               | Yes                             | No                                   | No                                                                                                                  | No                                         | **Yes** — Commonwealth Financial Assistance Grant allocations | Attribution condition                         |                         0 |
+| **data.vic CKAN**                                      | No GPFS                         | No                                   | LGPRF, waste, LGA profiles only                                                                                     | No                                         | No                                                            | Per dataset, usually CC BY                    |       0 council financial |
+| **Victorian local government waste data**              | Yes (surveyed councils)         | No                                   | Service tonnages and costs                                                                                          | No                                         | No                                                            | **CC BY 4.0**                                 |                         0 |
+| **VAGO local government audits**                       | Selected councils               | No                                   | Narrative/aggregate                                                                                                 | Occasionally                               | Occasionally                                                  | VAGO terms                                    |                         0 |
+| **ABS GFS**                                            | No (local-government aggregate) | No                                   | COFOG/GFS aggregate                                                                                                 | No                                         | No                                                            | CC BY                                         |       169 rows, aggregate |
+| **VIC Budget (`vic-budget`)**                          | No (state)                      | No                                   | State COFOG/agency statements                                                                                       | State capital                              | No                                                            | CC BY 4.0                                     |      28 rows, not council |
 
 ---
 
@@ -156,16 +158,16 @@ authoritative place to re-check each year.
 from every council. The page says the return is also used to reduce duplication for the ABS, the
 Australian Local Government Association and other agencies. The workbook family is:
 
-| File | Content | Granularity |
-| --- | --- | --- |
-| `VGC1` Expenditure and Revenue | Recurrent and non-recurrent expenditure/revenue | 9 functions (Governance; Family & Community Services; Aged & Disabled Services; Recreation & Culture; Waste Management; Traffic & Street Management; Environment; Business & Economic Services; Local Roads & Bridges) × 5 expense natures (Employee Benefits; Materials & Services; Depreciation & Amortisation; Finance Costs; Other Recurrent), plus revenue by rates, statutory fees/fines/user fees, State grants (recurrent/non-recurrent), Commonwealth grants (recurrent/non-recurrent), contributions/reimbursements |
-| `VGC2` Valuations and Rates | Property valuations and rates | Council-level rates/valuation data — **overlaps VGC1 rates revenue** |
-| `VGC3` Local Roads | Road length/expenditure | Road inventory — not a financial statement |
-| `ABS1` Capital Assets and Outlays | Capital outlays and sales | 9 functions × asset classes (Land; Buildings; Construction excluding buildings; Office Equipment; Transport Equipment; Other) |
-| `ABS2-3` Balance Sheets and Other Finance | Balance sheet, cash flow, reconciliation, income statement | Full code-level balance sheet (assets, liabilities, equity), cash-flow categories, income-statement categories |
-| `ALG1` Road Inventory Expenditure & Financial Data | Road data | Not a financial statement |
-| `LGV1` Council Employment | Employment profile | Not a financial statement |
-| Questionnaire + Manual | Definitions and certification | Manual is the definitional authority |
+| File                                               | Content                                                    | Granularity                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VGC1` Expenditure and Revenue                     | Recurrent and non-recurrent expenditure/revenue            | 9 functions (Governance; Family & Community Services; Aged & Disabled Services; Recreation & Culture; Waste Management; Traffic & Street Management; Environment; Business & Economic Services; Local Roads & Bridges) × 5 expense natures (Employee Benefits; Materials & Services; Depreciation & Amortisation; Finance Costs; Other Recurrent), plus revenue by rates, statutory fees/fines/user fees, State grants (recurrent/non-recurrent), Commonwealth grants (recurrent/non-recurrent), contributions/reimbursements |
+| `VGC2` Valuations and Rates                        | Property valuations and rates                              | Council-level rates/valuation data — **overlaps VGC1 rates revenue**                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `VGC3` Local Roads                                 | Road length/expenditure                                    | Road inventory — not a financial statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `ABS1` Capital Assets and Outlays                  | Capital outlays and sales                                  | 9 functions × asset classes (Land; Buildings; Construction excluding buildings; Office Equipment; Transport Equipment; Other)                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `ABS2-3` Balance Sheets and Other Finance          | Balance sheet, cash flow, reconciliation, income statement | Full code-level balance sheet (assets, liabilities, equity), cash-flow categories, income-statement categories                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `ALG1` Road Inventory Expenditure & Financial Data | Road data                                                  | Not a financial statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `LGV1` Council Employment                          | Employment profile                                         | Not a financial statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Questionnaire + Manual                             | Definitions and certification                              | Manual is the definitional authority                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 **Coverage verified this pass.** The 2024-25 `VGC1` workbook has **79 council rows** in the
 `Total Exp` sheet (Alpine to Yarriambiack, no duplicates), and the 2024-25 `ABS1` has **79 council
@@ -202,10 +204,10 @@ and **uploaded annually in May**; the 2024-25 files were archived in August 2026
 the current-year file is available before May.
 
 **Licence.** **Not an open-data licence.** The workbook's “Conditions of Use” says (verbatim):
-*“Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission
-data collection.”* The page adds a disclaimer that the data is produced from council-supplied
-returns, councils give permission for online release, and the Commission *“does not guarantee the
-material to be free from error”*. Treat this as **attribution + permission**, not CC BY. A
+_“Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission
+data collection.”_ The page adds a disclaimer that the data is produced from council-supplied
+returns, councils give permission for online release, and the Commission _“does not guarantee the
+material to be free from error”_. Treat this as **attribution + permission**, not CC BY. A
 publication decision is required before any row is exposed.
 
 **Feasibility without double counting.** **High value, medium effort, high double-count risk.**
@@ -215,7 +217,7 @@ Parsing is easy (one workbook family, stable sheet names, 79 rows). The traps:
   `Total Expenditure (Functions and Others)` matches the GPFS total expenses exactly. Treat the
   VGC1 total as the same measure as GPFS total expenses for that council-year, but **do not add
   the function rows to it** — the function rows sum to the functions-only total, and the `Other
-  (Main Roads & Other)` column bridges that to the full total.
+(Main Roads & Other)` column bridges that to the full total.
 - **VGC1 recurrent vs non-recurrent tabs.** The workbook separates recurrent and non-recurrent
   expenditure/revenue. The `Total Exp` sheet's last column is the functions-and-other total; the
   non-recurrent tabs are a separate cut. Do not add the recurrent total to the non-recurrent total
@@ -233,10 +235,10 @@ Parsing is easy (one workbook family, stable sheet names, 79 rows). The traps:
   says no cross-council totals. Do not publish it as a platform aggregate; if it is ever shown, label
   it as a source-provided total, not a computed one.
 - **Questionnaire, not audited GPFS.** The manual says definitions are the same as the annual
-  financial statements and *“As much as possible, follow the Model Financial Report”*, but also
-  *“Where financial statements have not been completed, current estimates … should be sourced from
-  the asset register”* and *“Please provide best estimates where actual information is not
-  available.”* The data is therefore **not audited** and can be an estimate. Mark it
+  financial statements and _“As much as possible, follow the Model Financial Report”_, but also
+  _“Where financial statements have not been completed, current estimates … should be sourced from
+  the asset register”_ and _“Please provide best estimates where actual information is not
+  available.”_ The data is therefore **not audited** and can be an estimate. Mark it
   `provisional`/`questionnaire` until reconciled.
 
 **Bendigo anchor (FY2024-25, whole dollars unless stated):**
@@ -255,8 +257,8 @@ LGV guidance <https://www.localgovernment.vic.gov.au/strengthening-councils/perf
 (live 403; verified via Wayback capture 25 October 2026).
 
 **What it is.** The Local Government Performance Reporting Framework (LGPRF) is mandatory for all
-Victorian councils. LGV's page says it is *“made up of 59 measures from a range of service areas,
-including roads, planning, animal management and waste”*, plus a **27-item Governance and
+Victorian councils. LGV's page says it is _“made up of 59 measures from a range of service areas,
+including roads, planning, animal management and waste”_, plus a **27-item Governance and
 Management checklist**.
 
 **Current rows at source.** The full data set covers **2020-21 through 2024-25**, **79 councils**,
@@ -273,9 +275,9 @@ names.
   returned **HTTP 403**; the archive copy is byte-verified.
 - DataVic metadata: <https://discover.data.vic.gov.au/dataset/local-government-performance-reporting>
   (fetched via CKAN API, HTTP 200). Licence **CC BY 4.0** (`license_id: cc-by`). Notes say the data
-  *“may change as councils occasionally need to update their performance data”* and that downloaders
-  agree *“not to use the council performance data set to aid in the publication of overly simplistic
-  league tables of councils.”*
+  _“may change as councils occasionally need to update their performance data”_ and that downloaders
+  agree _“not to use the council performance data set to aid in the publication of overly simplistic
+  league tables of councils.”_
 
 **Granularity.** Long-format indicator rows: `Council`, `Group`, `ID`, `Description`,
 `Service Provided`, `Data applicable?`, `Result`, `Variation`, then forecast columns. The
@@ -311,7 +313,7 @@ agreeing the population and expense base.
 **audited financial statements** (Local Government Act 2020 (Vic) s.98(2)(c)). The current Act is
 version 027, in force 20 October 2026 (authorised DOCX SHA-256
 `ef5861a757185f150c62b9b7e43e44d87bb90f37ef37c6edf65b3b1f1ffb6ddc`); s.98(2) reads (verbatim):
-*“an annual report must contain the following— … (c) audited financial statements; …”*. Section
+_“an annual report must contain the following— … (c) audited financial statements; …”_. Section
 99 requires the statements to be prepared, audited and certified; s.100 requires the annual report
 to be presented at a Council meeting open to the public within **4 months of the end of the
 financial year** (or before election day in an election year).
@@ -409,12 +411,12 @@ same grant revenue line in VGC1. Keep the funding source explicit: Commonwealth 
 **Current rows at source.** Targeted `package_search` queries found **no consolidated VIC council
 GPFS dataset**. The council-relevant datasets are:
 
-| Dataset | What it is | Licence |
-| --- | --- | --- |
-| `local-government-performance-reporting` (Know Your Council / LGPRF) | 79-council performance indicators, 2020-25 | CC BY 4.0 |
-| `victorian-local-government-waste-data-dashboard` | Council waste tonnages/costs | CC BY 4.0 |
-| `2011-local-government-area-profile`, `2015-local-government-area-profiles`, individual LGA profiles | ABS/state demographic and economic profiles | CC BY 4.0 |
-| `specific-purpose-grants` | State grants dataset (not council financial statements) | per dataset |
+| Dataset                                                                                              | What it is                                              | Licence     |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ----------- |
+| `local-government-performance-reporting` (Know Your Council / LGPRF)                                 | 79-council performance indicators, 2020-25              | CC BY 4.0   |
+| `victorian-local-government-waste-data-dashboard`                                                    | Council waste tonnages/costs                            | CC BY 4.0   |
+| `2011-local-government-area-profile`, `2015-local-government-area-profiles`, individual LGA profiles | ABS/state demographic and economic profiles             | CC BY 4.0   |
+| `specific-purpose-grants`                                                                            | State grants dataset (not council financial statements) | per dataset |
 
 **Granularity.** Indicators, waste services, demographics — **not** council financial statements.
 A CKAN search is still worth doing per council (some councils publish topic data), but do not
@@ -500,36 +502,37 @@ The 245 `dubbo-council` rows are NSW budget/estimate lines and must not be mixed
 
 ### 4.2 No VIC council rows
 
-There is no `vic-council`, `vic-vlgc` or council annual-report source in the DB. The VLGGC
-workbooks and LGPRF data set are **not ingested**. Any future ingestion must upsert on a natural key
-that includes `council`, `fiscal_year`, `statement`, `function`, `line_item` and `measure_type` so
-counts stay stable and no duplicate natural keys appear.
+At planning time there was no `vic-council`, `vic-vlgc` or council annual-report source in the DB.
+Pilot A now adds the VLGGC VGC1 source `vic-vlgc-vgc1` (5,401 non-additive rows, 79 councils; see
+§11); the LGPRF, ABS1 and ABS2-3 workbooks are still **not ingested**. Ingestion upserts on a
+natural key that includes the council, fiscal year, statement, function/nature line and measure
+type so counts stay stable and no duplicate natural keys appear.
 
 ---
 
 ## 5. Double-count map (the rules to carry into any future connector)
 
-| A | B | Relationship | Rule |
-| --- | --- | --- | --- |
-| VGC1 total expenditure | GPFS total expenses | Same total for Bendigo FY2024-25 (exact to $0.04) | Use **one** as the authority per council-year; never add. |
-| VGC1 function rows | VGC1 total expenditure | Components of the functions-only total; the `Other` column bridges to the full total | Never add both; the total is the sum. |
-| VGC1 recurrent total | VGC1 non-recurrent tabs | Separate cuts of the return | Do not add unless the manual's mapping proves disjointness; confirm first. |
-| VGC1 expenditure by function | VGC1 expenditure by nature | Two cuts of the same total | Never add. |
-| VGC1 rates revenue | VGC2 rates/valuations | Same rates total linked by the manual (VGC2 code 04999(6)) | Never add VGC2 rates to VGC1 revenue. |
-| ABS1 capital outlays | VGC1 expenses | Capital vs recurrent | Never add; reconcile capital to cash flow/notes. |
-| ABS2-3 balance sheet | ABS2-3 income statement | Different statements | Never add. |
-| VLGGC `Totals` row | Council rows | Source-provided cross-council total | Do not publish as a platform aggregate; no cross-council totals. |
-| LGPRF `C1`/`C4`/`C5` | VGC1 dollars | Ratios/per-head vs dollars | Never add; use only as a cross-check after agreeing population/base. |
-| LGPRF ratios | Each other | Different denominators | Never sum across indicators. |
-| VLGGC FAG allocation | VGC1 grant revenue | FAG is a component of grant income | Do not add to expenditure; do not double count inside grants. |
-| VGC1 State grants | VGC1 Commonwealth grants | Different funding sources | Can be shown separately; do not collapse into a single “grants” total without labels. |
-| Waste dashboard costs | VGC1 Waste Management function | Different collections/boundaries | Never add; service overlay only. |
-| Council GPFS consolidated | Council fund statements | Consolidated includes funds | Pick one basis; never sum. |
-| GPFS expenses by function | GPFS expenses by nature | Two cuts | Never sum. |
-| GPFS grant revenue | GPFS notes/special schedules | Overlapping disclosures | Do not add both. |
-| Council rows | `vic-budget` state rows | State vs local | Never add; different reporting entity. |
-| Council rows | ABS GFS local-government aggregate | Aggregate vs entity | Never add; benchmark only. |
-| Council rows | VAGO narrative | Audit context | Never convert narrative to rows. |
+| A                            | B                                  | Relationship                                                                         | Rule                                                                                  |
+| ---------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| VGC1 total expenditure       | GPFS total expenses                | Same total for Bendigo FY2024-25 (exact to $0.04)                                    | Use **one** as the authority per council-year; never add.                             |
+| VGC1 function rows           | VGC1 total expenditure             | Components of the functions-only total; the `Other` column bridges to the full total | Never add both; the total is the sum.                                                 |
+| VGC1 recurrent total         | VGC1 non-recurrent tabs            | Separate cuts of the return                                                          | Do not add unless the manual's mapping proves disjointness; confirm first.            |
+| VGC1 expenditure by function | VGC1 expenditure by nature         | Two cuts of the same total                                                           | Never add.                                                                            |
+| VGC1 rates revenue           | VGC2 rates/valuations              | Same rates total linked by the manual (VGC2 code 04999(6))                           | Never add VGC2 rates to VGC1 revenue.                                                 |
+| ABS1 capital outlays         | VGC1 expenses                      | Capital vs recurrent                                                                 | Never add; reconcile capital to cash flow/notes.                                      |
+| ABS2-3 balance sheet         | ABS2-3 income statement            | Different statements                                                                 | Never add.                                                                            |
+| VLGGC `Totals` row           | Council rows                       | Source-provided cross-council total                                                  | Do not publish as a platform aggregate; no cross-council totals.                      |
+| LGPRF `C1`/`C4`/`C5`         | VGC1 dollars                       | Ratios/per-head vs dollars                                                           | Never add; use only as a cross-check after agreeing population/base.                  |
+| LGPRF ratios                 | Each other                         | Different denominators                                                               | Never sum across indicators.                                                          |
+| VLGGC FAG allocation         | VGC1 grant revenue                 | FAG is a component of grant income                                                   | Do not add to expenditure; do not double count inside grants.                         |
+| VGC1 State grants            | VGC1 Commonwealth grants           | Different funding sources                                                            | Can be shown separately; do not collapse into a single “grants” total without labels. |
+| Waste dashboard costs        | VGC1 Waste Management function     | Different collections/boundaries                                                     | Never add; service overlay only.                                                      |
+| Council GPFS consolidated    | Council fund statements            | Consolidated includes funds                                                          | Pick one basis; never sum.                                                            |
+| GPFS expenses by function    | GPFS expenses by nature            | Two cuts                                                                             | Never sum.                                                                            |
+| GPFS grant revenue           | GPFS notes/special schedules       | Overlapping disclosures                                                              | Do not add both.                                                                      |
+| Council rows                 | `vic-budget` state rows            | State vs local                                                                       | Never add; different reporting entity.                                                |
+| Council rows                 | ABS GFS local-government aggregate | Aggregate vs entity                                                                  | Never add; benchmark only.                                                            |
+| Council rows                 | VAGO narrative                     | Audit context                                                                        | Never convert narrative to rows.                                                      |
 
 ---
 
@@ -556,7 +559,7 @@ No PDF batch; no 79-council ingestion.**
 5. **It avoids a publication decision on 79 different council copyrights** in the first step. The
    VLGGC attribution condition still needs a decision, but it is one decision, not 79.
 
-**Pilot scope (next item, not this one):**
+**Pilot scope (implemented — see §11):**
 
 - Parse the VGC1 `Total Exp`/`Total Rev` sheets, the nine function tabs and the five expense
   columns; the ABS1 `Total Outlays` sheet and asset classes; the ABS2-3 `Balance Sheets`,
@@ -691,15 +694,15 @@ is docs-only.
 
 ## 9. Ambiguities / open questions (verbatim where possible)
 
-1. **VLGGC licence.** *“Content from this spreadsheet should be attributed as Victorian Local
-   Government Grants Commission data collection.”* — Is that sufficient for publication, or is
-   written permission needed? There is no CC licence. The same page says councils *“provide
-   permission for this online release”*. One decision covers all 79, unlike the per-council GPFS.
-2. **VLGGC data quality.** *“The data in these spreadsheets is provided for information purposes
+1. **VLGGC licence.** _“Content from this spreadsheet should be attributed as Victorian Local
+   Government Grants Commission data collection.”_ — Is that sufficient for publication, or is
+   written permission needed? There is no CC licence. The same page says councils _“provide
+   permission for this online release”_. One decision covers all 79, unlike the per-council GPFS.
+2. **VLGGC data quality.** _“The data in these spreadsheets is provided for information purposes
    only… the Victorian Local Government Grants Commission does not guarantee the material to be
-   free from error.”* And the manual says *“Where financial statements have not been completed,
-   current estimates of the respective values should be sourced from the asset register”* and
-   *“Please provide best estimates where actual information is not available.”* — Which rows are
+   free from error.”_ And the manual says _“Where financial statements have not been completed,
+   current estimates of the respective values should be sourced from the asset register”_ and
+   _“Please provide best estimates where actual information is not available.”_ — Which rows are
    actuals vs estimates? The workbook does not flag them. The pilot must reconcile, not assume.
 3. **Capital outlay bridge.** ABS1 total capital outlays for Bendigo are `$56,221,353.20`; the GPFS
    cash-flow payments are `$55,748k` (difference `$473,353`, 0.85%). Is the difference accrual vs
@@ -717,7 +720,7 @@ is docs-only.
    source-provided label? (Recommendation: ignore for publication; no platform-computed total.)
 7. **Name aliases.** Directory vs KYC spellings differ (`Colac Otway`/`Colac-Otway`,
    `Greater Shepparton City`/`Greater Shepparton`, `Borough of Queenscliffe`/`Borough of
-   Queenscliffe Council`). Which canonical name/ID should the platform use? A council ID (e.g. ABS
+Queenscliffe Council`). Which canonical name/ID should the platform use? A council ID (e.g. ABS
    LGA code) is safer than a display name.
 8. **Non-council entities.** Are alpine resort boards, water corporations, waste groups, CMAs,
    library corporations, MAV/VLGA ever to be modelled? (Recommendation: no, not as councils; if
@@ -749,3 +752,80 @@ is docs-only.
   administrators can change the population, so re-read the official directory each year.
 - It does not treat the VLGGC questionnaire as audited GPFS: it is a council-supplied return that
   reconciles well at the totals but is not the auditor's statement.
+
+## 11. Pilot A implementation record (18 November 2026)
+
+**Scope delivered:** VLGGC VGC1 2024-25 only — income/expense by function and nature for all 79
+councils. ABS1 capital outlays, ABS2-3 balance sheets/cash flow, the 79 individual council GPFS
+PDFs and every other state remain a later item.
+
+**Source and archive**
+
+- Official landing page:
+  <https://www.localgovernment.vic.gov.au/funding-programs/victoria-grants-commission/consultation-and-operations>
+- Official resource:
+  <https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0030/225957/2024-25-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx>
+- The live page/asset return a Cloudflare challenge (HTTP 403) to automated clients. The connector
+  resolves the documented Wayback snapshot through the availability API
+  (`20260818214833`), retains the official URLs as provenance, and refuses to publish unless the
+  bytes match the verified hash.
+- Archived outside the repo at
+  `~/ausspend-source-archive/vic-vlgc-vgc1/2024-25-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx`
+  — **847,818 bytes, SHA-256
+  `9d72ff7005a48acec0361b36d47e54057363ee5503ddffedebc6158fc54b5572`**. Metadata-only manifest:
+  [`docs/source-archive/vic-vlgc-vgc1-2024-25.json`](./source-archive/vic-vlgc-vgc1-2024-25.json).
+
+**Licence / attribution (not CC BY).** The workbook's Conditions of Use say (verbatim):
+_“Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission
+data collection.”_ The disclaimer adds that councils _“provide permission for this online release”_
+and the Commission _“does not guarantee the material to be free from error.”_ This is
+**attribution + permission**, not a CC licence. The source metadata records the terms verbatim; only
+derived rows are emitted and the workbook is not redistributed.
+
+**Units.** Whole AUD (cells carry cents), converted explicitly to integer cents at ×100. The unit is
+never inferred from magnitude.
+
+**Rows and no-cross-total proof**
+
+- 79 council entities; council labels expanded deterministically (`Alpine (S)` → `Alpine Shire
+Council`, `Queenscliffe (B)` → `Borough of Queenscliffe`) and the printed label retained in
+  `vlgc_council_label`.
+- 5,401 records: 3,555 function×nature rows (79 × 9 functions × 5 natures), 1,396 function totals /
+  printed subtotals / bridges / grand totals.
+- The source **Totals row is suppressed on all 11 parsed sheets** (2 total sheets + 9 function
+  tabs); no record has a Totals entity and no cross-council total is published or computed.
+- Every row is `source_id: vic-vlgc-vgc1`, `statement: income`, `jurisdiction_level: local`,
+  `jurisdiction: VIC`, `measure_type: actual`, `aggregation_role: agency_detail`,
+  `data_quality_flag: provisional/local_government`, `verified: false`.
+- VGC1 functions/natures are questionnaire dimensions, **not COFOG**; no `function_code` is set.
+- No row is mixed with `vic-budget`, ABS GFS, LGPRF, waste or NSW council data.
+
+**Bendigo reconciliation gate.** City of Greater Bendigo FY2024-25:
+
+| Line              | VGC1 (whole AUD) | Audited GPFS (`$'000`) | Result                         |
+| ----------------- | ---------------: | ---------------------: | ------------------------------ |
+| Total expenditure | `252,760,999.96` |              `252,761` | matches to 4c (GPFS rounding)  |
+| Total revenue     | `277,002,000.17` |              `277,002` | matches to 17c (GPFS rounding) |
+
+Only these two Bendigo totals carry `reconciliation_status: reconciled_to_gpfs`; every other row
+(including Bendigo’s function/nature cuts) remains `questionnaire_unaudited`, because the GPFS does
+not publish function-level lines to bridge to. Totals are never forced: if the Bendigo gate fails,
+the connector raises the premise falsifier and publishes nothing.
+
+**DB delta.** Before pilot A: **515,955** measures. After: **521,356** (+5,401, all
+`vic-vlgc-vgc1`). No deletes, no updates to another source, no synthetic rows.
+
+**Reproduce.**
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export VGC1_SOURCE_PATH=/path/to/2024-25-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx
+npm run ingest:vic-vlgc
+# [ingest:vic-vlgc] vic-vlgc-vgc1: success fetched=5401 upserted=5401
+# [ingest:vic-vlgc] db source_rows=5401 distinct_councils=79 totals_entities=0 all_measures=521356
+```
+
+Checks: `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`,
+`npm run build`, plus `npx vitest run server/test/vic-vlgc-vgc1.test.ts` (79 entities, Totals
+suppression, unit conversion, Bendigo reconciliation, no-cross-total, idempotency, natural keys and
+licence metadata).

@@ -47,6 +47,7 @@ const LIVE_IDS = [
   'liverpool-gpfs',
   'ku-ring-gai-gpfs',
   'vic-budget',
+  'vic-vlgc-vgc1',
   'qld-budget',
   'qld-qgip',
   'acnc-charity',
@@ -64,9 +65,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships fifty-six connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(56);
-    expect(new Set(CONNECTOR_IDS).size).toBe(56);
+  it('ships fifty-seven connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(57);
+    expect(new Set(CONNECTOR_IDS).size).toBe(57);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),

@@ -35,6 +35,7 @@
     "ingest:qld": "npm run build -w shared && tsx scripts/ingest-qld.ts",
     "ingest:qgip-years": "npm run build -w shared && tsx scripts/ingest-qgip-years.ts",
     "archive:vic": "npm run build -w shared && tsx scripts/vic-source-archive.ts",
+    "ingest:vic-vlgc": "npm run build -w shared && tsx scripts/ingest-vic-vlgc.ts",
     "grantconnect:chunks": "npm run build -w shared && tsx scripts/grantconnect-chunks.ts",
     "archive:nsw": "npm run build -w shared && tsx scripts/nsw-source-archive.ts",
     "archive": "npm run build -w shared && tsx scripts/source-archive.ts",
