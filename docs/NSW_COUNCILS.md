@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Twenty-four council GPFS sources have landed as
+**Status:** the inventory and plan below are unchanged. Twenty-six council GPFS sources have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -35,7 +35,8 @@ The Council of the City of Ryde FY2024-25 GPFS (**§7.23**) then added exactly *
 rows (**515,819** → **515,836**). North Sydney Council FY2024-25 GPFS (**§7.24**) then added exactly
 **18** `north-sydney-gpfs` rows (**515,836** → **515,854**). The City of Canada Bay Council
 FY2024-25 GPFS (**§7.25**) then added exactly **17** `canada-bay-gpfs` rows (**515,854** →
-**515,871**).
+**515,871**). Cumberland City Council FY2024-25 GPFS (**§7.26**) then added exactly **17**
+`cumberland-gpfs` rows (**515,871** → **515,888**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -80,7 +81,10 @@ AusTender/GrantConnect/ACNC/data.nsw/QGIP rows whose `delivery_entity` merely me
 the 6 pre-existing AusTender/GrantConnect rows whose string is case-insensitively exactly "CITY OF
 CANADA BAY COUNCIL" / "City of Canada Bay Council" (2 uppercase AusTender contracts, 1 uppercase
 GrantConnect grant and 3 exact-case GrantConnect grants) and the 6 other
-AusTender/GrantConnect/ACNC rows whose `delivery_entity` merely mentions Canada Bay,
+AusTender/GrantConnect/ACNC rows whose `delivery_entity` merely mentions Canada Bay, the 6
+pre-existing GrantConnect rows whose `delivery_entity` is case-insensitively exactly "Cumberland
+Council" (1 uppercase and 5 exact-case grants) and the 33 other
+AusTender/GrantConnect/ACNC/data.nsw rows whose `delivery_entity` merely mentions Cumberland,
 and every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 18 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
@@ -294,7 +298,8 @@ FY2024-25 (`willoughby-gpfs`, §7.19), 18 for Inner West Council FY2024-25 (`inn
 §7.20) and 18 for Bayside Council FY2024-25 (`bayside-gpfs`, §7.21), and 17 for Randwick City
 Council FY2024-25 (`randwick-gpfs`, §7.22) and 17 for the Council of the City of Ryde FY2024-25
 (`ryde-gpfs`, §7.23) and 18 for North Sydney Council FY2024-25 (`north-sydney-gpfs`, §7.24) and 17
-for the City of Canada Bay Council FY2024-25 (`canada-bay-gpfs`, §7.25) — all separate source ids. The
+for the City of Canada Bay Council FY2024-25 (`canada-bay-gpfs`, §7.25) and 17 for Cumberland City
+Council FY2024-25 (`cumberland-gpfs`, §7.26) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows.
@@ -2443,6 +2448,96 @@ the 6 pre-existing exact rows) and exact published-string rows 3 → **20**; row
 upserted the same 17 natural keys and left the DB total unchanged (idempotent). No deletes or updates
 to any other source.
 
+### 7.26 Twenty-sixth council — Cumberland City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from Cumberland City Council's official Key council reports page
+<https://www.cumberland.nsw.gov.au/key-council-reports>. The page links a dedicated **"Annual
+Financial Statements 2024-2025"** PDF at
+<https://www.cumberland.nsw.gov.au/sites/default/files/inline-files/cumberland-council-annual-financial-statements-2024-2025.pdf>
+(the page also links the separate Annual Report 2024-2025, which the connector deliberately does not
+select). The 108-page PDF contains the signed General Purpose Financial Statements — Income Statement
+PDF p5 / printed p4; Statement of Comprehensive Income PDF p6 / printed p5; B1-1 "Total functions and
+activities" PDF p14-15 / printed p13-14; note B3-3 depreciation PDF p28 / printed p27 — and the
+independent auditor's reports on the financial statements. The statements were signed in accordance
+with a Council resolution made on 29 October 2025.
+
+The official page and PDF link are reachable with plain HTTP; no WAF challenge was encountered on the
+successful requests, so the connector uses the direct `fetch` path (the CMS returned an intermittent
+Varnish 403 for some user agents, but not for the documented direct fetch). It parses the FY2024-25
+"Annual Financial Statements" anchor from the official page HTML (no hard-coded PDF URL), downloads
+the exact bytes, and re-verifies them. Exact bytes archived outside the repo at
+`~/ausspend-source-archive/cumberland-gpfs/cumberland-city-council-annual-financial-statements-2024-25.pdf`:
+**7,165,368 bytes**, SHA-256
+`4c1d003cd8a27e72e71c9ebd75bd80f1c67931ef551b4baa3d7c0010d4dc267e` (`hash_verified: true`). The
+printed unit is explicit `$ '000` (thousands) on the Income Statement, Statement of Comprehensive
+Income, B1-1 and depreciation note; a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The PDF text stream places the Original unaudited budget amount before each
+Income Statement line label and the FY2024-25 actual immediately after it (followed by FY2023-24), so
+each emitted value is the first amount after the printed label. The expense subtotal contains the
+phrase "depreciation, amortisation and impairment of non-financial assets", so the actual depreciation
+line is read from the last occurrence. The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                           |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                   |                          `$277,139` thousand | = `$277,139,000`                                 |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$277,139` thousand | = printed total                                  |
+| Expense-by-nature components sum (employee + materials + borrowing + other + net loss on disposal)                           |                          `$193,611` thousand | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$48,954`)                           | `$193,611` + `$48,954` = `$242,565` thousand | = printed face-statement total expenses          |
+| Total income `$277,139` − total expenses `$242,565`                                                                          |                           `$34,574` thousand | = printed operating result and net result        |
+| B1-1 Total functions and activities — income                                                                                 |                          `$277,139` thousand | = face statement                                 |
+| B1-1 Total functions and activities — expenses                                                                               |                          `$242,564` thousand | = `$242,564,000` (printed; `$1k` rounding)       |
+| B1-1 Total functions and activities — operating result                                                                       |                           `$34,575` thousand | = printed (published `$1k` rounding vs face)     |
+| B1-1 grants and contributions                                                                                                |                           `$42,410` thousand | = operating `$16,225` + capital `$26,185`        |
+| Net operating result before capital grants                                                                                   |    `$34,574` − `$26,185` = `$8,389` thousand | = printed before-capital surplus (evidence only) |
+| Statement of Comprehensive Income net result                                                                                 |                           `$34,574` thousand | = Income Statement net result                    |
+| Statement of Comprehensive Income total (`$34,574` + `$48,015` revaluation)                                                  |                           `$82,589` thousand | = printed total comprehensive income             |
+| Note B3-3 total depreciation and amortisation costs                                                                          |                           `$48,954` thousand | = face depreciation/amortisation/impairment line |
+| Note B3-3 total depreciation, amortisation and impairment for non-financial assets                                           |                           `$48,954` thousand | = face depreciation/amortisation/impairment line |
+
+Total expenses is the printed face-statement bridge of expenses excluding depreciation (`$193,611`
+thousand) plus depreciation/amortisation/impairment (`$48,954` thousand) = `$242,565` thousand, which
+equals printed total income (`$277,139` thousand) less the printed operating result (`$34,574`
+thousand). The B1-1 "Total functions and activities" row prints expenses `$242,564` thousand and
+operating result `$34,575` thousand — a published **$1 thousand** function-row rounding difference
+from the face statement — which the connector accepts only at exactly that one-unit tolerance and
+retains as reconciliation evidence; B1-1 income and grants reconcile exactly. The printed before-capital
+result is a surplus of `$8,389` thousand; it is kept in the reconciliation evidence only and is not
+emitted as a row.
+
+**Rows.** 17 rows, source id `cumberland-gpfs`, `source_dataset` "Cumberland City Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`, `jurisdiction:
+"NSW"`, `delivery_entity: "Cumberland City Council"` (the exact published entity name in the audited
+statements), `data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines
+are total revenue `$277,139,000`, total expenses `$242,565,000`, employee expenses `$95,814,000`,
+depreciation/amortisation/impairment `$48,954,000`, operating government grants `$16,225,000`, capital
+government grants `$26,185,000`, net loss on disposal of assets `$261,000` and net result
+`$34,574,000`; the printed face-statement revenue and expense components are included for provenance.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing same-entity
+rows are preserved untouched and never summed: before this ingest there were **no rows** whose
+`delivery_entity` was exactly "Cumberland City Council"; **6 case-insensitive exact "Cumberland
+Council" rows** (1 uppercase GrantConnect grant and 5 exact-case GrantConnect grants) and **33 other
+rows** whose `delivery_entity` merely mentions Cumberland under other strings (AusTender, GrantConnect,
+ACNC, data.nsw) keep their per-source counts identical before and after. All twenty-five other council
+GPFS sources are unchanged (Dubbo 18, City of Sydney 18, Blacktown 17, Parramatta 17, Northern Beaches
+18, Canterbury-Bankstown 17, Sutherland Shire 17, Wollongong 17, Newcastle 17, Lake Macquarie 17,
+Maitland 7, Coffs Harbour 17, MidCoast 17, Port Macquarie-Hastings 17, Tweed Shire 17, Shoalhaven 17,
+Shellharbour 17, Waverley 17, Willoughby 18, Inner West 18, Bayside 18, Randwick 17, Ryde 17, North
+Sydney 18, Canada Bay 17). Government grant rows carry `potential_double_count: true` because they may
+overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,871 → **515,888** (exactly +17); `cumberland-gpfs`
+**17**; all twenty-five other GPFS sources unchanged (Canada Bay still 17, North Sydney still 18,
+Ryde still 17, Maitland still 7); `data-nsw-ckan` still **3,472**; `dubbo-council` still **245**;
+case-insensitive exact "Cumberland City Council" rows 0 → **17** and case-insensitive exact
+"Cumberland Council" rows still **6**; rows whose `delivery_entity` mentions Cumberland 39 → **56**;
+`data_sources` 51 → **52**. A second ingest run upserted the same 17 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -2485,7 +2580,8 @@ to any other source.
    2026-11-18:** Council of the City of Ryde FY2024-25 GPFS, 17 non-additive rows (§7.23).
    **Twenty-fourth expansion landed 2026-11-18:** North Sydney Council FY2024-25 GPFS, 18
    non-additive rows (§7.24). **Twenty-fifth expansion landed 2026-11-18:** City of Canada Bay
-   Council FY2024-25 GPFS, 17 non-additive rows (§7.25).
+   Council FY2024-25 GPFS, 17 non-additive rows (§7.25). **Twenty-sixth expansion landed
+   2026-11-18:** Cumberland City Council FY2024-25 GPFS, 17 non-additive rows (§7.26).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).

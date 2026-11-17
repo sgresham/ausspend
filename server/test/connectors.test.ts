@@ -41,6 +41,7 @@ const LIVE_IDS = [
   'ryde-gpfs',
   'north-sydney-gpfs',
   'canada-bay-gpfs',
+  'cumberland-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -59,9 +60,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships fifty-one connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(51);
-    expect(new Set(CONNECTOR_IDS).size).toBe(51);
+  it('ships fifty-two connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(52);
+    expect(new Set(CONNECTOR_IDS).size).toBe(52);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -241,6 +242,10 @@ describe('federal connector registry', () => {
     expect(getConnector('canada-bay-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('canada-bay-gpfs')?.source_url).toContain('canadabay.nsw.gov.au');
     expect(getConnector('canada-bay-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('cumberland-gpfs')?.status).toBe('active');
+    expect(getConnector('cumberland-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('cumberland-gpfs')?.source_url).toContain('cumberland.nsw.gov.au');
+    expect(getConnector('cumberland-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');

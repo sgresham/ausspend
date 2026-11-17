@@ -29,6 +29,7 @@ import { createRandwickGpfsConnector } from './randwick-gpfs.js';
 import { createRydeGpfsConnector } from './ryde-gpfs.js';
 import { createNorthSydneyGpfsConnector } from './north-sydney-gpfs.js';
 import { createCanadaBayGpfsConnector } from './canada-bay-gpfs.js';
+import { createCumberlandGpfsConnector } from './cumberland-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -386,6 +387,7 @@ export const CONNECTORS: readonly Connector[] = [
   // outside the repo. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
   createCanadaBayGpfsConnector(),
+  createCumberlandGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
