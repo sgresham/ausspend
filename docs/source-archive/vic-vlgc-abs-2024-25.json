@@ -1,0 +1,52 @@
+{
+  "dataset": "VLGGC Annual Questionnaire ABS1 Capital Outlays and ABS2-3 Balance Sheets and Other Finances 2024-25",
+  "fiscal_year": "2024-25",
+  "source_url": "https://www.localgovernment.vic.gov.au/funding-programs/victoria-grants-commission/consultation-and-operations",
+  "license": "VLGGC attribution/permission — NOT CC BY. Conditions of Use: \"Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.\" Councils provide permission for this online release; the Commission does not guarantee the material to be free from error. Derived rows only; the source workbooks are not redistributed.",
+  "attribution": "Victorian Local Government Grants Commission data collection",
+  "conditions_of_use": "Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.",
+  "disclaimer": "The data in these spreadsheets is provided for information purposes only. These spreadsheets are produced from data sourced annually from Local Government (councils) in Victoria. Councils provide permission for this online release. The data has been analysed, but the Victorian Local Government Grants Commission does not guarantee the material to be free from error.",
+  "caveat": "Council-supplied VLGGC ABS1/ABS2-3 questionnaire return, not audited GPFS; provisional and unverified. Non-additive rows only; no cross-council total; never mixed with VGC1, vic-budget, ABS GFS, LGPRF, waste or NSW council data. Bendigo balance-sheet totals reconcile exactly to the GPFS; capital outlays carry a documented $473,353.20 accrual/cash bridge to the GPFS cash-flow payments.",
+  "retrieved_at": "2026-11-17T20:42:58.871Z",
+  "unit": "whole AUD (x100 cents); cells carry cents",
+  "councils": 79,
+  "totals_suppressed": 4,
+  "rows": 9059,
+  "files": [
+    {
+      "workbook": "ABS1",
+      "resource_url": "https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0024/225960/2024-25-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx",
+      "retrieved_from": "https://web.archive.org/web/20260818214834id_/https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0024/225960/2024-25-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx",
+      "snapshot_timestamp": "20260818214834",
+      "filename": "2024-25-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx",
+      "sha256": "639fe70a6de9cbe27c44c5a59ec75c79a99827db706a92aa1353bfd574985f61",
+      "bytes": 477675
+    },
+    {
+      "workbook": "ABS2-3",
+      "resource_url": "https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0025/225961/2024-25-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx",
+      "retrieved_from": "https://web.archive.org/web/20260818214834id_/https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0025/225961/2024-25-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx",
+      "snapshot_timestamp": "20260818214834",
+      "filename": "2024-25-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx",
+      "sha256": "6975d1d9abf0d43f8776dc28fd73882670a8907f988d3bb94ad6c4055c50891f",
+      "bytes": 147062
+    }
+  ],
+  "reconciliation": {
+    "council": "Greater Bendigo City Council",
+    "assets_cents": 259560300000,
+    "liabilities_cents": 12359700000,
+    "equity_cents": 247200600000,
+    "assets_status": "exact",
+    "liabilities_status": "exact",
+    "equity_status": "exact",
+    "capital_outlays_cents": 5622135320,
+    "gpfs_cash_flow_capital_payments_thousand": 55748,
+    "capital_bridge_cents": 47335320,
+    "capital_bridge_dollars": 473353.2,
+    "capital_bridge_percent": 0.849,
+    "capital_status": "documented_accrual_cash_bridge_not_forced",
+    "bridge_note": "ABS1 total capital outlays $56,221,353.20 vs audited GPFS cash-flow payments for capital assets $55,748k; difference $473,353.20 (0.85%) is an accrual/cash classification bridge and is documented, not forced to equality."
+  },
+  "notes": "Derived rows only; neither workbook is redistributed. The source Totals rows are suppressed and no cross-council total is emitted. Every row is non-additive agency detail, provisional/local_government and verified=false. Zero cells are not emitted. Balance-sheet asset-class labels are preserved only for ABS2 asset lines; ABS1 asset classes are in the asset_class field."
+}

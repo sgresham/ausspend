@@ -230,6 +230,23 @@ export const MeasureRecordSchema = z.object({
   vlgc_unit: z.string().min(1).optional(),
   vlgc_printed_sign: z.enum(['positive', 'negative']).optional(),
   /**
+   * VLGGC ABS1/ABS2-3 council questionnaire provenance. `statement` is one of
+   * capital, balance, cash_flow or income; `statement_section` names the printed
+   * sub-table (for example assets, liabilities, operating_receipts,
+   * sources_and_applications); `statement_line` is the exact printed line label
+   * and `asset_class` the printed asset class where one applies. ABS rows are
+   * non-additive agency detail and are never summed across councils, functions,
+   * asset classes or statement sections, and never mixed with VGC1.
+   */
+  asset_class: z.string().min(1).optional(),
+  statement_section: z.string().min(1).optional(),
+  statement_line: z.string().min(1).optional(),
+  vlgc_abs_measure: z.string().min(1).optional(),
+  vlgc_abs_line_code: z.string().min(1).optional(),
+  vlgc_abs_council_label: z.string().min(1).optional(),
+  vlgc_abs_unit: z.string().min(1).optional(),
+  vlgc_abs_printed_sign: z.enum(['positive', 'negative']).optional(),
+  /**
    * True when the row's funding source names a government agency or a
    * separately disclosed government contribution/transfer. Such a row may
    * overlap government program spending, so the UI warns and the row is never

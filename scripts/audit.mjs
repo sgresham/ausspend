@@ -56,6 +56,8 @@ const KNOWN_SOURCE_IDS = [
   'ku-ring-gai-gpfs',
   'grantconnect',
   'vic-budget',
+  'vic-vlgc-vgc1',
+  'vic-vlgc-abs',
   'qld-budget',
   'qld-qgip',
   'acnc-charity',

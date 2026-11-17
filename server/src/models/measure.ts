@@ -120,6 +120,22 @@ export interface MeasureDocument {
   vlgc_unit?: string;
   /** Printed sign when a negative amount is stored as a non-negative magnitude. */
   vlgc_printed_sign?: 'positive' | 'negative';
+  /** VLGGC ABS1/ABS2-3 asset class where the printed line is an asset class. */
+  asset_class?: string;
+  /** VLGGC ABS1/ABS2-3 printed sub-table (assets, liabilities, receipts, ...). */
+  statement_section?: string;
+  /** VLGGC ABS1/ABS2-3 exact printed line label. */
+  statement_line?: string;
+  /** VLGGC ABS1/ABS2-3 stable printed row kind. */
+  vlgc_abs_measure?: string;
+  /** VLGGC ABS1/ABS2-3 exact printed line code. */
+  vlgc_abs_line_code?: string;
+  /** Council label exactly as printed in the ABS workbooks. */
+  vlgc_abs_council_label?: string;
+  /** Printed ABS unit; whole AUD, converted to cents at x100. */
+  vlgc_abs_unit?: string;
+  /** Printed sign when a negative ABS amount is stored as a magnitude. */
+  vlgc_abs_printed_sign?: 'positive' | 'negative';
   /** Government-named funding row that may overlap government program data. */
   potential_double_count?: boolean;
 }
@@ -239,6 +255,14 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     vlgc_council_label: { type: String },
     vlgc_unit: { type: String },
     vlgc_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    asset_class: { type: String, index: true },
+    statement_section: { type: String, index: true },
+    statement_line: { type: String },
+    vlgc_abs_measure: { type: String, index: true },
+    vlgc_abs_line_code: { type: String, index: true },
+    vlgc_abs_council_label: { type: String },
+    vlgc_abs_unit: { type: String },
+    vlgc_abs_printed_sign: { type: String, enum: ['positive', 'negative'] },
     potential_double_count: { type: Boolean, index: true },
   },
   { collection: 'measures', versionKey: false },

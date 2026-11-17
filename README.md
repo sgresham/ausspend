@@ -183,9 +183,9 @@ nonzero before it changes anything.
 
 The live baseline after the QGIP earlier-years, Essential Energy, Forestry Corporation of NSW,
 Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink ingests plus the Dubbo GPFS
-pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai GPFS expansion is **521,356 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
+pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai GPFS expansion, plus VIC council pilot B, is **530,415 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
 AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115,
-QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401, ABS GFS PNFC
+QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401, VIC VLGGC ABS1/ABS2-3 9,059, ABS GFS PNFC
 18, Sydney Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5,
 Sydney Trains 6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
 The pre-removal
@@ -544,8 +544,14 @@ FY2024-25 the VGC1 income-statement totals reconcile to the audited GPFS at the 
 rounding. **VIC council pilot A is implemented** as source `vic-vlgc-vgc1`: 5,401 non-additive
 VGC1 2024-25 rows for all 79 councils, every row provisional/local_government and unverified, the
 source Totals row suppressed, no cross-council total, and VLGGC attribution/permission (not CC BY).
-ABS1/ABS2-3, the 79 individual GPFS PDFs and other states remain a later item. Council spending is
-never state spending.
+**VIC council pilot B** adds source `vic-vlgc-abs`: the VLGGC 2024-25 ABS1 capital-outlays and
+ABS2-3 balance-sheet/cash-flow/income workbooks, 9,059 non-additive rows for the same 79 councils,
+all provisional/local_government and unverified, with the four source Totals rows suppressed and no
+cross-council total. Bendigo FY2024-25 balances reconcile exactly to the audited GPFS (assets
+$2,595,603,000, liabilities $123,597,000, equity $2,472,006,000); ABS1 capital outlays
+$56,221,353.20 carry a documented $473,353.20 accrual/cash bridge to the GPFS cash-flow payments
+($55,748k) and are never forced to equality. The 79 individual GPFS PDFs and other states remain a
+later item. Council spending is never state spending.
 
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
 not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this

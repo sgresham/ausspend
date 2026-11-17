@@ -102,6 +102,18 @@ Longitude`. Values use quoted thousands (`"1,805"`) and literal `N/A`; multiple 
 > (`$252,761k` / `$277,002k`) at the printed $1,000 rounding. See
 > [docs/VIC_COUNCILS.md](docs/VIC_COUNCILS.md) §11.
 
+> **VIC council pilot B (2026-11-18): ingested.** `vic-vlgc-abs` adds the VLGGC 2024-25 ABS1
+> Capital Outlays and Sales and ABS2-3 Balance Sheets and Other Finances workbooks for all 79
+> Victorian councils: 9,059 non-additive rows (capital 1,173, balance 2,709, cash-flow 3,157,
+> income 2,020). It is a council-supplied, unaudited questionnaire, not the GPFS; every row is
+> `aggregation_role: agency_detail`, `provisional/local_government`, `verified: false`, and the four
+> source Totals rows are suppressed (no cross-council total). VLGGC is **attribution/permission,
+> not CC BY**. Whole AUD is converted explicitly to cents. City of Greater Bendigo FY2024-25 total
+> assets `$2,595,603,000`, liabilities `$123,597,000` and equity `$2,472,006,000` reconcile exactly
+> to its audited GPFS; ABS1 capital outlays `$56,221,353.20` carry a documented `$473,353.20`
+> (0.85%) accrual/cash bridge to the GPFS cash-flow payments (`$55,748k`) and equality is never
+> forced. See [docs/VIC_COUNCILS.md](docs/VIC_COUNCILS.md) §12.
+
 - **Budget:** <https://www.dtf.vic.gov.au/state-budget>; 2026-27 delivered 5 May 2026. Capital
   program page <https://www.dtf.vic.gov.au/2026-27-state-capital-program>.
 - **Open data:** CKAN <https://discover.data.vic.gov.au>, API
