@@ -34,7 +34,7 @@ async function realContractCount(): Promise<number> {
 
 async function seedWithRealRow(): Promise<void> {
   await mongoose.connection.dropDatabase();
-  await seedSyntheticData();
+  await seedSyntheticData({ mode: 'synthetic' });
   await MeasureModel.create(FAKE_REAL_CONTRACT);
   await DataSourceModel.create({
     source_id: 'aus-tender',

@@ -10,9 +10,9 @@ import { DataSourceModel, FunctionModel, MeasureModel, RegionModel } from '../mo
 import { CONNECTORS } from '../connectors/index.js';
 
 /**
- * `synthetic` is the historical development seed. `real` boots the taxonomy and
- * the real source register but writes no synthetic measure rows at all, so the
- * app can run after the synthetic seed has been retired.
+ * `real` is the default: it boots the taxonomy and the real source register and
+ * writes no synthetic measure rows at all. `synthetic` is the historical
+ * development seed and is now an explicit opt-in only.
  */
 export type SeedMode = 'synthetic' | 'real';
 
@@ -170,19 +170,18 @@ export async function destructiveReset(): Promise<void> {
 /**
  * Install the development data. Assumes mongoose is already connected.
  *
- * `mode: 'synthetic'` (the default) is safe by default: only rows owned by
- * `synthetic-seed` are replaced, and the synthetic source record is upserted.
- * `mode: 'real'` registers the real connector sources and the taxonomy but
- * writes no synthetic measure rows and never deletes existing live rows.
- * Ingested rows (`aus-tender`), other data sources and every ingestion log
- * survive untouched. `reset: true` runs the destructive reset first and is only
- * wired to the explicit CLI flag.
+ * `mode: 'real'` (the default) registers the real connector sources and the
+ * taxonomy but writes no synthetic measure rows and never deletes existing live
+ * (or legacy synthetic) rows. `mode: 'synthetic'` is an explicit opt-in and
+ * replaces only rows owned by `synthetic-seed`. Ingested rows (`aus-tender`),
+ * other data sources and every ingestion log survive untouched. `reset: true`
+ * runs the destructive reset first and is only wired to the explicit CLI flag.
  */
 export async function seedSyntheticData(
   options: { reset?: boolean; mode?: SeedMode } = {},
 ): Promise<SeedSummary> {
   const reset = options.reset === true;
-  const mode: SeedMode = options.mode === 'real' ? 'real' : 'synthetic';
+  const mode: SeedMode = options.mode === 'synthetic' ? 'synthetic' : 'real';
   const databaseName: string | null = mongoose.connection.name ?? null;
 
   if (reset) {

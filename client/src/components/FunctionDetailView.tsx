@@ -51,7 +51,7 @@ export function FunctionDetailView() {
 
   const years = coverage.data?.fiscal_years ?? [];
   const measureTypes = base.data?.measure_types ?? [];
-  const syntheticPresent = coverage.data?.synthetic ?? true;
+  const syntheticPresent = coverage.data?.synthetic ?? false;
 
   const setFilters = (next: FilterSelection) => {
     const params = new URLSearchParams(searchParams);

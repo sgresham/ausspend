@@ -74,11 +74,24 @@ export function AboutPage() {
             never appears without the source it came from.
           </Typography>
           <Typography variant="body2">
-            The synthetic source is documented on the{' '}
-            <Link component={RouterLink} to="/data-sources#synthetic-seed">
-              Data sources
-            </Link>{' '}
-            page, together with every connector's status and the coverage limitations.
+            {coverage.data?.synthetic ? (
+              <>
+                The synthetic source is documented on the{' '}
+                <Link component={RouterLink} to="/data-sources#synthetic-seed">
+                  Data sources
+                </Link>{' '}
+                page, together with every connector's status and the coverage limitations.
+              </>
+            ) : (
+              <>
+                The{' '}
+                <Link component={RouterLink} to="/data-sources">
+                  Data sources
+                </Link>{' '}
+                page lists every registered real source, its connector status and the coverage
+                limitations; no synthetic source is registered.
+              </>
+            )}
           </Typography>
         </CardContent>
       </Card>

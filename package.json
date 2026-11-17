@@ -26,6 +26,7 @@
     "build": "npm run build -w shared && npm run build -w server && npm run build -w client",
     "seed": "npm run build -w shared && tsx scripts/seed.ts",
     "seed:real": "npm run build -w shared && tsx scripts/seed.ts --no-synthetic",
+    "seed:synthetic": "npm run build -w shared && tsx scripts/seed.ts --synthetic",
     "clean:synthetic": "npm run build -w shared && tsx scripts/clean-synthetic.ts",
     "ingest:federal": "npm run build -w shared && tsx scripts/ingest-federal.ts",
     "ingest:nsw": "npm run build -w shared && tsx scripts/ingest-nsw.ts",

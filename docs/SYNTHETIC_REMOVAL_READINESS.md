@@ -1,27 +1,56 @@
 # Synthetic-seed removal readiness
 
-Status: **readiness only — the 810 synthetic rows were not deleted in this item.** The database
-remains at **124,767 measures, 810 of them `source_id: synthetic-seed`**. The seed is still
-installed. Federal/PBS/CKAN/NSW/Dubbo rows were not touched.
+Status: **executed 2026-11-17.** The 810 `source_id: synthetic-seed` measures and their one
+`data_sources` register document were deleted after a verified backup. The database is now
+**348,939 measures, 0 synthetic**, across 11 real sources. The default seed/bootstrap is real-only.
+Every real source count is unchanged. This document keeps the dependency audit and the gate that
+was met, followed by the recorded removal evidence.
 
-This document records the dependency audit, what becomes empty or misleading if the seed rows
-disappear today, the real-only bootstrap and cleanup tooling added, and the exact gate that must be
-met before deletion is safe.
-
-## Current baseline (read from `ausspend_dev`, no writes)
+## Post-removal baseline (executed, verified)
 
 | Metric                                    |   Value |
 | ----------------------------------------- | ------: |
-| Total measures                            | 124,767 |
-| `synthetic-seed` measures                 |     810 |
-| Real measures                             | 123,957 |
+| Total measures                            | 348,939 |
+| `synthetic-seed` measures                 |       0 |
+| Real measures                             | 348,939 |
+| `data_sources` records                    |      11 |
 | AusTender contracts (`aus-tender`)        | 117,894 |
+| ACNC charity expenses (`acnc-charity`)    | 127,606 |
+| GrantConnect awards (`grantconnect`)      |  62,128 |
+| QLD QGIP (`qld-qgip`)                     |  34,000 |
+| data.nsw.gov.au CKAN (`data-nsw-ckan`)    |   3,472 |
 | PBS budget line items (`data-gov-au-pbs`) |   1,231 |
 | NSW Budget 2025-26 (`nsw-budget`)         |   1,115 |
-| data.nsw.gov.au CKAN (`data-nsw-ckan`)    |   3,472 |
+| QLD Budget 2026-27 (`qld-budget`)         |   1,051 |
 | Dubbo Regional Council (`dubbo-council`)  |     245 |
+| ABS GFS benchmark (`abs-gfs`)             |     169 |
+| VIC Budget 2026-27 (`vic-budget`)         |      28 |
 
-Synthetic rows by dimension:
+Verified backup taken before deletion:
+`/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (total 349,749; synthetic 810; ABS GFS 169;
+natural-key count 348,939, checksum
+`71a5c5f5b3a4c949ef9130e0365d4d92a9220a66f0fad488da51b1dfd2dd755c`).
+
+## Pre-removal baseline (the ready state)
+
+| Metric                                    |   Value |
+| ----------------------------------------- | ------: |
+| Total measures                            | 349,749 |
+| `synthetic-seed` measures                 |     810 |
+| Real measures                             | 348,939 |
+| AusTender contracts (`aus-tender`)        | 117,894 |
+| ACNC charity expenses (`acnc-charity`)    | 127,606 |
+| GrantConnect awards (`grantconnect`)      |  62,128 |
+| QLD QGIP (`qld-qgip`)                     |  34,000 |
+| data.nsw.gov.au CKAN (`data-nsw-ckan`)    |   3,472 |
+| PBS budget line items (`data-gov-au-pbs`) |   1,231 |
+| NSW Budget 2025-26 (`nsw-budget`)         |   1,115 |
+| QLD Budget 2026-27 (`qld-budget`)         |   1,051 |
+| Dubbo Regional Council (`dubbo-council`)  |     245 |
+| ABS GFS benchmark (`abs-gfs`)             |     169 |
+| VIC Budget 2026-27 (`vic-budget`)         |      28 |
+
+Synthetic rows by dimension (all removed):
 
 | Dimension      | Counts                                             |
 | -------------- | -------------------------------------------------- |
@@ -32,33 +61,33 @@ Synthetic rows by dimension:
 
 ## Dependency audit
 
-| Area                                                                                                 | Dependency on `synthetic-seed`                                               | Readiness change                                                                                                                                         |
-| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `server/src/seed/synthetic.ts`                                                                       | Only seed implementation; always deletes/reinserts synthetic rows            | Added `mode: 'synthetic' \| 'real'`. Real mode writes taxonomy + real source register, **0** synthetic rows, and never deletes existing rows             |
-| `scripts/seed.ts`                                                                                    | No mode flag                                                                 | Added `--no-synthetic` / `--real-only` / `--mode=real` / `SEED_MODE=real`; prints mode and `synthetic_written`                                           |
-| `package.json`                                                                                       | `seed` only                                                                  | Added `seed:real` and `clean:synthetic`                                                                                                                  |
-| `docker-compose.yml`                                                                                 | Compose seed always synthetic; comment says only synthetic rows are replaced | Seed service passes `SEED_MODE` (default `synthetic`); real-only documented                                                                              |
-| `server/src/seed/clean.ts` (new)                                                                     | —                                                                            | Dry-run inventory + guarded execute; the only writes are `source_id: 'synthetic-seed'`                                                                   |
-| `scripts/clean-synthetic.ts` (new)                                                                   | —                                                                            | CLI: dry run by default; `--execute` requires a verified backup                                                                                          |
-| `shared/src/data-source.ts`                                                                          | Defines `SYNTHETIC_SOURCE` and anchor `/data-sources#synthetic-seed`         | Kept: real-only mode simply does not register it; cleanup removes that one register doc                                                                  |
-| `server/src/api/coverage.ts`                                                                         | `synthetic: true` hard-coded; synthetic-only limitation text                 | `synthetic` is now derived from the row count; added `synthetic_measures`, `real_measures`, `counts.*` and `coverage_gaps`; no-synthetic limitation text |
-| `server/src/api/data-sources.ts`                                                                     | Lists whatever is in the register                                            | No code change; synthetic disappears when its register doc is removed                                                                                    |
-| `client/src/components/CoverageBanner.tsx`                                                           | Always said seed rows sit beside live rows                                   | Conditional no-synthetic wording and explicit real-coverage gap text; shows synthetic row count                                                          |
-| `client/src/pages/HomePage.tsx`                                                                      | Intro/alert claimed every amount is a placeholder                            | Conditional real-only wording                                                                                                                            |
-| `client/src/pages/AboutPage.tsx`                                                                     | Warning and scope bullet assumed synthetic present                           | Conditional wording                                                                                                                                      |
-| `client/src/pages/DataSourcesPage.tsx`                                                               | Intro assumed the synthetic anchor always exists                             | Conditional "when present" wording                                                                                                                       |
-| `client/src/components/FunctionDetailView.tsx`                                                       | Intro/note/empty state mention the synthetic seed                            | Empty state now says “No real data for this dimension yet” when synthetic is absent; still never zero-fills                                              |
-| `client/src/components/RegionDetailView.tsx`                                                         | Intro/note/empty state mention the synthetic seed                            | Same conditional empty state; state/region wording distinguishes `region_id` from `location.state`                                                       |
-| `client/src/pages/SearchPage.tsx`                                                                    | Empty state mentions whole DB; applied-filters note named synthetic seed     | Conditional “No real data for this dimension yet”; neutral whole-DB wording                                                                              |
-| `client/src/api/types.ts`                                                                            | Coverage type had no synthetic/real counts or gaps                           | Added `synthetic_measures`, `real_measures`, `coverage_gaps`                                                                                             |
-| `server/test/seed-safety.test.ts`                                                                    | Only synthetic mode tested                                                   | Added: real-only on empty DB → 0 synthetic; real-only never deletes existing synthetic/real rows                                                         |
-| `server/test/clean-synthetic.test.ts` (new)                                                          | —                                                                            | Dry run deletes 0; fake real row survives; execute requires backup check; deletes only synthetic; idempotent                                             |
-| `server/test/m2-api.test.ts`                                                                         | Coverage assertions only                                                     | Added synthetic/real count and `coverage_gaps` assertions                                                                                                |
-| `e2e/mock-api.ts`                                                                                    | Fixtures always include synthetic source/rows                                | Added `{ empty: true }` mode: synthetic source/rows absent, empty function/state/search                                                                  |
-| `e2e/empty-states.spec.ts` (new)                                                                     | —                                                                            | Function, state and search empty states; banner says no synthetic rows; source register omits synthetic                                                  |
-| `scripts/audit.mjs`                                                                                  | Live audit required the synthetic source and synthetic provenance footers    | Synthetic source check is conditional; provenance footers accept any real source id                                                                      |
-| `README.md`, `docs/QA.md`                                                                            | Seed/coverage text assumed synthetic always present                          | Real-only mode, `clean:synthetic`, coverage fields and gate documented                                                                                   |
-| Existing `e2e` fixtures (`home`, `data-sources`, `search`, `functions`, `regions`, `areas`, `about`) | Use synthetic fixture rows deliberately                                      | Left as-is: they exercise the mixed-data UI; the new empty-state spec covers the retired case                                                            |
+| Area                                                                                                 | Dependency on `synthetic-seed`                                               | Readiness change                                                                                                                                                    |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `server/src/seed/synthetic.ts`                                                                       | Only seed implementation; always deletes/reinserts synthetic rows            | `mode: 'synthetic' \| 'real'`; **real is now the default**. Real mode writes taxonomy + real source register, **0** synthetic rows, and never deletes existing rows |
+| `scripts/seed.ts`                                                                                    | No mode flag                                                                 | **Real-only is the default**; synthetic requires `--synthetic` / `SEED_MODE=synthetic`. Prints mode and `synthetic_written`                                         |
+| `package.json`                                                                                       | `seed` only                                                                  | `seed` is real-only; added `seed:real`, explicit `seed:synthetic` and `clean:synthetic`                                                                             |
+| `docker-compose.yml`                                                                                 | Compose seed always synthetic; comment says only synthetic rows are replaced | Seed service passes `SEED_MODE` and now defaults to **`real`**; synthetic is an explicit opt-in                                                                     |
+| `server/src/seed/clean.ts` (new)                                                                     | —                                                                            | Dry-run inventory + guarded execute; the only writes are `source_id: 'synthetic-seed'`                                                                              |
+| `scripts/clean-synthetic.ts` (new)                                                                   | —                                                                            | CLI: dry run by default; `--execute` requires a verified backup                                                                                                     |
+| `shared/src/data-source.ts`                                                                          | Defines `SYNTHETIC_SOURCE` and anchor `/data-sources#synthetic-seed`         | Kept: real-only mode simply does not register it; cleanup removes that one register doc                                                                             |
+| `server/src/api/coverage.ts`                                                                         | `synthetic: true` hard-coded; synthetic-only limitation text                 | `synthetic` is now derived from the row count; added `synthetic_measures`, `real_measures`, `counts.*` and `coverage_gaps`; no-synthetic limitation text            |
+| `server/src/api/data-sources.ts`                                                                     | Lists whatever is in the register                                            | No code change; synthetic disappears when its register doc is removed                                                                                               |
+| `client/src/components/CoverageBanner.tsx`                                                           | Always said seed rows sit beside live rows                                   | Conditional no-synthetic wording and explicit real-coverage gap text; shows synthetic row count                                                                     |
+| `client/src/pages/HomePage.tsx`                                                                      | Intro/alert claimed every amount is a placeholder                            | Conditional real-only wording                                                                                                                                       |
+| `client/src/pages/AboutPage.tsx`                                                                     | Warning and scope bullet assumed synthetic present                           | Conditional wording                                                                                                                                                 |
+| `client/src/pages/DataSourcesPage.tsx`                                                               | Intro assumed the synthetic anchor always exists                             | Conditional "when present" wording                                                                                                                                  |
+| `client/src/components/FunctionDetailView.tsx`                                                       | Intro/note/empty state mention the synthetic seed                            | Empty state now says “No real data for this dimension yet” when synthetic is absent; still never zero-fills                                                         |
+| `client/src/components/RegionDetailView.tsx`                                                         | Intro/note/empty state mention the synthetic seed                            | Same conditional empty state; state/region wording distinguishes `region_id` from `location.state`                                                                  |
+| `client/src/pages/SearchPage.tsx`                                                                    | Empty state mentions whole DB; applied-filters note named synthetic seed     | Conditional “No real data for this dimension yet”; neutral whole-DB wording                                                                                         |
+| `client/src/api/types.ts`                                                                            | Coverage type had no synthetic/real counts or gaps                           | Added `synthetic_measures`, `real_measures`, `coverage_gaps`                                                                                                        |
+| `server/test/seed-safety.test.ts`                                                                    | Only synthetic mode tested                                                   | Added: real-only on empty DB → 0 synthetic; real-only never deletes existing synthetic/real rows                                                                    |
+| `server/test/clean-synthetic.test.ts` (new)                                                          | —                                                                            | Dry run deletes 0; fake real row survives; execute requires backup check; deletes only synthetic; idempotent                                                        |
+| `server/test/m2-api.test.ts`                                                                         | Coverage assertions only                                                     | Added synthetic/real count and `coverage_gaps` assertions                                                                                                           |
+| `e2e/mock-api.ts`                                                                                    | Fixtures always include synthetic source/rows                                | Added `{ empty: true }` mode: synthetic source/rows absent, empty function/state/search                                                                             |
+| `e2e/empty-states.spec.ts` (new)                                                                     | —                                                                            | Function, state and search empty states; banner says no synthetic rows; source register omits synthetic                                                             |
+| `scripts/audit.mjs`                                                                                  | Live audit required the synthetic source and synthetic provenance footers    | Synthetic source check is conditional; provenance footers accept any real source id                                                                                 |
+| `README.md`, `docs/QA.md`                                                                            | Seed/coverage text assumed synthetic always present                          | Real-only mode, `clean:synthetic`, coverage fields and gate documented                                                                                              |
+| Existing `e2e` fixtures (`home`, `data-sources`, `search`, `functions`, `regions`, `areas`, `about`) | Use synthetic fixture rows deliberately                                      | Left as-is: they exercise the mixed-data UI; the new empty-state spec covers the retired case                                                                       |
 
 ## What becomes empty or misleading if the 810 rows disappear today
 
@@ -111,19 +140,20 @@ Real coverage gaps:
 - The data-source register simply omits `synthetic-seed` once its register document is removed; no
   page fabricates an anchor or a zero.
 
-## Real-only seed and cleanup tooling (implemented, not executed against the live DB)
+## Real-only seed and cleanup tooling (implemented and executed)
 
 ```bash
-# Real-only bootstrap: taxonomy + real source register, 0 synthetic rows, non-destructive.
-npm run seed:real
-# Equivalent: SEED_MODE=real npm run seed  |  npm run seed -- --no-synthetic
+# Real-only bootstrap (now the default): taxonomy + real source register, 0 synthetic rows.
+npm run seed
+# Explicit aliases: npm run seed:real | SEED_MODE=real npm run seed
+# Legacy opt-in only: npm run seed:synthetic | SEED_MODE=synthetic npm run seed
 
 # Cleanup: DRY RUN by default, prints counts, writes nothing.
 npm run clean:synthetic
 
-# Deletion (only after the gate below): requires a complete, recent, verified backup.
+# Deletion (executed 2026-11-17): requires a complete, recent, verified backup.
 npm run clean:synthetic -- --execute \
-  --backup /home/steve/backups/ausspend/<timestamp>
+  --backup /home/steve/backups/ausspend/2026-11-17T03-26-35.175Z
 ```
 
 `clean:synthetic --execute`:
@@ -137,12 +167,19 @@ npm run clean:synthetic -- --execute \
    `deleteOne({ source_id: 'synthetic-seed' })` on `data_sources`. Nothing else can match.
 4. Re-inventories and fails loudly if the non-synthetic measure count changed.
 
-## Verification run in this item
+## Removal execution and verification
 
 See the item completion evidence for exact commands/output. In summary:
 
-- `npm run clean:synthetic` dry run: before = synthetic 810 / total 124,767 / non-synthetic 123,957;
-  after = identical; 0 deleted.
+- `npm run clean:synthetic` dry run before deletion: synthetic 810 / total 349,749 /
+  non-synthetic 348,939; after = identical; 0 deleted.
+- Verified backup: `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z`; manifest measures 349,749,
+  810 synthetic rows, ABS GFS 169, natural-key count 348,939/digest verified.
+- `npm run clean:synthetic -- --execute --backup <dir>` deleted **810 measures + 1 data-source
+  record**; after = synthetic 0 / total 348,939 / non-synthetic 348,939, and all 11 real per-source
+  counts were identical before/after.
+- Default `npm run seed` is real-only: on a scratch database it writes 0 synthetic rows and
+  preserves any existing real rows; a synthetic run requires `npm run seed:synthetic`.
 - Scratch tests: real-only seed emits 0 synthetic; dry run preserves a fake real row; execute
   (with a stubbed verified-backup check) deletes only synthetic and preserves the real row.
 - `npm run seed:real` on an `ausspend_test_*` scratch DB: synthetic 0, regions 9, functions 53,
@@ -150,9 +187,10 @@ See the item completion evidence for exact commands/output. In summary:
 - `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`, `npm run build`,
   `npm run test:e2e` (alt ports 3101/5174) and `npm run audit` against an alt-port stack.
 
-## Exact safe-deletion gate (recommended; NOT executed here)
+## Deletion gate (met and executed 2026-11-17)
 
-Do **not** run `clean:synthetic -- --execute` until all of the following are true:
+The gate below was satisfied before the executed deletion. It remains the required check for any
+future backup/cleanup run:
 
 1. **S1 + S2 + S3 are complete and verified** (NSW Budget, targeted data.nsw.gov.au CKAN, Dubbo
    Regional Council), with their ingestion logs and provenance checks green.
@@ -172,8 +210,10 @@ Do **not** run `clean:synthetic -- --execute` until all of the following are tru
 6. **Scratch restore drill passed**: restore the backup into an `ausspend_restore_test_*` database,
    run the clean dry run there, then execute there and confirm non-synthetic rows are unchanged.
 7. **Human sign-off** recorded for the deletion, including the exact backup path and the
-   post-clean expected counts (synthetic 0, total = 123,957 if no ingestion has run since this
-   audit).
+   post-clean expected counts (synthetic 0, total = 348,939 for the executed run; the earlier
+   readiness estimate of 123,957 predates the GrantConnect, QGIP, ACNC, VIC, QLD and ABS GFS
+   ingestions).
 
-Until all seven are true, the seed stays. The default seed and the default `clean:synthetic` mode
-are non-destructive.
+All seven were true for the 2026-11-17 execution (human instruction to proceed without another
+approval gate recorded on the work item). The default seed is now real-only and the default
+`clean:synthetic` mode remains non-destructive.

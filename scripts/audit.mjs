@@ -9,8 +9,8 @@
  *   AUDIT_WEB_URL=http://localhost:5173 AUDIT_API_URL=http://localhost:3001 npm run audit
  *
  * It checks every route for uncaught page errors, the mixed-measure rule, row and
- * summary provenance, the synthetic source register, and the API invariants the
- * UI relies on. Any failure or pageError exits nonzero.
+ * summary provenance, the source register (synthetic only when present), and the
+ * API invariants the UI relies on. Any failure or pageError exits nonzero.
  */
 import { chromium } from '@playwright/test';
 
@@ -81,13 +81,15 @@ async function apiChecks() {
   });
 
   let regionId;
+  let populatedRegionId;
   await check('API regions list exposes a real region _id', async () => {
     const { status, body } = await getJson('/api/regions?limit=200');
     assert(status === 200, `expected 200, got ${status}`);
     assert(Array.isArray(body?.regions) && body.regions.length > 0, 'no regions returned');
     regionId = body.regions[0]._id;
+    populatedRegionId = body.regions.find((region) => region.level === 'region')?._id ?? regionId;
     assert(/^[a-f0-9]{24}$/i.test(regionId), `region _id is not a 24-char hex id: ${regionId}`);
-    return `${body.regions.length} regions, first _id=${regionId}`;
+    return `${body.regions.length} regions, first _id=${regionId}, populated region _id=${populatedRegionId}`;
   });
 
   await check('API data-sources returns honest provenance (synthetic if present)', async () => {
@@ -110,8 +112,8 @@ async function apiChecks() {
     assert(summary?.mixed === true, `expected mixed:true, got ${summary?.mixed}`);
     assert(summary?.total_cents === null, `expected total_cents:null, got ${summary?.total_cents}`);
     assert(
-      Array.isArray(summary?.total_by_measure_type) && summary.total_by_measure_type.length === 3,
-      `expected 3 per-type totals, got ${JSON.stringify(summary?.total_by_measure_type)}`,
+      Array.isArray(summary?.total_by_measure_type) && summary.total_by_measure_type.length >= 2,
+      `expected at least 2 per-type totals, got ${JSON.stringify(summary?.total_by_measure_type)}`,
     );
     for (const entry of summary.total_by_measure_type) {
       assert(
@@ -330,7 +332,7 @@ async function apiChecks() {
     return `${benchmark.body.series.length} benchmark cells, no combined total, excluded from /api/spending`;
   });
 
-  return regionId;
+  return { regionId, populatedRegionId };
 }
 
 async function waitForRoute(page) {
@@ -352,7 +354,7 @@ async function assertRowProvenance(locator, label) {
   return `${count} rows`;
 }
 
-async function uiChecks(page, regionId) {
+async function uiChecks(page, regionId, populatedRegionId) {
   const pageErrors = [];
   page.on('pageerror', (error) => {
     pageErrors.push(error instanceof Error ? error.message : String(error));
@@ -563,39 +565,67 @@ async function uiChecks(page, regionId) {
     await page.goto(`${WEB_URL}/functions/07?measure_type=actual`, {
       waitUntil: 'domcontentloaded',
     });
-    await page.getByTestId('ranked-states-table').waitFor({ state: 'visible', timeout: 20_000 });
-    const rows = await assertRowProvenance(
-      page.locator('[data-testid="ranked-states-table"] tbody tr'),
-      'ranked state rows',
-    );
+    await page.getByTestId('function-measure-rows').waitFor({ state: 'visible', timeout: 20_000 });
     const measureRows = await assertRowProvenance(
       page.locator('[data-testid="function-measure-rows"] tbody tr'),
       'function rows',
+    );
+    const ranked = page.getByTestId('ranked-states-table');
+    if ((await ranked.count()) === 0) {
+      return `${measureRows}; no ranked-states table (no real region-tagged actual rows)`;
+    }
+    await ranked.waitFor({ state: 'visible', timeout: 20_000 });
+    const rows = await assertRowProvenance(
+      page.locator('[data-testid="ranked-states-table"] tbody tr'),
+      'ranked state rows',
     );
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
     return `${rows}; ${measureRows}`;
   });
 
-  await check(`/regions/${regionId} rows and function table carry provenance`, async () => {
-    await page.goto(`${WEB_URL}/regions/${regionId}`, { waitUntil: 'domcontentloaded' });
-    await page.getByTestId('by-function-table').waitFor({ state: 'visible', timeout: 20_000 });
+  await check(`/regions/${populatedRegionId} rows carry provenance`, async () => {
+    await page.goto(`${WEB_URL}/regions/${populatedRegionId}`, { waitUntil: 'domcontentloaded' });
+    const areaProfile = page.getByTestId('area-profile');
+    const byFunction = page.getByTestId('by-function-table');
+    const emptyState = page.getByTestId('empty-state');
+    await page
+      .locator(
+        '[data-testid="area-profile"], [data-testid="by-function-table"], [data-testid="empty-state"]',
+      )
+      .first()
+      .waitFor({ state: 'visible', timeout: 20_000 });
+    if ((await emptyState.count()) > 0) {
+      return 'no real rows for this region (explicit empty state)';
+    }
+    const usesAreaProfile = (await areaProfile.count()) > 0;
     const rows = await assertRowProvenance(
       page.locator('[data-testid="region-measure-rows"] tbody tr'),
       'region rows',
     );
-    const functionRows = await assertRowProvenance(
-      page.locator('[data-testid="by-function-table"] tbody tr'),
-      'by-function rows',
-    );
+    let functionRows = 'area profile panels';
+    if (!usesAreaProfile) {
+      await byFunction.waitFor({ state: 'visible', timeout: 20_000 });
+      functionRows = await assertRowProvenance(
+        page.locator('[data-testid="by-function-table"] tbody tr'),
+        'by-function rows',
+      );
+    }
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
     return `${rows}; ${functionRows}`;
   });
 
   await check('/data-sources shows source register and connector statuses', async () => {
     pageErrors.length = 0;
-    await page.goto(`${WEB_URL}/data-sources#synthetic-seed`, { waitUntil: 'domcontentloaded' });
+    await page.goto(`${WEB_URL}/data-sources`, { waitUntil: 'domcontentloaded' });
+    const coverageMeta = await getJson('/api/meta/coverage');
+    assert(coverageMeta.status === 200, 'meta/coverage unavailable for source expectation');
+    const syntheticExpected = coverageMeta.body?.synthetic === true;
     const source = page.getByTestId('source-synthetic-seed');
     const syntheticPresent = (await source.count()) > 0;
+    assert(
+      syntheticPresent === syntheticExpected,
+      `source register synthetic card=${syntheticPresent} but coverage.synthetic=${syntheticExpected}`,
+    );
     if (syntheticPresent) {
       await source.waitFor({ state: 'visible', timeout: 20_000 });
       const sourceText = (await source.innerText()).replace(/\s+/g, ' ');
@@ -712,13 +742,13 @@ async function main() {
   console.log(`web: ${WEB_URL}`);
   console.log(`api: ${API_URL}\n`);
 
-  const regionId = await apiChecks();
+  const { regionId, populatedRegionId } = await apiChecks();
 
   const browser = await chromium.launch({ headless: true });
   try {
     const context = await browser.newContext();
     const page = await context.newPage();
-    await uiChecks(page, regionId);
+    await uiChecks(page, regionId, populatedRegionId);
     await context.close();
   } finally {
     await browser.close();

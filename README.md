@@ -4,14 +4,17 @@ An explorer for **published Australian government spending**, organised by COFOG
 and state. This repository is the Phase 1 application: an npm-workspace monorepo with a React
 client, an Express API and shared TypeScript/Zod contracts.
 
-> The app ships a **synthetic development seed** plus, as of F2, **live AusTender federal contract
-> records** and, as of F3, **live data.gov.au PBS budget line items**. It also imports
-> **GrantConnect grant awards from a human-downloaded, SHA-256-archived XLSX export** (manual file
-> import only; no API and no scraper). Seed values are deterministic placeholders; AusTender/PBS
-> and grant rows are real published records. None is human-verified (`verified: false`), and the
-> app never sums across measure types. PBS line items do **not** sum to the Budget Paper 1 total
-> general government expense. GrantConnect exports above the 50,000-result cap are rejected, so
-> grant coverage is partial until complete date-range chunks cover the period.
+> The app runs on **real published feeds only**. The synthetic development seed has been retired:
+> the database holds **348,939 real measures** and **0 synthetic rows**. Real sources include
+> **AusTender federal contracts**, **data.gov.au PBS budget line items**, **GrantConnect** grant
+> awards (a human-downloaded, SHA-256-archived XLSX export; no API and no scraper), NSW/VIC/QLD
+> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget, ACNC
+> charity expenses and the official ABS GFS COFOG-A benchmark. Project and charity rows are real
+> published records but remain unverified (`verified: false`); only the ABS GFS benchmark rows are
+> `verified: true` and they are never summed with project data. The app never sums across measure
+> types. PBS line items do **not** sum to the Budget Paper 1 total general government expense.
+> GrantConnect exports above the 50,000-result cap are rejected, so grant coverage is partial until
+> complete date-range chunks cover the period.
 
 ## Stack
 
@@ -63,10 +66,11 @@ docker compose up --build
 
 This starts three containers from the `node:24-alpine` image:
 
-1. `seed` — one-shot: `npm ci`, builds `shared`, then `npm run seed`. The seed is **safe by
-   default**: it replaces only rows owned by `synthetic-seed`, so live AusTender contracts, other
-   data sources and `ingestion_logs` survive every restart. It exits nonzero if the guard refuses
-   the database, and `server`/`client` do not start unless it completes successfully.
+1. `seed` — one-shot: `npm ci`, builds `shared`, then `npm run seed`. The seed is **real-only and
+   non-destructive by default**: it writes the taxonomy and real source register and creates no
+   synthetic rows, so live AusTender contracts, other data sources and `ingestion_logs` survive
+   every restart. It exits nonzero if the guard refuses the database, and `server`/`client` do not
+   start unless it completes successfully.
 2. `server` — API on <http://localhost:3001>, waiting for `seed` to finish.
 3. `client` — Vite dev server on <http://localhost:5173>, waiting for the API healthcheck.
 
@@ -127,40 +131,37 @@ Or run one side at a time: `npm run dev:server`, `npm run dev:client`. The Vite 
 ## Seed data
 
 The seed only ever touches the `ausspend_dev` database on host `q`. It refuses to run against any
-other database name, so a stray `MONGO_URL` cannot wipe unrelated data. It writes one clearly-marked
-synthetic source (`source_id: synthetic-seed`, `source_url: /data-sources#synthetic-seed`,
-`verified: false`), the national row plus the eight states/territories, the ten COFOG divisions
-with curated subdivisions, and actual/budget/estimate measures for three fiscal years. Seeded
-rows deliberately have no `natural_key`: the sparse unique index only applies to ingested records.
+other database name, so a stray `MONGO_URL` cannot wipe unrelated data.
 
-**Restart semantics.** A normal seed is non-destructive: it deletes only measures whose
-`source_id` is `synthetic-seed`, upserts the synthetic source/regions/functions, and leaves every
-ingested row, other `data_sources` and every `ingestion_logs` document untouched. Seeding twice
-therefore yields the same 810 synthetic rows, no duplicates, and the same live contracts.
+**Real-only default.** `npm run seed` writes the national/state/territory regions, the ten COFOG
+divisions with curated subdivisions, and the real connector source register, but **0 synthetic
+measure rows**. It is **non-destructive**: ingested rows, other `data_sources` and every
+`ingestion_logs` document are left untouched. A normal restart or compose `up` therefore cannot
+recreate synthetic rows or wipe real data. `npm run seed:real` is an explicit alias for the same
+mode. The compose `seed` service defaults to `SEED_MODE=real`.
 
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run seed
-# [seed] target database: ausspend_dev (mode=synthetic, non-destructive)
-# [seed] mode=synthetic sources=… regions=9 functions=53 measures=… synthetic=810 synthetic_written=810 non_synthetic=…
+# [seed] target database: ausspend_dev (mode=real, non-destructive)
+# [seed] mode=real sources=… regions=9 functions=53 measures=348939 synthetic=0 synthetic_written=0 non_synthetic=348939
 # [seed] verified measures: 0 (must be 0)
 ```
 
-**Real-only bootstrap.** `npm run seed:real` (or `SEED_MODE=real npm run seed`, or
-`npm run seed -- --no-synthetic`) creates the regions, COFOG functions and the real connector
-source register but writes **0 synthetic measure rows**. It is non-destructive: any existing
-synthetic rows, ingested rows and ingestion logs are left in place. This is the mode to run when
-the synthetic seed has been retired. Set `SEED_MODE=real` for the compose `seed` service to use it.
+**Legacy synthetic seed (explicit opt-in).** `npm run seed:synthetic` (or
+`SEED_MODE=synthetic npm run seed`) is the historical development seed. It replaces only rows whose
+`source_id` is `synthetic-seed` and leaves every real row and ingestion log untouched. It exists for
+isolated development only; the live database no longer contains those rows.
 
-**Retiring the synthetic seed (not yet executed).** `npm run clean:synthetic` is a **dry run by
-default**: it prints counts by measure type, fiscal year, region and function and writes nothing.
-`npm run clean:synthetic -- --execute --backup /home/steve/backups/ausspend/<stamp>` first verifies
-a complete, recent `ausspend_dev` backup (collection counts, natural-key checksum, `data_sources`
-statuses) and only then deletes rows whose `source_id` is exactly `synthetic-seed`, plus that one
-source-register document. It refuses a stale backup, a missing backup, a backup from another
-database, or a backup that does not contain the synthetic source. See
-[docs/SYNTHETIC_REMOVAL_READINESS.md](docs/SYNTHETIC_REMOVAL_READINESS.md) for the dependency
-audit, coverage gaps and the exact gate that must be met before `--execute` is used.
+**Synthetic-seed retirement (executed).** On 2026-11-17 a verified backup was taken at
+`/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures, 810 synthetic), then
+`npm run clean:synthetic -- --execute --backup <dir>` deleted exactly the 810
+`source_id: synthetic-seed` measures and its one source-register document. The database is now
+**348,939 measures, 0 synthetic**, and every real source count is unchanged. `npm run clean:synthetic`
+remains a **dry run by default** and refuses `--execute` without a complete, recent, verified
+`ausspend_dev` backup. See
+[docs/SYNTHETIC_REMOVAL_READINESS.md](docs/SYNTHETIC_REMOVAL_READINESS.md) for the dependency audit,
+coverage gaps and the recorded removal evidence.
 
 The only destructive path is explicit:
 
@@ -175,18 +176,20 @@ nonzero before it changes anything.
 
 ## Backup, restore and the AusTender backfill gate
 
-The live baseline is **810 synthetic seed measures**, **1,231 PBS budget measures** and
-**117,894 AusTender contract measures** (119,935 total; 119,125 distinct non-null natural keys).
-The one-week 861-row AusTender run and the historical 2-FY backfill coexist because they cover
-different publication windows. Before any future historical AusTender backfill, take a verified
-backup:
+The live baseline is **348,939 real measures and 0 synthetic rows**: AusTender 117,894, ACNC
+charity 127,606, GrantConnect 62,128, QLD QGIP 34,000, data.nsw.gov.au CKAN 3,472, PBS 1,231,
+NSW Budget 1,115, QLD Budget 1,051, Dubbo 245, ABS GFS 169 and VIC Budget 28. The pre-removal
+backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
+810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
+historical backfill:
 
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run db:backup -- --prune 14
-# [backup] wrote /home/steve/backups/ausspend/2026-11-16T11-04-33.153Z
-# [backup] natural_key count=2092 distinct=2092 checksum=...
-# [backup] data_sources aus-tender=active data-gov-au-pbs=active synthetic-seed=active
+# [backup] wrote /home/steve/backups/ausspend/<timestamp>
+# [backup] collection measures: 348939
+# [backup] natural_key count=348939 distinct=348939 checksum=...
+# [backup] data_sources abs-gfs=active acnc-charity=active aus-tender=active ... vic-budget=active
 ```
 
 `db:backup` reads `MONGO_URL`, refuses anything except `ausspend_dev` (or an explicit
@@ -303,8 +306,8 @@ connector status: true once AusTender/PBS ingest), `generated_at`,
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
 `federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat, grantconnect_caveat, grantconnect_note}` and
-`limitations`/`note` stating that the seed is synthetic, nothing is verified, live AusTender/PBS
-rows are unverified, and PBS line items are not the federal total. The COFOG set is curated and
+`limitations`/`note` stating that no synthetic rows are present, project/charity rows are
+unverified, live AusTender/PBS rows are unverified, and PBS line items are not the federal total. The COFOG set is curated and
 regions stop at state/territory granularity. The response
 is generated per request and sent with `Cache-Control: no-store`. If the database is unavailable it
 returns `503`.
@@ -522,23 +525,25 @@ It proves:
 - Mixed measure types show the warning and **no headline total** on `/search` and `/functions/07`;
   a single measure type shows a headline total.
 - Rendered row tables and summary/headline footers carry the source id/link and Unverified status.
-- `/data-sources#synthetic-seed` shows the synthetic source Unverified, seven connector stubs
-  marked **stub — not wired**, AusTender/PBS/NSW/CKAN/Dubbo live, GrantConnect degraded/partial
-  with its manual-export caveat, and the coverage limitations plus the PBS line-item caveat.
+- `/data-sources` shows the synthetic source card **only if coverage metadata says synthetic rows
+  are present** (they are not in the current real-only database), the connector stubs marked
+  **stub — not wired**, AusTender/PBS/NSW/CKAN/VIC/QLD/ACNC/ABS/Dubbo live, GrantConnect
+  degraded/partial with its manual-export caveat, and the coverage limitations plus the PBS
+  line-item caveat.
 - API invariants: `function=07` is mixed with `total_cents: null` and per-type totals;
   `measure_type=actual` has a numeric total; `region=NSW` is `400`; an unknown measure id is `404`;
-  `/api/meta/coverage` reports synthetic, live ingestion, seven stubs, `pending: []`,
-  a GrantConnect manual-export caveat and nonzero counts.
+  `/api/meta/coverage` reports `synthetic: false`, `synthetic_measures: 0`, the 348,939 real
+  measures, live ingestion, seven stubs, `pending: []`, a GrantConnect manual-export caveat and
+  nonzero counts.
 
 The mocked `npm run test:e2e` run stays database-free; the audit script is not a Playwright spec.
 
 ## Pages
 
 Eight routes render API data. Every page, including `/about`, shows a persistent coverage banner
-driven by `GET /api/meta/coverage`: synthetic seed rows next to live AusTender contracts and PBS
-budget line items, all figures unverified, plus counts and a link to the source register. If
-coverage metadata cannot be loaded the banner falls back to a static warning rather than
-disappearing.
+driven by `GET /api/meta/coverage`: the real sources and their counts, all project/charity figures
+unverified, 0 synthetic seed rows, plus a link to the source register. If coverage metadata cannot
+be loaded the banner falls back to a neutral unverified-data warning rather than disappearing.
 
 | Route                 | Purpose                                                                      |
 | --------------------- | ---------------------------------------------------------------------------- |
@@ -587,13 +592,14 @@ in the spending search” link that prefills the relevant filters.
 
 ### Coverage, connectors and the about page
 
-`/data-sources` keeps the synthetic source card and its `#synthetic-seed` anchor with the Unverified
-badge, shows the AusTender and PBS cards with last-ingested times/record counts and the PBS
-line-item caveat, and lists every connector from coverage metadata with id, name, publisher,
-source URL, status, jurisdiction level, last fetch and records ingested; stubs are marked **stub
-— not wired**. It also shows the API's coverage `limitations`. The `/about` page explains the
-F2/F3 scope (synthetic seed, live AusTender and PBS, curated COFOG subset, state/territory
-granularity), how provenance is attached, and why mixed measures never get a headline total.
+`/data-sources` shows every registered real source card with its Unverified badge; the synthetic
+source card and `#synthetic-seed` anchor appear only if synthetic rows are present, and they are
+absent from the current real-only register. It shows the AusTender and PBS cards with
+last-ingested times/record counts and the PBS line-item caveat, and lists every connector from
+coverage metadata with id, name, publisher, source URL, status, jurisdiction level, last fetch and
+records ingested; stubs are marked **stub — not wired**. It also shows the API's coverage
+`limitations`. The `/about` page explains the current real-only scope, how provenance is attached,
+and why mixed measures never get a headline total.
 
 ### Measure-type and provenance rules
 
@@ -610,9 +616,9 @@ total, ranked states and a bar. Every figure, group and table row keeps its sour
 ## Data and provenance
 
 Every spending value carries a `SourceRef` (`source_id`, `source_url`, `verified`) and is expressed
-as integer `MoneyCents`. The development seed is synthetic and every seeded measure is
-`verified: false`; the UI must never present it as real data. The seed also asserts it produced no
-verified measures before reporting success.
+as integer `MoneyCents`. Real project and charity rows remain `verified: false` until a human checks
+them; only the ABS GFS COFOG-A benchmark rows are `verified: true`, and they are never summed with
+project data. The seed asserts it produces no verified measures before reporting success.
 
 ## Docker Compose (development)
 
