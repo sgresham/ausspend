@@ -95,6 +95,10 @@ Database counts read at the P2 check (all unchanged from the current baseline): 
 `waternsw` 47; `vic-budget` 28; `abs-gfs-pnfc` 18; `sydney-water` 10; `essential-energy` 6;
 `hunter-water` 6. Total **515,413**.
 
+After SOC phase 6 (Forestry Corporation of NSW, 7 new rows) the current baseline is **515,420**
+measures and **76 SOC rows**; `forestry-corporation` contributes 7 rows and every per-source count
+above is unchanged (no deletes).
+
 ## Method and snapshot evidence
 
 Read-only commands used (no write operations):
