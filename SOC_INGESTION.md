@@ -1,13 +1,14 @@
-# SOC ingestion — PNFC benchmark + first NSW SOC (Sydney Water)
+# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW)
 
 **Status:** the ABS GFS Public Non-Financial Corporations (PNFC) sector
-benchmark is implemented, and the first NSW per-entity State Owned Corporation
-(SOC) adapter — **Sydney Water Corporation only** — is implemented. Per-entity
-NSW SOC extraction for any other entity, BP1 Chapter 9, VIC/QLD SOC and any
-synthetic SOC rows are out of scope and are not implemented.
+benchmark is implemented, and two NSW per-entity State Owned Corporation (SOC)
+adapters are implemented: **Sydney Water Corporation** and **WaterNSW (Water
+NSW)**. Per-entity NSW SOC extraction for any other entity, BP1 Chapter 9,
+VIC/QLD SOC and any synthetic SOC rows are out of scope and are not implemented.
+The two SOC entities are separate sources and are never summed with each other.
 
-`npm run ingest:soc` runs **PNFC first, then Sydney Water**, logging each
-source's success/failure and continuing after a source error.
+`npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW**,
+logging each source's success/failure and continuing after a source error.
 
 ## 1. Source: ABS GFS PNFC (Annual 2024-25 data cubes)
 
@@ -234,24 +235,188 @@ reconciled exactly (statement/Note 1(a)/Note 2(a)/Note 2(b) totals). It is
 **medium** for the two small government funding/transfer lines and the printed
 nil Commonwealth grant line. It is never a substitute for human verification.
 
+## 2A. Source: WaterNSW (second NSW SOC entity)
+
+### Legal and entity basis
+
+Water NSW is a statutory State Owned Corporation constituted under the _Water
+NSW Act 2014_, with the NSW Government as its ultimate parent. The consolidated
+entity comprises Water NSW (the Parent) and its wholly owned subsidiary
+WaterNSW Infrastructure Pty Ltd. Its general-purpose financial statements are
+prepared under the _Government Sector Finance Act 2018_, the _State Owned
+Corporations Act 1989_ and NSW Treasury directions, and are audited by the NSW
+Auditor-General. The annual report is tabled in NSW Parliament (2024-25
+registration 3087/4479, tabled 28 November 2025).
+
+"WaterNSW" is the canonical `delivery_entity`; "Water NSW" is the same entity
+and is an accepted alias. The entity-level statement is **not** a level of
+government, **not** project spending, **not** geographically disaggregated (no
+LGA, SA2, postcode or coordinate) and **not** the ABS PNFC sector aggregate. It
+is stored with `jurisdiction_level: "soc"` and `aggregation_role:
+"agency_detail"`. WaterNSW rows are never added to Sydney Water's rows or to any
+other SOC.
+
+### PDF discovery (no hard-coded URL)
+
+The connector starts at WaterNSW's official annual-report page:
+
+`https://www.waternsw.com.au/about-us/our-business/corporate-governance/annual-reports`
+
+It parses every `href`, accepts only WaterNSW annual-report PDFs (for example
+`WaterNSW-Annual-Report-2024-2025.pdf` and `WaterNSW_Annual-Report-2022-23.pdf`),
+explicitly excludes the half-yearly reports and the Statement of Corporate
+Intent, sorts by fiscal year and selects the latest. There is no hard-coded PDF
+URL; the discovery test proves the parser selects 2024-25 from a page that also
+lists half-yearly, 2023-24 and 2022-23 PDFs.
+
+Latest source found on 2026-11-17 (Annual Report 2024–25, tabled 28 November
+2025):
+
+- URL: `https://www.waternsw.com.au/documents/publications/general-publications/annual-reports/WaterNSW-Annual-Report-2024-2025.pdf`
+- SHA-256: `6240e733e2d2e5562553a15398b1dbe63c8ab454b6fe78a9d5000f354f338b09`
+- Bytes: `42,917,371`
+- Archive: outside the repo (`AUSSPEND_SOURCE_ARCHIVE` /
+  `~/ausspend-source-archive/waternsw/`)
+
+The official WaterNSW host presents a Cloudflare challenge to non-browser
+clients (Node `fetch` and `curl` receive HTTP 403). When the operator sets
+`WATERNSW_ANNUAL_REPORT_URL`, the connector skips online discovery and uses that
+exact official URL as row provenance; `WATERNSW_ANNUAL_REPORT_MIRROR_URL` may
+point at the same document's NSW Parliament tabled-paper artifact
+(`https://files.parliament.nsw.gov.au/.../Attachment%20C1%20-%20WaterNSW%20Annual%20Report%202024-2025.pdf`).
+The archive records the official URL as `original_url` and the mirror as
+`retrieved_from`/`archived_from: "other"`; SHA-256 and byte length are identical
+for both. The default path is still live discovery from the annual-report page.
+
+### Printed unit detection and the `$’000` guard
+
+Every financial-statement column header prints `$’000`, and the Basis of
+preparation (PDF page 61) states all values are rounded to the nearest thousand
+dollars (`$’000`). The adapter reads the statement unit row and calls the shared
+`detectMoneyUnit`; the only accepted unit is `thousands`. A statement whose
+header prints `$` (dollars) is rejected with `phase: "unit"` and no rows are
+ingested. One `$’000` unit = **100,000 cents**; conversion uses
+`Math.round(value × 100,000)` with `Number.isSafeInteger`.
+
+The face statement has four numeric columns (Consolidated 2025, Consolidated
+2024, Parent 2025, Parent 2024). The adapter stores the **consolidated
+current-year** column only. It anchors that column on the printed `Total
+revenue` row and matches every other row by right-edge alignment, so note numbers
+("2", "3", "5", …) and the Parent/comparative columns are never read as the
+current amount.
+
+### Statement and total-expenses reconciliation (zero tolerance)
+
+The consolidated statement is on PDF page 59 (`Statements of comprehensive
+income for the year ended 30 June 2025`) and prints, in `$’000`:
+
+| Printed line                           | 2025 consolidated | 2024 consolidated |
+| -------------------------------------- | ----------------- | ----------------- |
+| Revenue from water supply and delivery | 379,720           | 376,490           |
+| Grants and subsidies                   | 65,336            | 67,109            |
+| Other revenue                          | 49,948            | 54,089            |
+| **Total revenue**                      | **495,004**       | **497,688**       |
+| Employee related expenses              | (163,654)         | (141,587)         |
+| Depreciation and amortisation          | (107,530)         | (105,418)         |
+| Other operating expenses               | (113,348)         | (119,595)         |
+| Finance costs                          | (88,299)          | (67,497)          |
+| **Total expenses**                     | **(472,831)**     | **(434,097)**     |
+| Operating profit                       | 22,173            | 63,590            |
+| Other gains/(losses)                   | 1,607             | 384               |
+| Gains/(losses) on revaluation of PP&E  | (12)              | 188               |
+| Profit before income tax expense       | 23,768            | 64,163            |
+| Income tax expense                     | (7,117)           | (19,224)          |
+| Profit after income tax expense        | 16,651            | 44,939            |
+| Total comprehensive income             | 131,244           | 99,976            |
+
+WaterNSW prints an **explicit `Total expenses` line**; unlike Sydney Water this
+is not derived. It is accepted only when all of the following are exact (zero
+tolerance) in printed thousands:
+
+1. Revenue components: `379,720 + 65,336 + 49,948 = 495,004`.
+2. Expense components: `163,654 + 107,530 + 113,348 + 88,299 = 472,831`.
+3. Operating-profit bridge: `495,004 − 472,831 = 22,173`.
+4. Profit-before-tax bridge: `22,173 + 1,607 − 12 = 23,768`.
+5. Net result: `23,768 − 7,117 = 16,651`.
+6. Note 3 grants: `41,669 + 14,004 + 9,663 = 65,336` (the statement `Grants and
+subsidies` line).
+
+If any check differs by even one `$’000` unit, the whole document is deferred to
+`deferred_soc_documents` with the failing reason and **no row is ingested**. The
+tests cover one-unit `Total expenses`, one-unit profit-before-tax and one-unit
+Note 3 grants mismatches.
+
+Note 3 (`3 Grants and subsidies`, PDF page 64) discloses:
+
+| Printed line                               | 2025 consolidated |
+| ------------------------------------------ | ----------------- |
+| NSW Government contributions to operations | 41,669            |
+| NSW Government subsidies                   | 14,004            |
+| Other Government grants                    | 9,663             |
+| **Total**                                  | **65,336**        |
+
+### Extracted rows
+
+Every row is provisional, `verified: false`, `measure_type: "actual"`,
+`jurisdiction_level: "soc"`, `jurisdiction: "NSW"`, `delivery_entity:
+"WaterNSW"`, `location: { state: "NSW" }`, `source_dataset: "WaterNSW Annual
+Report 2024-25"`, `source_url` the exact PDF, `data_quality_flag:
+"provisional"`, `aggregation_role: "agency_detail"`, and a natural key
+`sha256(entity + fiscal_year + line_item + document_url)` prefixed `waternsw:`.
+
+| `soc_line_item`                              | Printed source                      | 2025 `$’000` | funding_source                                                                   | `potential_double_count` |
+| -------------------------------------------- | ----------------------------------- | ------------ | -------------------------------------------------------------------------------- | ------------------------ |
+| `total_revenue`                              | Statement Total revenue             | 495,004      | WaterNSW                                                                         | false                    |
+| `total_expenses`                             | Statement Total expenses (explicit) | **472,831**  | WaterNSW                                                                         | false                    |
+| `employee_expenses`                          | Employee related expenses           | 163,654      | WaterNSW                                                                         | false                    |
+| `depreciation_amortisation`                  | Depreciation and amortisation       | 107,530      | WaterNSW                                                                         | false                    |
+| `net_result`                                 | Profit after income tax expense     | 16,651       | WaterNSW                                                                         | false                    |
+| `nsw_government_contributions_to_operations` | Note 3                              | 41,669       | NSW Government — Department of Climate Change, Energy, the Environment and Water | **true**                 |
+| `nsw_government_subsidies`                   | Note 3                              | 14,004       | NSW Government                                                                   | **true**                 |
+| `other_government_grants`                    | Note 3                              | 9,663        | Government grants (agency not itemised)                                          | **true**                 |
+
+No project, LGA, SA2, postcode or coordinate is written. No line item is
+invented: every value is a printed statement/Note 3 line, and `total_expenses`
+is the explicit printed total.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (472,831 $’000)** — explicit printed consolidated total.
+   Confirm it is the intended “total expenses” definition and that the
+   consolidated (not Parent) column is the desired entity view.
+2. **`nsw_government_contributions_to_operations` (41,669 $’000)** — a
+   government-named funding row that is already inside Total revenue and may
+   overlap NSW government program spending. Confirm the funding-source label
+   (NSW DCCEEW) and the double-count flag before any additive use.
+
+Both rows carry `human_spot_check: required` in their notes. No WaterNSW row is
+marked verified in this phase.
+
+### Confidence
+
+`extraction_confidence` is **high** for the exactly reconciled statement and
+Note 3 total lines (revenue, expenses, employee, depreciation/amortisation, net
+result, NSW Government contributions). It is **medium** for the two smaller
+grant components. It is never a substitute for human verification.
+
 ## 3. Mapping (PNFC and SOC)
 
-| Field                    | PNFC benchmark                                  | Sydney Water SOC                                         |
-| ------------------------ | ----------------------------------------------- | -------------------------------------------------------- |
-| `jurisdiction_level`     | `pnfc`                                          | `soc`                                                    |
-| `jurisdiction`           | `Australia` or `NSW`/`VIC`/…                    | `NSW`                                                    |
-| `location`               | absent for national; `{ state }` for state rows | `{ state: "NSW" }` (statewide only)                      |
-| `function_code`          | absent                                          | absent                                                   |
-| `amount_cents`           | `$m × 100,000,000`                              | `$’000 × 100,000`                                        |
-| `measure_type`           | `actual`                                        | `actual`                                                 |
-| `aggregation_role`       | `benchmark`                                     | `agency_detail`                                          |
-| `verified`               | `true`                                          | `false`                                                  |
-| `data_quality_flag`      | `verified`                                      | `provisional`                                            |
-| `gfs_flow`               | `revenue` / `expense`                           | absent (`soc_line_item` carries the line)                |
-| `soc_line_item`          | absent                                          | stable line key (table above)                            |
-| `soc_unit`               | absent                                          | `AUD_thousands`                                          |
-| `potential_double_count` | absent                                          | `true` for government-named rows, `false` for own-source |
-| `natural_key`            | `abs-gfs-pnfc:` + 40 hex                        | `sydney-water:` + 40 hex                                 |
+| Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             |
+| ------------------------ | ----------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| `jurisdiction_level`     | `pnfc`                                          | `soc`                                                    | `soc`                                                    |
+| `jurisdiction`           | `Australia` or `NSW`/`VIC`/…                    | `NSW`                                                    | `NSW`                                                    |
+| `location`               | absent for national; `{ state }` for state rows | `{ state: "NSW" }` (statewide only)                      | `{ state: "NSW" }` (statewide only)                      |
+| `function_code`          | absent                                          | absent                                                   | absent                                                   |
+| `amount_cents`           | `$m × 100,000,000`                              | `$’000 × 100,000`                                        | `$’000 × 100,000`                                        |
+| `measure_type`           | `actual`                                        | `actual`                                                 | `actual`                                                 |
+| `aggregation_role`       | `benchmark`                                     | `agency_detail`                                          | `agency_detail`                                          |
+| `verified`               | `true`                                          | `false`                                                  | `false`                                                  |
+| `data_quality_flag`      | `verified`                                      | `provisional`                                            | `provisional`                                            |
+| `gfs_flow`               | `revenue` / `expense`                           | absent (`soc_line_item` carries the line)                | absent (`soc_line_item` carries the line)                |
+| `soc_line_item`          | absent                                          | stable line key (table above)                            | stable line key (table above)                            |
+| `soc_unit`               | absent                                          | `AUD_thousands`                                          | `AUD_thousands`                                          |
+| `potential_double_count` | absent                                          | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source |
+| `natural_key`            | `abs-gfs-pnfc:` + 40 hex                        | `sydney-water:` + 40 hex                                 | `waternsw:` + 40 hex                                     |
 
 ## 4. No-sum and double-count invariants (critical)
 
@@ -260,18 +425,22 @@ nil Commonwealth grant line. It is never a substitute for human verification.
 - Generic `/api/spending`, `/api/search`, region/function/state totals query
   `jurisdiction_level: { $ne: "soc" }` and `aggregation_role: { $ne:
 "benchmark" }`. SOC and PNFC rows can never enter a government program total.
-- `GET /api/soc` returns published SOC rows and computes **no total**: no sum
-  across line items, entities or years. `total_revenue` already includes the
-  separately shown grants; `total_expenses` already includes employee,
-  depreciation/amortisation and transfer lines; `net_result` is a result, not an
-  expense. Summing any of them is invalid.
+- `GET /api/soc` returns published SOC rows for separate entities and computes
+  **no total**: no sum across line items, entities or years. `total_revenue`
+  already includes the separately shown grants; `total_expenses` already
+  includes employee, depreciation/amortisation and transfer lines; `net_result`
+  is a result, not an expense. Summing any of them is invalid.
+- Sydney Water and WaterNSW are **separate sources and separate entities**.
+  The API returns a `sources` array and an `entities` filter; the UI shows an
+  entity column and an entity selector. WaterNSW rows are never added to Sydney
+  Water's rows.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
   added to government program spending.
 - The UI labels SOC as **“SOC entity statement — never add to government program
-  spending”** and shows the unit (`$’000`/`AUD_thousands`), measure-type and
-  provenance badges plus the double-count warning.
+  spending”** and shows the unit (`$’000`/`AUD_thousands`), measure-type,
+  entity/source and provenance badges plus the double-count warning.
 
 ## 5. Deferred SOC documents
 
@@ -293,20 +462,36 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then the Sydney Water connector, in order.
+1. Runs the PNFC connector first, then Sydney Water, then WaterNSW, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
 4. Never deletes any row and never touches any other source.
-5. Writes `docs/source-archive/abs-gfs-pnfc-2024-25.json` and
-   `docs/source-archive/sydney-water-annual-report.json`. The exact bytes stay
+5. Writes `docs/source-archive/abs-gfs-pnfc-2024-25.json`,
+   `docs/source-archive/sydney-water-annual-report.json` and
+   `docs/source-archive/waternsw-annual-report.json`. The exact bytes stay
    outside the repo.
-6. Prints per-source counts only (never a combined SOC or PNFC total).
+6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
+
+For the Cloudflare-blocked WaterNSW host, the live ingest can supply the exact
+official PDF URL and an optional Parliament mirror without hard-coding either in
+the source:
+
+```bash
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+WATERNSW_ANNUAL_REPORT_URL='https://www.waternsw.com.au/documents/publications/general-publications/annual-reports/WaterNSW-Annual-Report-2024-2025.pdf' \
+WATERNSW_ANNUAL_REPORT_MIRROR_URL='https://files.parliament.nsw.gov.au/.../Attachment%20C1%20-%20WaterNSW%20Annual%20Report%202024-2025.pdf' \
+npm run ingest:soc
+```
+
+The row `source_url` is always the official WaterNSW PDF URL; the manifest and
+archive record the mirror as `retrieved_from` with `archived_from: "other"`.
 
 ## 7. How the remaining SOCs will plug in later
 
-`scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water) and an
-intentionally empty `FUTURE_SOC_SOURCE_IDS`. A later phase should:
+`scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water, then
+WaterNSW) and an intentionally empty `FUTURE_SOC_SOURCE_IDS`. A later phase
+should:
 
 1. Add one adapter per source/edition under `server/src/connectors/soc/<state>/`,
    register it in `registry.ts`, and use a distinct `source_id`,

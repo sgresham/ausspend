@@ -23,6 +23,17 @@ import {
   SYDNEY_WATER_UNIT,
   SYDNEY_WATER_UNIT_LABEL,
   SYDNEY_WATER_UNIT_TO_CENTS,
+  WATERNSW_CAVEAT,
+  WATERNSW_ENTITY,
+  WATERNSW_ID,
+  WATERNSW_JURISDICTION,
+  WATERNSW_LICENSE,
+  WATERNSW_NAME,
+  WATERNSW_PUBLISHER,
+  WATERNSW_SOURCE_URL,
+  WATERNSW_UNIT,
+  WATERNSW_UNIT_LABEL,
+  WATERNSW_UNIT_TO_CENTS,
   getConnector,
   runIngestion,
 } from '../server/src/connectors/index.js';
@@ -39,10 +50,11 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
  *   AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo npm run ingest:soc
  *
- * Today it runs ONE source: the ABS GFS Public Non-Financial Corporations
- * (PNFC) sector benchmark, from the nine official ABS GFS Annual 2024-25 XLSX
- * data cubes. The ABS SDMX API has no PNFC/GFS dataflow, so this is the
- * human-approved XLSX fallback.
+ * It runs, in order: the ABS GFS Public Non-Financial Corporations (PNFC)
+ * sector benchmark from the nine official ABS GFS Annual 2024-25 XLSX data
+ * cubes, then the NSW SOC per-entity adapters — Sydney Water, then WaterNSW.
+ * The ABS SDMX API has no PNFC/GFS dataflow, so the PNFC XLSX is the
+ * human-approved fallback.
  *
  * Later NSW SOC per-entity adapters plug in at `FUTURE_SOC_SOURCE_IDS`: add the
  * connector id there and in the registry, and keep the same per-source
@@ -51,14 +63,16 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * PNFC is a sector aggregate: jurisdiction_level "pnfc",
  * aggregation_role "benchmark", verified true. It is never added to SOC/entity,
  * government, charity or project data, and revenue/expense or jurisdictions are
- * never summed. The runner prints per-flow and per-jurisdiction counts only,
- * never a combined total. It never deletes any row.
+ * never summed. The Sydney Water and WaterNSW entity adapters are separate SOC
+ * sources and are never summed with each other or with PNFC. The runner prints
+ * per-source counts only, never a combined total. It never deletes any row.
  */
 /**
- * Order matters: the PNFC sector benchmark runs first, then the first NSW SOC
- * per-entity adapter (Sydney Water). No other SOC adapter is implemented.
+ * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
+ * per-entity adapters (Sydney Water, then WaterNSW). No other SOC adapter is
+ * implemented, and the two entity adapters are never summed together.
  */
-export const SOC_SOURCE_IDS = [ABS_GFS_PNFC_ID, SYDNEY_WATER_ID] as const;
+export const SOC_SOURCE_IDS = [ABS_GFS_PNFC_ID, SYDNEY_WATER_ID, WATERNSW_ID] as const;
 
 /**
  * Placeholder for the later per-entity NSW SOC adapters. Do not add ids here
@@ -137,6 +151,40 @@ async function writeSydneyWaterManifest(): Promise<void> {
   );
 }
 
+async function writeWaterNswManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: WATERNSW_ID });
+  const manifestPath = path.resolve(
+    process.env.WATERNSW_MANIFEST ?? 'docs/source-archive/waternsw-annual-report.json',
+  );
+  const manifest = {
+    entity: WATERNSW_ENTITY,
+    jurisdiction: WATERNSW_JURISDICTION,
+    dataset: WATERNSW_NAME,
+    publisher: WATERNSW_PUBLISHER,
+    discovery_page: WATERNSW_SOURCE_URL,
+    license: WATERNSW_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${WATERNSW_UNIT_LABEL} (${WATERNSW_UNIT}; x${WATERNSW_UNIT_TO_CENTS} cents per unit)`,
+    caveat: WATERNSW_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      retrieved_from: record.retrieved_from,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      'Latest WaterNSW annual report discovered from the official annual-report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The consolidated face statement prints an explicit $’000 unit. Total expenses is an explicit printed total and is accepted only when the printed revenue/expense components and the operating-profit, profit-before-tax and net-result bridges reconcile exactly, and Note 3 grants sum to the statement Grants and subsidies line. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add WaterNSW rows to government program spending, the PNFC benchmark, Sydney Water, or each other.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -175,6 +223,7 @@ async function main(): Promise<void> {
     }
     await writePnfcManifest();
     await writeSydneyWaterManifest();
+    await writeWaterNswManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -239,6 +288,31 @@ async function main(): Promise<void> {
       console.log(
         `[ingest:soc] ${SYDNEY_WATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
+    }
+    const wnRows = await MeasureModel.countDocuments({ source_id: WATERNSW_ID });
+    const wnVerified = await MeasureModel.countDocuments({
+      source_id: WATERNSW_ID,
+      verified: true,
+    });
+    const wnDoubleCount = await MeasureModel.countDocuments({
+      source_id: WATERNSW_ID,
+      potential_double_count: true,
+    });
+    const wnByLine = await MeasureModel.aggregate([
+      { $match: { source_id: WATERNSW_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const wnDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: WATERNSW_ID,
+      status: 'deferred',
+    });
+    const wnArchived = await listArchivedRecords({ source_id: WATERNSW_ID });
+    console.log(
+      `[ingest:soc] ${WATERNSW_ID} rows=${wnRows} source_documents=${wnArchived.length} verified=${wnVerified} potential_double_count=${wnDoubleCount} deferred_documents=${wnDeferred} (entity-level SOC statement lines; no combined total is printed or computed)`,
+    );
+    for (const group of wnByLine) {
+      console.log(`[ingest:soc] ${WATERNSW_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW SOC adapters intentionally not implemented)`,

@@ -1,0 +1,23 @@
+{
+  "entity": "WaterNSW",
+  "jurisdiction": "NSW",
+  "dataset": "WaterNSW — Annual Report",
+  "publisher": "WaterNSW (Water NSW)",
+  "discovery_page": "https://www.waternsw.com.au/about-us/our-business/corporate-governance/annual-reports",
+  "license": "© WaterNSW. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T05:06:32.631Z",
+  "unit": "$’000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for WaterNSW only. Never add to government program spending, to the PNFC sector benchmark, or to each other: total revenue includes the separately shown government grants; total expenses includes employee, depreciation/amortisation, other operating and finance-cost lines. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25",
+      "filename": "WaterNSW-Annual-Report-2024-2025.pdf",
+      "url": "https://www.waternsw.com.au/documents/publications/general-publications/annual-reports/WaterNSW-Annual-Report-2024-2025.pdf",
+      "retrieved_from": "https://files.parliament.nsw.gov.au/fileapi/ParlFiles/GetArtifact?serverRelativeUrl=%2Ftp%2Ffiles%2F192122%2FAttachment%20C1%20-%20WaterNSW%20Annual%20Report%202024-2025.pdf",
+      "sha256": "6240e733e2d2e5562553a15398b1dbe63c8ab454b6fe78a9d5000f354f338b09",
+      "bytes": 42917371,
+      "archived_from": "other"
+    }
+  ],
+  "notes": "Latest WaterNSW annual report discovered from the official annual-report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The consolidated face statement prints an explicit $’000 unit. Total expenses is an explicit printed total and is accepted only when the printed revenue/expense components and the operating-profit, profit-before-tax and net-result bridges reconcile exactly, and Note 3 grants sum to the statement Grants and subsidies line. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add WaterNSW rows to government program spending, the PNFC benchmark, Sydney Water, or each other."
+}
