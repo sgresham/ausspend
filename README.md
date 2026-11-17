@@ -485,6 +485,12 @@ CKAN/Socrata/ArcGIS endpoints, local-government availability, licences, cadence,
 automation risks, with verified sample URLs and a recommended order (QLD first, then VIC). It is
 research only: no state connector is implemented and no state row is ingested.
 
+[docs/DATA_GRANULARITY.md](./docs/DATA_GRANULARITY.md) is the read-only audit of what detail each
+active source actually publishes versus what the app stores, including which sources are
+transactional, summary-only or inherently aggregate, the unit/reconciliation rules, the licence
+ambiguities and a prioritised list of follow-up items. It records the current 348,981-measure
+baseline and the no-sum rules for SOC, ABS GFS/PNFC, ACNC and overlapping budget series.
+
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
 not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this
 document state that wherever PBS figures appear; the budget per-measure-type total is the PBS
