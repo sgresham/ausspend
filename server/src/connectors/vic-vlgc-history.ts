@@ -23,6 +23,8 @@ import {
   type Vgc1WorkbookRows,
 } from './vic-vlgc-vgc1.js';
 import {
+  ABS23_LAYOUT_CURRENT,
+  ABS23_LAYOUT_LEGACY_2015_18,
   VLGGC_ABS_ATTRIBUTION,
   VLGGC_ABS_CONDITIONS_OF_USE,
   VLGGC_ABS_DISCLAIMER,
@@ -33,6 +35,7 @@ import {
   parseVlgcAbs23Workbook,
   readVlgcAbsWorkbook,
   transformVlgcAbsRaw,
+  type Abs23Layout,
   type VlgcAbsRaw,
   type VlgcAbsSkip,
   type VlgcAbsSourceMeta,
@@ -73,6 +76,12 @@ export interface VicHistoryYear {
   abs1: VicHistoryWorkbook;
   abs23: VicHistoryWorkbook;
   /**
+   * ABS2 balance-sheet layout generation. FY2015-16..FY2018-19 print 144
+   * columns (no lease-liability line); FY2019-20+ print 148. Omitted means
+   * `current`.
+   */
+  abs23_layout?: 'current' | 'legacy_2015_18';
+  /**
    * Published audited Bendigo GPFS totals ($'000) where fetched, used as the
    * reconciliation gate for the historical layer.
    */
@@ -86,6 +95,106 @@ export interface VicHistoryYear {
 const V = 'https://www.localgovernment.vic.gov.au/__data/assets/excel_doc';
 
 export const VIC_HISTORY_YEARS: readonly VicHistoryYear[] = [
+  {
+    fiscal_year: '2015-16',
+    abs23_layout: 'legacy_2015_18',
+    vgc1: {
+      resource_url: `${V}/0020/165440/2015-16-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx`,
+      snapshot_timestamp: '20220309020324',
+      sha256: 'e30382d5c0d056cc773f08fbb843454ab2a4e6e46ea55ea2703015d2fb75ea69',
+      bytes: 825_660,
+      filename: '2015-16-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx',
+    },
+    abs1: {
+      resource_url: `${V}/0025/165436/2015-16-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx`,
+      snapshot_timestamp: '20220309020400',
+      sha256: 'debdb84b3e93116cbd7d008d0825ad76ed2234f0698f1886067a76a80aa5f812',
+      bytes: 484_933,
+      filename: '2015-16-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx',
+    },
+    abs23: {
+      resource_url: `${V}/0026/165437/2015-16-VGC-Questionnaire-ABS2-3-Balance-Sheets-and-Other-Finances.xlsx`,
+      snapshot_timestamp: '20220309020410',
+      sha256: 'ac3bbe97cacdb7dcb0d4d107f94f93bf83ccb5f9bd2499ecc5cf213a0655c7fc',
+      bytes: 141_538,
+      filename: '2015-16-VGC-Questionnaire-ABS2-3-Balance-Sheets-and-Other-Finances.xlsx',
+    },
+  },
+  {
+    fiscal_year: '2016-17',
+    abs23_layout: 'legacy_2015_18',
+    vgc1: {
+      resource_url: `${V}/0021/170580/2016-17-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx`,
+      snapshot_timestamp: '20190312124827',
+      sha256: '08d9f99e9d7243947b3e0ef576d538901839d893dc546dd2f09fd24fb6e91a27',
+      bytes: 830_482,
+      filename: '2016-17-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx',
+    },
+    abs1: {
+      resource_url: `${V}/0024/170583/2016-17-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx`,
+      snapshot_timestamp: '20190312124932',
+      sha256: '7bc0e80c97e1ad4ba8bb66c547a2993f88a187976d0c4e5cf41f6a665602cb82',
+      bytes: 478_883,
+      filename: '2016-17-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx',
+    },
+    abs23: {
+      resource_url: `${V}/0025/170584/2016-17-VGC-Questionnaire-ABS2-3-Balance-Sheets-and-Other.xlsx`,
+      snapshot_timestamp: '20190312124950',
+      sha256: '677bf810ec1da9e13fa8104fe1a35ca898210a61885c9b6bb49d04150d9dc896',
+      bytes: 142_695,
+      filename: '2016-17-VGC-Questionnaire-ABS2-3-Balance-Sheets-and-Other.xlsx',
+    },
+  },
+  {
+    fiscal_year: '2017-18',
+    abs23_layout: 'legacy_2015_18',
+    vgc1: {
+      resource_url: `${V}/0025/417832/2017-18-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx`,
+      snapshot_timestamp: '20200229134217',
+      sha256: 'e977cbb573f9e212a17671a9fa085b89e3728c875b1675792179671ce0ff14af',
+      bytes: 844_966,
+      filename: '2017-18-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx',
+    },
+    abs1: {
+      resource_url: `${V}/0028/417835/2017-18-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx`,
+      snapshot_timestamp: '20200229134242',
+      sha256: '84e35f02a38ccb2054ec309cfcf92fa50e2e731d7aad5a9d9d85427727bae8b8',
+      bytes: 485_627,
+      filename: '2017-18-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx',
+    },
+    abs23: {
+      resource_url: `${V}/0024/417840/2017-18-VGC-Questionnaire-ABS2-Balance-Sheets-and-Other-Finances.xlsx`,
+      snapshot_timestamp: '20200229134258',
+      sha256: '62b97da8789bc8e872dbe1740b04bec9197c720c9ce16630b2aeeaf37c39c04d',
+      bytes: 144_124,
+      filename: '2017-18-VGC-Questionnaire-ABS2-Balance-Sheets-and-Other-Finances.xlsx',
+    },
+  },
+  {
+    fiscal_year: '2018-19',
+    abs23_layout: 'legacy_2015_18',
+    vgc1: {
+      resource_url: `${V}/0033/464973/2018-19-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx`,
+      snapshot_timestamp: '20210314151936',
+      sha256: 'b209ecd1d56a6735200c13bce891ea386a192737884c7cd19208be18d27b737c',
+      bytes: 847_695,
+      filename: '2018-19-VGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx',
+    },
+    abs1: {
+      resource_url: `${V}/0037/464968/2018-19-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx`,
+      snapshot_timestamp: '20210314152012',
+      sha256: 'c8e6ccfb8c26f03b5f6ca8b98ba1a27647b1a7fee46ffc9a74d846662143b66c',
+      bytes: 482_725,
+      filename: '2018-19-VGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx',
+    },
+    abs23: {
+      resource_url: `${V}/0038/464969/2018-19-VGC-Questionnaire-ABS2-Balance-Sheets-and-Other-Finances.xlsx`,
+      snapshot_timestamp: '20210314152032',
+      sha256: '2f59ab636fb99f084ca429ef5a49f258406b72b1135ab344cdb7bcb69df4cdfa',
+      bytes: 143_220,
+      filename: '2018-19-VGC-Questionnaire-ABS2-Balance-Sheets-and-Other-Finances.xlsx',
+    },
+  },
   {
     fiscal_year: '2019-20',
     vgc1: {
@@ -217,7 +326,7 @@ export const VIC_HISTORY_YEARS: readonly VicHistoryYear[] = [
 export const VIC_HISTORY_FISCAL_YEARS = VIC_HISTORY_YEARS.map((year) => year.fiscal_year);
 
 /** Years explicitly deferred: the premise is not yet proven for this generation. */
-export const VIC_HISTORY_DEFERRED_YEARS = ['2015-16', '2016-17', '2017-18', '2018-19'] as const;
+export const VIC_HISTORY_DEFERRED_YEARS = [] as const;
 
 export function findVicHistoryYear(fiscalYear: string): VicHistoryYear {
   const year = VIC_HISTORY_YEARS.find((entry) => entry.fiscal_year === fiscalYear);
@@ -324,8 +433,11 @@ function rowAt(
 }
 
 function findHeaderRow(sheet: SheetRows, first: string, second: string): number {
+  // The FY2015-16..FY2018-19 workbooks print "Family & Community Service"
+  // (singular); FY2019-20+ print "Family & Community Services". Match the
+  // stable stem rather than assuming identical wording.
   const row = sheet.rows.find(
-    (entry) => text(entry.values[1]) === first && text(entry.values[2]) === second,
+    (entry) => text(entry.values[1]) === first && (text(entry.values[2]) ?? '').includes(second),
   );
   if (!row) throw new Error(`VLGGC historical ${sheet.name} header not found (${first}/${second})`);
   return row.number;
@@ -363,8 +475,8 @@ export function parseVgc1HistoryWorkbook(
 
   const totalExp = sheetByName(workbook, 'Total Exp');
   const totalRev = sheetByName(workbook, 'Total Rev');
-  findHeaderRow(totalExp, 'Governance', 'Family & Community Services');
-  findHeaderRow(totalRev, 'Governance', 'Family & Community Services');
+  findHeaderRow(totalExp, 'Governance', 'Family & Community');
+  findHeaderRow(totalRev, 'Governance', 'Family & Community');
   const expRows = collectCouncilRows(totalExp, skipped);
   const revRows = collectCouncilRows(totalRev, skipped);
   if (expRows.councils.length !== 79 || revRows.councils.length !== 79) {
@@ -947,7 +1059,9 @@ export async function loadVlgcAbsHistoryYear(
   };
 
   const parsed1 = parseVlgcAbs1Workbook(abs1.workbook, abs1Meta);
-  const parsed23 = parseVlgcAbs23Workbook(abs23.workbook, abs23Meta);
+  const abs23Layout: Abs23Layout =
+    year.abs23_layout === 'legacy_2015_18' ? ABS23_LAYOUT_LEGACY_2015_18 : ABS23_LAYOUT_CURRENT;
+  const parsed23 = parseVlgcAbs23Workbook(abs23.workbook, abs23Meta, abs23Layout);
   const parsedRaw = [...parsed1.raw, ...parsed23.raw];
   const transformed = transformVlgcAbsRaw(parsedRaw);
   assertVlgcAbsHistoryPremise(transformed.records, fiscalYear);
