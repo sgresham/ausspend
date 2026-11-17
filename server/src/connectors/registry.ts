@@ -27,6 +27,7 @@ import { createInnerWestGpfsConnector } from './inner-west-gpfs.js';
 import { createBaysideGpfsConnector } from './bayside-gpfs.js';
 import { createRandwickGpfsConnector } from './randwick-gpfs.js';
 import { createRydeGpfsConnector } from './ryde-gpfs.js';
+import { createNorthSydneyGpfsConnector } from './north-sydney-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -359,6 +360,20 @@ export const CONNECTORS: readonly Connector[] = [
   // summed with any other council, the Dubbo budget rows, the existing council
   // GPFS rows or State rows.
   createRydeGpfsConnector(),
+  // GPFS expansion: twenty-fourth council only (North Sydney Council). Its
+  // audited FY2024-25 General Purpose Financial Statements are the standalone
+  // official "Financial Statements 2024-2025" PDF linked from the Financial
+  // Statements document listing, and a separate source id: every row is
+  // non-additive agency_detail, has no region/LGA allocation, and reconciles
+  // exactly to the printed Income Statement, B1-1 "Total functions and
+  // activities", note B3-4 (depreciation plus gross IPPE impairment) and
+  // comprehensive-income totals. The listing and file endpoints sit behind an
+  // AWS WAF challenge, so the documented headless Chromium path (channel
+  // chromium, not the headless shell) clears it and the connector still selects
+  // the link from the cleared HTML; the exact bytes are SHA-256 archived outside
+  // the repo. Never summed with any other council, the Dubbo budget rows, the
+  // existing council GPFS rows or State rows.
+  createNorthSydneyGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),

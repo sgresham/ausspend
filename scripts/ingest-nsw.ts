@@ -6,6 +6,7 @@ import {
   MID_COAST_GPFS_ID,
   PORT_MACQUARIE_HASTINGS_GPFS_ID,
   RANDWICK_GPFS_ID,
+  NORTH_SYDNEY_GPFS_ID,
   WAVERLEY_GPFS_ID,
   WILLOUGHBY_GPFS_ID,
   WOLLONGONG_GPFS_ID,
@@ -14,6 +15,7 @@ import {
   createMidCoastGpfsConnector,
   createPortMacquarieHastingsGpfsConnector,
   createRandwickGpfsConnector,
+  createNorthSydneyGpfsConnector,
   createWaverleyGpfsConnector,
   createWilloughbyGpfsConnector,
   createWollongongGpfsConnector,
@@ -27,6 +29,7 @@ import { fetchLakeMacquarieGpfsViaBrowser } from './lake-macquarie-gpfs-browser.
 import { fetchMidCoastGpfsViaBrowser } from './mid-coast-gpfs-browser.js';
 import { fetchPortMacquarieHastingsGpfsViaBrowser } from './port-macquarie-hastings-gpfs-browser.js';
 import { fetchRandwickGpfsViaBrowser } from './randwick-gpfs-browser.js';
+import { fetchNorthSydneyGpfsViaBrowser } from './north-sydney-gpfs-browser.js';
 import { fetchWaverleyGpfsViaBrowser } from './waverley-gpfs-browser.js';
 import { fetchWilloughbyGpfsViaBrowser } from './willoughby-gpfs-browser.js';
 import { fetchWollongongGpfsViaBrowser } from './wollongong-gpfs-browser.js';
@@ -65,6 +68,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - bayside-gpfs  GPFS expansion: Bayside Council's audited FY2024-25 GPFS
  *   - randwick-gpfs  GPFS expansion: Randwick City Council's audited FY2024-25 GPFS
  *   - ryde-gpfs  GPFS expansion: Council of the City of Ryde's audited FY2024-25 GPFS
+ *   - north-sydney-gpfs  GPFS expansion: North Sydney Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -73,8 +77,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Council, Maitland City Council, Coffs Harbour City Council, MidCoast Council,
  * Port Macquarie-Hastings Council, Tweed Shire Council, Shoalhaven City
  * Council, Shellharbour City Council, Waverley Council, Willoughby City
- * Council, Inner West Council, Bayside Council, Randwick City Council and the
- * Council of the City of Ryde. No other councils, states/territories,
+ * Council, Inner West Council, Bayside Council, Randwick City Council, the
+ * Council of the City of Ryde and North Sydney Council. No other councils, states/territories,
  * SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
@@ -106,6 +110,7 @@ export const NSW_SOURCE_IDS = [
   'bayside-gpfs',
   'randwick-gpfs',
   'ryde-gpfs',
+  'north-sydney-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -247,6 +252,23 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] randwick-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createRandwickGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === NORTH_SYDNEY_GPFS_ID) {
+      // North Sydney's Financial Statements listing and file endpoints are
+      // protected by an AWS WAF challenge. The documented headless Chromium
+      // path (channel chromium, not the headless shell) clears it, and the
+      // connector still discovers the FY2024-25 link from the cleared HTML and
+      // re-verifies the bytes.
+      console.log('[ingest:nsw] north-sydney-gpfs: browser discovery/download starting');
+      const fetched = await fetchNorthSydneyGpfsViaBrowser();
+      console.log(`[ingest:nsw] north-sydney-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createNorthSydneyGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
