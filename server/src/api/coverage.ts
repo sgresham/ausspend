@@ -50,6 +50,12 @@ import {
   SYDNEY_TRAINS_JURISDICTION,
   SYDNEY_TRAINS_UNIT,
   SYDNEY_TRAINS_UNIT_LABEL,
+  NSW_TRAINLINK_CAVEAT,
+  NSW_TRAINLINK_ENTITY,
+  NSW_TRAINLINK_ID,
+  NSW_TRAINLINK_JURISDICTION,
+  NSW_TRAINLINK_UNIT,
+  NSW_TRAINLINK_UNIT_LABEL,
   TAHE_CAVEAT,
   TAHE_ENTITY,
   TAHE_ID,
@@ -279,6 +285,7 @@ export function createCoverageHandler(
     const portAuthority = dataSourceById.get(PORT_AUTHORITY_ID);
     const tahe = dataSourceById.get(TAHE_ID);
     const sydneyTrains = dataSourceById.get(SYDNEY_TRAINS_ID);
+    const nswTrainlink = dataSourceById.get(NSW_TRAINLINK_ID);
     const socLiveIds = [
       SYDNEY_WATER_ID,
       WATERNSW_ID,
@@ -289,6 +296,7 @@ export function createCoverageHandler(
       PORT_AUTHORITY_ID,
       TAHE_ID,
       SYDNEY_TRAINS_ID,
+      NSW_TRAINLINK_ID,
     ].filter((id) => {
       const source = dataSourceById.get(id);
       return source?.status === 'active' || source?.status === 'degraded';
@@ -304,6 +312,7 @@ export function createCoverageHandler(
       portAuthority?.last_ingested_at,
       tahe?.last_ingested_at,
       sydneyTrains?.last_ingested_at,
+      nswTrainlink?.last_ingested_at,
     ]
       .filter((value) => value !== null && value !== undefined)
       .sort((a, b) => new Date(b as Date).getTime() - new Date(a as Date).getTime())[0];
@@ -334,6 +343,7 @@ export function createCoverageHandler(
               socLiveIds.includes(PORT_AUTHORITY_ID) ? 'Port Authority of NSW' : null,
               socLiveIds.includes(TAHE_ID) ? 'TAHE' : null,
               socLiveIds.includes(SYDNEY_TRAINS_ID) ? 'Sydney Trains' : null,
+              socLiveIds.includes(NSW_TRAINLINK_ID) ? 'NSW TrainLink' : null,
             ]
               .filter(Boolean)
               .join(' + ')})`
@@ -465,6 +475,7 @@ export function createCoverageHandler(
           PORT_AUTHORITY_ID,
           TAHE_ID,
           SYDNEY_TRAINS_ID,
+          NSW_TRAINLINK_ID,
         ].filter((id) => dataSourceById.get(id)?.status === 'degraded'),
         last_ingested_at: socLastIngested ? new Date(socLastIngested).toISOString() : null,
         // Row counts only; entity amounts are never combined into a total.
@@ -477,13 +488,14 @@ export function createCoverageHandler(
           (landcom?.records_ingested ?? 0) +
           (portAuthority?.records_ingested ?? 0) +
           (tahe?.records_ingested ?? 0) +
-          (sydneyTrains?.records_ingested ?? 0),
+          (sydneyTrains?.records_ingested ?? 0) +
+          (nswTrainlink?.records_ingested ?? 0),
         // Kept for the single-source shape: the first SOC entity.
         entity: SYDNEY_WATER_ENTITY,
         jurisdiction: SYDNEY_WATER_JURISDICTION,
         unit: SYDNEY_WATER_UNIT,
         unit_label: SYDNEY_WATER_UNIT_LABEL,
-        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE and Sydney Trains are separate SOC entities; their rows are never added to Sydney Water's or to any other total.`,
+        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink are separate SOC entities; their rows are never added to Sydney Water's or to any other total.`,
         label: 'SOC entity statement — never add to government program spending',
         entities: [
           {
@@ -594,8 +606,20 @@ export function createCoverageHandler(
               : null,
             caveat: SYDNEY_TRAINS_CAVEAT,
           },
+          {
+            source_id: NSW_TRAINLINK_ID,
+            entity: NSW_TRAINLINK_ENTITY,
+            jurisdiction: NSW_TRAINLINK_JURISDICTION,
+            unit: NSW_TRAINLINK_UNIT,
+            unit_label: NSW_TRAINLINK_UNIT_LABEL,
+            records: nswTrainlink?.records_ingested ?? 0,
+            last_ingested_at: nswTrainlink?.last_ingested_at
+              ? new Date(nswTrainlink.last_ingested_at).toISOString()
+              : null,
+            caveat: NSW_TRAINLINK_CAVEAT,
+          },
         ],
-        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE and Sydney Trains. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges; Hunter Water: explicit printed Total expenses plus its component, Note 3 and profit-before-tax bridges; Essential Energy: exact sum of the printed expense lines because the statement has no single Total expenses subtotal, plus Note 2(c) and Note 3 bridge checks and the printed loss retained with a negative sign; Forestry Corporation: explicit printed Total expenses plus Note 5/8/9/10 subtotals and profit bridges, with two government-grant rows flagged potential double count; Landcom: no printed Total revenue or Total expenses, so both are the exact signed sums of the printed statement lines, accepted only when the gross-profit, PBT, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly, with one grant-income row flagged potential double count and two lines flagged for human spot-check; Port Authority of NSW: explicit printed Total revenue and Total expenses, accepted only when the revenue-line, expense-line, PBT (including net gain on sale of PPE and other gains), net-result and Note 3/Note 4 bridges reconcile exactly, with no government grants separately disclosed and two lines flagged for human spot-check; TAHE: explicit printed Total revenue and Total expenses, accepted only when the five revenue lines, five non-nil expense lines plus an explicitly printed nil valuation decrement and the net-result bridge reconcile exactly, with one Grants and contributions row flagged potential double count and two lines flagged for human spot-check; Sydney Trains: explicit printed Total revenue and Total expenses excluding losses, accepted only when the four revenue lines, six expense lines, deficit-before-grants, operations-result and net-result bridges (including the below-the-line gains/losses) reconcile exactly, with one Grants and contributions row flagged potential double count, two lines flagged for human spot-check and a documented Volume 2 “Draft” footer provenance caveat). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the entities are never summed together. Government-named funding rows carry potential_double_count.',
+        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges; Hunter Water: explicit printed Total expenses plus its component, Note 3 and profit-before-tax bridges; Essential Energy: exact sum of the printed expense lines because the statement has no single Total expenses subtotal, plus Note 2(c) and Note 3 bridge checks and the printed loss retained with a negative sign; Forestry Corporation: explicit printed Total expenses plus Note 5/8/9/10 subtotals and profit bridges, with two government-grant rows flagged potential double count; Landcom: no printed Total revenue or Total expenses, so both are the exact signed sums of the printed statement lines, accepted only when the gross-profit, PBT, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly, with one grant-income row flagged potential double count and two lines flagged for human spot-check; Port Authority of NSW: explicit printed Total revenue and Total expenses, accepted only when the revenue-line, expense-line, PBT (including net gain on sale of PPE and other gains), net-result and Note 3/Note 4 bridges reconcile exactly, with no government grants separately disclosed and two lines flagged for human spot-check; TAHE: explicit printed Total revenue and Total expenses, accepted only when the five revenue lines, five non-nil expense lines plus an explicitly printed nil valuation decrement and the net-result bridge reconcile exactly, with one Grants and contributions row flagged potential double count and two lines flagged for human spot-check; Sydney Trains: explicit printed Total revenue and Total expenses excluding losses, accepted only when the four revenue lines, six expense lines, deficit-before-grants, operations-result and net-result bridges (including the below-the-line gains/losses) reconcile exactly, with one Grants and contributions row flagged potential double count, two lines flagged for human spot-check and a documented Volume 2 “Draft” footer provenance caveat; NSW TrainLink: explicit printed Total revenue and Total expenses excluding losses, accepted only when the three revenue lines, five expense lines, deficit-before-grants, operations-result and net-result bridges (with an explicitly printed nil impairment dash) reconcile exactly, with one Grants and contributions row flagged potential double count, two lines flagged for human spot-check and a recorded NSW TrainLink-brand/NSW Trains-legal-entity provenance caveat). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the entities are never summed together. Government-named funding rows carry potential_double_count.',
       },
       local_ingestion: {
         live: localConnectors

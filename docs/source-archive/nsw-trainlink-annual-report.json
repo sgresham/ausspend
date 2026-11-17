@@ -1,0 +1,23 @@
+{
+  "entity": "NSW TrainLink",
+  "legal_entity": "NSW Trains",
+  "jurisdiction": "NSW",
+  "dataset": "NSW TrainLink — Annual Report",
+  "publisher": "NSW TrainLink (Transport for NSW)",
+  "discovery_page": "https://www.transport.nsw.gov.au/news-and-events/reports-and-publications/nsw-trainlink-annual-reports",
+  "license": "© Transport for NSW. Published NSW TrainLink annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T09:51:21.187Z",
+  "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for NSW TrainLink only. Never add to government program spending, to the PNFC sector benchmark, or to each other: Total revenue (97,080 thousand) excludes the separately presented Grants and contributions line (395,366 thousand); Total expenses excluding losses (377,742 thousand) excludes the below-the-line Gains/(losses) on disposal and Impairment reversals/(losses) that are included in the printed net-result bridge; the net result is a surplus of 113,817 thousand. The annual report is branded NSW TrainLink but the audited statement is for the legal entity NSW Trains, so every row records legal_name NSW Trains and is provisional and unverified, flagged for human spot-check.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25 — audited financial statements",
+      "filename": "nsw-trainlink-annual-report-2024-25-volume-2.pdf",
+      "url": "https://www.transport.nsw.gov.au/system/files/media/documents/2025/nsw-trainlink-annual-report-2024%E2%80%9325-volume-2.pdf",
+      "sha256": "31db9476ca47e87e9ca8afce05437bbfe58b97367b5420e7195ae527f8ee7aea",
+      "bytes": 1682671,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest NSW TrainLink annual report discovered from the official Transport for NSW NSW TrainLink annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. NSW TrainLink publishes two volumes; the audited Statement of comprehensive income is in Volume 2, so discovery selects the latest report year's financial-statements volume. The statement prints an explicit $'000 unit and explicit Total revenue and Total expenses excluding losses subtotals. Both printed totals are accepted only when the printed revenue lines, expense lines, deficit-before-grants bridge, operations-result bridge (adding Grants and contributions) and net-result bridge (adding gains/losses on disposal and impairment reversals) reconcile exactly. Grants and contributions are separately disclosed in Note 2(c), so one grant row carries potential_double_count=true. The annual report is branded NSW TrainLink but the audited statement is for the legal entity NSW Trains; that provenance caveat is recorded and two lines are flagged for human spot-check. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add NSW TrainLink rows to government program spending, the PNFC benchmark, or any other SOC."
+}

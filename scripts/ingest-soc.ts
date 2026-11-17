@@ -89,6 +89,17 @@ import {
   SYDNEY_TRAINS_UNIT,
   SYDNEY_TRAINS_UNIT_LABEL,
   SYDNEY_TRAINS_UNIT_TO_CENTS,
+  NSW_TRAINLINK_CAVEAT,
+  NSW_TRAINLINK_ENTITY,
+  NSW_TRAINLINK_ID,
+  NSW_TRAINLINK_JURISDICTION,
+  NSW_TRAINLINK_LICENSE,
+  NSW_TRAINLINK_NAME,
+  NSW_TRAINLINK_PUBLISHER,
+  NSW_TRAINLINK_SOURCE_URL,
+  NSW_TRAINLINK_UNIT,
+  NSW_TRAINLINK_UNIT_LABEL,
+  NSW_TRAINLINK_UNIT_TO_CENTS,
   TAHE_CAVEAT,
   TAHE_ENTITY,
   TAHE_ID,
@@ -148,9 +159,9 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
- * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, then
- * Sydney Trains). No other SOC adapter is implemented, and the nine entity
- * adapters are never summed together.
+ * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
+ * Trains, then NSW TrainLink). No other SOC adapter is implemented, and the ten
+ * entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
@@ -163,6 +174,7 @@ export const SOC_SOURCE_IDS = [
   PORT_AUTHORITY_ID,
   TAHE_ID,
   SYDNEY_TRAINS_ID,
+  NSW_TRAINLINK_ID,
 ] as const;
 
 /**
@@ -509,6 +521,40 @@ async function writeSydneyTrainsManifest(): Promise<void> {
   );
 }
 
+async function writeNswTrainlinkManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: NSW_TRAINLINK_ID });
+  const manifestPath = path.resolve(
+    process.env.NSW_TRAINLINK_MANIFEST ?? 'docs/source-archive/nsw-trainlink-annual-report.json',
+  );
+  const manifest = {
+    entity: NSW_TRAINLINK_ENTITY,
+    legal_entity: 'NSW Trains',
+    jurisdiction: NSW_TRAINLINK_JURISDICTION,
+    dataset: NSW_TRAINLINK_NAME,
+    publisher: NSW_TRAINLINK_PUBLISHER,
+    discovery_page: NSW_TRAINLINK_SOURCE_URL,
+    license: NSW_TRAINLINK_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${NSW_TRAINLINK_UNIT_LABEL} (${NSW_TRAINLINK_UNIT}; x${NSW_TRAINLINK_UNIT_TO_CENTS} cents per unit)`,
+    caveat: NSW_TRAINLINK_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "Latest NSW TrainLink annual report discovered from the official Transport for NSW NSW TrainLink annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. NSW TrainLink publishes two volumes; the audited Statement of comprehensive income is in Volume 2, so discovery selects the latest report year's financial-statements volume. The statement prints an explicit $'000 unit and explicit Total revenue and Total expenses excluding losses subtotals. Both printed totals are accepted only when the printed revenue lines, expense lines, deficit-before-grants bridge, operations-result bridge (adding Grants and contributions) and net-result bridge (adding gains/losses on disposal and impairment reversals) reconcile exactly. Grants and contributions are separately disclosed in Note 2(c), so one grant row carries potential_double_count=true. The annual report is branded NSW TrainLink but the audited statement is for the legal entity NSW Trains; that provenance caveat is recorded and two lines are flagged for human spot-check. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add NSW TrainLink rows to government program spending, the PNFC benchmark, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -555,6 +601,7 @@ async function main(): Promise<void> {
     await writePortAuthorityManifest();
     await writeTaheManifest();
     await writeSydneyTrainsManifest();
+    await writeNswTrainlinkManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -750,6 +797,33 @@ async function main(): Promise<void> {
     );
     for (const group of lcByLine) {
       console.log(`[ingest:soc] ${LANDCOM_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const ntlRows = await MeasureModel.countDocuments({ source_id: NSW_TRAINLINK_ID });
+    const ntlVerified = await MeasureModel.countDocuments({
+      source_id: NSW_TRAINLINK_ID,
+      verified: true,
+    });
+    const ntlDoubleCount = await MeasureModel.countDocuments({
+      source_id: NSW_TRAINLINK_ID,
+      potential_double_count: true,
+    });
+    const ntlByLine = await MeasureModel.aggregate([
+      { $match: { source_id: NSW_TRAINLINK_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const ntlDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: NSW_TRAINLINK_ID,
+      status: 'deferred',
+    });
+    const ntlArchived = await listArchivedRecords({ source_id: NSW_TRAINLINK_ID });
+    console.log(
+      `[ingest:soc] ${NSW_TRAINLINK_ID} rows=${ntlRows} source_documents=${ntlArchived.length} verified=${ntlVerified} potential_double_count=${ntlDoubleCount} deferred_documents=${ntlDeferred} (entity-level SOC statement lines; no combined total is printed or computed)`,
+    );
+    for (const group of ntlByLine) {
+      console.log(
+        `[ingest:soc] ${NSW_TRAINLINK_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW SOC adapters intentionally not implemented)`,
