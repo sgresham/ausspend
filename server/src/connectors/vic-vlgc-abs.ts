@@ -191,12 +191,15 @@ export interface VlgcAbsSourceMeta {
   source_sha256: string;
   source_date: string;
   workbook: 'ABS1' | 'ABS2-3';
+  /** Fiscal year of the workbook; defaults to FY2024-25 when omitted. */
+  fiscal_year?: string;
 }
 
 export interface VlgcAbsRaw extends Record<string, unknown> {
   workbook: 'ABS1' | 'ABS2-3';
   council_label: string;
   council_name: string;
+  fiscal_year?: string;
   statement: 'capital' | 'balance' | 'cash_flow' | 'income';
   statement_section: string;
   asset_class: string | null;
@@ -653,6 +656,8 @@ export function parseVlgcAbs23Workbook(
 }
 
 function reconciliationStatus(raw: VlgcAbsRaw): string {
+  const fiscalYear = raw.fiscal_year ?? VLGGC_ABS_FISCAL_YEAR;
+  if (fiscalYear !== VLGGC_ABS_FISCAL_YEAR) return 'questionnaire_unaudited';
   if (raw.council_name !== BENDIGO_ABS_COUNCIL_NAME) return 'questionnaire_unaudited';
   if (raw.measure === 'balance_sheet_line' && raw.line_code === '32300') {
     return 'reconciled_to_gpfs';
@@ -670,9 +675,10 @@ function reconciliationStatus(raw: VlgcAbsRaw): string {
 function mapRawRecord(raw: VlgcAbsRaw): SpendingRecord | null {
   const amount = vlgcAbsAmountToCents(raw.raw_value);
   if (amount === null) return null;
+  const fiscalYear = raw.fiscal_year ?? VLGGC_ABS_FISCAL_YEAR;
   const reconciliation = reconciliationStatus(raw);
   const key = vlgcAbsNaturalKey([
-    VLGGC_ABS_FISCAL_YEAR,
+    fiscalYear,
     raw.workbook,
     raw.council_name,
     raw.statement,
@@ -683,7 +689,7 @@ function mapRawRecord(raw: VlgcAbsRaw): SpendingRecord | null {
   ]);
 
   const note = [
-    `Source: ${VLGGC_ABS_NAME} (${raw.workbook} ${raw.sheet}, row ${raw.row}, column ${raw.column_index})`,
+    `Source: VLGGC ABS ${fiscalYear} questionnaire (${raw.workbook} ${raw.sheet}, row ${raw.row}, column ${raw.column_index})`,
     `Official landing page: ${VLGGC_ABS_LANDING_URL}`,
     `Official resource: ${raw.resource_url}`,
     `Retrieved from: ${raw.retrieval_url}`,
@@ -694,7 +700,7 @@ function mapRawRecord(raw: VlgcAbsRaw): SpendingRecord | null {
     `Attribution: ${VLGGC_ABS_ATTRIBUTION}. Conditions of Use: "${VLGGC_ABS_CONDITIONS_OF_USE}" This is attribution/permission, NOT a CC licence; the workbooks are not redistributed.`,
     'Council-supplied VLGGC questionnaire, unaudited; provisional/local_government; verified=false',
     reconciliation === 'reconciled_to_gpfs'
-      ? `Reconciliation: City of Greater Bendigo ${raw.line_label} reconciles exactly to its audited FY2024-25 GPFS; reconciliation_status=reconciled_to_gpfs`
+      ? `Reconciliation: City of Greater Bendigo ${raw.line_label} reconciles exactly to its audited ${fiscalYear} GPFS; reconciliation_status=reconciled_to_gpfs`
       : reconciliation === 'bridged_to_gpfs_cash_flow'
         ? `Reconciliation: City of Greater Bendigo ABS1 total capital outlays $56,221,353.20 exceed the audited GPFS cash-flow payments for capital assets ($55,748k) by $473,353.20 (0.85%); the accrual/cash bridge is documented and equality is never forced; reconciliation_status=bridged_to_gpfs_cash_flow`
         : 'Reconciliation: questionnaire_unaudited; no GPFS reconciliation for this row',
@@ -704,7 +710,7 @@ function mapRawRecord(raw: VlgcAbsRaw): SpendingRecord | null {
   return {
     amount_cents: amount.cents,
     measure_type: 'actual',
-    fiscal_year: VLGGC_ABS_FISCAL_YEAR,
+    fiscal_year: fiscalYear,
     source_id: VLGGC_ABS_ID,
     source_url: VLGGC_ABS_LANDING_URL,
     verified: false,
@@ -713,12 +719,12 @@ function mapRawRecord(raw: VlgcAbsRaw): SpendingRecord | null {
     jurisdiction: 'VIC',
     delivery_entity: raw.council_name,
     funding_source: 'Victorian local government',
-    source_dataset: VLGGC_ABS_DATASET,
+    source_dataset: `VLGGC Annual Questionnaire ABS1 Capital Outlays and ABS2-3 Balance Sheets and Other Finances ${fiscalYear}`,
     source_date: raw.source_date,
     data_quality_flag: VLGGC_ABS_DATA_QUALITY_FLAG,
     aggregation_role: 'agency_detail',
     project_name: `${raw.council_name} — ${raw.line_label}`,
-    description: `VLGGC ${raw.workbook} ${VLGGC_ABS_FISCAL_YEAR} ${raw.statement} — ${raw.line_label}`,
+    description: `VLGGC ${raw.workbook} ${fiscalYear} ${raw.statement} — ${raw.line_label}`,
     location: { state: 'VIC', lga_name: raw.council_name },
     statement: raw.statement,
     reconciliation_status: reconciliation,

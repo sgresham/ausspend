@@ -1,0 +1,44 @@
+{
+  "dataset": "VLGGC Annual Questionnaire ABS1 Capital Outlays and ABS2-3 Balance Sheets and Other Finances 2021-22",
+  "fiscal_year": "2021-22",
+  "source_url": "https://www.localgovernment.vic.gov.au/funding-programs/victoria-grants-commission/consultation-and-operations",
+  "license": "VLGGC attribution/permission — NOT CC BY. Conditions of Use: \"Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.\" Councils provide permission for this online release; the Commission does not guarantee the material to be free from error. Derived rows only; the source workbooks are not redistributed.",
+  "attribution": "Victorian Local Government Grants Commission data collection",
+  "conditions_of_use": "Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.",
+  "disclaimer": "The data in these spreadsheets is provided for information purposes only. These spreadsheets are produced from data sourced annually from Local Government (councils) in Victoria. Councils provide permission for this online release. The data has been analysed, but the Victorian Local Government Grants Commission does not guarantee the material to be free from error.",
+  "caveat": "Council-supplied VLGGC ABS1/ABS2-3 questionnaire return, not audited GPFS; provisional and unverified. Non-additive rows only; no cross-council total; never mixed with VGC1, vic-budget, ABS GFS, LGPRF, waste or NSW council data.",
+  "retrieved_at": "2026-11-17T21:01:40.138Z",
+  "unit": "whole AUD (x100 cents); cells carry cents",
+  "councils": 79,
+  "totals_suppressed": 4,
+  "rows": 8868,
+  "files": [
+    {
+      "workbook": "ABS1",
+      "resource_url": "https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0035/197495/2021-22-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx",
+      "retrieved_from": "https://web.archive.org/web/20231109222002id_/https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0035/197495/2021-22-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx",
+      "snapshot_timestamp": "20231109222002",
+      "filename": "2021-22-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx",
+      "sha256": "30ec390b68f16543fdb1a33b4aa17db48d69df9d43ebbf1f2f01937e943f3d18",
+      "bytes": 469559
+    },
+    {
+      "workbook": "ABS2-3",
+      "resource_url": "https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0036/197496/2021-22-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx",
+      "retrieved_from": "https://web.archive.org/web/20231109222007id_/https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0036/197496/2021-22-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx",
+      "snapshot_timestamp": "20231109222007",
+      "filename": "2021-22-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx",
+      "sha256": "25a287666ffc4bf05504399553460142d192922a1e7a5db75a2423b9c039e90b",
+      "bytes": 144732
+    }
+  ],
+  "source_totals_check": {
+    "capital_sum_cents": 300514451604,
+    "capital_total_cents": 300514451603,
+    "capital_delta_cents": 1,
+    "assets_sum_cents": 13573984353179,
+    "assets_total_cents": 13573984353178,
+    "assets_delta_cents": 1
+  },
+  "notes": "Derived rows only; neither workbook is redistributed. The source Totals rows are suppressed and no cross-council total is emitted. Every row is non-additive agency detail, provisional/local_government and verified=false. Per-year fiscal_year and natural keys prevent cross-year collision."
+}

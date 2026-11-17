@@ -129,12 +129,21 @@ export interface Vgc1SourceMeta {
   source_url: string;
   source_sha256: string;
   source_date: string;
+  /** Fiscal year of the workbook; defaults to FY2024-25 when omitted. */
+  fiscal_year?: string;
 }
 
 export interface Vgc1Raw extends Record<string, unknown> {
   kind: 'expense' | 'revenue' | 'expense_nature';
   council_label: string;
   council_name: string;
+  fiscal_year?: string;
+  /**
+   * Optional per-row reconciliation override (for example a historical year's
+   * Bendigo totals that were checked against the audited GPFS). Absent means
+   * the normal pilot-A rule applies.
+   */
+  reconciliation_status?: string;
   section: Vgc1Section;
   line_type: Vgc1LineType;
   function_name: string | null;
@@ -468,6 +477,7 @@ export function parseVgc1Workbook(
   workbook: Vgc1WorkbookRows,
   meta: Vgc1SourceMeta,
 ): Vgc1ParseResult {
+  const sourceMeta: Vgc1SourceMeta = { fiscal_year: VGC1_FISCAL_YEAR, ...meta };
   const skipped: Vgc1Skip[] = [];
   const raw: Vgc1Raw[] = [];
   const totalExp = sheetByName(workbook, 'Total Exp');
@@ -521,7 +531,7 @@ export function parseVgc1Workbook(
           column_index: 1 + fn.index,
           raw_value: expValue,
           unit: VGC1_UNIT,
-          ...meta,
+          ...sourceMeta,
         });
       }
       const revValue = numberValue(revRow.values[1 + fn.index]);
@@ -542,7 +552,7 @@ export function parseVgc1Workbook(
           column_index: 1 + fn.index,
           raw_value: revValue,
           unit: VGC1_UNIT,
-          ...meta,
+          ...sourceMeta,
         });
       }
     }
@@ -592,7 +602,7 @@ export function parseVgc1Workbook(
         column_index: bridge.column,
         raw_value: value,
         unit: VGC1_UNIT,
-        ...meta,
+        ...sourceMeta,
       });
     }
 
@@ -637,13 +647,13 @@ export function parseVgc1Workbook(
         column_index: bridge.column,
         raw_value: value,
         unit: VGC1_UNIT,
-        ...meta,
+        ...sourceMeta,
       });
     }
   }
 
   for (const fn of VGC1_FUNCTIONS) {
-    const parsed = parseFunctionSheet(workbook, meta, fn, expRows.councils, skipped);
+    const parsed = parseFunctionSheet(workbook, sourceMeta, fn, expRows.councils, skipped);
     raw.push(...parsed.raw);
     totalsSuppressed += parsed.totalsSuppressed;
   }
@@ -662,11 +672,14 @@ export function parseVgc1Workbook(
 function mapRawRecord(raw: Vgc1Raw): SpendingRecord | null {
   const amount = vgc1AmountToCents(raw.raw_value);
   if (amount === null) return null;
+  const fiscalYear = raw.fiscal_year ?? VGC1_FISCAL_YEAR;
   const isBendigo = raw.council_name === BENDIGO_COUNCIL_NAME;
-  const isBendigoTotal = isBendigo && raw.line_type === 'total';
-  const reconciliationStatus = isBendigoTotal ? 'reconciled_to_gpfs' : 'questionnaire_unaudited';
+  const isBendigoTotal = isBendigo && raw.line_type === 'total' && fiscalYear === VGC1_FISCAL_YEAR;
+  const reconciliationStatus =
+    raw.reconciliation_status ??
+    (isBendigoTotal ? 'reconciled_to_gpfs' : 'questionnaire_unaudited');
   const key = vgc1NaturalKey([
-    VGC1_FISCAL_YEAR,
+    fiscalYear,
     raw.council_name,
     raw.section,
     raw.line_type,
@@ -689,9 +702,9 @@ function mapRawRecord(raw: Vgc1Raw): SpendingRecord | null {
             : `total_${raw.section === 'expense' ? 'expenditure' : 'revenue'}`;
 
   const note = [
-    `Source: ${VGC1_NAME} (${raw.sheet}, row ${raw.row}, column ${raw.column_index})`,
+    `Source: VLGGC VGC1 ${fiscalYear} Expenditure and Revenue questionnaire (${raw.sheet}, row ${raw.row}, column ${raw.column_index})`,
     `Official landing page: ${VGC1_LANDING_URL}`,
-    `Official resource: ${VGC1_RESOURCE_URL}`,
+    `Official resource: ${raw.resource_url}`,
     `Retrieved from: ${raw.retrieval_url}`,
     `Workbook SHA-256: ${raw.source_sha256}`,
     `Unit: whole ${VGC1_UNIT} (cells carry cents) converted at ${VGC1_UNIT_TO_CENTS} cents per dollar; unit is explicit, never inferred from magnitude`,
@@ -702,8 +715,8 @@ function mapRawRecord(raw: Vgc1Raw): SpendingRecord | null {
       : '',
     `Attribution: ${VGC1_ATTRIBUTION}. Conditions of Use: "${VGC1_CONDITIONS_OF_USE}" This is attribution/permission, NOT a CC licence; the workbook is not redistributed.`,
     'Council-supplied VLGGC questionnaire, unaudited; provisional/local_government; verified=false',
-    isBendigoTotal
-      ? `Reconciliation: City of Greater Bendigo total ${raw.section} reconciles to its audited FY2024-25 GPFS at the printed $1,000 rounding (VGC whole AUD vs GPFS $'000); reconciliation_status=reconciled_to_gpfs`
+    reconciliationStatus === 'reconciled_to_gpfs'
+      ? `Reconciliation: City of Greater Bendigo total ${raw.section} reconciles to its audited ${fiscalYear} GPFS at the printed $1,000 rounding (VGC whole AUD vs GPFS $'000); reconciliation_status=reconciled_to_gpfs`
       : 'Reconciliation: questionnaire_unaudited; no GPFS reconciliation for this row',
     'NON-ADDITIVE: function totals, the five expense natures, printed bridges and totals are separate printed cuts and are never summed together; no cross-council total; never mixed with vic-budget, ABS GFS, LGPRF, waste or NSW council rows',
   ]
@@ -713,7 +726,7 @@ function mapRawRecord(raw: Vgc1Raw): SpendingRecord | null {
   return {
     amount_cents: amount.cents,
     measure_type: 'actual',
-    fiscal_year: VGC1_FISCAL_YEAR,
+    fiscal_year: fiscalYear,
     source_id: VGC1_ID,
     source_url: VGC1_LANDING_URL,
     verified: false,
@@ -722,12 +735,12 @@ function mapRawRecord(raw: Vgc1Raw): SpendingRecord | null {
     jurisdiction: 'VIC',
     delivery_entity: raw.council_name,
     funding_source: 'Victorian local government',
-    source_dataset: VGC1_DATASET,
+    source_dataset: `VLGGC Annual Questionnaire VGC1 — Expenditure and Revenue ${fiscalYear}`,
     source_date: raw.source_date,
     data_quality_flag: VGC1_DATA_QUALITY_FLAG,
     aggregation_role: 'agency_detail',
     project_name: `${raw.council_name} — ${raw.line_label}`,
-    description: `VLGGC VGC1 ${VGC1_FISCAL_YEAR} ${raw.section} — ${raw.line_label}`,
+    description: `VLGGC VGC1 ${fiscalYear} ${raw.section} — ${raw.line_label}`,
     location: { state: 'VIC', lga_name: raw.council_name },
     statement: 'income',
     reconciliation_status: reconciliationStatus,

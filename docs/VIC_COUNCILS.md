@@ -4,10 +4,13 @@
 pass. **VIC council pilot A is implemented** as source `vic-vlgc-vgc1`: 5,401 non-additive VGC1
 2024-25 rows across all 79 councils (see §11). **VIC council pilot B is implemented** as source
 `vic-vlgc-abs`: 9,059 non-additive ABS1/ABS2-3 2024-25 rows across the same 79 councils (see §12).
-The planning pass touched docs only; pilots A and B are separate ingestion items. The database was
-**515,449 measures** at planning time, **515,955** on the eve of pilot A, **521,356** after it
-(exact delta +5,401), and **530,415** after pilot B (exact delta +9,059). No council PDFs were
-queued.
+**VIC council pilot C is implemented** as historical VGC1 and ABS1/ABS2-3 rows for FY2019-20 to
+FY2023-24 under the same two source ids: **27,099 VGC1 + 44,548 ABS = 71,647 historical rows**
+(see §13). FY2015-16 to FY2018-19 are explicitly **deferred**, not sampled. The planning pass
+touched docs only; pilots A–C are separate ingestion items. The database was **515,449 measures**
+at planning time, **515,955** on the eve of pilot A, **521,356** after it (exact delta +5,401),
+**530,415** after pilot B (exact delta +9,059), and **602,062** after pilot C (exact delta +71,647).
+No council PDFs were queued.
 
 **As at:** 17 November 2026. **Scope:** Victorian local government — the 79 councils — not state
 government, and not a cross-council spending total.
@@ -929,3 +932,129 @@ npm run ingest:vic-vlgc-abs
 Bendigo balance reconciliation and capital bridge, no-cross-total, idempotency, natural keys and
 licence metadata), `npm run build`, mocked `npm run test:e2e` and live `npm run audit` on alternate
 ports. Do not run these against 3001/5173 or the production nginx.
+
+## 13. Pilot C implementation record (18 November 2026)
+
+**Scope delivered:** the historical VLGGC series **FY2019-20 to FY2023-24** for all 79 councils,
+under the existing source ids `vic-vlgc-vgc1` (VGC1 income/expense) and `vic-vlgc-abs`
+(ABS1 capital, ABS2-3 balance sheet/cash flow/income/Sources & Applications). **No new source
+family**, no 2024-25 re-ingest, no NSW rows, no OLG data, no council PDFs.
+
+### 13.1 Years landed and years deferred (no silent sampling)
+
+| Fiscal year | Status   |  VGC1 rows |   ABS rows | VGC1 natural-key scope                     |
+| ----------- | -------- | ---------: | ---------: | ------------------------------------------ |
+| 2019-20     | landed   |      5,426 |      8,903 | `fiscal_year: 2019-20`                     |
+| 2020-21     | landed   |      5,426 |      8,865 | `fiscal_year: 2020-21`                     |
+| 2021-22     | landed   |      5,427 |      8,868 | `fiscal_year: 2021-22`                     |
+| 2022-23     | landed   |      5,413 |      8,917 | `fiscal_year: 2022-23`                     |
+| 2023-24     | landed   |      5,407 |      8,995 | `fiscal_year: 2023-24`                     |
+| **Total**   |          | **27,099** | **44,548** |                                            |
+| 2015-16     | deferred |          — |          — | workbook exists, schema/mapping not proven |
+| 2016-17     | deferred |          — |          — | workbook exists, schema/mapping not proven |
+| 2017-18     | deferred |          — |          — | workbook exists, schema/mapping not proven |
+| 2018-19     | deferred |          — |          — | workbook exists, schema/mapping not proven |
+
+The five landed years use the 2019-20..2023-24 workbook generation. That generation prints each
+VGC1 `E-*` function tab as repeated sub-function blocks; **the first block of each tab is the
+printed `<function> Total`** (code 01199, 01299, …, 01996) and is mapped to the same
+function × 5-nature cut as pilot A. Later sub-function blocks are deliberately **not** summed into
+the function total. The 2015-16..2018-19 generation uses different sheet names (for example
+`2015-16-VGC-Questionnaire-...`) and has not been mapped; it is left for a later item rather than
+guessed.
+
+### 13.2 Workbooks, snapshots and hashes
+
+All bytes are archived outside the repo under `~/ausspend-source-archive/` (never redistributed).
+The live VLGGC page/asset returns a Cloudflare challenge (HTTP 403); the connector resolves the
+documented Wayback snapshot and refuses to publish unless the byte length and SHA-256 match.
+
+| Year    | Workbook | Wayback snapshot | SHA-256                        |   Bytes |
+| ------- | -------- | ---------------- | ------------------------------ | ------: |
+| 2019-20 | VGC1     | 20220309015720   | `a9043c1a…b1219c5b`            | 853,697 |
+| 2019-20 | ABS1     | 20220309015753   | `5556c35b…fcd337871`           | 483,359 |
+| 2019-20 | ABS2     | 20220309015801   | `a45979fe…ab8ef123f3f`         | 145,479 |
+| 2020-21 | VGC1     | 20221018093621   | `e075a4ce…b7300ba3b6caaa7`     | 899,273 |
+| 2020-21 | ABS1     | 20221018093649   | `36ab30b5…59e2805eca8cbef9`    | 471,036 |
+| 2020-21 | ABS2-3   | 20221018093657   | `d64d4749…c937d60612829a0966`  | 144,323 |
+| 2021-22 | VGC1     | 20231109221951   | `11362f35…d61551954388cfd2d`   | 848,271 |
+| 2021-22 | ABS1     | 20231109222002   | `30ec390b…f2f01937e943f3d18`   | 469,559 |
+| 2021-22 | ABS2-3   | 20231109222007   | `25a28766…5a2423b9c039e90b`    | 144,732 |
+| 2022-23 | VGC1     | 20241020185951   | `2dc779a3…e56283c33d33789f`    | 839,975 |
+| 2022-23 | ABS1     | 20241020190003   | `c983ef2b…c60dbe11f186ca0`     | 470,335 |
+| 2022-23 | ABS2-3   | 20241020190007   | `c7986d5b…f27b3e973b99f8386`   | 145,499 |
+| 2023-24 | VGC1     | 20251120123849   | `f36ed668…888b76bdd54f106663`  | 842,585 |
+| 2023-24 | ABS1     | 20251120123903   | `db4ed8fe…24e0fe4ce7e4fa59f3c` | 470,645 |
+| 2023-24 | ABS2-3   | 20251120123907   | `a63354b9…b980b2b9e3b7d0b9258` | 145,962 |
+
+Per-year metadata-only manifests are in `docs/source-archive/` as
+`vic-vlgc-vgc1-<year>.json` and `vic-vlgc-abs-<year>.json`.
+
+### 13.3 Licence / attribution (not CC BY)
+
+Every historical workbook carries the same VLGGC Conditions of Use (verbatim): _“Content from this
+spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.”_
+The disclaimer adds that councils _“provide permission for this online release”_ and the Commission
+_“does not guarantee the material to be free from error.”_ This is **attribution + permission, not
+a CC licence**. Only derived rows are emitted and no workbook is redistributed. The source metadata
+records the terms verbatim.
+
+### 13.4 Totals suppression, per-year keys and no-sum
+
+- Every year's `Total Exp`, `Total Rev`, all nine `E-*` tabs, `Total Outlays`, `O-Total`,
+  `Balance Sheets` and `Sources & Applications` Totals row is **suppressed** (11 VGC1 + 4 ABS per
+  year). No emitted row has a `Totals` entity and no cross-council total is published or computed.
+- Every natural key includes the **fiscal year**, plus the council, section/measure, function/nature
+  or statement/line code, sheet and column. The same council/line in two years therefore never
+  collides; the 5,401 + 9,059 2024-25 rows keep their own keys unchanged.
+- Each year has exactly **79 reporting entities**. Across the whole series there are **80 display
+  names** because the 2019-20 and 2020-21 workbooks print the pre-rename `Moreland (C)` label
+  (`Moreland City Council`) while 2021-22 onward print `Merri-bek (C)` (`Merri-bek City Council`).
+  The printed label is retained verbatim in `vlgc_council_label`; this is the documented 26 September
+  2022 rename, not an extra council, and no rows are merged or renamed across years.
+- Every row keeps `aggregation_role: agency_detail`, `data_quality_flag:
+provisional/local_government`, `verified: false`, `jurisdiction_level: local`, `jurisdiction:
+VIC` and the source id of its pilot. Functions, natures, asset classes, balance-sheet lines,
+  cash-flow lines and income-statement lines remain separate non-additive cuts; nothing is summed
+  across councils, functions, sections or years. No row is mixed with `vic-budget`, ABS GFS,
+  LGPRF, waste or NSW council data.
+- Whole AUD is converted explicitly to integer cents at ×100; the unit is never inferred from
+  magnitude.
+
+### 13.5 Reconciliation
+
+Each year has two independent gates:
+
+1. **Source Totals row (internal, not published).** The sum of the 79 council grand totals must
+   equal the workbook's printed Totals row within one cent (floating-point rounding). All five
+   years pass (±1 cent). For ABS, the sum of council total capital outlays and total assets must
+   equal the `Total Outlays` / `Balance Sheets` Totals rows; all five years pass (±1 cent).
+2. **Bendigo audited GPFS (FY2023-24).** City of Greater Bendigo FY2023-24 VGC1 totals are
+   `$240,485,023.18` expenditure and `$245,114,475.92` revenue, against the audited GPFS
+   (`$240,484k` / `$245,112k`): deltas `$1,023.18` (0.0004%) and `$2,475.92` (0.001%). The two
+   Bendigo total rows carry `reconciliation_status: reconciled_to_gpfs`; the deltas are recorded in
+   the manifest and are **never forced to zero**. Every other historical row remains
+   `questionnaire_unaudited`.
+
+No cross-council, state-plus-local or cross-year total is created.
+
+### 13.6 Reproduce and checks
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export VIC_HISTORY_ARCHIVE_ROOT=/home/steve/ausspend-source-archive
+npm run ingest:vic-vlgc-history
+# years 2019-20..2023-24; idempotent upsert on natural_key; no deletes
+# [ingest:vic-vlgc-history] vic-vlgc-vgc1: success fetched=27099 upserted=27099
+# [ingest:vic-vlgc-history] vic-vlgc-abs: success fetched=44548 upserted=44548
+# [ingest:vic-vlgc-history] db source_rows vgc1=32499 abs=53607 totals_entities=0 all_measures=602062
+```
+
+`VIC_HISTORY_YEARS` may narrow the run; `VIC_HISTORY_DIR` may point at already-downloaded
+`<year>-VGC1.xlsx` / `<year>-ABS1.xlsx` / `<year>-ABS23.xlsx` files for an offline re-run.
+
+Checks: `npm run typecheck`, `npm run lint`, `npm test` (including
+`server/test/vic-vlgc-history.test.ts`: five verified years, deferred years, licence metadata,
+79-council parsing, 11-Totals suppression, fiscal-year natural keys, idempotency, non-additive
+flags and ABS year scoping), `npm run build`, mocked `npm run test:e2e` and live `npm run audit` on
+alternate ports. Do not run these against 3001/5173 or the production nginx.
