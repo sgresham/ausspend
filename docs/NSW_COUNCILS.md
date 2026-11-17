@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Fifteen council GPFS sources have landed as
+**Status:** the inventory and plan below are unchanged. Seventeen council GPFS sources have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -23,7 +23,8 @@ Macquarie-Hastings Council FY2024-25 GPFS (**§7.14**) then added exactly **17**
 `port-macquarie-hastings-gpfs` rows (**515,663** → **515,680**). The Tweed Shire Council FY2024-25
 GPFS (**§7.15**) then added exactly **17** `tweed-shire-gpfs` rows (**515,680** → **515,697**).
 Shoalhaven City Council FY2024-25 GPFS (**§7.16**) then added exactly **17** `shoalhaven-gpfs` rows
-(**515,697** → **515,714**).
+(**515,697** → **515,714**). Shellharbour City Council FY2024-25 GPFS (**§7.17**) then added exactly
+**17** `shellharbour-gpfs` rows (**515,714** → **515,731**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -1588,6 +1589,85 @@ overlap government program data; they are not added to expenditure.
 `data_sources` 41 → **42**. A second ingest run upserted the same 17 natural keys and left the DB
 total unchanged (idempotent). No deletes or updates to any other source.
 
+### 7.17 Seventeenth council — Shellharbour City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official "Annual reports" page
+<https://www.shellharbour.nsw.gov.au/council/news-and-publications/annual-reports> (plain HTTP, no
+edge challenge). That page links the **"Annual Report 2024 - 2025"** page
+<https://www.shellharbour.nsw.gov.au/council/forms-and-publications/annual-reports/annual-report-2024-2025>,
+which links the council-hosted annual-report PDF
+<https://cdn.shellharbour.nsw.gov.au/sites/default/files/Reports/full-report_2_4.pdf>
+(58,205,018 bytes) and an **"Audited Financial Statements for year ending 30 June 2025"** section
+link (a flipbook starting at p96). The audited GPFS is the 84-printed-page financial-statements
+section of that official annual-report PDF: the Income Statement is printed p5 of 84 (PDF p54), the
+Statement of Comprehensive Income p6 (PDF p55), B1-1 "Total functions and activities" p14 (PDF p63)
+and note B3-4 depreciation p27 (PDF p76). The PDF URL is parsed from the page HTML, never
+hard-coded. Exact bytes archived outside the repo at
+`~/ausspend-source-archive/shellharbour-gpfs/full-report_2_4.pdf`, SHA-256
+`f199f5e22b095f1f6b7acae84fc7bbb9414c206a01936a92202e46448a8f2894` (`hash_verified: true`). The
+printed unit is explicit `$ '000` (thousands) on the income statement, B1-1, the comprehensive-income
+statement and the depreciation note; a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before
+each line label, so each emitted value is the first amount after the printed label (the FY2024-25
+actual). The phrase "depreciation, amortisation and impairment of non-financial assets" appears in
+the expense subtotal and in the excluding-depreciation result before the actual depreciation line,
+so the connector reads that line from the last printed occurrence. The connector emits nothing
+unless all of these agree exactly:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                    |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ----------------------------------------- |
+| Total income from continuing operations (Income Statement)                                                                   |                          `$310,293` thousand | = `$310,293,000`                          |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$310,293` thousand | = printed total                           |
+| B1-1 Total functions and activities — income                                                                                 |                          `$310,293` thousand | = face statement                          |
+| Expense-by-nature components sum (employee + materials + borrowing + other + net loss on disposal)                           |                          `$206,611` thousand | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$29,784`)                           | `$206,611` + `$29,784` = `$236,395` thousand | = B1-1 expense total                      |
+| B1-1 Total functions and activities — expenses                                                                               |                          `$236,395` thousand | = `$236,395,000` (printed total)          |
+| Operating result / net operating result                                                                                      | `$310,293` − `$236,395` = `$73,898` thousand | = printed operating result                |
+| Net operating result for the year attributable to Council                                                                    |                           `$73,898` thousand | = operating result                        |
+| Net operating result before capital grants                                                                                   |   `$73,898` − `$36,357` = `$37,541` thousand | = printed before-capital result           |
+| B1-1 grants and contributions                                                                                                |                           `$44,892` thousand | = operating `$8,535` + capital `$36,357`  |
+| Statement of Comprehensive Income net result                                                                                 |                           `$73,898` thousand | = Income Statement net result             |
+| Note B3-4 total depreciation and amortisation costs                                                                          |                           `$29,784` thousand | = face depreciation line                  |
+
+Total expenses is the printed B1-1 "Total functions and activities" expense total
+(`$236,395` thousand), **not** a sum of the nature components on its own and **not** the separate
+printed expenses-excluding-depreciation line. It equals the printed expenses-excluding-depreciation
+line (`$206,611` thousand) plus the printed depreciation/impairment line (`$29,784` thousand) and
+the printed total income less the printed operating result. The printed "Net loss from the disposal
+of assets" is a real printed expense line (`$1,897` thousand) and is emitted; the seven revenue
+components still sum exactly to the printed total.
+
+**Rows.** 17 rows, source id `shellharbour-gpfs`, `source_dataset` "Shellharbour City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Shellharbour City Council"` (the exact published entity
+name in the audited statements), `data_quality_flag: "provisional/local_government"`,
+`verified: false`. The minimum lines are total revenue `$310,293,000`, total expenses
+`$236,395,000`, employee expenses `$47,263,000`, depreciation/amortisation/impairment
+`$29,784,000`, operating government grants `$8,535,000`, capital government grants `$36,357,000`,
+net loss on disposal of assets `$1,897,000` and net result `$73,898,000`; the face-statement revenue
+and expense components are included for provenance.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing
+same-entity rows are preserved untouched and never summed: **1 GrantConnect row** whose
+`delivery_entity` is exactly "Shellharbour City Council", plus **65 other rows** whose
+`delivery_entity` merely mentions Shellharbour under other strings (34 GrantConnect, 28 ACNC, 2
+AusTender and 1 data.nsw row); their per-source counts are identical before and after the ingest.
+All sixteen other council GPFS sources are unchanged (Dubbo 18, City of Sydney 18, Blacktown 17,
+Parramatta 17, Northern Beaches 18, Canterbury-Bankstown 17, Sutherland Shire 17, Wollongong 17,
+Newcastle 17, Lake Macquarie 17, Maitland 7, Coffs Harbour 17, MidCoast 17, Port Macquarie-Hastings
+17, Tweed Shire 17, Shoalhaven 17). Government grant rows carry `potential_double_count: true`
+because they may overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,714 → **515,731** (exactly +17);
+`shellharbour-gpfs` **17**; `data-nsw-ckan` still **3,472**; `dubbo-council` still **245**; exact
+"Shellharbour City Council" rows 1 → **18** (the new 17 plus the pre-existing GrantConnect row);
+`data_sources` 42 → **43**. A second ingest run upserted the same 17 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -1620,7 +1700,8 @@ total unchanged (idempotent). No deletes or updates to any other source.
    Council FY2024-25 GPFS, 17 non-additive rows (§7.14). **Fourteenth expansion landed
    2026-11-18:** Tweed Shire Council FY2024-25 GPFS, 17 non-additive rows (§7.15). **Fifteenth
    expansion landed 2026-11-18:** Shoalhaven City Council FY2024-25 GPFS, 17 non-additive rows
-   (§7.16).
+   (§7.16). **Sixteenth expansion landed 2026-11-18:** Shellharbour City Council FY2024-25 GPFS,
+   17 non-additive rows (§7.17).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
