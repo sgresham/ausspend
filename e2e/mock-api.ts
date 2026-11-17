@@ -1037,12 +1037,15 @@ function spendingResponse(url: URL) {
   const page = Number(url.searchParams.get('page') ?? '1');
   const pageSize = Number(url.searchParams.get('page_size') ?? '20');
 
-  // Literal, case-insensitive match over the descriptive project fields only.
+  // Tokenised, case-insensitive match over the descriptive project fields only:
+  // every word must appear in at least one field, in any order.
+  const tokens = text ? [...new Set(text.toLowerCase().split(/\s+/).filter(Boolean))] : [];
   const matchesText = (row: Record<string, unknown>) => {
-    if (!text) return true;
-    const needle = text.toLowerCase();
-    return [row.project_name, row.description, row.delivery_entity].some(
-      (value) => typeof value === 'string' && value.toLowerCase().includes(needle),
+    if (tokens.length === 0) return true;
+    return tokens.every((token) =>
+      [row.project_name, row.description, row.delivery_entity].some(
+        (value) => typeof value === 'string' && value.toLowerCase().includes(token),
+      ),
     );
   };
 

@@ -64,6 +64,30 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Maximum number of whitespace-separated words considered from one q value. */
+const MAX_Q_TOKENS = 8;
+/** Longest single token; the schema already caps the whole q at 100 characters. */
+const MAX_Q_TOKEN_LENGTH = 100;
+
+/**
+ * Split the project/item text box into case-insensitive words. Repeated words
+ * are collapsed and the list is bounded so a hostile q cannot fan out into an
+ * unbounded number of regex clauses. Word order is irrelevant: every token is
+ * matched independently against the descriptive fields.
+ */
+function tokenizeQuery(value: string): string[] {
+  const seen = new Set<string>();
+  const tokens: string[] = [];
+  for (const raw of value.trim().split(/\s+/)) {
+    const token = raw.slice(0, MAX_Q_TOKEN_LENGTH).toLowerCase();
+    if (!token || seen.has(token)) continue;
+    seen.add(token);
+    tokens.push(token);
+    if (tokens.length >= MAX_Q_TOKENS) break;
+  }
+  return tokens;
+}
+
 const SORTS: Record<SpendingSort, Record<string, 1 | -1>> = {
   amount_desc: { amount_cents: -1, _id: 1 },
   amount_asc: { amount_cents: 1, _id: 1 },
@@ -365,19 +389,29 @@ export const listSpending: RequestHandler = async (req, res) => {
   if (areaRegion)
     Object.assign(mongoQuery, areaQueries(areaRegion, areaRegion.parent_code ?? 'NSW').combined);
   if (query.q && query.q.length > 0) {
-    // Literal, case-insensitive project/item text filter. Only the descriptive
+    // Tokenised project/item text filter: every whitespace-separated word must
+    // occur in at least one of the project fields (AND across words, OR across
+    // fields). Word order therefore does not matter, while a single word still
+    // behaves like the previous literal substring filter. Only the descriptive
     // project fields match: never notes or source_url, and never a total.
-    const pattern = new RegExp(escapeRegex(query.q), 'i');
-    const textFilter = {
-      $or: [{ project_name: pattern }, { description: pattern }, { delivery_entity: pattern }],
-    };
-    if (mongoQuery.$or) {
-      // Area mode already uses $or; combine both with an explicit $and so the
-      // text filter composes with every existing filter instead of replacing it.
-      mongoQuery.$and = [{ $or: mongoQuery.$or }, textFilter];
-      delete mongoQuery.$or;
-    } else {
-      Object.assign(mongoQuery, textFilter);
+    const tokens = tokenizeQuery(query.q);
+    const textFilters = tokens.map((token) => {
+      const pattern = new RegExp(escapeRegex(token), 'i');
+      return {
+        $or: [{ project_name: pattern }, { description: pattern }, { delivery_entity: pattern }],
+      };
+    });
+    if (textFilters.length > 0) {
+      if (mongoQuery.$or) {
+        // Area mode already uses $or; combine both with an explicit $and so the
+        // text filter composes with every existing filter instead of replacing it.
+        mongoQuery.$and = [{ $or: mongoQuery.$or }, ...textFilters];
+        delete mongoQuery.$or;
+      } else if (textFilters.length === 1) {
+        Object.assign(mongoQuery, textFilters[0] ?? {});
+      } else {
+        mongoQuery.$and = textFilters;
+      }
     }
   }
   if (query.min_amount !== undefined || query.max_amount !== undefined) {

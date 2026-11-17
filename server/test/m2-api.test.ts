@@ -518,6 +518,55 @@ describe('GET /api/spending', () => {
     expect(trimmed.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
   });
 
+  it('matches every whitespace-separated word in any order (AND across words)', async () => {
+    for (const q of [
+      'dubbo new bridge',
+      'bridge dubbo new',
+      'New Dubbo Bridge',
+      '  bridge   NEW   dubbo  ',
+      'dubbo dubbo bridge new',
+    ]) {
+      const response = await request(app).get(`/api/spending?q=${encodeURIComponent(q)}`);
+      expect(response.status, q).toBe(200);
+      expect(
+        response.body.data.map((row: { id: string }) => row.id),
+        q,
+      ).toEqual([measureIds[0]]);
+    }
+
+    const echoed = await request(app).get('/api/spending?q=dubbo%20new%20bridge');
+    expect(echoed.body.applied_filters.q).toBe('dubbo new bridge');
+
+    const alias = await request(app).get('/api/v1/spending?q=bridge%20dubbo%20new');
+    expect(alias.status).toBe(200);
+    expect(alias.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+
+    // AND across words, OR across fields: "macquarie" is only in the
+    // description and "new" only in the project name, but both describe row 0.
+    const acrossFields = await request(app).get('/api/spending?q=macquarie%20new');
+    expect(acrossFields.status).toBe(200);
+    expect(acrossFields.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+
+    // Two words that each match a different row must return nothing.
+    const disjointWords = await request(app).get('/api/spending?q=dubbo%20health');
+    expect(disjointWords.status).toBe(200);
+    expect(disjointWords.body.data).toEqual([]);
+    expect(disjointWords.body.summary.count).toBe(0);
+
+    const composed = await request(app).get(
+      '/api/spending?q=bridge%20dubbo%20new&measure_type=actual&fiscal_year=2024-25',
+    );
+    expect(composed.status).toBe(200);
+    expect(composed.body.summary.count).toBe(1);
+    expect(composed.body.data.map((row: { id: string }) => row.id)).toEqual([measureIds[0]]);
+
+    const disjointFilter = await request(app).get(
+      `/api/spending?q=bridge%20dubbo%20new&region=${nswId}`,
+    );
+    expect(disjointFilter.status).toBe(200);
+    expect(disjointFilter.body.data).toEqual([]);
+  });
+
   it('matches description and delivery_entity, but never notes or source_url', async () => {
     const description = await request(app).get('/api/spending?q=Macquarie');
     expect(description.status).toBe(200);
@@ -539,6 +588,14 @@ describe('GET /api/spending', () => {
 
   it('treats regex metacharacters literally and returns no fuzzy matches', async () => {
     for (const literal of ['.*', '(', '[', 'Bridge.*']) {
+      const response = await request(app).get(`/api/spending?q=${encodeURIComponent(literal)}`);
+      expect(response.status, literal).toBe(200);
+      expect(response.body.data, literal).toEqual([]);
+    }
+
+    // Escaping applies per token: the literal "(" is not a group, so even a
+    // query whose other words match the bridge returns nothing.
+    for (const literal of ['dubbo (new', 'bridge .* new', 'new bridge [']) {
       const response = await request(app).get(`/api/spending?q=${encodeURIComponent(literal)}`);
       expect(response.status, literal).toBe(200);
       expect(response.body.data, literal).toEqual([]);

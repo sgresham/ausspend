@@ -435,13 +435,13 @@ export function SearchPage() {
                   commitText();
                 }
               }}
-              placeholder="e.g. New Dubbo Bridge"
+              placeholder="e.g. dubbo new bridge"
               helperText={
                 q
                   ? state.data
-                    ? `${state.data.pagination.total} matching row${state.data.pagination.total === 1 ? '' : 's'}`
-                    : 'Matching project name, description or delivery entity'
-                  : 'Text match over project name, description or delivery entity — not fuzzy'
+                    ? `${state.data.pagination.total} matching row${state.data.pagination.total === 1 ? '' : 's'} — every word must match`
+                    : 'Every word must appear in project name, description or delivery entity'
+                  : 'Every word must appear in project name, description or delivery entity — order does not matter, not fuzzy'
               }
               inputProps={{ maxLength: 100 }}
             />
