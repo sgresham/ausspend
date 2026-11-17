@@ -1,0 +1,22 @@
+{
+  "entity": "Port Authority of NSW",
+  "jurisdiction": "NSW",
+  "dataset": "Port Authority of NSW — Annual Report",
+  "publisher": "Port Authority of NSW",
+  "discovery_page": "https://www.portauthoritynsw.com.au/corporate/corporate-governance/port-authority-nsw-annual-reports/",
+  "license": "© Port Authority of NSW. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T09:00:27.484Z",
+  "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for Port Authority of NSW only. Never add to government program spending, to the PNFC sector benchmark, or to each other: the statement prints an explicit Total revenue and Total expenses; total revenue already includes all revenue lines, total expenses already includes employee, depreciation/amortisation, other expenses and finance costs; the net result is a profit. No government grants/contributions are separately disclosed in this statement or its notes, so no grants row is emitted. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25",
+      "filename": "Port-Authority-of-NSW-Annual-Report-2024-25.pdf",
+      "url": "https://www.portauthoritynsw.com.au/sites/default/files/2025-12/Port%20Authority%20of%20NSW%20Annual%20Report%202024-25.pdf",
+      "sha256": "5311425dbdaec28dc4155dc486c77eb49f7707cc05aba039856f0bf3c2a1794d",
+      "bytes": 14911040,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest Port Authority of NSW annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of comprehensive income prints an explicit $'000 unit and explicit Total revenue and Total expenses subtotals. Both printed totals are accepted only when the printed revenue and expense lines, the profit-before-tax bridge (including net gain on sale of PPE and other gains), the net-result bridge and the Note 3/Note 4 printed totals reconcile exactly. No government grants/contributions are separately disclosed, so no grant row is emitted. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Port Authority of NSW rows to government program spending, the PNFC benchmark, or any other SOC."
+}

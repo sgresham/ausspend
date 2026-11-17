@@ -31,6 +31,12 @@ import {
   LANDCOM_JURISDICTION,
   LANDCOM_UNIT,
   LANDCOM_UNIT_LABEL,
+  PORT_AUTHORITY_CAVEAT,
+  PORT_AUTHORITY_ENTITY,
+  PORT_AUTHORITY_ID,
+  PORT_AUTHORITY_JURISDICTION,
+  PORT_AUTHORITY_UNIT,
+  PORT_AUTHORITY_UNIT_LABEL,
   PBS_CAVEAT,
   SYDNEY_WATER_CAVEAT,
   SYDNEY_WATER_ENTITY,
@@ -258,6 +264,7 @@ export function createCoverageHandler(
     const essentialEnergy = dataSourceById.get(ESSENTIAL_ENERGY_ID);
     const forestryCorporation = dataSourceById.get(FORESTRY_CORPORATION_ID);
     const landcom = dataSourceById.get(LANDCOM_ID);
+    const portAuthority = dataSourceById.get(PORT_AUTHORITY_ID);
     const socLiveIds = [
       SYDNEY_WATER_ID,
       WATERNSW_ID,
@@ -265,6 +272,7 @@ export function createCoverageHandler(
       ESSENTIAL_ENERGY_ID,
       FORESTRY_CORPORATION_ID,
       LANDCOM_ID,
+      PORT_AUTHORITY_ID,
     ].filter((id) => {
       const source = dataSourceById.get(id);
       return source?.status === 'active' || source?.status === 'degraded';
@@ -277,6 +285,7 @@ export function createCoverageHandler(
       essentialEnergy?.last_ingested_at,
       forestryCorporation?.last_ingested_at,
       landcom?.last_ingested_at,
+      portAuthority?.last_ingested_at,
     ]
       .filter((value) => value !== null && value !== undefined)
       .sort((a, b) => new Date(b as Date).getTime() - new Date(a as Date).getTime())[0];
@@ -304,6 +313,7 @@ export function createCoverageHandler(
               socLiveIds.includes(ESSENTIAL_ENERGY_ID) ? 'Essential Energy' : null,
               socLiveIds.includes(FORESTRY_CORPORATION_ID) ? 'Forestry Corporation of NSW' : null,
               socLiveIds.includes(LANDCOM_ID) ? 'Landcom' : null,
+              socLiveIds.includes(PORT_AUTHORITY_ID) ? 'Port Authority of NSW' : null,
             ]
               .filter(Boolean)
               .join(' + ')})`
@@ -432,6 +442,7 @@ export function createCoverageHandler(
           ESSENTIAL_ENERGY_ID,
           FORESTRY_CORPORATION_ID,
           LANDCOM_ID,
+          PORT_AUTHORITY_ID,
         ].filter((id) => dataSourceById.get(id)?.status === 'degraded'),
         last_ingested_at: socLastIngested ? new Date(socLastIngested).toISOString() : null,
         // Row counts only; entity amounts are never combined into a total.
@@ -441,13 +452,14 @@ export function createCoverageHandler(
           (hunterWater?.records_ingested ?? 0) +
           (essentialEnergy?.records_ingested ?? 0) +
           (forestryCorporation?.records_ingested ?? 0) +
-          (landcom?.records_ingested ?? 0),
+          (landcom?.records_ingested ?? 0) +
+          (portAuthority?.records_ingested ?? 0),
         // Kept for the single-source shape: the first SOC entity.
         entity: SYDNEY_WATER_ENTITY,
         jurisdiction: SYDNEY_WATER_JURISDICTION,
         unit: SYDNEY_WATER_UNIT,
         unit_label: SYDNEY_WATER_UNIT_LABEL,
-        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW and Landcom are separate SOC entities; their rows are never added to Sydney Water's or to any other total.`,
+        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom and Port Authority of NSW are separate SOC entities; their rows are never added to Sydney Water's or to any other total.`,
         label: 'SOC entity statement — never add to government program spending',
         entities: [
           {
@@ -522,8 +534,20 @@ export function createCoverageHandler(
               : null,
             caveat: LANDCOM_CAVEAT,
           },
+          {
+            source_id: PORT_AUTHORITY_ID,
+            entity: PORT_AUTHORITY_ENTITY,
+            jurisdiction: PORT_AUTHORITY_JURISDICTION,
+            unit: PORT_AUTHORITY_UNIT,
+            unit_label: PORT_AUTHORITY_UNIT_LABEL,
+            records: portAuthority?.records_ingested ?? 0,
+            last_ingested_at: portAuthority?.last_ingested_at
+              ? new Date(portAuthority.last_ingested_at).toISOString()
+              : null,
+            caveat: PORT_AUTHORITY_CAVEAT,
+          },
         ],
-        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW and Landcom. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges; Hunter Water: explicit printed Total expenses plus its component, Note 3 and profit-before-tax bridges; Essential Energy: exact sum of the printed expense lines because the statement has no single Total expenses subtotal, plus Note 2(c) and Note 3 bridge checks and the printed loss retained with a negative sign; Forestry Corporation: explicit printed Total expenses plus Note 5/8/9/10 subtotals and profit bridges, with two government-grant rows flagged potential double count; Landcom: no printed Total revenue or Total expenses, so both are the exact signed sums of the printed statement lines, accepted only when the gross-profit, PBT, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly, with one grant-income row flagged potential double count and two lines flagged for human spot-check). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the entities are never summed together. Government-named funding rows carry potential_double_count.',
+        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom and Port Authority of NSW. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges; Hunter Water: explicit printed Total expenses plus its component, Note 3 and profit-before-tax bridges; Essential Energy: exact sum of the printed expense lines because the statement has no single Total expenses subtotal, plus Note 2(c) and Note 3 bridge checks and the printed loss retained with a negative sign; Forestry Corporation: explicit printed Total expenses plus Note 5/8/9/10 subtotals and profit bridges, with two government-grant rows flagged potential double count; Landcom: no printed Total revenue or Total expenses, so both are the exact signed sums of the printed statement lines, accepted only when the gross-profit, PBT, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly, with one grant-income row flagged potential double count and two lines flagged for human spot-check; Port Authority of NSW: explicit printed Total revenue and Total expenses, accepted only when the revenue-line, expense-line, PBT (including net gain on sale of PPE and other gains), net-result and Note 3/Note 4 bridges reconcile exactly, with no government grants separately disclosed and two lines flagged for human spot-check). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the entities are never summed together. Government-named funding rows carry potential_double_count.',
       },
       local_ingestion: {
         live: localConnectors

@@ -56,6 +56,17 @@ import {
   LANDCOM_UNIT,
   LANDCOM_UNIT_LABEL,
   LANDCOM_UNIT_TO_CENTS,
+  PORT_AUTHORITY_CAVEAT,
+  PORT_AUTHORITY_ENTITY,
+  PORT_AUTHORITY_ID,
+  PORT_AUTHORITY_JURISDICTION,
+  PORT_AUTHORITY_LICENSE,
+  PORT_AUTHORITY_NAME,
+  PORT_AUTHORITY_PUBLISHER,
+  PORT_AUTHORITY_SOURCE_URL,
+  PORT_AUTHORITY_UNIT,
+  PORT_AUTHORITY_UNIT_LABEL,
+  PORT_AUTHORITY_UNIT_TO_CENTS,
   SYDNEY_WATER_CAVEAT,
   SYDNEY_WATER_ENTITY,
   SYDNEY_WATER_ID,
@@ -126,6 +137,7 @@ export const SOC_SOURCE_IDS = [
   ESSENTIAL_ENERGY_ID,
   FORESTRY_CORPORATION_ID,
   LANDCOM_ID,
+  PORT_AUTHORITY_ID,
 ] as const;
 
 /**
@@ -373,6 +385,39 @@ async function writeLandcomManifest(): Promise<void> {
   );
 }
 
+async function writePortAuthorityManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: PORT_AUTHORITY_ID });
+  const manifestPath = path.resolve(
+    process.env.PORT_AUTHORITY_MANIFEST ?? 'docs/source-archive/port-authority-annual-report.json',
+  );
+  const manifest = {
+    entity: PORT_AUTHORITY_ENTITY,
+    jurisdiction: PORT_AUTHORITY_JURISDICTION,
+    dataset: PORT_AUTHORITY_NAME,
+    publisher: PORT_AUTHORITY_PUBLISHER,
+    discovery_page: PORT_AUTHORITY_SOURCE_URL,
+    license: PORT_AUTHORITY_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${PORT_AUTHORITY_UNIT_LABEL} (${PORT_AUTHORITY_UNIT}; x${PORT_AUTHORITY_UNIT_TO_CENTS} cents per unit)`,
+    caveat: PORT_AUTHORITY_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "Latest Port Authority of NSW annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of comprehensive income prints an explicit $'000 unit and explicit Total revenue and Total expenses subtotals. Both printed totals are accepted only when the printed revenue and expense lines, the profit-before-tax bridge (including net gain on sale of PPE and other gains), the net-result bridge and the Note 3/Note 4 printed totals reconcile exactly. No government grants/contributions are separately disclosed, so no grant row is emitted. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Port Authority of NSW rows to government program spending, the PNFC benchmark, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -416,6 +461,7 @@ async function main(): Promise<void> {
     await writeEssentialEnergyManifest();
     await writeForestryCorporationManifest();
     await writeLandcomManifest();
+    await writePortAuthorityManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });

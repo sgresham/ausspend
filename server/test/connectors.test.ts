@@ -26,13 +26,14 @@ const LIVE_IDS = [
   'essential-energy',
   'forestry-corporation',
   'landcom',
+  'port-authority-nsw',
 ];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships twenty-two connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(22);
-    expect(new Set(CONNECTOR_IDS).size).toBe(22);
+  it('ships twenty-three connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(23);
+    expect(new Set(CONNECTOR_IDS).size).toBe(23);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
