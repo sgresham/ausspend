@@ -7,6 +7,7 @@ import {
   VIC_HISTORY_YEARS,
   assertVgc1HistoryPremise,
   assertVlgcAbsHistoryPremise,
+  buildBendigoHistoryReconciliation,
   findVicHistoryYear,
   parseVgc1HistoryWorkbook,
 } from '../src/connectors/vic-vlgc-history.js';
@@ -329,6 +330,70 @@ describe('VGC1 historical parsing and Totals suppression', () => {
       { ...vgc1Raw('2023-24'), reconciliation_status: 'reconciled_to_gpfs' },
     ]);
     expect(override.records[0]!.reconciliation_status).toBe('reconciled_to_gpfs');
+  });
+});
+
+describe('FY2023-24 Bendigo historical GPFS reconciliation label', () => {
+  // Exact values from the FY2023-24 VGC1 Totals row vs the audited GPFS
+  // ($240,484k / $245,112k).
+  const bendigo = buildBendigoHistoryReconciliation({
+    fiscalYear: '2023-24',
+    expenseCents: 24_048_502_318,
+    revenueCents: 24_511_447_592,
+    gpfsExpensesThousand: 240_484,
+    gpfsRevenueThousand: 245_112,
+  });
+
+  it('never labels a nonzero-delta Bendigo total reconciled_to_gpfs', () => {
+    expect(bendigo.status).toBe('bridged_to_gpfs');
+    expect(bendigo.status).not.toBe('reconciled_to_gpfs');
+    expect(bendigo.expense_delta_cents).toBe(102_318);
+    expect(bendigo.revenue_delta_cents).toBe(247_592);
+  });
+
+  it('names both exact deltas and the rounding caveat in the human spot check', () => {
+    expect(bendigo.human_spot_check).toContain('$1,023.18');
+    expect(bendigo.human_spot_check).toContain('$2,475.92');
+    expect(bendigo.human_spot_check).toContain("GPFS $'000");
+    expect(bendigo.human_spot_check).toContain('does not fully explain them');
+    expect(bendigo.human_spot_check).toContain('bridged_to_gpfs');
+    expect(bendigo.reconciliation_note).toContain('$1,023.18');
+    expect(bendigo.reconciliation_note).toContain('$2,475.92');
+  });
+
+  it('keeps a delta within the printed $1,000 rounding as reconciled_to_gpfs', () => {
+    // FY2024-25 pilot A/B Bendigo: $0.04 and $0.17 residuals are fully
+    // explained by the GPFS printed $'000 rounding.
+    const rounded = buildBendigoHistoryReconciliation({
+      fiscalYear: '2024-25',
+      expenseCents: 25_276_099_996,
+      revenueCents: 27_700_200_017,
+      gpfsExpensesThousand: 252_761,
+      gpfsRevenueThousand: 277_002,
+    });
+    expect(rounded.status).toBe('reconciled_to_gpfs');
+    expect(rounded.expense_delta_cents).toBe(-4);
+    expect(rounded.revenue_delta_cents).toBe(17);
+    expect(rounded.human_spot_check).toBeUndefined();
+    expect(rounded.reconciliation_note).toBeUndefined();
+  });
+
+  it('renders the bridged note through the transform with both deltas', () => {
+    const raw = vgc1Raw('2023-24', 'Greater Bendigo City Council');
+    const transformed = transformVgc1Raw([
+      {
+        ...raw,
+        reconciliation_status: bendigo.status,
+        reconciliation_note: bendigo.reconciliation_note,
+        human_spot_check: bendigo.human_spot_check,
+      },
+    ]);
+    const record = transformed.records[0]!;
+    expect(record.reconciliation_status).toBe('bridged_to_gpfs');
+    expect(record.human_spot_check).toBe(bendigo.human_spot_check);
+    expect(record.notes).toContain('$1,023.18');
+    expect(record.notes).toContain('$2,475.92');
+    expect(record.notes).toContain('reconciliation_status=bridged_to_gpfs');
   });
 });
 

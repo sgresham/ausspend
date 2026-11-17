@@ -1041,10 +1041,14 @@ Each year has two independent gates:
    equal the `Total Outlays` / `Balance Sheets` Totals rows; all five years pass (±1 cent).
 2. **Bendigo audited GPFS (FY2023-24).** City of Greater Bendigo FY2023-24 VGC1 totals are
    `$240,485,023.18` expenditure and `$245,114,475.92` revenue, against the audited GPFS
-   (`$240,484k` / `$245,112k`): deltas `$1,023.18` (0.0004%) and `$2,475.92` (0.001%). The two
-   Bendigo total rows carry `reconciliation_status: reconciled_to_gpfs`; the deltas are recorded in
-   the manifest and are **never forced to zero**. Every other historical row remains
-   `questionnaire_unaudited`.
+   (`$240,484k` / `$245,112k`): deltas `$1,023.18` (0.0004%) and `$2,475.92` (0.001%). Because both
+   deltas exceed the ±`$500` that `$'000` GPFS rounding can explain, the two Bendigo total rows carry
+   `reconciliation_status: bridged_to_gpfs` plus `human_spot_check: required`; the notes name both
+   exact deltas and state that the whole-AUD VGC questionnaire vs GPFS `$'000` rounding does not
+   fully explain them. The deltas are recorded in the manifest and are **never forced to zero**.
+   Every other historical row remains `questionnaire_unaudited`. Only the FY2024-25 pilot A/B
+   Bendigo totals, whose `$0.04`/`$0.17` residuals are fully explained by the printed rounding,
+   keep `reconciled_to_gpfs`.
 
 No cross-council, state-plus-local or cross-year total is created.
 
@@ -1151,3 +1155,25 @@ Checks: `npm run typecheck`, `npm run lint`, `npm test` (including
 144-column legacy ABS2 layout, fiscal-year keys, idempotency, Totals suppression, licence metadata),
 `npm run build`, mocked `npm run test:e2e` and live `npm run audit` on alternate ports. Do not run
 against 3001/5173 or production nginx.
+
+## 15. Pilot C label cure (18 November 2026)
+
+**Scope:** label/disclosure only for the FY2023-24 Bendigo VGC1 grand totals. No amounts, row
+counts, natural keys or other years change.
+
+- The two rows (`total_expenditure` `$240,485,023.18`, `total_revenue` `$245,114,475.92`) move from
+  `reconciliation_status: reconciled_to_gpfs` to `bridged_to_gpfs`, with
+  `human_spot_check: required` and notes naming the exactly `$1,023.18` and `$2,475.92` deltas
+  against the GPFS (`$240,484k` / `$245,112k`). The notes state that whole-AUD VGC vs GPFS `$'000`
+  rounding does not fully explain the residuals; equality is never forced.
+- The exact FY2024-25 pilot A/B Bendigo totals keep `reconciled_to_gpfs`; every other historical
+  row stays `questionnaire_unaudited`.
+- Re-running `npm run ingest:vic-vlgc-history` is idempotent on `natural_key`: history rows stay
+  **27,099 VGC1 + 44,548 ABS = 71,647** for FY2019-20..FY2023-24, and **48,814 + 79,857 = 128,671**
+  across all nine historical years (FY2015-16..FY2023-24). The DB is unchanged at **659,086**
+  measures (VGC1 source 54,215 + ABS source 88,916, including the untouched 2024-25 pilot rows).
+  Amounts are byte-identical; only the two rows' status/notes text changes.
+
+Checks: `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test` (including the
+`buildBendigoHistoryReconciliation` cases in `server/test/vic-vlgc-history.test.ts`) and
+`npm run build`.

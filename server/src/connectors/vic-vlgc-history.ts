@@ -721,6 +721,84 @@ export function assertVgc1HistoryPremise(
   }
 }
 
+/** Whole-cent delta rendered as an exact AUD string, e.g. 102318 -> "$1,023.18". */
+function formatAudCents(cents: number): string {
+  return `$${(Math.abs(cents) / 100).toLocaleString('en-AU', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+export interface BendigoHistoryReconciliation {
+  status: 'reconciled_to_gpfs' | 'bridged_to_gpfs';
+  expense_delta_cents: number;
+  revenue_delta_cents: number;
+  /** Present only when a delta must be bridged, not reconciled. */
+  reconciliation_note?: string;
+  /** Present only when a delta requires human confirmation. */
+  human_spot_check?: string;
+}
+
+/**
+ * Maximum residual a single GPFS figure printed to $'000 can hide: half a
+ * thousand dollars. A delta inside this bound is explained by the printed
+ * rounding; a larger one is not and must be bridged.
+ */
+const GPFS_THOUSAND_ROUNDING_CENTS = 500 * 100;
+
+/**
+ * Decide the reconciliation label for the FY2023-24 Bendigo VGC1 grand totals.
+ *
+ * A delta that is fully explained by the GPFS's printed $'000 rounding (at most
+ * ±$500 per figure) may claim `reconciled_to_gpfs`. Any residual beyond that
+ * bound is a `bridged_to_gpfs` with a human spot check: the whole-AUD VGC
+ * questionnaire vs $'000 GPFS rounding cannot explain it, and equality is never
+ * forced.
+ */
+export function buildBendigoHistoryReconciliation(input: {
+  fiscalYear: string;
+  expenseCents: number;
+  revenueCents: number;
+  gpfsExpensesThousand: number;
+  gpfsRevenueThousand: number;
+}): BendigoHistoryReconciliation {
+  const expenseDeltaCents = input.expenseCents - input.gpfsExpensesThousand * 1000 * 100;
+  const revenueDeltaCents = input.revenueCents - input.gpfsRevenueThousand * 1000 * 100;
+  const roundingExplainsDelta =
+    Math.abs(expenseDeltaCents) <= GPFS_THOUSAND_ROUNDING_CENTS &&
+    Math.abs(revenueDeltaCents) <= GPFS_THOUSAND_ROUNDING_CENTS;
+  if (roundingExplainsDelta) {
+    return {
+      status: 'reconciled_to_gpfs',
+      expense_delta_cents: expenseDeltaCents,
+      revenue_delta_cents: revenueDeltaCents,
+    };
+  }
+  const expenseDelta = formatAudCents(expenseDeltaCents);
+  const revenueDelta = formatAudCents(revenueDeltaCents);
+  const expenseAmount = formatAudCents(input.expenseCents);
+  const revenueAmount = formatAudCents(input.revenueCents);
+  const gpfsExpense = `$${input.gpfsExpensesThousand.toLocaleString('en-AU')}k`;
+  const gpfsRevenue = `$${input.gpfsRevenueThousand.toLocaleString('en-AU')}k`;
+  return {
+    status: 'bridged_to_gpfs',
+    expense_delta_cents: expenseDeltaCents,
+    revenue_delta_cents: revenueDeltaCents,
+    reconciliation_note:
+      `City of Greater Bendigo ${input.fiscalYear} VGC1 totals differ from the audited GPFS by ` +
+      `${expenseDelta} expenditure (${expenseAmount} vs ${gpfsExpense}) and ` +
+      `${revenueDelta} revenue (${revenueAmount} vs ${gpfsRevenue}); the deltas exceed the ±$500 ` +
+      `that whole-AUD VGC questionnaire vs GPFS $'000 rounding could explain, so the totals are ` +
+      `bridged, not reconciled`,
+    human_spot_check:
+      `required — the VGC1 whole-AUD Bendigo ${input.fiscalYear} totals differ from the audited GPFS by ` +
+      `${expenseDelta} (expenditure ${expenseAmount} vs ${gpfsExpense}) and ` +
+      `${revenueDelta} (revenue ${revenueAmount} vs ${gpfsRevenue}); VGC whole-AUD vs GPFS $'000 ` +
+      `rounding does not fully explain them, so reconciliation_status=bridged_to_gpfs, not ` +
+      `reconciled_to_gpfs`,
+  };
+}
+
 export interface LoadedVgc1HistoryYear {
   fiscal_year: string;
   records: SpendingRecord[];
@@ -861,15 +939,33 @@ export async function loadVgc1HistoryYear(
           `(expense ${expenseDeltaCents}c, revenue ${revenueDeltaCents}c)`,
       );
     }
-    bendigoExpense.reconciliation_status = 'reconciled_to_gpfs';
-    bendigoRevenue.reconciliation_status = 'reconciled_to_gpfs';
+    const override = buildBendigoHistoryReconciliation({
+      fiscalYear,
+      expenseCents: bendigoExpense.amount_cents,
+      revenueCents: bendigoRevenue.amount_cents,
+      gpfsExpensesThousand: year.bendigo_gpfs.expenses_thousand,
+      gpfsRevenueThousand: year.bendigo_gpfs.revenue_thousand,
+    });
+    bendigoExpense.reconciliation_status = override.status;
+    bendigoRevenue.reconciliation_status = override.status;
     // The connector re-runs transform() on raw rows at ingestion time, so the
-    // override must live on the raw Bendigo grand-total rows too.
+    // override must live on the raw Bendigo grand-total rows too. A nonzero
+    // delta is bridged, never reconciled, and always carries a spot check.
     for (const entry of parsed.raw) {
       if (entry.council_name === 'Greater Bendigo City Council' && entry.line_type === 'total') {
-        entry.reconciliation_status = 'reconciled_to_gpfs';
+        entry.reconciliation_status = override.status;
+        if (override.reconciliation_note) {
+          entry.reconciliation_note = override.reconciliation_note;
+        }
+        if (override.human_spot_check) {
+          entry.human_spot_check = override.human_spot_check;
+        }
       }
     }
+    // The records above were transformed before this override was applied;
+    // regenerate them so the returned status/notes match the raw rows the
+    // ingestion path actually re-transforms and persists.
+    transformed.records = transformVgc1Raw(parsed.raw).records;
     reconciliation = {
       council: 'Greater Bendigo City Council',
       expense_cents: bendigoExpense.amount_cents,
@@ -879,8 +975,13 @@ export async function loadVgc1HistoryYear(
       expense_delta_cents: expenseDeltaCents,
       revenue_delta_cents: revenueDeltaCents,
       status:
-        `VGC1 whole-AUD Bendigo totals match the audited FY${fiscalYear} GPFS within ` +
-        `${Math.abs(expenseDeltaCents)}c expense / ${Math.abs(revenueDeltaCents)}c revenue; documented, not forced`,
+        override.status === 'reconciled_to_gpfs'
+          ? `VGC1 whole-AUD Bendigo totals match the audited FY${fiscalYear} GPFS within the printed $1,000 rounding; reconciliation_status=reconciled_to_gpfs`
+          : `VGC1 whole-AUD Bendigo totals differ from the audited FY${fiscalYear} GPFS by ` +
+            `${Math.abs(expenseDeltaCents)}c expense / ${Math.abs(revenueDeltaCents)}c revenue; ` +
+            `${Math.abs(expenseDeltaCents) > 0 ? formatAudCents(expenseDeltaCents) : '$0.00'} / ` +
+            `${Math.abs(revenueDeltaCents) > 0 ? formatAudCents(revenueDeltaCents) : '$0.00'} ` +
+            `documented, not forced; reconciliation_status=bridged_to_gpfs; human_spot_check=required`,
     };
     warnings.push(
       `Bendigo ${fiscalYear} expense/revenue deltas vs GPFS: ${expenseDeltaCents}c / ${revenueDeltaCents}c`,
