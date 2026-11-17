@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Twenty-two council GPFS sources have landed as
+**Status:** the inventory and plan below are unchanged. Twenty-three council GPFS sources have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -31,6 +31,8 @@ City Council FY2024-25 GPFS (**§7.19**) then added exactly **18** `willoughby-g
 `inner-west-gpfs` rows (**515,766** → **515,784**). Bayside Council FY2024-25 GPFS (**§7.21**) then
 added exactly **18** `bayside-gpfs` rows (**515,784** → **515,802**). Randwick City Council FY2024-25
 GPFS (**§7.22**) then added exactly **17** `randwick-gpfs` rows (**515,802** → **515,819**).
+The Council of the City of Ryde FY2024-25 GPFS (**§7.23**) then added exactly **17** `ryde-gpfs`
+rows (**515,819** → **515,836**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -66,6 +68,9 @@ AusTender/GrantConnect/ACNC/QGIP/data.nsw rows whose `delivery_entity` merely me
 GrantConnect rows whose `delivery_entity` is exactly "Randwick City Council" and the 2 uppercase
 AusTender contracts whose string is "RANDWICK CITY COUNCIL" (5 case-insensitive exact rows) plus the
 95 other AusTender/GrantConnect/ACNC/data.nsw rows whose `delivery_entity` merely mentions Randwick,
+the 1 pre-existing uppercase AusTender contract whose string is exactly "COUNCIL OF THE CITY OF RYDE"
+(the only case-insensitive exact row before this ingest) and the 204 other
+AusTender/GrantConnect/ACNC/data.nsw/QGIP rows whose `delivery_entity` merely mentions Ryde,
 and every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 18 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
@@ -147,15 +152,15 @@ category is the 128.
 
 ## 3. Source coverage at a glance
 
-| Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                         In DB now |
-| --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | ----------------------------------------------------------------: |
-| OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                 0 |
-| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **18** (Dubbo FY2024-25 GPFS pilot; separate non-additive source) |
-| LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                 0 |
-| data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                3,472 rows, none council financial |
-| Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                 0 |
-| ABS GFS (benchmark)                           | No (local government aggregate) | No                   | COFOG aggregate                                     | No                         | No                                        | CC BY                         |                                               169 rows, aggregate |
-| NSW Budget LGA-tagged projects                | No (state projects)             | No                   | Project-level state capital                         | Yes (state)                | No                                        | CC BY 3.0 AU                  |                                           1,115 rows, not council |
+| Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                   In DB now |
+| --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------------------: |
+| OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                           0 |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **387** (23 council GPFS sources, FY2024-25; separate non-additive sources) |
+| LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                           0 |
+| data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                          3,472 rows, none council financial |
+| Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                           0 |
+| ABS GFS (benchmark)                           | No (local government aggregate) | No                   | COFOG aggregate                                     | No                         | No                                        | CC BY                         |                                                         169 rows, aggregate |
+| NSW Budget LGA-tagged projects                | No (state projects)             | No                   | Project-level state capital                         | Yes (state)                | No                                        | CC BY 3.0 AU                  |                                                     1,115 rows, not council |
 
 ---
 
@@ -261,7 +266,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 352 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 387 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -277,7 +282,8 @@ Tweed Shire Council FY2024-25 (`tweed-shire-gpfs`, §7.15), 17 for Shoalhaven Ci
 17 for Waverley Council FY2024-25 (`waverley-gpfs`, §7.18), 18 for Willoughby City Council
 FY2024-25 (`willoughby-gpfs`, §7.19), 18 for Inner West Council FY2024-25 (`inner-west-gpfs`,
 §7.20) and 18 for Bayside Council FY2024-25 (`bayside-gpfs`, §7.21), and 17 for Randwick City
-Council FY2024-25 (`randwick-gpfs`, §7.22) — all separate source ids. The
+Council FY2024-25 (`randwick-gpfs`, §7.22) and 17 for the Council of the City of Ryde FY2024-25
+(`ryde-gpfs`, §7.23) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows.
@@ -2145,6 +2151,103 @@ updates to any other source.
 
 ---
 
+### 7.23 Twenty-third council — Council of the City of Ryde FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the council's official "Financial Reports and Statements" page
+<https://www.ryde.nsw.gov.au/Council/Strategies-Plans-and-Publications/Integrated-Planning-and-Reporting/Financial-Reports-and-Statements>
+(reached from the home page's Integrated Planning and Reporting menu). The page lists the FY2024-25
+**"Financial Statements (General and Special Purpose)"** PDF as the link labelled "Year ended 30 June
+2025" with the council's title "Finacial-Report-2025.pdf"; it is separate from the Annual Report. That
+82-page PDF contains the **General Purpose Financial Statements** (Income Statement PDF p6, printed
+p3; Statement of Comprehensive Income PDF p7, printed p4; B1-1 "Total functions and activities" PDF
+p15, printed p12; and note B3-4 depreciation PDF p27, printed p24) together with the independent
+auditor's reports on the financial statements. The statements were signed in accordance with a
+Council resolution made on 21 October 2025. `ryde.nsw.gov.au` served plain HTTP to Node's `fetch` in
+this pass (page HTTP 200, PDF HTTP 200; no Cloudflare/Akamai challenge observed), so discovery and the
+PDF download use plain `fetch`; the connector still parses the FY2024-25 financial-statements anchor
+from the page HTML (no hard-coded PDF URL). Exact bytes archived outside the repo at
+`~/ausspend-source-archive/ryde-gpfs/council-of-the-city-of-ryde-financial-statements-2024-25.pdf`:
+**12,685,077 bytes**, SHA-256
+`4a70b2a68b47142b79679a4ea4763849d7c07fc76b90a19c7bbc48e635a4bdb5` (`hash_verified: true`). The
+printed unit is explicit `$ '000` (thousands) on the income statement, B1-1, the comprehensive-income
+statement and the depreciation note; a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The PDF text stream places the Original unaudited budget amount before each
+Income Statement line label and the FY2024-25 actual immediately after it (followed by FY2023-24), so
+each emitted value is the first amount after the printed label. The expense subtotal embeds the phrase
+"depreciation, amortisation and impairment of non-financial assets", so the connector reads the actual
+depreciation line from the last printed occurrence (the standalone capitalised line). The connector
+emits nothing unless all of these agree exactly:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                           |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                   |                          `$215,461` thousand | = `$215,461,000`                                 |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$215,461` thousand | = printed total                                  |
+| B1-1 Total functions and activities — income                                                                                 |                          `$215,461` thousand | = face statement                                 |
+| Expense-by-nature components sum (employee + materials + borrowing + other + net loss on disposal)                           |                          `$148,688` thousand | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$30,119`)                           | `$148,688` + `$30,119` = `$178,807` thousand | = face-statement total expenses                  |
+| Operating result / net operating result                                                                                      | `$215,461` − `$178,807` = `$36,654` thousand | = printed operating result                       |
+| Net operating result for the year attributable to Council                                                                    |                           `$36,654` thousand | = operating result                               |
+| Net operating result before capital grants                                                                                   |  `$36,654` − `$42,063` = `$(5,409)` thousand | = printed before-capital deficit (evidence only) |
+| B1-1 grants and contributions                                                                                                |                           `$47,196` thousand | = operating `$5,133` + capital `$42,063`         |
+| B1-1 Total functions and activities — expenses                                                                               |                          `$178,792` thousand | = printed (but see the $15 discrepancy below)    |
+| B1-1 operating result                                                                                                        |                           `$36,669` thousand | = printed (but see the $15 discrepancy below)    |
+| Statement of Comprehensive Income net result                                                                                 |                           `$36,654` thousand | = Income Statement net result                    |
+| Note B3-4 total depreciation and amortisation costs                                                                          |                           `$30,119` thousand | = face depreciation line                         |
+
+Total expenses is the printed face-statement bridge: the printed expenses-excluding-depreciation line
+(`$148,688` thousand) plus the printed depreciation/amortisation/impairment line (`$30,119` thousand),
+i.e. `$178,807` thousand, which equals printed total income (`$215,461` thousand) less the printed
+operating result (`$36,654` thousand). It is **not** a sum of the nature components on its own and
+**not** the B1-1 expense total. The audited B1-1 "Total functions and activities" row prints expenses
+`$178,792` thousand and operating result `$36,669` thousand: a printed **$15 thousand
+function-allocation discrepancy** (B1-1 expenses are $15 thousand lower and B1-1 operating result $15
+thousand higher than the face statement). The connector requires the two differences to be equal in
+magnitude/direction, records both in the reconciliation evidence, and uses the face statement as
+authoritative for emitted total expenses and net result. The printed before-capital result is a
+deficit of `$5,409` thousand; it is kept in the reconciliation evidence only and is not emitted as a
+row.
+
+**Rows.** 17 rows, source id `ryde-gpfs`, `source_dataset` "Council of the City of Ryde GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Council of the City of Ryde"` (the exact published entity
+name in the audited statements), `data_quality_flag: "provisional/local_government"`, `verified:
+false`. The minimum lines are total revenue `$215,461,000`, total expenses `$178,807,000`, employee
+expenses `$65,215,000`, depreciation/amortisation/impairment `$30,119,000`, operating government grants
+`$5,133,000`, capital government grants `$42,063,000`, net loss on disposal of assets `$17,882,000` and
+net result `$36,654,000`; the printed face-statement revenue and expense components are included for
+provenance. The `total_expenses` and `net_result` rows carry `human_spot_check: required` in their
+notes, naming the printed `$15` thousand B1-1 function-allocation discrepancy (B1-1 expenses
+`$178,792` thousand / operating result `$36,669` thousand vs face expenses `$178,807` thousand /
+operating result `$36,654` thousand) that a human must reconcile before those two totals are treated
+as final.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing same-entity
+rows are preserved untouched and never summed: **1 uppercase AusTender contract** whose
+`delivery_entity` is exactly "COUNCIL OF THE CITY OF RYDE" (the only case-insensitive exact row before
+this ingest), plus **204 other rows** whose `delivery_entity` merely mentions Ryde under other strings
+(AusTender, GrantConnect, ACNC, QGIP and data.nsw CKAN); their per-source counts are identical before
+and after the ingest. All twenty-two other council GPFS sources are unchanged (Dubbo 18, City of
+Sydney 18, Blacktown 17, Parramatta 17, Northern Beaches 18, Canterbury-Bankstown 17, Sutherland
+Shire 17, Wollongong 17, Newcastle 17, Lake Macquarie 17, Maitland 7, Coffs Harbour 17, MidCoast 17,
+Port Macquarie-Hastings 17, Tweed Shire 17, Shoalhaven 17, Shellharbour 17, Waverley 17, Willoughby
+18, Inner West 18, Bayside 18, Randwick 17). Government grant rows carry `potential_double_count: true`
+because they may overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,819 → **515,836** (exactly +17); `ryde-gpfs` **17**;
+`randwick-gpfs` still **17**; `bayside-gpfs` still **18**; `data-nsw-ckan` still **3,472**;
+`dubbo-council` still **245**; exact case-insensitive "Council of the City of Ryde" rows 1 → **18**
+(the new 17 plus the 1 pre-existing uppercase AusTender contract) and exact published-string rows 0 →
+**17**; rows whose `delivery_entity` mentions Ryde 205 → **222**; `data_sources` 48 → **49**. A second
+ingest run upserted the same 17 natural keys and left the DB total unchanged (idempotent); a later
+in-place upsert added `human_spot_check: required` to the `total_expenses` and `net_result` notes and
+left the row count and amounts unchanged. No deletes or updates to any other source.
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -2179,8 +2282,10 @@ updates to any other source.
    17 non-additive rows (§7.17). **Seventeenth expansion landed 2026-11-18:** Waverley Council
    FY2024-25 GPFS, 17 non-additive rows (§7.18). **Eighteenth expansion landed 2026-11-18:**
    Willoughby City Council FY2024-25 GPFS, 18 non-additive rows (§7.19). **Nineteenth expansion
-   landed 2026-11-18:** Inner West Council FY2024-25 GPFS, 18 non-additive rows (§7.20). **Twentieth expansion landed 2026-11-18:** Bayside Council FY2024-25
-   GPFS, 18 non-additive rows (§7.21).
+   landed 2026-11-18:** Inner West Council FY2024-25 GPFS, 18 non-additive rows (§7.20). **Twenty-first expansion landed 2026-11-18:** Bayside Council FY2024-25
+   GPFS, 18 non-additive rows (§7.21). **Twenty-second expansion landed 2026-11-18:** Randwick City
+   Council FY2024-25 GPFS, 17 non-additive rows (§7.22). **Twenty-third expansion landed
+   2026-11-18:** Council of the City of Ryde FY2024-25 GPFS, 17 non-additive rows (§7.23).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
