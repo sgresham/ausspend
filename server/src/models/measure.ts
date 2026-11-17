@@ -140,6 +140,19 @@ export interface MeasureDocument {
   vlgc_abs_printed_sign?: 'positive' | 'negative';
   /** Government-named funding row that may overlap government program data. */
   potential_double_count?: boolean;
+  /** VIC LGPRF performance value (non-monetary; may be negative or fractional). */
+  performance_value?: number;
+  /** Published textual result when the source result is not numeric. */
+  performance_value_text?: string;
+  /** Unit exactly as published/defined for the LGPRF indicator. */
+  performance_unit?: string;
+  performance_indicator_code?: string;
+  performance_indicator_name?: string;
+  performance_indicator_group?: string;
+  performance_service_provided?: string;
+  performance_data_applicable?: string;
+  performance_council_label?: string;
+  performance_non_additive?: boolean;
 }
 
 const LocationSchema = new Schema<SpendingLocationDocument>(
@@ -267,6 +280,16 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     vlgc_abs_unit: { type: String },
     vlgc_abs_printed_sign: { type: String, enum: ['positive', 'negative'] },
     potential_double_count: { type: Boolean, index: true },
+    performance_value: { type: Number, required: false },
+    performance_value_text: { type: String },
+    performance_unit: { type: String, index: true },
+    performance_indicator_code: { type: String, index: true },
+    performance_indicator_name: { type: String },
+    performance_indicator_group: { type: String },
+    performance_service_provided: { type: String },
+    performance_data_applicable: { type: String, index: true },
+    performance_council_label: { type: String },
+    performance_non_additive: { type: Boolean, index: true },
   },
   { collection: 'measures', versionKey: false },
 );

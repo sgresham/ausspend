@@ -186,6 +186,34 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.vlgc_council_label ? { vlgc_council_label: measure.vlgc_council_label } : {}),
     ...(measure.vlgc_unit ? { vlgc_unit: measure.vlgc_unit } : {}),
     ...(measure.vlgc_printed_sign ? { vlgc_printed_sign: measure.vlgc_printed_sign } : {}),
+    ...(measure.performance_value !== undefined
+      ? { performance_value: measure.performance_value }
+      : {}),
+    ...(measure.performance_value_text
+      ? { performance_value_text: measure.performance_value_text }
+      : {}),
+    ...(measure.performance_unit ? { performance_unit: measure.performance_unit } : {}),
+    ...(measure.performance_indicator_code
+      ? { performance_indicator_code: measure.performance_indicator_code }
+      : {}),
+    ...(measure.performance_indicator_name
+      ? { performance_indicator_name: measure.performance_indicator_name }
+      : {}),
+    ...(measure.performance_indicator_group
+      ? { performance_indicator_group: measure.performance_indicator_group }
+      : {}),
+    ...(measure.performance_service_provided
+      ? { performance_service_provided: measure.performance_service_provided }
+      : {}),
+    ...(measure.performance_data_applicable
+      ? { performance_data_applicable: measure.performance_data_applicable }
+      : {}),
+    ...(measure.performance_council_label
+      ? { performance_council_label: measure.performance_council_label }
+      : {}),
+    ...(measure.performance_non_additive !== undefined
+      ? { performance_non_additive: measure.performance_non_additive }
+      : {}),
     function_name: fn?.name ?? null,
     function_level: fn?.level ?? null,
     ...(fn?.parent_code ? { function_parent_code: fn.parent_code } : {}),
