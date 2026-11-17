@@ -1,13 +1,16 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import {
+  LAKE_MACQUARIE_GPFS_ID,
   WOLLONGONG_GPFS_ID,
+  createLakeMacquarieGpfsConnector,
   createWollongongGpfsConnector,
   ensureDubboRegion,
   getConnector,
   runIngestion,
 } from '../server/src/connectors/index.js';
 import type { Connector } from '../server/src/connectors/types.js';
+import { fetchLakeMacquarieGpfsViaBrowser } from './lake-macquarie-gpfs-browser.js';
 import { fetchWollongongGpfsViaBrowser } from './wollongong-gpfs-browser.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
@@ -30,14 +33,15 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - sutherland-shire-gpfs  GPFS expansion: Sutherland Shire Council's audited FY2024-25 GPFS
  *   - wollongong-gpfs      GPFS expansion: Wollongong City Council's audited FY2024-25 GPFS
  *   - newcastle-gpfs       GPFS expansion: Newcastle City Council's audited FY2024-25 GPFS
+ *   - lake-macquarie-gpfs  GPFS expansion: Lake Macquarie City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
  * Northern Beaches Council, Canterbury-Bankstown Council, Sutherland Shire
- * Council, Wollongong City Council and Newcastle City Council. No other councils,
- * states/territories, SOC/charity or live state connectors are touched. The
- * runner upserts on natural_key, so re-running is idempotent and never deletes
- * existing federal/synthetic rows.
+ * Council, Wollongong City Council, Newcastle City Council and Lake Macquarie
+ * City Council. No other councils, states/territories, SOC/charity or live state
+ * connectors are touched. The runner upserts on natural_key, so re-running is
+ * idempotent and never deletes existing federal/synthetic rows.
  */
 export const NSW_SOURCE_IDS = [
   'nsw-budget',
@@ -52,6 +56,7 @@ export const NSW_SOURCE_IDS = [
   'sutherland-shire-gpfs',
   'wollongong-gpfs',
   'newcastle-gpfs',
+  'lake-macquarie-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -80,6 +85,22 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] wollongong-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createWollongongGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === LAKE_MACQUARIE_GPFS_ID) {
+      // Lake Macquarie's site rejects direct HTTP with an Akamai 403 (and the
+      // CMS intermittently served a Granicus/OpenCities failover page); the
+      // documented headless Chromium path clears it, and the connector still
+      // discovers the PDF link from the cleared HTML and re-verifies the bytes.
+      console.log('[ingest:nsw] lake-macquarie-gpfs: browser discovery/download starting');
+      const fetched = await fetchLakeMacquarieGpfsViaBrowser();
+      console.log(`[ingest:nsw] lake-macquarie-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createLakeMacquarieGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
