@@ -1,4 +1,5 @@
 import { createAbsGfsConnector } from './abs-gfs.js';
+import { createAihwHealthExpenditureConnector } from './aihw-health-expenditure.js';
 import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
 import { createAusTenderConnector } from './aus-tender.js';
@@ -114,14 +115,12 @@ export const CONNECTORS: readonly Connector[] = [
   // never add it to SOC/entity, government, charity or project data, and never
   // sum across jurisdictions or revenue/expense flows.
   createAbsGfsPnfcConnector(),
-  stub({
-    id: 'aihw-health-expenditure',
-    name: 'Health Expenditure Australia',
-    publisher: 'Australian Institute of Health and Welfare',
-    source_url: 'https://www.aihw.gov.au/reports-data/health-welfare-overview/health-expenditure',
-    jurisdiction_level: 'federal',
-    // TODO: ingest AIHW health-expenditure data tables (XLSX) by year.
-  }),
+  // Phase 6.2: AIHW health expenditure. METEOR is metadata-only (it contains
+  // no data), so this uses the official AIHW state x area x funding-source CSV
+  // published on data.gov.au. Rows are real (constant 2011-12 prices) AUD
+  // millions; government and non-government are separate, non-additive series.
+  // The data.gov.au package ends at 2011-12 and is documented as superseded.
+  createAihwHealthExpenditureConnector(),
   stub({
     id: 'aofm',
     name: 'Australian Office of Financial Management',

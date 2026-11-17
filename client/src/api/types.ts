@@ -273,6 +273,10 @@ export interface MeasureRow {
   soc_breakdown?: string;
   soc_printed_sign?: 'positive' | 'negative';
   potential_double_count?: boolean;
+  aihw_broad_source_of_funding?: 'Government' | 'Non-government';
+  aihw_area_of_expenditure?: string;
+  aihw_printed_sign?: 'positive' | 'negative';
+  aihw_unit?: string;
 }
 
 /** Per-measure-type count and sum. The API never sums across types. */

@@ -140,6 +140,14 @@ export interface MeasureDocument {
   vlgc_abs_printed_sign?: 'positive' | 'negative';
   /** Government-named funding row that may overlap government program data. */
   potential_double_count?: boolean;
+  /** AIHW health-expenditure broad funding series. */
+  aihw_broad_source_of_funding?: 'Government' | 'Non-government';
+  /** AIHW published area of expenditure. */
+  aihw_area_of_expenditure?: string;
+  /** Printed sign when a negative AIHW amount is stored as a magnitude. */
+  aihw_printed_sign?: 'positive' | 'negative';
+  /** AIHW published unit, AUD_millions (real/constant 2011-12 prices). */
+  aihw_unit?: string;
   /** VIC LGPRF performance value (non-monetary; may be negative or fractional). */
   performance_value?: number;
   /** Published textual result when the source result is not numeric. */
@@ -280,6 +288,14 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     vlgc_abs_unit: { type: String },
     vlgc_abs_printed_sign: { type: String, enum: ['positive', 'negative'] },
     potential_double_count: { type: Boolean, index: true },
+    aihw_broad_source_of_funding: {
+      type: String,
+      enum: ['Government', 'Non-government'],
+      index: true,
+    },
+    aihw_area_of_expenditure: { type: String, index: true },
+    aihw_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    aihw_unit: { type: String },
     performance_value: { type: Number, required: false },
     performance_value_text: { type: String },
     performance_unit: { type: String, index: true },

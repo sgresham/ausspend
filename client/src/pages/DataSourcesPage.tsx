@@ -432,9 +432,12 @@ export function DataSourcesPage() {
         data.gov.au CKAN PBS CSV, <code>nsw-budget</code> is live from the NSW 2025-26 open-data
         XLSX snapshot plus ArcGIS capital projects, and <code>data-nsw-ckan</code> is live from
         selected data.nsw.gov.au CKAN CSV/XLSX/DataStore resources, and <code>dubbo-council</code>
-        is live for one local council only (Dubbo Regional Council). <code>grantconnect</code> is
-        blocked pending a usable adaptor (no public award API; no direct scraper) and the remaining
-        seven connectors (four federal and VIC/QLD/WA) are stubs. No other council is covered.
+        is live for one local council only (Dubbo Regional Council), and{' '}
+        <code>aihw-health-expenditure</code> is live from the official data.gov.au CKAN CSV (METEOR
+        is metadata-only): its real/constant-price government and non-government series are
+        non-additive. <code>grantconnect</code> is blocked pending a usable adaptor (no public award
+        API; no direct scraper) and the remaining six connectors (three federal and VIC/QLD/WA) are
+        stubs. No other council is covered.
       </Typography>
 
       {!coverage.data && coverage.error ? (

@@ -166,7 +166,7 @@ describe('GET /api/meta/coverage', () => {
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body).toMatchObject({
       phase:
-        'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live) + ACNC charity',
+        'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live) + ACNC charity + AIHW health expenditure',
       synthetic: true,
       live_ingestion: true,
       counts: { data_sources: 1, regions: 3, functions: 4, measures: 8 },
@@ -189,6 +189,7 @@ describe('GET /api/meta/coverage', () => {
       expect(connector.status).toBe(
         connector.id === 'abs-gfs' ||
           connector.id === 'abs-gfs-pnfc' ||
+          connector.id === 'aihw-health-expenditure' ||
           connector.id === 'aus-tender' ||
           connector.id === 'data-gov-au-pbs' ||
           connector.id === 'grantconnect' ||

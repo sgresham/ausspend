@@ -146,7 +146,7 @@ function coverageLimitations(
     syntheticLine,
     'Synthetic and ingested project rows are unverified: seeded measures, AusTender contracts, PBS budget rows, state budget/project rows and charity rows carry verified: false. The only verified rows are the official ABS GFS COFOG-A aggregates (aggregation_role "benchmark"), which are top-down benchmarks and are never added to project data.',
     liveFederal
-      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. The four other registered connectors are stubs and make no network call.'
+      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. AIHW health expenditure is live from the official data.gov.au CSV because METEOR is metadata-only; its rows are real/constant-price, government/non-government, non-additive agency detail. The three other registered connectors are stubs and make no network call.'
       : 'No live ingestion has run yet: aus-tender, data-gov-au-pbs and grantconnect plus the eight other registered connectors are stubs; no request leaves the API until the runner runs.',
     pbsLive
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
@@ -256,6 +256,8 @@ export function createCoverageHandler(
     const liveIngestion = connectorStatusCounts.active > 0;
     const pbsLive =
       connectors.find((connector) => connector.id === 'data-gov-au-pbs')?.status === 'active';
+    const aihw = connectors.find((connector) => connector.id === 'aihw-health-expenditure');
+    const aihwLive = aihw?.status === 'active' || aihw?.status === 'degraded';
     const federalConnectors = connectors.filter(
       (connector) => connector.jurisdiction_level === 'federal',
     );
@@ -341,6 +343,7 @@ export function createCoverageHandler(
         charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
         benchmarkLive ? '+ ABS GFS benchmark' : null,
         pnfcBenchmarkLive ? '+ ABS GFS PNFC benchmark' : null,
+        aihwLive ? '+ AIHW health expenditure' : null,
         socLive
           ? `+ NSW SOC (${[
               socLiveIds.includes(SYDNEY_WATER_ID) ? 'Sydney Water' : null,
@@ -408,7 +411,7 @@ export function createCoverageHandler(
         grantconnect_caveat: GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
         grantconnect_note: grantconnect?.notes ?? GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
         note: liveIngestion
-          ? 'AusTender OCDS contracts, data.gov.au PBS budget line items and the ABS GFS COFOG-A benchmark are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. Every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense, and ABS GFS is a top-down benchmark that is never added to project data.'
+          ? 'AusTender OCDS contracts, data.gov.au PBS budget line items, the ABS GFS COFOG-A benchmark and AIHW health expenditure are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. AIHW health expenditure uses the official data.gov.au state x area x funding-source CSV because METEOR is metadata-only; government and non-government are separate, non-additive series and its 1997-98..2011-12 coverage is documented as a superseded snapshot. Every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense, and ABS GFS is a top-down benchmark that is never added to project data.'
           : 'No federal source is live yet. AusTender, PBS and GrantConnect are pending.',
       },
       state_ingestion: {

@@ -270,6 +270,18 @@ export const MeasureRecordSchema = z.object({
    */
   potential_double_count: z.boolean().optional(),
   /**
+   * AIHW health-expenditure provenance. Government and Non-government are
+   * separate funding series and are never summed; `aihw_area_of_expenditure`
+   * is the published area (for example Public hospitals). `aihw_printed_sign`
+   * marks the 122 negative constant-price amounts (mostly the medical-expense
+   * tax rebate) whose magnitude is stored in `amount_cents`. `aihw_unit` is the
+   * explicit published unit, AUD_millions (real/constant 2011-12 prices).
+   */
+  aihw_broad_source_of_funding: z.enum(['Government', 'Non-government']).optional(),
+  aihw_area_of_expenditure: z.string().min(1).optional(),
+  aihw_printed_sign: z.enum(['positive', 'negative']).optional(),
+  aihw_unit: z.string().min(1).optional(),
+  /**
    * VIC council performance-indicator provenance (LGPRF). Performance values
    * are not money: a value may be a per-head amount, per-unit cost, percentage,
    * ratio, score, count or days. `performance_value` stores the published

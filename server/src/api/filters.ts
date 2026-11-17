@@ -9,6 +9,15 @@ import { badRequest } from './errors.js';
 export const DEFAULT_LIMIT = 2000;
 export const MAX_LIMIT = 2000;
 
+/**
+ * AIHW health expenditure is a historical, non-additive state x area x funding
+ * matrix. It is kept out of the generic spending/state/function views by
+ * default (like SOC and the ABS GFS benchmark) so 1997-98 rows do not crowd out
+ * current program data; it is still queryable explicitly with
+ * `?source_id=aihw-health-expenditure`.
+ */
+export const AIHW_SOURCE_ID = 'aihw-health-expenditure';
+
 const MeasureFiltersSchema = z.object({
   fiscal_year: z
     .string()
@@ -68,7 +77,13 @@ export function measureQuery(filters: MeasureFilters): Record<string, unknown> {
   if (filters.fiscal_year) query.fiscal_year = filters.fiscal_year;
   if (filters.measure_type) query.measure_type = filters.measure_type;
   if (filters.region) query.region_id = new mongoose.Types.ObjectId(filters.region);
-  if (filters.source_id) query.source_id = filters.source_id;
+  if (filters.source_id) {
+    query.source_id = filters.source_id;
+  } else {
+    // AIHW historical rows are non-additive and would otherwise dominate the
+    // earliest fiscal-year pages of every generic function/region view.
+    query.source_id = { $ne: AIHW_SOURCE_ID };
+  }
   return query;
 }
 
