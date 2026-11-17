@@ -8,9 +8,12 @@ import { SourceDocumentModel } from '../models/index.js';
  *   GET /api/v1/source-documents?source_id=nsw-budget
  *
  * The bytes live outside the repository; `local_path` + `sha256` let a reviewer
- * verify the exact copy that an ingestion run used.
+ * verify the exact copy that an ingestion run used. Host filesystem paths are
+ * stripped unless EXPOSE_SOURCE_PATHS=true: the production edge also 404s this
+ * route (see deploy/nginx/ausspend.conf) so paths are never public.
  */
 export const listSourceDocuments: RequestHandler = async (req, res) => {
+  const exposePaths = process.env.EXPOSE_SOURCE_PATHS === 'true';
   const sourceId = typeof req.query.source_id === 'string' ? req.query.source_id.trim() : '';
   const limitRaw = typeof req.query.limit === 'string' ? Number(req.query.limit) : 100;
   const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(Math.trunc(limitRaw), 1), 200) : 100;
@@ -29,7 +32,7 @@ export const listSourceDocuments: RequestHandler = async (req, res) => {
       original_url: doc.original_url,
       retrieved_from: doc.retrieved_from,
       archived_from: doc.archived_from,
-      local_path: doc.local_path,
+      ...(exposePaths ? { local_path: doc.local_path } : {}),
       sha256: doc.sha256,
       bytes: doc.bytes,
       content_type: doc.content_type,

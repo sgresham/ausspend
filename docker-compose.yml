@@ -53,11 +53,14 @@ services:
     working_dir: /app
     command: sh -c "npm run dev -w server"
     ports:
-      - '${SERVER_PORT:-3001}:3001'
+      # Loopback only: nginx (host 443) is the sole public entry point. Never
+      # publish 3001/5173 on 0.0.0.0.
+      - '127.0.0.1:${SERVER_PORT:-3001}:3001'
     environment:
       MONGO_URL: ${MONGO_URL:-mongodb://10.10.10.30:27017/ausspend_dev}
       PORT: '3001'
-      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
+      # Production same-origin origin; local dev may override CLIENT_ORIGIN.
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-https://ausspend.com.au}
     volumes:
       - .:/app
       - app_node_modules:/app/node_modules
@@ -86,7 +89,8 @@ services:
     working_dir: /app
     command: sh -c "npm run dev -w client -- --host 0.0.0.0"
     ports:
-      - '${CLIENT_PORT:-5173}:5173'
+      # Vite dev server is loopback only; it must never be public.
+      - '127.0.0.1:${CLIENT_PORT:-5173}:5173'
     environment:
       VITE_API_PROXY_TARGET: http://server:3001
     volumes:
