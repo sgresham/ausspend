@@ -28,6 +28,7 @@ import { useCoverage } from '../coverage';
 import { titleCase } from '../format';
 import { GRANTCONNECT_CAVEAT, PBS_CAVEAT, uniqueSources } from '../provenance';
 import { QuickSearch } from '../components/QuickSearch';
+import { DiscoverySuggestion } from '../search/DiscoverySuggestion';
 import { SpendingSummaryPanel } from '../components/SpendingSummaryPanel';
 import { SpendingRowsTable } from '../components/SpendingRowsTable';
 import { AreaPanels } from '../components/AreaPanels';
@@ -441,7 +442,7 @@ export function SearchPage() {
                   ? state.data
                     ? `${state.data.pagination.total} matching row${state.data.pagination.total === 1 ? '' : 's'} — every word must match`
                     : 'Every word must appear in project name, description or delivery entity'
-                  : 'Every word must appear in project name, description or delivery entity — order does not matter, not fuzzy'
+                  : 'Every word must appear in project name, description or delivery entity — order does not matter. Use the jump search above for typo-tolerant discovery.'
               }
               inputProps={{ maxLength: 100 }}
             />
@@ -642,7 +643,9 @@ export function SearchPage() {
                 ? 'No real published spending rows match this filter combination. The synthetic seed is not present and no real feed covers this dimension yet. Nothing is estimated, zero-filled or invented. Reset the filters to see the whole database.'
                 : 'The API returned no rows for this filter combination. Nothing is estimated, zero-filled or invented. Reset the filters to see the whole database.'
             }
-          />
+          >
+            {q ? <DiscoverySuggestion query={q} testId="no-result-suggestion" /> : null}
+          </EmptyState>
         ) : (
           <>
             {state.data.area_profile ? (

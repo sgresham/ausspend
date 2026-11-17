@@ -75,6 +75,36 @@ export function HomePage() {
       <Typography variant="h1" gutterBottom>
         ausspend
       </Typography>
+
+      <Card
+        variant="outlined"
+        sx={{ mb: 3, borderColor: 'primary.main', borderWidth: 2 }}
+        data-testid="home-search"
+      >
+        <CardContent>
+          <Typography variant="h5" component="h2" gutterBottom>
+            Search the spending explorer
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            Find a COFOG function, region, registered data source or NSW SOC entity. Matching is
+            typo-tolerant over that <strong>bounded discovery index</strong> — try{' '}
+            <code>health</code>, <code>dubbo</code>, <code>waternsw</code> or{' '}
+            <code>hunter wter</code>. Press Enter to run the same query through the full spending
+            explorer.
+          </Typography>
+          <QuickSearch
+            autoFocus
+            testId="home-autocomplete"
+            label="Search functions, regions, sources and NSW SOC entities"
+          />
+          <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1.5 }}>
+            Phase 1 scope: discovery rows only (taxonomy, regions, source register and the ten NSW
+            SOC entities). Result ranking over the full 515k-row measure set is Phase 2 and needs a
+            dedicated search index — this box does not claim full-dataset fuzzy search.
+          </Typography>
+        </CardContent>
+      </Card>
+
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         An explorer for published Australian government spending, organised by COFOG function,
         region and state.{' '}
@@ -124,17 +154,6 @@ export function HomePage() {
         </Link>{' '}
         page.
       </Alert>
-
-      <Typography variant="h5" component="h2" gutterBottom>
-        Search regions and functions
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Results come from <code>/api/regions?q=</code> and <code>/api/search?q=</code>. Region
-        results link by <code>_id</code>; state rows link to their state page.
-      </Typography>
-      <Box sx={{ mb: 4 }} data-testid="home-autocomplete">
-        <QuickSearch />
-      </Box>
 
       <Typography variant="h5" component="h2" gutterBottom>
         Explore

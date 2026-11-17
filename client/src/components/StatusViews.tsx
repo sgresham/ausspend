@@ -1,4 +1,5 @@
 import { Alert, AlertTitle, Box, CircularProgress, Typography } from '@mui/material';
+import type { ReactNode } from 'react';
 import type { ApiError } from '../api/client';
 
 export function LoadingState({ label = 'Loading data…' }: { label?: string }) {
@@ -12,11 +13,20 @@ export function LoadingState({ label = 'Loading data…' }: { label?: string }) 
   );
 }
 
-export function EmptyState({ title, message }: { title: string; message: string }) {
+export function EmptyState({
+  title,
+  message,
+  children,
+}: {
+  title: string;
+  message: string;
+  children?: ReactNode;
+}) {
   return (
     <Alert severity="info" sx={{ my: 2 }} data-testid="empty-state">
       <AlertTitle>{title}</AlertTitle>
       {message}
+      {children}
     </Alert>
   );
 }
