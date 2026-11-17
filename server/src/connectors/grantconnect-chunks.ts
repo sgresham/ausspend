@@ -257,10 +257,28 @@ export function coverageOf(target: DayRange, accepted: ReadonlyArray<DayRange>):
   };
 }
 
+const MONTH_TOKENS = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+] as const;
+
 function formatDateToken(day: IsoDay): string {
   const date = new Date(`${day}T00:00:00.000Z`);
   const dayNumberValue = date.getUTCDate();
-  const month = date.toLocaleString('en-AU', { month: 'short', timeZone: 'UTC' });
+  // GrantConnect expects three-letter month tokens. Never use ICU's en-AU
+  // short name here: Node renders September as "Sept", which the public
+  // DownloadResult endpoint rejects with HTTP 500.
+  const month = MONTH_TOKENS[date.getUTCMonth()]!;
   return `${dayNumberValue}-${month}-${date.getUTCFullYear()}`;
 }
 

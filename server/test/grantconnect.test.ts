@@ -10,6 +10,7 @@ import {
   detectCapWarning,
   fiscalYearRange,
   formatRange,
+  buildDownloadResultUrl,
   inspectGrantConnectExport,
   mapGrantConnectRow,
   parseDateRange,
@@ -149,6 +150,17 @@ describe('GrantConnect chunk arithmetic', () => {
       const current = new Date(`${chunks[index]!.start}T00:00:00.000Z`).getTime();
       expect(current - previous).toBe(86_400_000);
     }
+  });
+
+  it('builds DownloadResult URLs with three-letter month tokens', () => {
+    const url = buildDownloadResultUrl({ start: '2025-09-01', end: '2025-09-07' });
+    expect(url).toContain('DateStart=1-Sep-2025');
+    expect(url).toContain('DateEnd=7-Sep-2025');
+    // en-AU ICU renders September as "Sept"; GrantConnect returns HTTP 500 for it.
+    expect(url).not.toContain('Sept');
+    expect(buildDownloadResultUrl({ start: '2025-10-01', end: '2025-10-01' })).toContain(
+      'DateStart=1-Oct-2025',
+    );
   });
 
   it('reports partial and complete coverage truthfully', () => {
