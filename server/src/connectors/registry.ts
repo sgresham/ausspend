@@ -9,6 +9,7 @@ import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { createQldBudgetConnector } from './qld-budget.js';
 import { createQgipConnector } from './qld-qgip.js';
+import { createEssentialEnergyConnector } from './soc/nsw/essential-energy.js';
 import { createHunterWaterConnector } from './soc/nsw/hunter-water.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
@@ -150,6 +151,11 @@ export const CONNECTORS: readonly Connector[] = [
   // entity-level SOC statement lines. Never added to government program
   // spending, the PNFC benchmark, Sydney Water, WaterNSW, or any other SOC.
   createHunterWaterConnector(),
+  // SOC Phase 5: fourth NSW state-owned corporation — Essential Energy. Latest
+  // annual report discovered, SHA-256 archived and parsed as entity-level
+  // statement lines. Never added to government program spending, the PNFC
+  // benchmark, or any other SOC. Other SOCs are not implemented.
+  createEssentialEnergyConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

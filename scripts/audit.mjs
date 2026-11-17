@@ -35,6 +35,7 @@ const KNOWN_SOURCE_IDS = [
   'sydney-water',
   'waternsw',
   'hunter-water',
+  'essential-energy',
 ];
 
 const results = [];
@@ -347,8 +348,8 @@ async function apiChecks() {
     );
     assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
     assert(
-      Array.isArray(soc.body?.series) && soc.body.series.length === 63,
-      `expected 63 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6), got ${soc.body?.series?.length}`,
+      Array.isArray(soc.body?.series) && soc.body.series.length === 69,
+      `expected 69 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -366,13 +367,18 @@ async function apiChecks() {
       Array.isArray(soc.body.entities) &&
         soc.body.entities.includes('Sydney Water') &&
         soc.body.entities.includes('WaterNSW') &&
-        soc.body.entities.includes('Hunter Water'),
-      'SOC entities (Sydney Water, WaterNSW, Hunter Water) are not returned',
+        soc.body.entities.includes('Hunter Water') &&
+        soc.body.entities.includes('Essential Energy'),
+      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy) are not returned',
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
     assert(sources.get('waternsw')?.records === 47, 'WaterNSW source count is not 47 rows');
     assert(sources.get('hunter-water')?.records === 6, 'Hunter Water source count is not 6 rows');
+    assert(
+      sources.get('essential-energy')?.records === 6,
+      'Essential Energy source count is not 6 rows',
+    );
     for (const entity of ['sydney-water', 'waternsw', 'hunter-water']) {
       assert(
         sources.get(entity)?.unit === 'AUD_thousands',
@@ -383,6 +389,14 @@ async function apiChecks() {
         `${entity} SOC scale is not 100,000 cents per unit`,
       );
     }
+    assert(
+      sources.get('essential-energy')?.unit === 'AUD_millions',
+      'Essential Energy SOC unit is not AUD_millions',
+    );
+    assert(
+      sources.get('essential-energy')?.unit_to_cents === 100000000,
+      'Essential Energy SOC scale is not 100,000,000 cents per unit',
+    );
 
     const sydneyWater = await getJson('/api/soc?fiscal_year=2024-25&entity=Sydney%20Water');
     assert(sydneyWater.status === 200, `Sydney Water SOC expected 200, got ${sydneyWater.status}`);
@@ -561,6 +575,54 @@ async function apiChecks() {
       'Hunter Water government grants row is not flagged as a potential double count',
     );
 
+    const essentialEnergy = await getJson('/api/soc?fiscal_year=2024-25&entity=Essential%20Energy');
+    assert(
+      essentialEnergy.status === 200,
+      `Essential Energy SOC expected 200, got ${essentialEnergy.status}`,
+    );
+    assert(
+      essentialEnergy.body?.series?.length === 6,
+      `expected 6 Essential Energy SOC rows, got ${essentialEnergy.body?.series?.length}`,
+    );
+    assert(
+      essentialEnergy.body?.source?.source_id === 'essential-energy',
+      'Essential Energy SOC source is not essential-energy',
+    );
+    assert(
+      essentialEnergy.body.series.every((row) => row.delivery_entity === 'Essential Energy'),
+      'Essential Energy SOC response contains another entity',
+    );
+    const eeByLine = new Map(essentialEnergy.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      eeByLine.get('total_expenses')?.amount_cents === 204270000000,
+      'Essential Energy total expenses is not 2,042.7 $M in cents',
+    );
+    assert(
+      eeByLine.get('total_revenue')?.amount_cents === 190600000000,
+      'Essential Energy total revenue is not 1,906.0 $M in cents',
+    );
+    assert(
+      eeByLine.get('employee_expenses')?.amount_cents === 39930000000,
+      'Essential Energy employee expenses is not 399.3 $M in cents',
+    );
+    assert(
+      eeByLine.get('depreciation_amortisation')?.amount_cents === 49720000000,
+      'Essential Energy depreciation/amortisation is not 497.2 $M in cents',
+    );
+    assert(
+      eeByLine.get('net_result')?.amount_cents === 9580000000 &&
+        eeByLine.get('net_result')?.soc_printed_sign === 'negative',
+      'Essential Energy net result is not the printed 95.8 $M loss',
+    );
+    assert(
+      eeByLine.get('total_expenses')?.potential_double_count === false,
+      'Essential Energy own-source total expenses is flagged as double count',
+    );
+    assert(
+      eeByLine.get('government_grants_and_subsidies')?.potential_double_count === true,
+      'Essential Energy government grants row is not flagged as a potential double count',
+    );
+
     const generic = await getJson('/api/spending?limit=5');
     assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
     const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
@@ -573,7 +635,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '63 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6), $’000, exact total expenses 2,949,540, 472,831 and 418,326, no total, excluded from generic spending';
+    return '69 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326 and 2,042.7, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {

@@ -12,6 +12,17 @@ import {
   ABS_GFS_PNFC_TABLES,
   ABS_GFS_PNFC_UNIT,
   ABS_GFS_PNFC_UNIT_TO_CENTS,
+  ESSENTIAL_ENERGY_CAVEAT,
+  ESSENTIAL_ENERGY_ENTITY,
+  ESSENTIAL_ENERGY_ID,
+  ESSENTIAL_ENERGY_JURISDICTION,
+  ESSENTIAL_ENERGY_LICENSE,
+  ESSENTIAL_ENERGY_NAME,
+  ESSENTIAL_ENERGY_PUBLISHER,
+  ESSENTIAL_ENERGY_SOURCE_URL,
+  ESSENTIAL_ENERGY_UNIT,
+  ESSENTIAL_ENERGY_UNIT_LABEL,
+  ESSENTIAL_ENERGY_UNIT_TO_CENTS,
   HUNTER_WATER_CAVEAT,
   HUNTER_WATER_ENTITY,
   HUNTER_WATER_ID,
@@ -81,14 +92,16 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  */
 /**
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
- * per-entity adapters (Sydney Water, WaterNSW, then Hunter Water). No other SOC adapter is
- * implemented, and the three entity adapters are never summed together.
+ * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, then Essential
+ * Energy). No other SOC adapter is implemented, and the four entity adapters are
+ * never summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
   SYDNEY_WATER_ID,
   WATERNSW_ID,
   HUNTER_WATER_ID,
+  ESSENTIAL_ENERGY_ID,
 ] as const;
 
 /**
@@ -235,6 +248,40 @@ async function writeHunterWaterManifest(): Promise<void> {
   );
 }
 
+async function writeEssentialEnergyManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: ESSENTIAL_ENERGY_ID });
+  const manifestPath = path.resolve(
+    process.env.ESSENTIAL_ENERGY_MANIFEST ??
+      'docs/source-archive/essential-energy-annual-report.json',
+  );
+  const manifest = {
+    entity: ESSENTIAL_ENERGY_ENTITY,
+    jurisdiction: ESSENTIAL_ENERGY_JURISDICTION,
+    dataset: ESSENTIAL_ENERGY_NAME,
+    publisher: ESSENTIAL_ENERGY_PUBLISHER,
+    discovery_page: ESSENTIAL_ENERGY_SOURCE_URL,
+    license: ESSENTIAL_ENERGY_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${ESSENTIAL_ENERGY_UNIT_LABEL} (${ESSENTIAL_ENERGY_UNIT}; x${ESSENTIAL_ENERGY_UNIT_TO_CENTS} cents per unit)`,
+    caveat: ESSENTIAL_ENERGY_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      'Latest Essential Energy annual report discovered from the official annual-report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The consolidated statement of comprehensive income prints an explicit $M unit. Because the statement has no single printed Total expenses subtotal, total expenses is the exact sum of the printed expense lines (pass through costs, operating expenses, loss on disposal/write-off, depreciation/amortisation/impairment and net finance costs) and is accepted only when the revenue, EBITDA/EBIT, expense-component and profit-before-tax/net-result bridges reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Essential Energy rows to government program spending, the PNFC benchmark, or any other SOC.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -275,6 +322,7 @@ async function main(): Promise<void> {
     await writeSydneyWaterManifest();
     await writeWaterNswManifest();
     await writeHunterWaterManifest();
+    await writeEssentialEnergyManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -390,6 +438,33 @@ async function main(): Promise<void> {
     for (const group of hwByLine) {
       console.log(
         `[ingest:soc] ${HUNTER_WATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const eeRows = await MeasureModel.countDocuments({ source_id: ESSENTIAL_ENERGY_ID });
+    const eeVerified = await MeasureModel.countDocuments({
+      source_id: ESSENTIAL_ENERGY_ID,
+      verified: true,
+    });
+    const eeDoubleCount = await MeasureModel.countDocuments({
+      source_id: ESSENTIAL_ENERGY_ID,
+      potential_double_count: true,
+    });
+    const eeByLine = await MeasureModel.aggregate([
+      { $match: { source_id: ESSENTIAL_ENERGY_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const eeDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: ESSENTIAL_ENERGY_ID,
+      status: 'deferred',
+    });
+    const eeArchived = await listArchivedRecords({ source_id: ESSENTIAL_ENERGY_ID });
+    console.log(
+      `[ingest:soc] ${ESSENTIAL_ENERGY_ID} rows=${eeRows} source_documents=${eeArchived.length} verified=${eeVerified} potential_double_count=${eeDoubleCount} deferred_documents=${eeDeferred} (entity-level SOC statement lines; no combined total is printed or computed)`,
+    );
+    for (const group of eeByLine) {
+      console.log(
+        `[ingest:soc] ${ESSENTIAL_ENERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(

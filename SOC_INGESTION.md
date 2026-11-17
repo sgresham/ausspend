@@ -1,4 +1,4 @@
-# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water)
+# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy)
 
 **Status:** the ABS GFS Public Non-Financial Corporations (PNFC) sector
 benchmark is implemented, and three NSW per-entity State Owned Corporation (SOC)
@@ -606,6 +606,151 @@ invented: every value is a printed statement or note line.
 Both rows carry `human_spot_check: required` in their notes. No Hunter Water row
 is marked verified in this phase.
 
+## 2C. Source: Essential Energy (fourth NSW SOC entity)
+
+### Legal and entity basis
+
+Essential Energy (the Corporation) is a NSW statutory State Owned Corporation
+incorporated under the _State Owned Corporations Act 1989_. It distributes
+electricity across regional NSW and delivers water services in Far West NSW
+through Essential Water. Its consolidated general-purpose financial statements
+are prepared under the _Government Sector Finance Act 2018_ and NSW Treasury
+directions and are audited by the Audit Office of New South Wales. The 2024-25
+consolidated statement of comprehensive income covers the year ended 30 June 2025.
+
+"Essential Energy" is the canonical `delivery_entity`. The entity-level
+statement is **not** a level of government, **not** project spending, **not**
+geographically disaggregated (no LGA, SA2, postcode or coordinate) and **not**
+the ABS PNFC sector aggregate. It is stored with `jurisdiction_level: "soc"` and
+`aggregation_role: "agency_detail"`. Essential Energy rows are never added to
+Sydney Water's, WaterNSW's, Hunter Water's or any other SOC's rows.
+
+### PDF discovery (no hard-coded URL)
+
+The connector starts at Essential Energy's official annual-report page:
+
+`https://www.essentialenergy.com.au/about-us/corporate-governance/annual-report`
+
+It parses every annual-report PDF link on that page — both the legacy
+`/-/media/.../AnnualReportYYYY-YY.pdf` paths and the newer
+`/ext/arYYYY/files/.../Essential-Energy_Annual-Report_YYYY-YY.pdf` paths —
+ignores CRFD, pricing, GIPA, ENSMS and other non-annual PDFs, and selects the
+latest fiscal year. There is no hard-coded PDF URL; the discovery test proves
+the parser selects 2024-25 from a page that also lists 2023-24, GIPA, pricing
+and an ENSMS report.
+
+The html page is reachable in a normal browser but is behind a Cloudflare HTML
+challenge from the ingestion host (the PDF endpoint itself returns 200). The
+live ingest therefore uses the same operator escape hatch as WaterNSW:
+`ESSENTIAL_ENERGY_ANNUAL_REPORT_URL` supplies the exact official PDF URL without
+hard-coding it in source. The default path is live page discovery.
+
+Latest source found on 2026-11-17 (Annual Report 2024–25):
+
+- URL: `https://www.essentialenergy.com.au/ext/ar2025/files/2025/11/Essential-Energy_Annual-Report_2024-25.pdf`
+- Discovery page: `https://www.essentialenergy.com.au/about-us/corporate-governance/annual-report`
+- SHA-256: `eab0a3f4f3c7b8f53a636cd53eef0d375618c2c77035a236fe353cc7e90bec1d`
+- Bytes: `19,147,042`
+- Archive: outside the repo (`AUSSPEND_SOURCE_ARCHIVE` /
+  `~/ausspend-source-archive/essential-energy/`)
+
+### Printed unit detection and the `$M` guard
+
+The consolidated statement of comprehensive income (PDF page 81) prints `$M` in
+both column headers, and the Basis of Preparation (PDF page 86) states amounts
+are rounded to the nearest tenth of a million dollars. The adapter reads the
+statement unit row and calls the shared `detectMoneyUnit`; the only accepted
+unit is `millions`. A statement whose header prints `$` (dollars), `$'000`
+(thousands) or no unit is rejected with `phase: "unit"` and no rows are
+ingested. One `$M` unit = **100,000,000 cents**; the printed one-decimal
+precision is one tenth of a million = **10,000,000 cents**.
+
+### Zero-tolerance reconciliation
+
+The consolidated statement prints (2025, `$M`):
+
+| Printed line                                          | 2025        |
+| ----------------------------------------------------- | ----------- |
+| Network revenue from contracts with customers         | 1,582.6     |
+| Other revenue from contracts with customers           | 293.4       |
+| Total revenue from contracts with customers           | 1,876.0     |
+| Other revenue                                         | 30.0        |
+| **Total revenue**                                     | **1,906.0** |
+| Pass through costs                                    | (424.1)     |
+| Operating expenses                                    | (723.7)     |
+| Loss on disposal or write-off of non-financial assets | (59.0)      |
+| EBITDA                                                | 699.2       |
+| Depreciation, amortisation and impairment             | (497.2)     |
+| EBIT                                                  | 202.0       |
+| Net finance costs                                     | (338.7)     |
+| **Loss before income tax**                            | **(136.7)** |
+| Income tax benefit                                    | 40.9        |
+| **Loss for the year**                                 | **(95.8)**  |
+| **Derived total expenses** (five lines above)         | **2,042.7** |
+| Note 2(c) Government grants and subsidies             | 25.4        |
+| Note 3(b) Employee benefits (three lines)             | 399.3       |
+
+The consolidated statement has **no single printed Total expenses subtotal**.
+Following the Sydney Water precedent, `total_expenses` is the exact sum of the
+printed entity-level expense lines — pass through costs, operating expenses,
+loss on disposal/write-off, depreciation/amortisation/impairment and net finance
+costs — and is accepted only when every printed bridge reconciles with zero
+tolerance:
+
+- revenue from contracts: 1,582.6 + 293.4 = 1,876.0 exactly;
+- total revenue: 1,876.0 + 30.0 = 1,906.0 exactly;
+- EBITDA: 1,906.0 − 424.1 − 723.7 − 59.0 = 699.2 exactly;
+- EBIT: 699.2 − 497.2 = 202.0 exactly;
+- expense components: −424.1 − 723.7 − 59.0 − 497.2 − 338.7 = −2,042.7
+  exactly;
+- profit before tax: 1,906.0 + (−2,042.7) = −136.7 exactly;
+- net result: −136.7 + 40.9 = −95.8 exactly;
+- Note 2(c): 25.4 + 4.6 = 30.0 = statement Other revenue exactly;
+- Note 3(b): 70.2 + 1.3 + 327.8 + 323.1 + 1.3 = 723.7 exactly, with employee
+  benefits 70.2 + 1.3 + 327.8 = 399.3;
+- Note 3(d): 466.1 + 16.3 + 14.8 = 497.2 exactly.
+
+A one-tenth-of-a-million mismatch in any bridge defers the whole document with
+`phase: "reconciliation"`. No figure is invented and no component is summed into
+the total except the five printed expense lines that form the derived total.
+
+### Extracted rows
+
+Every row is provisional, `verified: false`, `measure_type: "actual"`,
+`jurisdiction_level: "soc"`, `jurisdiction: "NSW"`, `delivery_entity:
+"Essential Energy"`, `location: { state: "NSW" }`, `source_dataset: "Essential
+Energy Annual Report 2024-25"`, `source_url` the exact PDF, `data_quality_flag:
+"provisional"`, `aggregation_role: "agency_detail"`, and a natural key
+`sha256(entity + fiscal_year + line_item + document_url)` prefixed
+`essential-energy:`.
+
+| `soc_line_item`                   | Printed source                                      | 2025 `$M`   | funding_source                       | `potential_double_count` |
+| --------------------------------- | --------------------------------------------------- | ----------- | ------------------------------------ | ------------------------ |
+| `total_revenue`                   | Statement Total revenue                             | 1,906.0     | Essential Energy                     | false                    |
+| `total_expenses`                  | Exact sum of the five printed expense lines         | **2,042.7** | Essential Energy                     | false                    |
+| `employee_expenses`               | Note 3(b) Operating expenses — Employee benefits    | 399.3       | Essential Energy                     | false                    |
+| `depreciation_amortisation`       | Statement Depreciation, amortisation and impairment | 497.2       | Essential Energy                     | false                    |
+| `net_result`                      | Statement Loss for the year (printed negative)      | −95.8       | Essential Energy                     | false                    |
+| `government_grants_and_subsidies` | Note 2(c) Other revenue                             | 25.4        | NSW Government (agency not itemised) | **true**                 |
+
+The printed loss is stored as a non-negative `amount_cents` magnitude with
+`soc_printed_sign: "negative"`, the same convention used for WaterNSW note
+deductions. No project, LGA, SA2, postcode or coordinate is written. No line
+item is invented: every value is a printed statement or note line.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (2,042.7 $M)** — derived, because the statement has no
+   single printed Total expenses subtotal. Confirm that the five printed expense
+   lines are the intended total-expenses definition and that pass through costs
+   belong in total expenses.
+2. **`net_result` (−95.8 $M)** — the printed Loss for the year, stored as a
+   magnitude with a negative printed sign. Confirm the printed loss is the
+   intended net result.
+
+Both rows carry `human_spot_check: required` in their notes. No Essential Energy
+row is marked verified in this phase.
+
 ## 3. Mapping (PNFC and SOC)
 
 | Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             | Hunter Water SOC                                         |
@@ -637,10 +782,11 @@ is marked verified in this phase.
   already includes the separately shown grants; `total_expenses` already
   includes employee, depreciation/amortisation and transfer lines; `net_result`
   is a result, not an expense. Summing any of them is invalid.
-- Sydney Water, WaterNSW and Hunter Water are **separate sources and separate entities**.
-  The API returns a `sources` array and an `entities` filter; the UI shows an
-  entity column and an entity selector. WaterNSW and Hunter Water rows are never
-  added to Sydney Water's rows or to each other.
+- Sydney Water, WaterNSW, Hunter Water and Essential Energy are **separate
+  sources and separate entities**. The API returns a `sources` array and an
+  `entities` filter; the UI shows an entity column and an entity selector.
+  WaterNSW, Hunter Water and Essential Energy rows are never added to Sydney
+  Water's rows or to each other.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
@@ -669,16 +815,17 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then Sydney Water, WaterNSW and Hunter Water, in order.
+1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water and Essential Energy, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
 4. Never deletes any row and never touches any other source.
 5. Writes `docs/source-archive/abs-gfs-pnfc-2024-25.json`,
    `docs/source-archive/sydney-water-annual-report.json` and
-   `docs/source-archive/waternsw-annual-report.json` and
-   `docs/source-archive/hunter-water-annual-report.json`. The exact bytes stay
-   outside the repo.
+   `docs/source-archive/waternsw-annual-report.json`,
+   `docs/source-archive/hunter-water-annual-report.json` and
+   `docs/source-archive/essential-energy-annual-report.json`. The exact bytes
+   stay outside the repo.
 6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
 
 For the Cloudflare-blocked WaterNSW host, the live ingest can supply the exact
@@ -695,10 +842,24 @@ npm run ingest:soc
 The row `source_url` is always the official WaterNSW PDF URL; the manifest and
 archive record the mirror as `retrieved_from` with `archived_from: "other"`.
 
+Essential Energy's html discovery page is likewise behind a Cloudflare HTML
+challenge (its PDF endpoint is reachable). The live ingest can supply the exact
+official PDF URL without hard-coding it in source:
+
+```bash
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ESSENTIAL_ENERGY_ANNUAL_REPORT_URL='https://www.essentialenergy.com.au/ext/ar2025/files/2025/11/Essential-Energy_Annual-Report_2024-25.pdf' \
+npm run ingest:soc
+```
+
+The row `source_url` is the official Essential Energy PDF URL; the manifest and
+archive record the exact bytes and SHA-256 outside the repo.
+
 ## 7. How the remaining SOCs will plug in later
 
-`scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water, then
-WaterNSW) and an intentionally empty `FUTURE_SOC_SOURCE_IDS`. A later phase
+`scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water,
+WaterNSW, Hunter Water, then Essential Energy) and an intentionally empty
+`FUTURE_SOC_SOURCE_IDS`. A later phase
 should:
 
 1. Add one adapter per source/edition under `server/src/connectors/soc/<state>/`,
