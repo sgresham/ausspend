@@ -1,0 +1,22 @@
+{
+  "entity": "Essential Energy",
+  "jurisdiction": "NSW",
+  "dataset": "Essential Energy — Annual Report",
+  "publisher": "Essential Energy",
+  "discovery_page": "https://www.essentialenergy.com.au/about-us/corporate-governance/annual-report",
+  "license": "© Essential Energy. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T07:13:26.977Z",
+  "unit": "$M (AUD_millions; x100000000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for Essential Energy only. Never add to government program spending, to the PNFC sector benchmark, or to each other: total revenue includes the separately shown government grants and subsidies; total expenses is the exact sum of the printed expense lines (pass through costs, operating expenses, loss on disposal/write-off, depreciation/amortisation/impairment and net finance costs); the net result is a loss. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25",
+      "filename": "Essential-Energy_Annual-Report_2024-25.pdf",
+      "url": "https://www.essentialenergy.com.au/ext/ar2025/files/2025/11/Essential-Energy_Annual-Report_2024-25.pdf",
+      "sha256": "eab0a3f4f3c7b8f53a636cd53eef0d375618c2c77035a236fe353cc7e90bec1d",
+      "bytes": 19147042,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest Essential Energy annual report discovered from the official annual-report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The consolidated statement of comprehensive income prints an explicit $M unit. Because the statement has no single printed Total expenses subtotal, total expenses is the exact sum of the printed expense lines (pass through costs, operating expenses, loss on disposal/write-off, depreciation/amortisation/impairment and net finance costs) and is accepted only when the revenue, EBITDA/EBIT, expense-component and profit-before-tax/net-result bridges reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Essential Energy rows to government program spending, the PNFC benchmark, or any other SOC."
+}

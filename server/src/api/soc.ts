@@ -1,5 +1,14 @@
 import type { RequestHandler } from 'express';
 import {
+  ESSENTIAL_ENERGY_CAVEAT,
+  ESSENTIAL_ENERGY_ENTITY,
+  ESSENTIAL_ENERGY_ID,
+  ESSENTIAL_ENERGY_JURISDICTION,
+  ESSENTIAL_ENERGY_NAME,
+  ESSENTIAL_ENERGY_SOURCE_URL,
+  ESSENTIAL_ENERGY_UNIT,
+  ESSENTIAL_ENERGY_UNIT_LABEL,
+  ESSENTIAL_ENERGY_UNIT_TO_CENTS,
   HUNTER_WATER_CAVEAT,
   HUNTER_WATER_ENTITY,
   HUNTER_WATER_ID,
@@ -39,7 +48,7 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW) is a separate
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy) is a separate
  * source and is never summed with the others.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
@@ -82,6 +91,17 @@ const SOC_SOURCES = [
     unit_label: HUNTER_WATER_UNIT_LABEL,
     unit_to_cents: HUNTER_WATER_UNIT_TO_CENTS,
     caveat: HUNTER_WATER_CAVEAT,
+  },
+  {
+    source_id: ESSENTIAL_ENERGY_ID,
+    name: ESSENTIAL_ENERGY_NAME,
+    entity: ESSENTIAL_ENERGY_ENTITY,
+    jurisdiction: ESSENTIAL_ENERGY_JURISDICTION,
+    discovery_page: ESSENTIAL_ENERGY_SOURCE_URL,
+    unit: ESSENTIAL_ENERGY_UNIT,
+    unit_label: ESSENTIAL_ENERGY_UNIT_LABEL,
+    unit_to_cents: ESSENTIAL_ENERGY_UNIT_TO_CENTS,
+    caveat: ESSENTIAL_ENERGY_CAVEAT,
   },
 ] as const;
 
@@ -206,6 +226,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water and WaterNSW). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, or another SOC line. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water and Essential Energy). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, or another SOC line. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };
