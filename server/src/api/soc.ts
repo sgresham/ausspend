@@ -54,6 +54,15 @@ import {
   SYDNEY_WATER_UNIT,
   SYDNEY_WATER_UNIT_LABEL,
   SYDNEY_WATER_UNIT_TO_CENTS,
+  TAHE_CAVEAT,
+  TAHE_ENTITY,
+  TAHE_ID,
+  TAHE_JURISDICTION,
+  TAHE_NAME,
+  TAHE_SOURCE_URL,
+  TAHE_UNIT,
+  TAHE_UNIT_LABEL,
+  TAHE_UNIT_TO_CENTS,
   WATERNSW_CAVEAT,
   WATERNSW_ENTITY,
   WATERNSW_ID,
@@ -75,7 +84,7 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW) is a separate
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE) is a separate
  * source and is never summed with the others.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
@@ -162,6 +171,17 @@ const SOC_SOURCES = [
     unit_label: PORT_AUTHORITY_UNIT_LABEL,
     unit_to_cents: PORT_AUTHORITY_UNIT_TO_CENTS,
     caveat: PORT_AUTHORITY_CAVEAT,
+  },
+  {
+    source_id: TAHE_ID,
+    name: TAHE_NAME,
+    entity: TAHE_ENTITY,
+    jurisdiction: TAHE_JURISDICTION,
+    discovery_page: TAHE_SOURCE_URL,
+    unit: TAHE_UNIT,
+    unit_label: TAHE_UNIT_LABEL,
+    unit_to_cents: TAHE_UNIT_TO_CENTS,
+    caveat: TAHE_CAVEAT,
   },
 ] as const;
 
@@ -286,6 +306,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom and Port Authority of NSW). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, or another SOC line. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW and TAHE). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, or another SOC line. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };

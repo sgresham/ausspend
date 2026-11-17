@@ -39,6 +39,7 @@ const KNOWN_SOURCE_IDS = [
   'forestry-corporation',
   'landcom',
   'port-authority-nsw',
+  'tahe',
 ];
 
 const results = [];
@@ -350,9 +351,12 @@ async function apiChecks() {
       'SOC default source is not sydney-water',
     );
     assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
+    // The default view is the latest SOC fiscal year (2024-25). TAHE's latest
+    // published report is FY2023-24, so it is queried explicitly below rather
+    // than mixed into the 2024-25 series.
     assert(
       Array.isArray(soc.body?.series) && soc.body.series.length === 87,
-      `expected 87 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7 + Landcom 6 + Port Authority of NSW 5), got ${soc.body?.series?.length}`,
+      `expected 87 SOC rows (2024-25: Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7 + Landcom 6 + Port Authority of NSW 5), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -374,8 +378,9 @@ async function apiChecks() {
         soc.body.entities.includes('Essential Energy') &&
         soc.body.entities.includes('Forestry Corporation of NSW') &&
         soc.body.entities.includes('Landcom') &&
-        soc.body.entities.includes('Port Authority of NSW'),
-      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW) are not returned',
+        soc.body.entities.includes('Port Authority of NSW') &&
+        soc.body.entities.includes('TAHE'),
+      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE) are not returned',
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
@@ -394,6 +399,10 @@ async function apiChecks() {
       sources.get('port-authority-nsw')?.records === 5,
       'Port Authority of NSW source count is not 5 rows',
     );
+    assert(
+      sources.get('tahe')?.records === 0,
+      'TAHE should have no rows in the default 2024-25 view',
+    );
     for (const entity of [
       'sydney-water',
       'waternsw',
@@ -401,6 +410,7 @@ async function apiChecks() {
       'forestry-corporation',
       'landcom',
       'port-authority-nsw',
+      'tahe',
     ]) {
       assert(
         sources.get(entity)?.unit === 'AUD_thousands',
@@ -784,6 +794,51 @@ async function apiChecks() {
       'Port Authority emitted a grant row although no grant is separately disclosed',
     );
 
+    const tahe = await getJson('/api/soc?fiscal_year=2023-24&entity=TAHE');
+    assert(tahe.status === 200, `TAHE SOC expected 200, got ${tahe.status}`);
+    assert(
+      tahe.body?.series?.length === 6,
+      `expected 6 TAHE SOC rows, got ${tahe.body?.series?.length}`,
+    );
+    assert(tahe.body?.source?.source_id === 'tahe', 'TAHE SOC source is not tahe');
+    assert(
+      tahe.body.series.every((row) => row.delivery_entity === 'TAHE'),
+      'TAHE SOC response contains another entity',
+    );
+    assert(!('total_cents' in tahe.body), 'TAHE SOC response has a total_cents');
+    const taheByLine = new Map(tahe.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      taheByLine.get('total_expenses')?.amount_cents === 172204600000,
+      'TAHE total expenses is not $1,722,046 thousand in cents',
+    );
+    assert(
+      taheByLine.get('total_revenue')?.amount_cents === 2014394000000,
+      'TAHE total revenue is not $20,143,940 thousand in cents',
+    );
+    assert(
+      taheByLine.get('employee_expenses')?.amount_cents === 1050700000,
+      'TAHE employee expenses is not $10,507 thousand in cents',
+    );
+    assert(
+      taheByLine.get('depreciation_amortisation')?.amount_cents === 133457600000,
+      'TAHE depreciation/amortisation is not $1,334,576 thousand in cents',
+    );
+    assert(
+      taheByLine.get('government_grants')?.amount_cents === 126979900000 &&
+        taheByLine.get('government_grants')?.potential_double_count === true,
+      'TAHE grants row is not $1,269,799 thousand with potential_double_count',
+    );
+    assert(
+      taheByLine.get('net_result')?.amount_cents === 1842189400000 &&
+        taheByLine.get('net_result')?.soc_printed_sign === 'positive',
+      'TAHE net result is not the printed $18,421,894 thousand surplus',
+    );
+    assert(
+      taheByLine.get('total_expenses')?.potential_double_count === false &&
+        taheByLine.get('net_result')?.potential_double_count === false,
+      'TAHE own-source rows are incorrectly flagged as potential double counts',
+    );
+
     const generic = await getJson('/api/spending?limit=5');
     assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
     const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
@@ -796,7 +851,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '87 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7, Landcom 6, Port Authority of NSW 5), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7, 384,532, 213,995 and 190,953, no total, excluded from generic spending';
+    return '87 rows in the default 2024-25 SOC view (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7, Landcom 6, Port Authority of NSW 5) plus 6 separate FY2023-24 TAHE rows, $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7, 384,532, 213,995, 190,953 and 1,722,046, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {

@@ -1,0 +1,22 @@
+{
+  "entity": "TAHE",
+  "jurisdiction": "NSW",
+  "dataset": "TAHE — Annual Report",
+  "publisher": "Transport Asset Holding Entity of NSW (published by Transport Asset Manager of NSW)",
+  "discovery_page": "https://www.tam.nsw.gov.au/publications",
+  "license": "© Transport Asset Holding Entity of NSW / Transport Asset Manager of NSW. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T09:18:46.578Z",
+  "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for TAHE (Transport Asset Holding Entity of New South Wales) only. Never add to government program spending, to the PNFC sector benchmark, or to each other: the statement prints an explicit Total revenue and Total expenses; total revenue already includes the separately shown Grants and contributions line, total expenses already includes employee-related expenses, other operating expenses, other expenses, depreciation/amortisation/de-recognition and finance costs; the net result is a surplus. The FY2023-24 result is materially affected by a $17.8bn valuation increment and a change in grants recognition, so it is not comparable to prior years. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2023–24",
+      "filename": "Transport-Asset-Holding-Entity-of-NSW-202324-Annual-Report_0.pdf",
+      "url": "https://www.tam.nsw.gov.au/sites/default/files/2025-01/Transport%20Asset%20Holding%20Entity%20of%20NSW%20202324%20Annual%20Report_0.pdf",
+      "sha256": "53508050276f7641edc594b300626640aa64dbc26442a1144225f9a78d0bb4e4",
+      "bytes": 9262428,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest TAHE (Transport Asset Holding Entity of New South Wales) annual report discovered from the official TAHE publications page now served by Transport Asset Manager (TAM) of NSW (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The audited Statement of comprehensive income prints an explicit $'000 unit and explicit Total revenue and Total expenses subtotals. Both printed totals are accepted only when the printed revenue and expense lines (including an explicitly printed nil valuation decrement) and the net-result bridge reconcile exactly. Grants and contributions are separately disclosed, so one grant row carries potential_double_count=true. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add TAHE rows to government program spending, the PNFC benchmark, or any other SOC."
+}

@@ -112,6 +112,15 @@ per-source count above is unchanged (no deletes). The 515,426 measures before th
 preserved; Port Authority of NSW adds five provisional, unverified rows. It separately discloses no
 government grants/contributions, so no grant row is emitted (never estimated or zero-filled).
 
+After SOC phase 9 (TAHE, 6 new rows) the current baseline is **515,437** measures and **93 SOC
+rows**; `tahe` contributes 6 rows (total revenue 20,143,940, total expenses 1,722,046, employee
+10,507, depreciation/amortisation 1,334,576, government grants/contributions 1,269,799 and net
+result 18,421,894 $’000) and every per-source count above is unchanged (no deletes). The 515,431
+measures before this phase are all preserved; TAHE adds six provisional, unverified rows. Its
+separately disclosed Grants and contributions line is flagged potential double count. The FY2023-24
+result is dominated by a $17.8bn valuation increment and a grants-recognition change, so it is not
+comparable with prior years.
+
 ## Method and snapshot evidence
 
 Read-only commands used (no write operations):

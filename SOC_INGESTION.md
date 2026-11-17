@@ -1,18 +1,19 @@
-# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW)
+# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE)
 
 **Status:** the ABS GFS Public Non-Financial Corporations (PNFC) sector
-benchmark is implemented, and seven NSW per-entity State Owned Corporation (SOC)
+benchmark is implemented, and eight NSW per-entity State Owned Corporation (SOC)
 adapters are implemented: **Sydney Water Corporation**, **WaterNSW (Water NSW)**,
 **Hunter Water Corporation**, **Essential Energy**, **Forestry Corporation of
-NSW**, **Landcom** and **Port Authority of NSW**. Per-entity NSW SOC extraction
-for any other entity, BP1 Chapter 9, VIC/QLD SOC and any synthetic SOC rows are
-out of scope and are not implemented. The seven SOC entities are separate
-sources and are never summed with each other.
+NSW**, **Landcom**, **Port Authority of NSW** and **TAHE (Transport Asset
+Holding Entity of New South Wales)**. Per-entity NSW SOC extraction for any
+other entity, BP1 Chapter 9, VIC/QLD SOC and any synthetic SOC rows are out of
+scope and are not implemented. The eight SOC entities are separate sources and
+are never summed with each other.
 
 `npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW, then
 Hunter Water, then Essential Energy, then Forestry Corporation of NSW, then
-Landcom, then Port Authority of NSW**, logging each source's success/failure and
-continuing after a source error.
+Landcom, then Port Authority of NSW, then TAHE**, logging each source's
+success/failure and continuing after a source error.
 
 ## 1. Source: ABS GFS PNFC (Annual 2024-25 data cubes)
 
@@ -1013,6 +1014,101 @@ the PNFC benchmark or government program spending.
 Both rows carry `human_spot_check: required` in their notes. No Port Authority of
 NSW row is marked verified in this phase.
 
+## 2G. Source: TAHE (eighth NSW SOC entity)
+
+TAHE is the Transport Asset Holding Entity of New South Wales, an NSW State
+Owned Corporation. Its former domains (`tahe.com.au`, `tahensw.com.au`) now
+redirect to **Transport Asset Manager (TAM) of NSW**, its statutory successor and
+current official publisher. Source id: `tahe`. Name: `TAHE — Annual Report`.
+Publisher: Transport Asset Holding Entity of NSW (published by Transport Asset
+Manager of NSW). Canonical `delivery_entity`: `TAHE` (the report's full legal
+name, Transport Asset Holding Entity of New South Wales, is recorded in every
+row's notes).
+
+The connector starts at the official publications page
+(`https://www.tam.nsw.gov.au/publications`) and selects the latest annual-report
+PDF. No PDF URL is hard-coded.
+
+- Document: `TAHE Annual Report 2023–24` — the latest annual report published on
+  the official page at retrieval (2026-11-17). A FY2024-25 report is not listed
+  there; the adapter does not guess or substitute another document.
+- Official PDF:
+  `https://www.tam.nsw.gov.au/sites/default/files/2025-01/Transport%20Asset%20Holding%20Entity%20of%20NSW%20202324%20Annual%20Report_0.pdf`
+- Bytes: `9,262,428` (SHA-256
+  `53508050276f7641edc594b300626640aa64dbc26442a1144225f9a78d0bb4e4`)
+- Printed unit: **`$'000`** (thousands), stated on the audited face statement.
+  `AUD_thousands`; `amount_cents = $'000 × 100,000`. A table read as dollars or
+  millions is rejected and the document is deferred.
+- Statement: _Statement of comprehensive income_ for the year ended 30 June 2024
+  (audited financial statements, PDF page 60). The financial-performance summary
+  table on page 51 prints the same values.
+
+### Exact reconciliation (zero tolerance, printed 2024 column, $'000)
+
+| Printed line                                                                     |   2024 ($'000) |
+| -------------------------------------------------------------------------------- | -------------: |
+| Revenue from contracts with customers                                            |        557,518 |
+| Investment revenue                                                               |        490,176 |
+| Grants and contributions                                                         |      1,269,799 |
+| Valuation increment of property, plant and equipment and intangible assets       |     17,787,495 |
+| Other income                                                                     |         38,952 |
+| **Total revenue**                                                                | **20,143,940** |
+| Employee-related expenses                                                        |       (10,507) |
+| Other operating expenses                                                         |      (240,007) |
+| Valuation decrement of property, plant and equipment and intangible assets (nil) |              – |
+| Other expenses                                                                   |       (50,072) |
+| Depreciation, amortisation and de-recognition                                    |    (1,334,576) |
+| Finance costs                                                                    |       (86,884) |
+| **Total expenses**                                                               |  **1,722,046** |
+| **Net result**                                                                   | **18,421,894** |
+
+The statement prints explicit Total revenue and Total expenses subtotals. Both
+are accepted only when every printed bridge reconciles:
+
+1. Total revenue: `557,518 + 490,176 + 1,269,799 + 17,787,495 + 38,952 = 20,143,940`.
+2. Total expenses: `10,507 + 240,007 + 0 + 50,072 + 1,334,576 + 86,884 = 1,722,046`.
+   The printed Valuation decrement is an explicit nil (`-`), not a missing cell.
+3. Net result: `20,143,940 − 1,722,046 = 18,421,894`.
+
+Any one-thousand-dollar mismatch defers the whole document; no partial rows are
+ingested. TAHE separately discloses **Grants and contributions** (Note 2.3:
+Capital 1,128,777 + Operating 141,022 = 1,269,799), already included in Total
+revenue, so it is emitted as a separate grant row with
+`potential_double_count: true`.
+
+The FY2023-24 result is not comparable with prior years: TAHE changed from a
+for-profit to a not-for-profit entity for accounting purposes, which produced a
+$17.8bn valuation increment in revenue and a change in grants recognition.
+Those facts are recorded in the rows and caveat; they are not adjusted.
+
+### Ingested line items (6 rows)
+
+| `soc_line_item`             | Printed source                                          |   2024 ($'000) | `funding_source`                     | `potential_double_count` |
+| --------------------------- | ------------------------------------------------------- | -------------: | ------------------------------------ | ------------------------ |
+| `total_revenue`             | Printed statement Total revenue                         |     20,143,940 | TAHE                                 | false                    |
+| `total_expenses`            | Printed statement Total expenses                        |  **1,722,046** | TAHE                                 | false                    |
+| `employee_expenses`         | Statement Employee-related expenses                     |         10,507 | TAHE                                 | false                    |
+| `depreciation_amortisation` | Statement Depreciation, amortisation and de-recognition |      1,334,576 | TAHE                                 | false                    |
+| `government_grants`         | Statement Grants and contributions (Note 2.3)           |      1,269,799 | NSW Government (agency not itemised) | true                     |
+| `net_result`                | Printed statement Net result                            | **18,421,894** | TAHE                                 | false                    |
+
+`total_revenue` includes all five printed revenue lines; `total_expenses`
+includes the five non-nil printed expense lines plus the explicitly printed nil
+valuation decrement; `net_result` is a result. None of the six rows may be added
+to another SOC row, the PNFC benchmark or government program spending.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (1,722,046 $'000)** — the printed Total expenses subtotal.
+   Confirm that the printed expense lines (including the nil valuation
+   decrement) are the intended total-expenses definition.
+2. **`net_result` (18,421,894 $'000)** — confirm the printed net result is the
+   intended result, noting the valuation increment and grants-recognition change
+   that dominate FY2023-24.
+
+Both rows carry `human_spot_check: required` in their notes. No TAHE row is
+marked verified in this phase.
+
 ## 3. Mapping (PNFC and SOC)
 
 | Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             | Hunter Water SOC                                         |
@@ -1036,6 +1132,8 @@ Landcom follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`
 
 Port Authority of NSW follows the same SOC mapping with `natural_key` prefix `port-authority-nsw:`. It has no grant row because none is separately disclosed.
 
+TAHE follows the same SOC mapping with `natural_key` prefix `tahe:`, `delivery_entity` `TAHE`, `funding_source` `TAHE` for its own rows, and `source_dataset` `TAHE Annual Report 2023-24`. Its separately disclosed Grants and contributions row is `potential_double_count: true` with `funding_source` `NSW Government (agency not itemised)`.
+
 Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`/`location` NSW, `amount_cents = $’000 × 100,000`, `measure_type` `actual`, `aggregation_role` `agency_detail`, `verified` `false`, `data_quality_flag` `provisional`, `soc_unit` `AUD_thousands`, and `natural_key` prefix `forestry-corporation:`. Both grant rows are `potential_double_count: true`.
 
 ## 4. No-sum and double-count invariants (critical)
@@ -1051,11 +1149,12 @@ Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `
   includes employee, depreciation/amortisation and transfer lines; `net_result`
   is a result, not an expense. Summing any of them is invalid.
 - Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry
-  Corporation of NSW, Landcom and Port Authority of NSW are **separate sources
-  and separate entities**. The API returns a `sources` array and an `entities`
-  filter; the UI shows an entity column and an entity selector. WaterNSW, Hunter
-  Water, Essential Energy, Forestry Corporation, Landcom and Port Authority of
-  NSW rows are never added to Sydney Water's rows or to each other.
+  Corporation of NSW, Landcom, Port Authority of NSW and TAHE are **separate
+  sources and separate entities**. The API returns a `sources` array and an
+  `entities` filter; the UI shows an entity column and an entity selector.
+  WaterNSW, Hunter Water, Essential Energy, Forestry Corporation, Landcom, Port
+  Authority of NSW and TAHE rows are never added to Sydney Water's rows or to
+  each other.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
@@ -1084,7 +1183,7 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom and Port Authority of NSW, in order.
+1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW and TAHE, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
@@ -1095,9 +1194,10 @@ The runner:
    `docs/source-archive/hunter-water-annual-report.json`,
    `docs/source-archive/essential-energy-annual-report.json` and
    `docs/source-archive/forestry-corporation-annual-report.json`,
-   `docs/source-archive/landcom-annual-report.json` and
-   `docs/source-archive/port-authority-annual-report.json`. The exact bytes stay
-   outside the repo.
+   `docs/source-archive/landcom-annual-report.json`,
+   `docs/source-archive/port-authority-annual-report.json` and
+   `docs/source-archive/tahe-annual-report.json`. The exact bytes stay outside
+   the repo.
 6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
 
 For the Cloudflare-blocked WaterNSW host, the live ingest can supply the exact
@@ -1131,7 +1231,7 @@ archive record the exact bytes and SHA-256 outside the repo.
 
 `scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water,
 WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom,
-then Port Authority of NSW) and
+Port Authority of NSW, then TAHE) and
 an intentionally empty
 `FUTURE_SOC_SOURCE_IDS`. A later phase
 should:

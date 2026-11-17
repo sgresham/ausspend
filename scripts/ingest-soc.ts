@@ -78,6 +78,17 @@ import {
   SYDNEY_WATER_UNIT,
   SYDNEY_WATER_UNIT_LABEL,
   SYDNEY_WATER_UNIT_TO_CENTS,
+  TAHE_CAVEAT,
+  TAHE_ENTITY,
+  TAHE_ID,
+  TAHE_JURISDICTION,
+  TAHE_LICENSE,
+  TAHE_NAME,
+  TAHE_PUBLISHER,
+  TAHE_SOURCE_URL,
+  TAHE_UNIT,
+  TAHE_UNIT_LABEL,
+  TAHE_UNIT_TO_CENTS,
   WATERNSW_CAVEAT,
   WATERNSW_ENTITY,
   WATERNSW_ID,
@@ -126,8 +137,9 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
- * Forestry Corporation of NSW, then Landcom). No other SOC adapter is
- * implemented, and the six entity adapters are never summed together.
+ * Forestry Corporation of NSW, Landcom, then Port Authority of NSW, then TAHE).
+ * No other SOC adapter is implemented, and the eight entity adapters are never
+ * summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
@@ -138,6 +150,7 @@ export const SOC_SOURCE_IDS = [
   FORESTRY_CORPORATION_ID,
   LANDCOM_ID,
   PORT_AUTHORITY_ID,
+  TAHE_ID,
 ] as const;
 
 /**
@@ -418,6 +431,39 @@ async function writePortAuthorityManifest(): Promise<void> {
   );
 }
 
+async function writeTaheManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: TAHE_ID });
+  const manifestPath = path.resolve(
+    process.env.TAHE_MANIFEST ?? 'docs/source-archive/tahe-annual-report.json',
+  );
+  const manifest = {
+    entity: TAHE_ENTITY,
+    jurisdiction: TAHE_JURISDICTION,
+    dataset: TAHE_NAME,
+    publisher: TAHE_PUBLISHER,
+    discovery_page: TAHE_SOURCE_URL,
+    license: TAHE_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${TAHE_UNIT_LABEL} (${TAHE_UNIT}; x${TAHE_UNIT_TO_CENTS} cents per unit)`,
+    caveat: TAHE_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "Latest TAHE (Transport Asset Holding Entity of New South Wales) annual report discovered from the official TAHE publications page now served by Transport Asset Manager (TAM) of NSW (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The audited Statement of comprehensive income prints an explicit $'000 unit and explicit Total revenue and Total expenses subtotals. Both printed totals are accepted only when the printed revenue and expense lines (including an explicitly printed nil valuation decrement) and the net-result bridge reconcile exactly. Grants and contributions are separately disclosed, so one grant row carries potential_double_count=true. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add TAHE rows to government program spending, the PNFC benchmark, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -462,6 +508,7 @@ async function main(): Promise<void> {
     await writeForestryCorporationManifest();
     await writeLandcomManifest();
     await writePortAuthorityManifest();
+    await writeTaheManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
