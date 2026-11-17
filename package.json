@@ -34,6 +34,7 @@
     "ingest:soc": "npm run build -w shared && tsx scripts/ingest-soc.ts",
     "ingest:qld": "npm run build -w shared && tsx scripts/ingest-qld.ts",
     "ingest:qgip-years": "npm run build -w shared && tsx scripts/ingest-qgip-years.ts",
+    "ingest:aihw": "npm run build -w shared && tsx scripts/ingest-aihw-health-expenditure.ts",
     "archive:vic": "npm run build -w shared && tsx scripts/vic-source-archive.ts",
     "ingest:vic-vlgc": "npm run build -w shared && tsx scripts/ingest-vic-vlgc.ts",
     "ingest:vic-vlgc-abs": "npm run build -w shared && tsx scripts/ingest-vic-vlgc-abs.ts",

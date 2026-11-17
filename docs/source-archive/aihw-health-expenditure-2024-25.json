@@ -1,0 +1,240 @@
+{
+  "dataset": "AIHW Health Expenditure Australia 2024-25 — Supplementary tables",
+  "release": "2024-25",
+  "source_url": "https://www.aihw.gov.au/reports/health-welfare-expenditure/health-expenditure-australia-2024-25/data",
+  "resource_url": "https://www.aihw.gov.au/getmedia/44735a41-5372-414e-9a18-d25f7c13fe4c/AIHW-HWE-110-HEA-2024-25-data-tables.xlsx",
+  "source_date": "2026-10-14",
+  "license": "Creative Commons Attribution 3.0 Australia",
+  "attribution": "Australian Institute of Health and Welfare, Health expenditure Australia 2024–25: supplementary tables (HWE 110), licensed under CC BY 3.0 Australia.",
+  "caveat": "AIHW total health expenditure, current prices, by state/territory, area of expenditure and source of funds. This is actual expenditure, not a budget. Government and non-government funding are separate series and are never summed; Australian Government and State and local government rows may describe the same services, so government rows are non-additive agency detail with potential_double_count. Only published leaf areas and detailed funding components are emitted; parent/subtotal and total columns are used for reconciliation and never published. No cross-state, cross-area, cross-source or cross-year total is created.",
+  "sha256": "e4b98fa8a5ee5506d772af082e33b4cdc3d926ad1186fceba80a35012eeeca5b",
+  "bytes": 841137,
+  "unit": "AUD_millions ($ million (current prices)); explicit conversion at 100000000 cents per $m",
+  "price_basis": "current_prices",
+  "function_code": "07",
+  "states": ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"],
+  "fiscal_years": ["2022-23", "2023-24", "2024-25"],
+  "rows_emitted": 1747,
+  "government_rows": 991,
+  "non_government_rows": 756,
+  "tables": [
+    {
+      "sheet": "Table B1",
+      "state": "NSW",
+      "fiscal_year": "2022-23",
+      "rows": 75,
+      "component_sum_millions": 75328,
+      "published_total_millions": 75328,
+      "difference_millions": 0
+    },
+    {
+      "sheet": "Table B2",
+      "state": "NSW",
+      "fiscal_year": "2023-24",
+      "rows": 75,
+      "component_sum_millions": 79950,
+      "published_total_millions": 79954,
+      "difference_millions": 4
+    },
+    {
+      "sheet": "Table B3",
+      "state": "NSW",
+      "fiscal_year": "2024-25",
+      "rows": 75,
+      "component_sum_millions": 83817,
+      "published_total_millions": 83816,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B4",
+      "state": "VIC",
+      "fiscal_year": "2022-23",
+      "rows": 76,
+      "component_sum_millions": 66087,
+      "published_total_millions": 66085,
+      "difference_millions": 2
+    },
+    {
+      "sheet": "Table B5",
+      "state": "VIC",
+      "fiscal_year": "2023-24",
+      "rows": 76,
+      "component_sum_millions": 67959,
+      "published_total_millions": 67958,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B6",
+      "state": "VIC",
+      "fiscal_year": "2024-25",
+      "rows": 74,
+      "component_sum_millions": 74934,
+      "published_total_millions": 74927,
+      "difference_millions": 7
+    },
+    {
+      "sheet": "Table B7",
+      "state": "QLD",
+      "fiscal_year": "2022-23",
+      "rows": 71,
+      "component_sum_millions": 52982,
+      "published_total_millions": 52983,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B8",
+      "state": "QLD",
+      "fiscal_year": "2023-24",
+      "rows": 72,
+      "component_sum_millions": 57371,
+      "published_total_millions": 57369,
+      "difference_millions": 2
+    },
+    {
+      "sheet": "Table B9",
+      "state": "QLD",
+      "fiscal_year": "2024-25",
+      "rows": 71,
+      "component_sum_millions": 61959,
+      "published_total_millions": 61959,
+      "difference_millions": 0
+    },
+    {
+      "sheet": "Table B10",
+      "state": "WA",
+      "fiscal_year": "2022-23",
+      "rows": 75,
+      "component_sum_millions": 27981,
+      "published_total_millions": 27984,
+      "difference_millions": 3
+    },
+    {
+      "sheet": "Table B11",
+      "state": "WA",
+      "fiscal_year": "2023-24",
+      "rows": 76,
+      "component_sum_millions": 29613,
+      "published_total_millions": 29609,
+      "difference_millions": 4
+    },
+    {
+      "sheet": "Table B12",
+      "state": "WA",
+      "fiscal_year": "2024-25",
+      "rows": 76,
+      "component_sum_millions": 32005,
+      "published_total_millions": 32004,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B13",
+      "state": "SA",
+      "fiscal_year": "2022-23",
+      "rows": 74,
+      "component_sum_millions": 18022,
+      "published_total_millions": 18020,
+      "difference_millions": 2
+    },
+    {
+      "sheet": "Table B14",
+      "state": "SA",
+      "fiscal_year": "2023-24",
+      "rows": 75,
+      "component_sum_millions": 19380,
+      "published_total_millions": 19380,
+      "difference_millions": 0
+    },
+    {
+      "sheet": "Table B15",
+      "state": "SA",
+      "fiscal_year": "2024-25",
+      "rows": 75,
+      "component_sum_millions": 20830,
+      "published_total_millions": 20829,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B16",
+      "state": "TAS",
+      "fiscal_year": "2022-23",
+      "rows": 75,
+      "component_sum_millions": 6075,
+      "published_total_millions": 6071,
+      "difference_millions": 4
+    },
+    {
+      "sheet": "Table B17",
+      "state": "TAS",
+      "fiscal_year": "2023-24",
+      "rows": 75,
+      "component_sum_millions": 6633,
+      "published_total_millions": 6629,
+      "difference_millions": 4
+    },
+    {
+      "sheet": "Table B18",
+      "state": "TAS",
+      "fiscal_year": "2024-25",
+      "rows": 76,
+      "component_sum_millions": 6861,
+      "published_total_millions": 6858,
+      "difference_millions": 3
+    },
+    {
+      "sheet": "Table B19",
+      "state": "ACT",
+      "fiscal_year": "2022-23",
+      "rows": 69,
+      "component_sum_millions": 5546,
+      "published_total_millions": 5550,
+      "difference_millions": 4
+    },
+    {
+      "sheet": "Table B20",
+      "state": "ACT",
+      "fiscal_year": "2023-24",
+      "rows": 70,
+      "component_sum_millions": 6124,
+      "published_total_millions": 6123,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B21",
+      "state": "ACT",
+      "fiscal_year": "2024-25",
+      "rows": 71,
+      "component_sum_millions": 6542,
+      "published_total_millions": 6541,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B22",
+      "state": "NT",
+      "fiscal_year": "2022-23",
+      "rows": 63,
+      "component_sum_millions": 3238,
+      "published_total_millions": 3237,
+      "difference_millions": 1
+    },
+    {
+      "sheet": "Table B23",
+      "state": "NT",
+      "fiscal_year": "2023-24",
+      "rows": 64,
+      "component_sum_millions": 3555,
+      "published_total_millions": 3551,
+      "difference_millions": 4
+    },
+    {
+      "sheet": "Table B24",
+      "state": "NT",
+      "fiscal_year": "2024-25",
+      "rows": 68,
+      "component_sum_millions": 3746,
+      "published_total_millions": 3727,
+      "difference_millions": 19
+    }
+  ],
+  "coverage_note": "The current AIHW 2024-25 release publishes state x area x source detail for 2022-23, 2023-24 and 2024-25 only. The superseded 1997-98..2011-12 data.gov.au CSV is not treated as current and is not shipped as current coverage.",
+  "notes": "Derived rows only; workbook not redistributed. Leaf areas and detailed funding components only; parent/subtotal and total columns are used for reconciliation and not emitted. Government and non-government funding are separate and never summed; no cross-state/area/source/year total."
+}
