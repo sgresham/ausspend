@@ -25,6 +25,7 @@ import { createWaverleyGpfsConnector } from './waverley-gpfs.js';
 import { createWilloughbyGpfsConnector } from './willoughby-gpfs.js';
 import { createInnerWestGpfsConnector } from './inner-west-gpfs.js';
 import { createBaysideGpfsConnector } from './bayside-gpfs.js';
+import { createRandwickGpfsConnector } from './randwick-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -331,6 +332,18 @@ export const CONNECTORS: readonly Connector[] = [
   // outside the repo. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
   createBaysideGpfsConnector(),
+  // GPFS expansion: twenty-second council only (Randwick City Council). Its
+  // audited FY2024-25 General Purpose Financial Statements are the standalone
+  // official "Financial Statements - 2024-25" PDF linked from the Our reports
+  // page, and a separate source id: every row is non-additive agency_detail,
+  // has no region/LGA allocation, and reconciles exactly to the printed Income
+  // Statement, B1-1 "Total functions and activities" and comprehensive-income
+  // totals. randwick.nsw.gov.au serves a Cloudflare challenge to non-browser
+  // clients, so the documented headless Chromium path clears it and the
+  // connector still selects the link from the cleared HTML; the exact bytes are
+  // SHA-256 archived outside the repo. Never summed with any other council, the
+  // Dubbo budget rows, the existing council GPFS rows or State rows.
+  createRandwickGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),

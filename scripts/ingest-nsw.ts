@@ -5,6 +5,7 @@ import {
   LAKE_MACQUARIE_GPFS_ID,
   MID_COAST_GPFS_ID,
   PORT_MACQUARIE_HASTINGS_GPFS_ID,
+  RANDWICK_GPFS_ID,
   WAVERLEY_GPFS_ID,
   WILLOUGHBY_GPFS_ID,
   WOLLONGONG_GPFS_ID,
@@ -12,6 +13,7 @@ import {
   createLakeMacquarieGpfsConnector,
   createMidCoastGpfsConnector,
   createPortMacquarieHastingsGpfsConnector,
+  createRandwickGpfsConnector,
   createWaverleyGpfsConnector,
   createWilloughbyGpfsConnector,
   createWollongongGpfsConnector,
@@ -24,6 +26,7 @@ import { fetchCoffsHarbourGpfsViaBrowser } from './coffs-harbour-gpfs-browser.js
 import { fetchLakeMacquarieGpfsViaBrowser } from './lake-macquarie-gpfs-browser.js';
 import { fetchMidCoastGpfsViaBrowser } from './mid-coast-gpfs-browser.js';
 import { fetchPortMacquarieHastingsGpfsViaBrowser } from './port-macquarie-hastings-gpfs-browser.js';
+import { fetchRandwickGpfsViaBrowser } from './randwick-gpfs-browser.js';
 import { fetchWaverleyGpfsViaBrowser } from './waverley-gpfs-browser.js';
 import { fetchWilloughbyGpfsViaBrowser } from './willoughby-gpfs-browser.js';
 import { fetchWollongongGpfsViaBrowser } from './wollongong-gpfs-browser.js';
@@ -60,6 +63,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - willoughby-gpfs  GPFS expansion: Willoughby City Council's audited FY2024-25 GPFS
  *   - inner-west-gpfs  GPFS expansion: Inner West Council's audited FY2024-25 GPFS
  *   - bayside-gpfs  GPFS expansion: Bayside Council's audited FY2024-25 GPFS
+ *   - randwick-gpfs  GPFS expansion: Randwick City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -68,8 +72,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Council, Maitland City Council, Coffs Harbour City Council, MidCoast Council,
  * Port Macquarie-Hastings Council, Tweed Shire Council, Shoalhaven City
  * Council, Shellharbour City Council, Waverley Council, Willoughby City
- * Council, Inner West Council and Bayside Council. No other councils,
- * states/territories, SOC/charity or live state
+ * Council, Inner West Council, Bayside Council and Randwick City Council. No
+ * other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -98,6 +102,7 @@ export const NSW_SOURCE_IDS = [
   'willoughby-gpfs',
   'inner-west-gpfs',
   'bayside-gpfs',
+  'randwick-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -222,6 +227,23 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] willoughby-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createWilloughbyGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === RANDWICK_GPFS_ID) {
+      // Randwick's site rejects Node's direct HTTP fetch with a Cloudflare "Just
+      // a moment..." challenge (HTTP 403); the documented headless Chromium path
+      // clears it, and the connector still discovers the FY2024-25 Financial
+      // Statements link from the cleared Our reports HTML and re-verifies the
+      // bytes.
+      console.log('[ingest:nsw] randwick-gpfs: browser discovery/download starting');
+      const fetched = await fetchRandwickGpfsViaBrowser();
+      console.log(`[ingest:nsw] randwick-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createRandwickGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
