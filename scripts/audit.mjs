@@ -1361,6 +1361,7 @@ async function uiChecks(page, regionId, populatedRegionId) {
       'newcastle-gpfs',
       'lake-macquarie-gpfs',
       'maitland-gpfs',
+      'coffs-harbour-gpfs',
       'grantconnect',
       'sydney-water',
       'hunter-water',

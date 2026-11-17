@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Eleven council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Twelve council GPFS extractions have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -16,7 +16,8 @@ Wollongong City Council FY2024-25 GPFS (**§7.8**) then added exactly **17** `wo
 **17** `newcastle-gpfs` rows (**515,588** → **515,605**); Lake Macquarie City Council FY2024-25
 GPFS (**§7.10**) then added exactly **17** `lake-macquarie-gpfs` rows (**515,605** → **515,622**);
 Maitland City Council FY2024-25 GPFS (**§7.11**) then added exactly **7** `maitland-gpfs` rows
-(**515,622** → **515,629**).
+(**515,622** → **515,629**); Coffs Harbour City Council FY2024-25 GPFS (**§7.12**) then added exactly
+**17** `coffs-harbour-gpfs` rows (**515,629** → **515,646**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -33,7 +34,10 @@ Newcastle" GrantConnect row, the 4 AusTender/GrantConnect rows whose `delivery_e
 uppercase GrantConnect grants), the 1 GrantConnect row whose `delivery_entity` exactly names
 "MAITLAND CITY COUNCIL" (an uppercase grant), the 205 AusTender/data.nsw/GrantConnect/ACNC rows whose
 `delivery_entity` merely mentions Maitland, the NSW Budget rows whose `project_name` mentions
-Maitland, and every other source are preserved untouched and are never summed with the GPFS rows.
+Maitland, the 2 AusTender federal contract rows whose `delivery_entity` is the different string
+"CITY OF COFFS HARBOUR", the 199 other AusTender/data.nsw/GrantConnect/NSW Budget/ACNC rows whose
+`delivery_entity` mentions Coffs Harbour under other delivery_entity strings, and every other
+source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 18 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -228,15 +232,16 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 180 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 197 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
 §7.5), 17 for Canterbury-Bankstown Council FY2024-25 (`canterbury-bankstown-gpfs`, §7.6), 17 for
 Sutherland Shire Council FY2024-25 (`sutherland-shire-gpfs`, §7.7), 17 for Wollongong City Council
 FY2024-25 (`wollongong-gpfs`, §7.8), 17 for Newcastle City Council FY2024-25 (`newcastle-gpfs`,
-§7.9), 17 for Lake Macquarie City Council FY2024-25 (`lake-macquarie-gpfs`, §7.10) and 7 for Maitland
-City Council FY2024-25 (`maitland-gpfs`, §7.11) — all separate source ids. The existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS
+§7.9), 17 for Lake Macquarie City Council FY2024-25 (`lake-macquarie-gpfs`, §7.10), 7 for Maitland
+City Council FY2024-25 (`maitland-gpfs`, §7.11) and 17 for Coffs Harbour City Council FY2024-25
+(`coffs-harbour-gpfs`, §7.12) — all separate source ids. The existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS
 actuals, and are not touched or summed with the GPFS rows.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
@@ -1182,6 +1187,88 @@ still **18**; `data-nsw-ckan` still **3,472**; `data_sources` 36 → **37**. A s
 upserted the same 7 natural keys and left the DB total unchanged (idempotent). No deletes or updates
 to any other source.
 
+### 7.12 Twelfth council — Coffs Harbour City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official Annual Report page
+<https://www.coffsharbour.nsw.gov.au/Your-Council/Our-responsibilities/Corporate-planning-and-reporting/Annual-Report>.
+Plain HTTP to `coffsharbour.nsw.gov.au` is rejected by an Akamai edge with **HTTP 403**, which is not
+proof of absence; the documented headless Chromium/Playwright path (`scripts/coffs-harbour-gpfs-browser.ts`)
+clears it, and the connector still discovers the link from the cleared page HTML (never hard-coded).
+The FY2024-25 anchor **"Annual Report Section 3 - Annual Financial Statements 2024-25"**
+(`title="2024-25-Annual-Report-Section-3.pdf"`) resolves to
+<https://www.coffsharbour.nsw.gov.au/files/sharedassets/public/v/1/resident-services/your-council/corporate-planning-and-reporting/202425/annual-report-24-25/2024-25-annual-report-section-3.pdf>
+(4,006,409 bytes; HTTP 200 `application/pdf`). The separate FY2025-26 Section 3 link is discovered but
+not selected. Exact bytes are archived outside the repo at
+`/home/steve/ausspend-source-archive/coffs-harbour-gpfs/2024-25-annual-report-section-3.pdf`,
+SHA-256 `026fd09fed7099b1276beb2775c62193d00e60ed13c7f71c72a202c7f25ebf5e`, with the archive
+metadata record alongside (`hash_verified: true`). The printed unit is explicit `$ '000` on the Income
+Statement (p5 of 101), the Statement of Comprehensive Income (p6), note B1-1 (p15) and note B3-4
+(p26); a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before
+each line label, so each emitted value is the first amount after the printed label (the FY2024-25
+actual). The Income Statement does not print a combined "Total expenses" line. Total expenses is the
+printed B1-1 "Total functions and activities" expense total `$213,278` thousand, which equals the
+printed expenses-excluding-depreciation line `$155,527` thousand plus the printed depreciation line
+`$57,751` thousand, and equals printed total income `$295,498` thousand less the printed continuing
+operating result `$82,220` thousand. The printed net result `$81,833` thousand is the continuing
+operating result less the printed discontinued-operations result `$(387)` thousand, and the Statement
+of Comprehensive Income repeats it. Those top-level printed totals reconcile exactly:
+
+| Check                                                                                    |              Printed / derived | Result                                                |
+| ---------------------------------------------------------------------------------------- | -----------------------------: | ----------------------------------------------------- |
+| Total income from continuing operations (Income Statement p5)                            |            `$295,498` thousand | = `$295,498,000`                                      |
+| Total expenses (printed B1-1 p15; equals expenses excluding depreciation + depreciation) |            `$213,278` thousand | = `$155,527 + $57,751`                                |
+| Employee benefits and on-costs                                                           |             `$60,823` thousand | printed                                               |
+| Depreciation, amortisation and impairment (Income Statement p5) = note B3-4 total        |             `$57,751` thousand | exact                                                 |
+| Operating grants / capital grants                                                        | `$19,058` / `$64,207` thousand | B1-1 grants `$83,265` = `$19,058 + $64,207`           |
+| Continuing operating result (Income Statement p5)                                        |             `$82,220` thousand | = printed total income − printed total expenses       |
+| Net operating result for the year attributable to Council (Income Statement p5)          |             `$81,833` thousand | = continuing result `$82,220` − discontinued `$(387)` |
+| Statement of Comprehensive Income net result (p6)                                        |             `$81,833` thousand | = Income Statement net result                         |
+| Revenue components sum = printed total income                                            |            `$295,498` thousand | exact                                                 |
+| Expense components sum = printed expenses excluding depreciation                         |            `$155,527` thousand | exact                                                 |
+| Printed net result − capital grants = printed before-capital result                      |             `$17,626` thousand | exact                                                 |
+
+The connector emits the printed revenue and expense components plus the printed totals; each
+component carries `gpfs_component_of` naming its printed subtotal, and printed totals are never
+recomputed from components. The negative discontinued-operations result and the positive
+before-capital result are reconciliation evidence only, never stored rows. The connector does
+**not** use OLG all-rights data or any data.nsw fallback.
+
+**Rows.** **17 rows**, source id `coffs-harbour-gpfs`, `source_dataset` "Coffs Harbour City Council
+GPFS 2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Coffs Harbour City Council"` (the exact published entity
+name in the audited statements), `data_quality_flag: "provisional/local_government"`,
+`verified: false`. Only printed Income Statement categories are emitted: total revenue
+`$295,498,000`, total expenses `$213,278,000`, total expenses excluding depreciation
+`$155,527,000`, employee expenses `$60,823,000`, materials and services `$75,906,000`, borrowing
+costs `$5,702,000`, other expenses `$4,236,000`, net loss from disposal of assets `$8,860,000`,
+depreciation/amortisation/impairment `$57,751,000`, rates and annual charges `$119,875,000`, user
+charges and fees `$53,927,000`, other revenues `$15,038,000`, operating government grants
+`$19,058,000`, capital government grants `$64,207,000`, interest and investment income
+`$20,711,000`, other income `$2,682,000` and net result `$81,833,000`. No B1-1 function split and no
+region/LGA allocation are emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`; the generic additive API and area panels exclude them. The rows have **no
+`region_id` and no `location`/LGA allocation**, so they cannot be summed into any other council or
+state rows. There is **no row whose `delivery_entity` exactly names "Coffs Harbour City Council"**;
+the closest pre-existing rows are 2 AusTender federal contracts whose `delivery_entity` is the
+different string "CITY OF COFFS HARBOUR", and 199 further rows whose `delivery_entity` merely
+mentions Coffs Harbour under other delivery_entity strings (ACNC, data.nsw schools, NSW Budget
+project rows). Their per-source counts are identical before and after the ingest, and they are never
+summed with the GPFS rows. Government grant rows carry `potential_double_count: true` because they
+may overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,629 → **515,646** (exactly +17);
+`coffs-harbour-gpfs` **17**; `maitland-gpfs` still **7**; `lake-macquarie-gpfs` still **17**;
+`newcastle-gpfs` still **17**; `wollongong-gpfs` still **17**; `sutherland-shire-gpfs` still **17**;
+`canterbury-bankstown-gpfs` still **17**; `northern-beaches-gpfs` still **18**; `parramatta-gpfs`
+still **17**; `blacktown-gpfs` still **17**; `city-of-sydney-gpfs` still **18**; `dubbo-council`
+still **245**; `dubbo-council-gpfs` still **18**; `CITY OF COFFS HARBOUR` AusTender rows still **2**;
+`data_sources` 37 → **38**. A second ingest run upserted the same 17 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -1255,6 +1342,10 @@ differ); always show the source, year, measure type and fund/basis.
   <https://www.sutherlandshire.nsw.gov.au/your-council/our-vision-for-the-future/annual-and-financial-reports>
 - Sutherland Shire Council FY2024-25 GPFS PDF — URL above (5,464,555 bytes; SHA-256
   `a97e7719e485a0fb6f49468c0eb7672a5b120c0aa6077ccfdb0349d56dd2b743`)
+- Coffs Harbour City Council Annual Report page —
+  <https://www.coffsharbour.nsw.gov.au/Your-Council/Our-responsibilities/Corporate-planning-and-reporting/Annual-Report>
+- Coffs Harbour City Council FY2024-25 GPFS PDF — URL above (4,006,409 bytes; SHA-256
+  `026fd09fed7099b1276beb2775c62193d00e60ed13c7f71c72a202c7f25ebf5e`)
 - Audit Office reports — <https://www.audit.nsw.gov.au/our-work/reports>
 - data.nsw CKAN API — `package_search` queries for "local government council", "local government
   financial", "time series council", "council expenditure", "financial data return", "grants
