@@ -39,7 +39,8 @@ FY2024-25 GPFS (**§7.25**) then added exactly **17** `canada-bay-gpfs` rows (**
 `cumberland-gpfs` rows (**515,871** → **515,888**). Georges River Council FY2024-25 GPFS
 (**§7.27**) then added exactly **16** `georges-river-gpfs` rows (**515,888** → **515,904**).
 Fairfield City Council FY2024-25 GPFS (**§7.28**) then added exactly **17** `fairfield-gpfs` rows
-(**515,904** → **515,921**).
+(**515,904** → **515,921**). Liverpool City Council FY2024-25 GPFS (**§7.29**) then added exactly
+**17** `liverpool-gpfs` rows (**515,921** → **515,938**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -307,7 +308,8 @@ Council FY2024-25 (`randwick-gpfs`, §7.22) and 17 for the Council of the City o
 for the City of Canada Bay Council FY2024-25 (`canada-bay-gpfs`, §7.25) and 17 for Cumberland City
 Council FY2024-25 (`cumberland-gpfs`, §7.26) and 16 for Georges River Council FY2024-25
 (`georges-river-gpfs`, §7.27) and 17 for Fairfield City Council FY2024-25 (`fairfield-gpfs`,
-§7.28) — all separate source ids. The
+§7.28) and 17 for Liverpool City Council FY2024-25 (`liverpool-gpfs`, §7.29) — all separate source
+ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows.
@@ -2759,6 +2761,116 @@ Cumberland still 17, Maitland still 7); `data-nsw-ckan` still **3,472**; `dubbo-
 second ingest run upserted the same 17 natural keys and left the DB total unchanged (idempotent). No
 deletes or updates to any other source.
 
+### 7.29 Twenty-ninth council — Liverpool City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from Liverpool City Council's official Finance Reports page
+<https://www.liverpool.nsw.gov.au/council/corporate-information/finance-reports>. The page heads each
+year's table with a printed "Financial Year 2024/2025" cell and lists the audited document under the
+repeated link text **"Audited Financial Statement"**. The FY2024-25 link is
+<https://www.liverpool.nsw.gov.au/__data/assets/pdf_file/0009/282717/Annual-Financial-Statements-2025-Final-signed-with-Audit-Opinion.pdf>
+(anchor text `Audited Financial Statement`; the prior-year rows under the same page link
+`Annual-Financial-Statements-2024-Grand-Finale.pdf` and are deliberately not selected). The official
+page and PDF sit behind a Cloudflare managed challenge that returns **HTTP 403** to non-browser
+clients ("Just a moment..."), so the documented headless Chromium path
+(`scripts/liverpool-gpfs-browser.ts`) clears the challenge, saves the cleared HTML and downloads the
+exact PDF bytes. The connector still parses the PDF link from that HTML (no hard-coded document URL)
+and SHA-256 re-verifies the bytes.
+
+The 124-page PDF (printed "Page x of 121") contains the signed General Purpose Financial Statements —
+Income Statement PDF p18 / printed p16; Statement of Comprehensive Income PDF p19 / printed p17; B1-1
+"Total functions and activities" PDF p29 / printed p27; note B3-4 depreciation PDF p44 / printed
+p42 — and the independent auditor's reports, including the Report on the Conduct of the Audit (PDF
+p107-108 / printed p105-106). The printed unit is explicit `$ '000` on the Income Statement,
+Statement of Comprehensive Income, B1-1 and note B3-4; a missing or conflicting unit rejects the
+whole extraction.
+
+Exact bytes archived outside the repo at
+`~/ausspend-source-archive/liverpool-gpfs/liverpool-city-council-audited-financial-statements-2024-25.pdf`:
+**9,940,306 bytes**, SHA-256
+`89848112c7768239780f363d7f34785acab11326bc6d0312e7f1c229ba1a048d` (`hash_verified: true`). The
+cleared listing HTML and an `archive-meta.json` are stored alongside it.
+
+**Layout note.** Liverpool prints each row's label and its three amounts on the same printed line
+(Original unaudited budget, then Actual 2025, then Actual 2024; note references sit between the label
+and the actual column). The adapter groups text items by y, reads the Actual 2025 column by its x
+band, and never sums a page's components to obtain a printed total. The B1-1 total row is a normal
+line with five column pairs; the adapter reads the FY2024-25 income, expenses, operating-result and
+grants values by their printed order and never sums the six function rows.
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                                               |                                                                                                                                           Printed / derived | Result                                                                               |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------: | ------------------------------------------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                                          |                                                                                                                                         `$380,226` thousand | = `$380,226,000`                                                                     |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income + net gain on disposal) |                                                                                                                                         `$380,226` thousand | = printed total                                                                      |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses)                                                          |                                                                                         `$107,576` + `$101,845` + `$9,452` + `$5,479` = `$224,352` thousand | = printed expenses excluding depreciation                                            |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$55,138`)                                                  |                                                                                                                `$224,352` + `$55,138` = `$279,490` thousand | = printed B1-1 total expenses                                                        |
+| B1-1 Total functions and activities — income                                                                                                        |                                                                                                                                         `$380,226` thousand | = face statement                                                                     |
+| B1-1 Total functions and activities — expenses                                                                                                      |                                                                                                                                         `$279,490` thousand | = `$279,490,000` (printed total)                                                     |
+| B1-1 Total functions and activities — operating result                                                                                              |                                                                                                                                         `$100,736` thousand | = face net result                                                                    |
+| B1-1 grants and contributions                                                                                                                       |                                                                                                                                         `$132,469` thousand | = operating `$21,295` + capital `$111,174`                                           |
+| Operating result / net operating result                                                                                                             |                                                                                                               `$380,226` − `$279,490` = `$100,736` thousand | = printed operating result                                                           |
+| Operating result before depreciation                                                                                                                |                                                                                                               `$380,226` − `$224,352` = `$155,874` thousand | = printed before-depreciation result (evidence only)                                 |
+| Net operating result before capital grants                                                                                                          |                                                                                                               `$100,736` − `$111,174` = `−$10,438` thousand | = printed before-capital deficit (evidence only)                                     |
+| Statement of Comprehensive Income net result                                                                                                        |                                                                                                                                         `$100,736` thousand | = Income Statement net result                                                        |
+| Statement of Comprehensive Income total (`$100,736` + `$108,293` other comprehensive income)                                                        |                                                                                                                                         `$209,029` thousand | = printed total comprehensive income                                                 |
+| Note B3-4 total depreciation, amortisation and impairment for non-financial assets                                                                  |                                                                                                                                          `$55,138` thousand | = face depreciation/amortisation/impairment line                                     |
+| Independent auditor's Report on the Conduct of the Audit — rounded narrative                                                                        | operating result `$100.7m`, grants `$132.5m`, revenue `$380.2m`, depreciation `$55.1m`, expenses-excluding-depreciation `$224.4m`, before-capital `−$10.4m` | all agree within printed $0.1m rounding; no numeric total-expenses figure is printed |
+
+Total expenses is the printed B1-1 "Total functions and activities" expense total (`$279,490`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$224,352` thousand) plus printed
+depreciation/amortisation/impairment (`$55,138` thousand), and equals printed total income
+(`$380,226` thousand) less the printed operating result (`$100,736` thousand). The B1-1 income,
+expenses, operating result and grants reconcile exactly to the face statement — there is **no
+face-vs-B1-1 discrepancy**.
+
+**Internal printed narrative inconsistency (human spot check required).** The independent auditor's
+Report on the Conduct of the Audit rounds the figures consistently with the GPFS, but it labels the
+`$224.4 million` operating-expenses-excluding-depreciation subtotal **"Other expenses"**. The Income
+Statement's own "Other expenses" line is `$5,479` thousand; the `$224.4 million` figure actually equals
+the printed expenses-excluding-depreciation subtotal (`$224,352` thousand), not total expenses. This
+is a printed narrative **label** inconsistency, not a numeric difference in total expenses or the net
+result: every printed total still reconciles exactly. Per the ingestion rule, the connector does not
+silently reconcile it — it records the inconsistency in the reconciliation evidence and adds
+`human_spot_check: required` to the `total_expenses`, `total_expenses_excluding_depreciation` and
+`net_result` notes (total expenses `$279,490` thousand; net result `$100,736` thousand), so a human
+confirms how the narrative presentation should be read before the affected total is treated as final.
+The connector retains any future narrative numeric difference beyond the printed one-decimal-million
+rounding tolerance the same way.
+
+**Rows.** 17 rows, source id `liverpool-gpfs`, `source_dataset` "Liverpool City Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Liverpool City Council"` (the exact published entity name in
+the audited statements), `data_quality_flag: "provisional/local_government"`, `verified: false`. The
+minimum lines are total revenue `$380,226,000`, total expenses `$279,490,000`, employee expenses
+`$107,576,000`, depreciation/amortisation/impairment `$55,138,000`, operating government grants
+`$21,295,000`, capital government grants `$111,174,000`, borrowing costs `$9,452,000`, net gain on
+disposal of assets `$3,632,000` and net result `$100,736,000`; the printed face-statement revenue and
+expense components are included for provenance. The nil 2025 "Net loss from the disposal of assets"
+line and the printed before-capital deficit are not emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing same-entity
+rows are preserved untouched and never summed: before this ingest there were **2 rows** whose
+`delivery_entity` is exactly "Liverpool City Council" (1 GrantConnect grant and 1 AusTender contract),
+**5 case-insensitive exact rows** (those 2 plus 1 more uppercase AusTender contract, 1 uppercase
+GrantConnect grant and 1 uppercase AusTender contract) and **91 other rows** whose `delivery_entity`
+merely mentions Liverpool under other strings (schools, charities, suppliers, etc.); their per-source
+counts are identical before and after. All twenty-eight other council GPFS sources are unchanged.
+Government grant rows carry `potential_double_count: true` because they may overlap government
+program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,921 → **515,938** (exactly +17);
+`liverpool-gpfs` **17**; all twenty-eight other GPFS sources unchanged (Fairfield still 17, Georges
+River still 16, Cumberland still 17, dubbo-council-gpfs still 18); `data-nsw-ckan` still **3,472**;
+`dubbo-council` still **245**; exact-case "Liverpool City Council" rows 2 → **19** and
+case-insensitive exact rows 5 → **22**; rows whose `delivery_entity` mentions Liverpool 91 → **108**;
+`data_sources` 54 → **55**. A second ingest run upserted the same 17 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -2805,7 +2917,8 @@ deletes or updates to any other source.
    2026-11-18:** Cumberland City Council FY2024-25 GPFS, 17 non-additive rows (§7.26).
    **Twenty-seventh expansion landed 2026-11-18:** Georges River Council FY2024-25 GPFS, 16
    non-additive rows (§7.27). **Twenty-eighth expansion landed 2026-11-18:** Fairfield City Council
-   FY2024-25 GPFS, 17 non-additive rows (§7.28).
+   FY2024-25 GPFS, 17 non-additive rows (§7.28). **Twenty-ninth expansion landed 2026-11-18:**
+   Liverpool City Council FY2024-25 GPFS, 17 non-additive rows (§7.29).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
