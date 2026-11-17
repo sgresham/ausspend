@@ -255,6 +255,11 @@ export interface MeasureRow {
   soc_line_item?: string;
   soc_line_label?: string;
   soc_unit?: string;
+  soc_section?: 'revenue' | 'expenses' | 'result' | 'capital' | 'transfer';
+  soc_note?: string;
+  soc_component_of?: string;
+  soc_breakdown?: string;
+  soc_printed_sign?: 'positive' | 'negative';
   potential_double_count?: boolean;
 }
 
@@ -424,6 +429,11 @@ export interface SocSeriesRow {
   soc_line_item: string | null;
   soc_line_label: string | null;
   soc_unit: string | null;
+  soc_section: 'revenue' | 'expenses' | 'result' | 'capital' | 'transfer' | null;
+  soc_note: string | null;
+  soc_component_of: string | null;
+  soc_breakdown: string | null;
+  soc_printed_sign: 'positive' | 'negative' | null;
   measure_type: MeasureType;
   amount_cents: number;
   potential_double_count: boolean;
@@ -477,6 +487,8 @@ export interface SocResponse {
     series: number;
     by_line: Record<string, number>;
     by_entity: Record<string, number>;
+    by_section: Record<string, number>;
+    by_note: Record<string, number>;
     potential_double_count: number;
     deferred_documents: number;
   };

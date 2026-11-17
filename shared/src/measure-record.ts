@@ -147,6 +147,23 @@ export const MeasureRecordSchema = z.object({
   soc_line_label: z.string().min(1).optional(),
   soc_unit: z.string().min(1).optional(),
   /**
+   * SOC breakdown dimension. `soc_section` groups rows for the UI (revenue,
+   * expenses, result, capital); `soc_note` names the printed note/table;
+   * `soc_component_of` names the printed subtotal a component sums to (so a
+   * component is never added to that subtotal); `soc_breakdown` names the
+   * dimension the note exposes (for example other_operating_expense_category).
+   */
+  soc_section: z.enum(['revenue', 'expenses', 'result', 'capital', 'transfer']).optional(),
+  soc_note: z.string().min(1).optional(),
+  soc_component_of: z.string().min(1).optional(),
+  soc_breakdown: z.string().min(1).optional(),
+  /**
+   * Printed sign when the published figure is negative but `amount_cents` is
+   * stored as a non-negative magnitude (money is never negative in the model).
+   * Reconciliation checks use the printed sign.
+   */
+  soc_printed_sign: z.enum(['positive', 'negative']).optional(),
+  /**
    * True when the row's funding source names a government agency or a
    * separately disclosed government contribution/transfer. Such a row may
    * overlap government program spending, so the UI warns and the row is never
