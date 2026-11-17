@@ -198,13 +198,41 @@ export function DataSourcesPage() {
                     <Typography variant="body2" color="text.secondary">
                       Ingestion status
                     </Typography>
-                    <Typography variant="body2">
+                    <Typography
+                      variant="body2"
+                      data-testid={`ingestion-status-${source.source_id}`}
+                    >
                       {source.status} · {source.records_ingested} record(s)
                       {source.last_ingested_at
                         ? ` · last ingested ${formatDate(source.last_ingested_at)}`
                         : ' · never ingested'}
+                      {source.fetch_strategy ? ` · fetch strategy ${source.fetch_strategy}` : ''}
                     </Typography>
                   </Box>
+
+                  {source.status === 'degraded' || (source.staleness_days ?? 0) > 0 ? (
+                    <Alert
+                      severity="warning"
+                      data-testid={`stale-${source.source_id}`}
+                      sx={{ mt: 2 }}
+                    >
+                      <strong>Stale data — the last successful fetch is still shown.</strong>{' '}
+                      {source.last_successful_fetch
+                        ? `Last successful fetch ${formatDate(source.last_successful_fetch)}${
+                            typeof source.staleness_days === 'number'
+                              ? ` (${source.staleness_days} day${
+                                  source.staleness_days === 1 ? '' : 's'
+                                } ago)`
+                              : ''
+                          }.`
+                        : 'No successful fetch is recorded.'}{' '}
+                      The {source.records_ingested} existing record(s) are preserved and displayed
+                      unchanged; a failed refresh never deletes, zero-fills or hides them.
+                      {source.fetch_strategy
+                        ? ` The last successful document was obtained via ${source.fetch_strategy}.`
+                        : ''}
+                    </Alert>
+                  ) : null}
 
                   {source.notes ? (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -432,12 +460,25 @@ export function DataSourcesPage() {
                       label={connector.status === 'stub' ? 'stub — not wired' : connector.status}
                     />
                     <Chip size="small" variant="outlined" label={connector.jurisdiction_level} />
+                    {connector.fetch_strategy ? (
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        data-testid={`fetch-strategy-${connector.id}`}
+                        label={`fetch: ${connector.fetch_strategy}`}
+                      />
+                    ) : null}
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
                     {connector.publisher} · {connector.records_ingested} record(s)
                     {connector.last_fetched_at
                       ? ` · last fetched ${formatDate(connector.last_fetched_at)}`
                       : ' · never fetched'}
+                    {typeof connector.staleness_days === 'number'
+                      ? ` · ${connector.staleness_days} day${
+                          connector.staleness_days === 1 ? '' : 's'
+                        } stale`
+                      : ''}
                   </Typography>
                   <Typography variant="body2" component="div">
                     <SourceLink

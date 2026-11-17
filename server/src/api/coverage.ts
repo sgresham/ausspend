@@ -241,6 +241,11 @@ export function createCoverageHandler(
         records_ingested: stored.records_ingested,
         errors: stored.errors ?? [],
         deferred_resources: stored.deferred_resources ?? summary.deferred_resources,
+        fetch_strategy: stored.fetch_strategy ?? summary.fetch_strategy ?? null,
+        last_successful_fetch: stored.last_successful_fetch
+          ? new Date(stored.last_successful_fetch).toISOString()
+          : null,
+        staleness_days: stored.staleness_days ?? null,
       };
     });
     const connectorStatusCounts = {

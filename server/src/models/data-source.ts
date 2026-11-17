@@ -2,6 +2,8 @@ import mongoose, { Schema } from 'mongoose';
 
 export type DataSourceStatus = 'stub' | 'active' | 'degraded';
 
+export type DataSourceFetchStrategy = 'direct' | 'parliament_fallback' | 'headless';
+
 /**
  * A resource that was deliberately not ingested in this phase (for example a
  * PDF/DOCX whose extraction belongs to the separate PDF foundation). It is
@@ -29,7 +31,14 @@ export interface DataSourceDocument {
   verified: boolean;
   notes?: string;
   status: DataSourceStatus;
+  /** Last successful ingestion (not the last attempt). */
   last_ingested_at?: Date | null;
+  /** How the most recent successful run obtained the source document. */
+  fetch_strategy?: DataSourceFetchStrategy | null;
+  /** Last successful document fetch; preserved across failed refreshes. */
+  last_successful_fetch?: Date | null;
+  /** Whole days since last_successful_fetch; preserved across failed refreshes. */
+  staleness_days?: number | null;
   records_ingested: number;
   errors: string[];
   deferred_resources: DeferredResource[];
@@ -53,6 +62,13 @@ const DataSourceMongooseSchema = new Schema<DataSourceDocument>(
       index: true,
     },
     last_ingested_at: { type: Date, default: null },
+    fetch_strategy: {
+      type: String,
+      enum: ['direct', 'parliament_fallback', 'headless'],
+      default: null,
+    },
+    last_successful_fetch: { type: Date, default: null },
+    staleness_days: { type: Number, default: null, min: 0 },
     records_ingested: { type: Number, required: true, default: 0, min: 0 },
     errors: { type: [String], required: true, default: [] },
     deferred_resources: {

@@ -16,7 +16,9 @@ import {
   type ArchivedSourceRecord,
 } from '../../source-archive.js';
 import { DeferredSocDocumentModel } from '../../../models/index.js';
-import type { Connector, RawRecord } from '../../types.js';
+import type { Connector, FetchStrategy, RawRecord } from '../../types.js';
+import { resolveSocDocument } from './soc-document-fetch.js';
+import type { HeadlessPdfFetcher } from './headless.js';
 
 /**
  * NSW SOC Phase 5 — Essential Energy annual-report adapter.
@@ -1202,16 +1204,8 @@ export interface EssentialEnergyConnectorOptions {
   now?: () => Date;
   /** Test/CLI override; the live connector normally discovers the latest PDF. */
   document?: EssentialEnergyAnnualReportLink;
-}
-
-function documentFilename(url: string): string {
-  try {
-    const name = decodeURIComponent(new URL(url).pathname.split('/').pop() ?? '');
-    if (/\.pdf$/i.test(name)) return name.replace(/[^A-Za-z0-9._-]+/g, '-');
-  } catch {
-    // Fall through.
-  }
-  return 'essential-energy-annual-report.pdf';
+  /** Test-only injection point for the last-resort headless browser fetch. */
+  headlessFetch?: HeadlessPdfFetcher;
 }
 
 /**
@@ -1249,7 +1243,7 @@ function documentFromEnv(): EssentialEnergyAnnualReportLink | null {
 }
 
 async function recordDeferral(
-  document: EssentialEnergyAnnualReportLink,
+  document: Pick<EssentialEnergyAnnualReportLink, 'url' | 'fiscal_year' | 'title'>,
   archive: ArchivedSourceRecord | null,
   deferral: EssentialEnergyDeferral,
 ): Promise<void> {
@@ -1283,6 +1277,7 @@ export function createEssentialEnergyConnector(
     recordsIngested: 0,
     errors: [] as string[],
     warnings: [] as string[],
+    fetchStrategy: null as FetchStrategy | null,
   };
 
   const connector: Connector = {
@@ -1299,30 +1294,31 @@ export function createEssentialEnergyConnector(
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
-      const document =
-        options.document ??
-        documentFromEnv() ??
-        (await discoverEssentialEnergyAnnualReport(fetchImpl));
-      const response = await fetchImpl(document.url, {
-        redirect: 'follow',
-        headers: BROWSER_HEADERS,
+      metadata.fetchStrategy = null;
+      const override = options.document ?? documentFromEnv() ?? undefined;
+      const resolved = await resolveSocDocument({
+        source_id: ESSENTIAL_ENERGY_ID,
+        source_label: 'Essential Energy',
+        fetchImpl,
+        discoverDirect: async () =>
+          override ?? (await discoverEssentialEnergyAnnualReport(fetchImpl)),
+        directDocument: override,
+        discoveryPageUrl: ESSENTIAL_ENERGY_SOURCE_URL,
+        headlessFetch: options.headlessFetch,
       });
-      if (!response.ok) {
-        throw new Error(`Essential Energy PDF fetch HTTP ${response.status} for ${document.url}`);
-      }
-      const bytes = Buffer.from(await response.arrayBuffer());
+      metadata.fetchStrategy = resolved.strategy;
+      const document = resolved.document;
       const archived = await archiveSourceDocument({
         source_id: ESSENTIAL_ENERGY_ID,
         title: document.title,
         original_url: document.url,
-        retrieved_from: document.url,
-        archived_from: 'direct',
-        filename: documentFilename(document.url),
+        retrieved_from: resolved.retrieved_from,
+        archived_from: resolved.archived_from,
+        filename: resolved.filename,
         content_type: 'application/pdf',
-        data: bytes,
+        data: resolved.bytes,
         root: options.archiveRoot,
-        notes:
-          'Essential Energy annual-report PDF; archived for auditable NSW SOC entity-statement extraction.',
+        notes: resolved.note,
       });
       await verifySourceDocument(archived);
       const extraction = await extractArchivedPdf(archived);

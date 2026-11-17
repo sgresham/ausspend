@@ -65,6 +65,28 @@ const GRANTCONNECT_SOURCE = {
     'GrantConnect manual export (file archived SHA-256; not an API, no live scraper). Coverage partial 0/365 days of 2025-07-01..2026-06-30: the supplied wide exports carried the >50,000-result cap warning and were rejected, never partially imported.',
 };
 
+const WATERNSW_SOURCE = {
+  source_id: 'waternsw',
+  name: 'WaterNSW — Annual Report',
+  publisher: 'WaterNSW (Water NSW)',
+  source_url:
+    'https://www.waternsw.com.au/about-us/our-business/corporate-governance/annual-reports',
+  retrieved_at: '2026-11-17T05:43:27.391Z',
+  license:
+    '© WaterNSW. Published annual-report PDF used here for public-interest research; not an open-data licence grant.',
+  verified: false,
+  status: 'degraded',
+  last_ingested_at: '2026-11-17T05:43:27.391Z',
+  fetch_strategy: 'parliament_fallback',
+  last_successful_fetch: '2026-11-17T05:43:27.391Z',
+  staleness_days: 1,
+  records_ingested: 47,
+  errors: ['annual-report page HTTP 403'],
+  notes:
+    'NSW SOC entity statement lines. The last successful fetch used the NSW Parliament tabled-paper artifact; existing rows are preserved when a refresh fails.',
+  deferred_resources: [],
+};
+
 const NSW_BUDGET_SOURCE = {
   source_id: 'nsw-budget',
   name: 'NSW Budget 2025-26 Open Data',
@@ -1540,6 +1562,7 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
           NSW_CKAN_SOURCE,
           DUBBO_SOURCE,
           GRANTCONNECT_SOURCE,
+          WATERNSW_SOURCE,
         ];
         await json(route, {
           sources: empty ? sources : [SYNTHETIC_SOURCE, ...sources],

@@ -1450,6 +1450,103 @@ npm run ingest:soc
 The row `source_url` is the official Essential Energy PDF URL; the manifest and
 archive record the exact bytes and SHA-256 outside the repo.
 
+## 6A. Degraded-source recovery: fetch strategy, Parliament fallback and staleness
+
+Phase 6.1 investigated the three degraded NSW SOC sources separately on
+2026-11-17. All three publisher hosts returned the same CDN response for both
+the annual-report HTML page and the PDF path:
+
+```text
+HTTP/2 403
+cf-mitigated: challenge
+server: cloudflare
+```
+
+that is a Cloudflare **challenge**, not a generic bot block and not a timeout.
+Changing the `User-Agent`/`Accept` headers alone did not clear it. Per host:
+
+| Source                 | Official HTML page | Official PDF  | Recovery used                      |
+| ---------------------- | ------------------ | ------------- | ---------------------------------- |
+| `waternsw`             | 403 challenge      | 403 challenge | NSW Parliament tabled paper 192122 |
+| `essential-energy`     | 403 challenge      | **200 PDF**   | NSW Parliament tabled paper 192060 |
+| `forestry-corporation` | 403 challenge      | 403 challenge | NSW Parliament tabled paper 192061 |
+
+Each connector now follows the same deterministic ladder and records the result
+in `data_sources.fetch_strategy`:
+
+1. **`direct`** — discover and download from the publisher with a browser-like
+   `fetch` (the pre-existing path).
+2. **`parliament_fallback`** — fetch the same annual report tabled in NSW
+   Parliament through the file service. This is the fallback discovery path:
+   the tabled-paper index in
+   `server/src/connectors/soc/nsw/nsw-parliament.ts` records the paper id,
+   artifact URL, byte length and SHA-256. Each artifact is verified on every
+   fetch; a mismatch defers the document instead of ingesting the wrong bytes.
+3. **`headless`** — only when both of the above fail, a lazily-loaded
+   Playwright browser loads the publisher page, clears the challenge and reads
+   the exact PDF bytes. If Playwright or a browser binary is unavailable the
+   connector records that reason and moves on. The browser is never needed for
+   the three current recoveries.
+
+If all three fail the runner marks the source `degraded`. The refusal to
+silently degrade again is the point: the error lists every attempt.
+
+### Parliament tabled-paper registry (2024-25)
+
+| Source                 | Tabled paper | SHA-256                                                            | Bytes      | Byte-identical to official?              |
+| ---------------------- | ------------ | ------------------------------------------------------------------ | ---------- | ---------------------------------------- |
+| `waternsw`             | 192122       | `6240e733e2d2e5562553a15398b1dbe63c8ab454b6fe78a9d5000f354f338b09` | 42,917,371 | yes                                      |
+| `essential-energy`     | 192060       | `99953e63e91d669bca8b41068f22dc5a22c12cb3d85e6cf55e8f0e760257dfbf` | 13,513,919 | no (same statement, different rendering) |
+| `forestry-corporation` | 192061       | `18f9fa57718cd6177d505298d0fd214f897028b2db76e8a3e257376aa392be10` | 6,448,775  | yes                                      |
+
+`waternsw` and `forestry-corporation` are byte-identical to the official-host
+PDFs. Parliament tabled a different rendering of the Essential Energy report
+(the official-host PDF is 19,147,042 bytes); every printed statement line,
+Note 2(c)/Note 3(b) component and profit bridge still reconciles exactly to the
+same audited figures, so the six `essential-energy` rows are unchanged. The
+archive records the official PDF URL as `original_url` and the Parliament
+artifact as `retrieved_from`; the artifact filename is used locally so the two
+renderings never overwrite each other.
+
+To update the registry when a new report is tabled, add one entry with the
+Parliament paper id, artifact URL, byte length and SHA-256, and extend the
+focused recovery test. No PDF URL is invented at runtime.
+
+### Staleness and preservation on failure
+
+`data_sources` now also stores:
+
+- `last_successful_fetch` — the last date a document was actually fetched and
+  parsed, separate from the last attempt;
+- `staleness_days` — whole days since `last_successful_fetch` (null when the
+  source has never succeeded);
+- `fetch_strategy` — `direct | parliament_fallback | headless` from the last
+  successful run.
+
+On a failed refresh the runner sets `status = degraded`, preserves the prior
+`records_ingested`, `last_ingested_at`, `last_successful_fetch` and
+`fetch_strategy`, computes `staleness_days`, and **never deletes a measure row**.
+`/api/data-sources` and `/api/meta/coverage` expose all three fields, and the
+data-sources page shows a stale-data warning that names the preserved row count;
+it still renders the rows rather than hiding them. On a successful refresh the
+source returns to `active` with a fresh `last_ingested_at` and
+`staleness_days = 0`.
+
+Verify the recovery in the live database:
+
+```bash
+# source statuses, strategies and staleness
+mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+  db.data_sources.find({source_id:{$in:["waternsw","essential-energy","forestry-corporation"]}},
+    {source_id:1,status:1,records_ingested:1,fetch_strategy:1,last_successful_fetch:1,staleness_days:1}).toArray()
+'
+# row counts are unchanged and no duplicates were inserted
+mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+  db.measures.aggregate([{$match:{source_id:{$in:["waternsw","essential-energy","forestry-corporation"]}}},
+    {$group:{_id:"$source_id",rows:{$sum:1}}}]).toArray()
+'
+```
+
 ## 7. How the remaining SOCs will plug in later
 
 `scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water,
