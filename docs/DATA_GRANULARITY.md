@@ -384,7 +384,7 @@ types. The no-sum rules are listed in §4.
 > FY2024-25 its income-statement and balance-sheet totals reconcile exactly to the audited GPFS;
 > capital outlays differ by $473,353 and need a documented bridge. The historical pilot adds
 > FY2019-20..FY2023-24 under the same two source ids (27,099 VGC1 + 44,548 ABS non-additive rows),
-> each year keyed by its own `fiscal_year`. The FY2015-16..FY2018-19 years are now also landed (pilot D), so all nine historical years are present and none is deferred. The
+> each year keyed by its own `fiscal_year`. The FY2015-16..FY2018-19 years are now also landed (pilot D), so all nine historical years are present and none is deferred. For the one historical year with an audited GPFS target (Bendigo FY2023-24), the VGC1 totals carry nonzero deltas (`$1,023.18` expenditure, `$2,475.92` revenue) and are labelled `bridged_to_gpfs` with `human_spot_check: required`, never `reconciled_to_gpfs`. The
 > LGPRF/Know Your Council data
 > set covers all 79 councils but only with 59 performance indicators (CC BY 4.0), and no single
 > official dataset publishes the audited GPFS for all 79. The 28 `vic-budget` rows are statewide
