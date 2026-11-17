@@ -96,6 +96,8 @@ export interface MeasureDocument {
   gpfs_statement?: string;
   /** Printed subtotal this GPFS component belongs to. */
   gpfs_component_of?: string;
+  /** Printed sign when a negative result is stored as a non-negative magnitude. */
+  gpfs_printed_sign?: 'positive' | 'negative';
   /** Government-named funding row that may overlap government program data. */
   potential_double_count?: boolean;
 }
@@ -203,6 +205,7 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     gpfs_section: { type: String, enum: ['revenue', 'expenses', 'result'], index: true },
     gpfs_statement: { type: String },
     gpfs_component_of: { type: String, index: true },
+    gpfs_printed_sign: { type: String, enum: ['positive', 'negative'] },
     potential_double_count: { type: Boolean, index: true },
   },
   { collection: 'measures', versionKey: false },
