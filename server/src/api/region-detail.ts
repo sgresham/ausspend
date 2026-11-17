@@ -70,25 +70,50 @@ async function groupByFunction(measures: readonly LeanMeasure[], mixed: boolean)
     .sort((a, b) => a.function.code.localeCompare(b.function.code));
 }
 
+const NON_ADDITIVE_ROLES = ['agency_detail', 'policy_measure'] as const;
+type NonAdditiveRole = (typeof NON_ADDITIVE_ROLES)[number];
+
+const NON_ADDITIVE_LABELS: Record<NonAdditiveRole, { label: string; description: string }> = {
+  agency_detail: {
+    label: 'Agency detail — not additive',
+    description:
+      'A single agency statement overlaps the consolidated series; it is excluded from every additive total.',
+  },
+  policy_measure: {
+    label: 'Policy measures — not additive',
+    description:
+      'BP4 policy measures overlap the BP3 capital program (some projects appear in both); they are excluded from every additive total.',
+  },
+};
+
 /**
- * Single-agency detail is listed separately and is never added to the
- * consolidated totals. The label is explicit in the API response so the UI
- * cannot present it as part of the headline.
+ * Non-additive detail is grouped by role and listed separately. It is never
+ * added to the headline total; each block carries its own explicit label.
  */
-function agencyDetailBlock(measures: readonly LeanMeasure[]) {
-  const detail = measures.filter((measure) => !isAdditiveMeasure(measure));
+function nonAdditiveBlock(role: NonAdditiveRole, measures: readonly LeanMeasure[]) {
+  const detail = measures.filter(
+    (measure) => !isAdditiveMeasure(measure) && measure.aggregation_role === role,
+  );
   const measureTypes = [...new Set(detail.map((measure) => measure.measure_type))].sort();
   const mixed = measureTypes.length > 1;
+  const copy = NON_ADDITIVE_LABELS[role];
   return {
-    label: 'Agency detail — not additive',
-    aggregation_role: 'agency_detail' as const,
+    label: copy.label,
+    description: copy.description,
+    aggregation_role: role,
     count: detail.length,
     mixed,
     total_cents:
       detail.length === 0 || mixed ? null : sumCents(detail.map((measure) => measure.amount_cents)),
-    total_by_measure_type: perMeasureTypeTotals(detail, { includeAgencyDetail: true }),
+    total_by_measure_type: perMeasureTypeTotals(detail, { includeNonAdditive: true }),
     measures: detail.map(serializeMeasure),
   };
+}
+
+function nonAdditiveBlocks(measures: readonly LeanMeasure[]) {
+  return NON_ADDITIVE_ROLES.map((role) => nonAdditiveBlock(role, measures)).filter(
+    (block) => block.count > 0,
+  );
 }
 
 async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCode?: string) {
@@ -106,7 +131,9 @@ async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCo
     ...summary,
     by_function: await groupByFunction(additiveMeasures, summary.mixed),
     measures: measures.map(serializeMeasure),
-    agency_detail: agencyDetailBlock(measures),
+    non_additive: nonAdditiveBlocks(measures),
+    // Backwards-compatible single block for the VIC agency-detail UI.
+    agency_detail: nonAdditiveBlock('agency_detail', measures),
   };
 }
 

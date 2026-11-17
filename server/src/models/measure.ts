@@ -5,6 +5,7 @@ export type MeasureType = 'actual' | 'budget' | 'estimate' | 'contract' | 'grant
 export interface SpendingLocationDocument {
   state?: string;
   lga_name?: string;
+  sa4_name?: string;
 }
 
 /**
@@ -33,7 +34,7 @@ export interface MeasureDocument {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
-  aggregation_role?: 'additive' | 'agency_detail';
+  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: SpendingLocationDocument;
   unspsc?: string;
@@ -43,6 +44,7 @@ const LocationSchema = new Schema<SpendingLocationDocument>(
   {
     state: { type: String },
     lga_name: { type: String },
+    sa4_name: { type: String },
   },
   { _id: false },
 );
@@ -91,7 +93,11 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     data_quality_flag: { type: String },
     // Missing means additive for older sources. `agency_detail` rows are shown
     // for provenance but excluded from every additive total by the API.
-    aggregation_role: { type: String, enum: ['additive', 'agency_detail'], index: true },
+    aggregation_role: {
+      type: String,
+      enum: ['additive', 'agency_detail', 'policy_measure'],
+      index: true,
+    },
     extraction_confidence: { type: String, enum: ['low', 'medium', 'high'] },
     location: { type: LocationSchema },
     unspsc: { type: String, index: true },

@@ -58,7 +58,7 @@ export function TotalsPanel({
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {scopeLabel} · sum of {additiveRows} additive rows for one measure type. The total is
-          returned by the API over the whole filtered set; non-additive agency detail is excluded.
+          returned by the API over the whole filtered set; non-additive detail is excluded.
         </Typography>
         <ProvenanceFooter sources={sources} note={note} />
       </CardContent>

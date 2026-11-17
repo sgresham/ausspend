@@ -31,7 +31,7 @@ export interface MeasureRow {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
-  aggregation_role?: 'additive' | 'agency_detail';
+  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: { state?: string; lga_name?: string };
   unspsc?: string;
@@ -118,35 +118,47 @@ export async function loadMeasures(
 }
 
 /**
- * Missing `aggregation_role` means `additive` for older sources. Agency detail
- * is shown for provenance but must never enter an additive total.
+ * Missing `aggregation_role` means `additive` for older sources. Both
+ * `agency_detail` (single-agency statements) and `policy_measure` (BP4 policy
+ * decisions that overlap another series) are shown for provenance but must
+ * never enter an additive total.
  */
 export function isAgencyDetail(measure: {
-  aggregation_role?: 'additive' | 'agency_detail' | null;
+  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure' | null;
 }): boolean {
   return measure.aggregation_role === 'agency_detail';
 }
 
-export function isAdditiveMeasure(measure: {
-  aggregation_role?: 'additive' | 'agency_detail' | null;
+export function isNonAdditiveMeasure(measure: {
+  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure' | null;
 }): boolean {
-  return !isAgencyDetail(measure);
+  return (
+    measure.aggregation_role !== undefined &&
+    measure.aggregation_role !== null &&
+    measure.aggregation_role !== 'additive'
+  );
+}
+
+export function isAdditiveMeasure(measure: {
+  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure' | null;
+}): boolean {
+  return !isNonAdditiveMeasure(measure);
 }
 
 /**
- * Count and sum for each measure type present. Agency detail is excluded by
- * default (pass `includeAgencyDetail` only for the labelled non-additive
+ * Count and sum for each measure type present. Non-additive detail is excluded
+ * by default (pass `includeNonAdditive` only for a labelled non-additive
  * block). These per-type totals are the only totals that are safe to add up,
  * and only within a single type. Never sum across types.
  */
 export function perMeasureTypeTotals(
   measures: readonly Pick<LeanMeasure, 'amount_cents' | 'measure_type' | 'aggregation_role'>[],
-  options: { includeAgencyDetail?: boolean } = {},
+  options: { includeNonAdditive?: boolean } = {},
 ): PerMeasureTypeTotal[] {
   const byType = new Map<MeasureDocument['measure_type'], { count: number; amounts: number[] }>();
 
   for (const measure of measures) {
-    if (!options.includeAgencyDetail && isAgencyDetail(measure)) continue;
+    if (!options.includeNonAdditive && isNonAdditiveMeasure(measure)) continue;
     const entry = byType.get(measure.measure_type) ?? { count: 0, amounts: [] };
     entry.count += 1;
     entry.amounts.push(measure.amount_cents);

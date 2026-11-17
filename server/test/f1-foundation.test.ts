@@ -71,7 +71,7 @@ const workingConnector = activeConnector(
   async () => [{ id: 'c-1' }],
 );
 
-const stubConnector = getConnector('qld-budget')!;
+const stubConnector = getConnector('wa-budget')!;
 
 beforeAll(async () => {
   await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
@@ -90,14 +90,14 @@ describe('F1 ingestion runner', () => {
     });
 
     expect(result.results.map((entry) => `${entry.source_id}:${entry.log_status}`)).toEqual([
-      'qld-budget:skipped',
+      'wa-budget:skipped',
       'fake-failing-source:error',
       'fake-contract-source:success',
     ]);
 
     const logs = await IngestionLogModel.find({}).sort({ source_id: 1 }).lean();
     expect(logs).toHaveLength(3);
-    expect(logs.find((log) => log.source_id === 'qld-budget')).toMatchObject({
+    expect(logs.find((log) => log.source_id === 'wa-budget')).toMatchObject({
       status: 'skipped',
       records_fetched: 0,
       records_upserted: 0,
@@ -112,7 +112,7 @@ describe('F1 ingestion runner', () => {
       records_upserted: 1,
     });
 
-    const stubSource = await DataSourceModel.findOne({ source_id: 'qld-budget' }).lean();
+    const stubSource = await DataSourceModel.findOne({ source_id: 'wa-budget' }).lean();
     expect(stubSource).toMatchObject({ status: 'stub', records_ingested: 0 });
     const failedSource = await DataSourceModel.findOne({
       source_id: 'fake-failing-source',
@@ -233,13 +233,13 @@ describe('F1 extended measure shape and API', () => {
 
     const coverage = await request(app).get('/api/v1/meta/coverage');
     expect(coverage.status).toBe(200);
-    // AusTender, PBS, GrantConnect (manual export), NSW Budget, CKAN, Dubbo
-    // and VIC Budget are wired; the remaining six connectors are stubs.
+    // AusTender, PBS, GrantConnect (manual export), NSW Budget, CKAN, Dubbo,
+    // VIC Budget and QLD Budget are wired; the remaining five are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(7);
-    expect(coverage.body.connector_status_counts.stub).toBe(6);
+    ).toBe(8);
+    expect(coverage.body.connector_status_counts.stub).toBe(5);
     expect([
       ...coverage.body.federal_ingestion.live,
       ...coverage.body.federal_ingestion.degraded,
@@ -252,13 +252,13 @@ describe('F1 extended measure shape and API', () => {
     expect(logs.status).toBe(200);
     expect(logs.body.logs.length).toBeGreaterThanOrEqual(3);
     expect(logs.body.logs.map((log: { source_id: string }) => log.source_id)).toEqual(
-      expect.arrayContaining(['qld-budget', 'fake-failing-source', 'fake-contract-source']),
+      expect.arrayContaining(['wa-budget', 'fake-failing-source', 'fake-contract-source']),
     );
 
-    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=qld-budget');
+    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=wa-budget');
     expect(legacyLogs.status).toBe(200);
     expect(legacyLogs.body.logs[0]).toMatchObject({
-      source_id: 'qld-budget',
+      source_id: 'wa-budget',
       status: 'skipped',
     });
   });

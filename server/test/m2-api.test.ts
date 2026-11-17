@@ -152,7 +152,7 @@ describe('GET /api/meta/coverage', () => {
     expect(response.status).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body).toMatchObject({
-      phase: 'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC + Dubbo live)',
+      phase: 'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live)',
       synthetic: true,
       live_ingestion: true,
       counts: { data_sources: 1, regions: 3, functions: 4, measures: 8 },
@@ -179,7 +179,8 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'nsw-budget' ||
           connector.id === 'data-nsw-ckan' ||
           connector.id === 'dubbo-council' ||
-          connector.id === 'vic-budget'
+          connector.id === 'vic-budget' ||
+          connector.id === 'qld-budget'
           ? 'active'
           : 'stub',
       );
@@ -193,10 +194,9 @@ describe('GET /api/meta/coverage', () => {
       'nsw-budget',
       'data-nsw-ckan',
       'vic-budget',
+      'qld-budget',
     ]);
-    expect(response.body.state_ingestion.stubs).toEqual(
-      expect.arrayContaining(['qld-budget', 'wa-budget']),
-    );
+    expect(response.body.state_ingestion.stubs).toEqual(expect.arrayContaining(['wa-budget']));
     expect(response.body.federal_ingestion.pending).toEqual([]);
     expect(response.body.limitations.join(' ')).toMatch(/synthetic/i);
     expect(response.body.limitations.join(' ')).toMatch(/verified/i);

@@ -76,7 +76,8 @@ export function MeasureRowsTable({
                   <TableCell>{labelFor(row)}</TableCell>
                   <TableCell>
                     <MeasureTypeChip type={row.measure_type} />
-                    {row.aggregation_role === 'agency_detail' ? (
+                    {row.aggregation_role === 'agency_detail' ||
+                    row.aggregation_role === 'policy_measure' ? (
                       <Chip
                         size="small"
                         color="warning"

@@ -4,6 +4,7 @@ import { createDubboConnector } from './dubbo-council.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
+import { createQldBudgetConnector } from './qld-budget.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
@@ -106,14 +107,9 @@ export const CONNECTORS: readonly Connector[] = [
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
-  stub({
-    id: 'qld-budget',
-    name: 'Queensland Budget',
-    publisher: 'Queensland Treasury',
-    source_url: 'https://budget.qld.gov.au/',
-    jurisdiction_level: 'state',
-    // TODO: ingest Queensland Budget datasets (CSV/XLSX) per portfolio.
-  }),
+  // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
+  // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
+  createQldBudgetConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

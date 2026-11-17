@@ -1,0 +1,52 @@
+{
+  "dataset": "QLD Budget 2026-27 BP3/BP4",
+  "fiscal_year": "2026-27",
+  "source_url": "https://www.data.qld.gov.au/dataset/2026-27-state-budget-budget-paper-3-capital-statement",
+  "license": "CC BY 4.0",
+  "attribution": "© State of Queensland (Queensland Treasury), 2026",
+  "retrieved_at": "2026-11-17T01:31:42.777Z",
+  "unit": "$'000 (x100,000 cents; confirmed by the archived data dictionaries)",
+  "files": [
+    {
+      "title": "QLD Budget 2026-27 — Data Dictionary and Explanatory Notes—Capital Statement—Budget Paper 3 (2026-27)",
+      "filename": "data-dictionary-and-explanatory-notes-capital-statement-budget-paper-3-2026-27.csv",
+      "url": "https://www.data.qld.gov.au/dataset/fb0df743-a719-476e-a3ae-4d4e3a0d9124/resource/bb5d4369-f12b-4f1a-80f0-60325565a710/download/data-dictionary-and-explanatory-notes-capital-statement-budget-paper-3-2026-27.csv",
+      "sha256": "1152880ba7e19915ac08a07c7c0126ff07f422579f9141b99c0ec8de2804f141",
+      "bytes": 2783,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QLD Budget 2026-27 — Budget Measures—Budget Paper 4 (2026-27)",
+      "filename": "bp4-open-data-budget-2026-27.csv",
+      "url": "https://www.data.qld.gov.au/dataset/e37910f7-0ae5-4a20-9e59-dcaa30517080/resource/1eb033d0-a344-4c24-821a-96fc0a0d57fa/download/bp4-open-data-budget-2026-27.csv",
+      "sha256": "20ceebc6ce145217b5af4bfd54dace632f1facaac8eb9ea07785703c923a3243",
+      "bytes": 38777,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QLD Budget 2026-27 — Data Dictionary—Budget Measures—Budget Paper 4 (2026-27)",
+      "filename": "data-dictionary-budget-measures-budget-paper-4-2026-27.csv",
+      "url": "https://www.data.qld.gov.au/dataset/e37910f7-0ae5-4a20-9e59-dcaa30517080/resource/da5e8180-1ab7-407d-a01e-f38d35f2db99/download/data-dictionary-budget-measures-budget-paper-4-2026-27.csv",
+      "sha256": "5197d5d7237e24f9dbe2c2498d90a9b2eab570d42439e98eae98d9a2561c2cda",
+      "bytes": 758,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QLD Budget 2026-27 — Capital Statement - Budget Paper 3 (2026-27)",
+      "filename": "capital-statement-bp3-2026-27-budget.csv",
+      "url": "https://www.data.qld.gov.au/dataset/fb0df743-a719-476e-a3ae-4d4e3a0d9124/resource/aa894f86-6f57-4e81-8f95-8c1541bcd819/download/capital-statement-bp3-2026-27-budget.csv",
+      "sha256": "ae1b6d99d6ce65843091d1a8ddf7174040d8f40287e0c8e6833631c8bb7643d5",
+      "bytes": 270747,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QLD Budget 2026-27 — Explanatory Notes—Budget Measures—Budget Paper 4 (2026-27)",
+      "filename": "explanatory-notes-budget-measures-budget-paper-4-2026-27.csv",
+      "url": "https://www.data.qld.gov.au/dataset/e37910f7-0ae5-4a20-9e59-dcaa30517080/resource/28333519-6495-4055-9662-c23889518030/download/explanatory-notes-budget-measures-budget-paper-4-2026-27.csv",
+      "sha256": "efaff8eccebd5377729cef34dc07db6eac5d209197b3822956084c47fc9b00ff",
+      "bytes": 1282,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "BP3 capital projects and BP4 expense/capital budget measures. BP4 revenue measures and blank/zero/negative 2026-27 amounts are excluded. No COFOG function; provisional. The two series are not a complete QLD expense total."
+}

@@ -198,9 +198,9 @@ export interface MeasureRow {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
-  aggregation_role?: 'additive' | 'agency_detail';
+  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure';
   extraction_confidence?: ExtractionConfidence;
-  location?: { state?: string; lga_name?: string };
+  location?: { state?: string; lga_name?: string; sa4_name?: string };
   unspsc?: string;
 }
 
@@ -266,9 +266,10 @@ export interface FunctionDetail extends MeasureSummary {
   measures: MeasureRow[];
 }
 
-export interface AgencyDetailBlock {
+export interface NonAdditiveBlock {
   label: string;
-  aggregation_role: 'agency_detail';
+  description?: string;
+  aggregation_role: 'agency_detail' | 'policy_measure';
   count: number;
   mixed: boolean;
   total_cents: number | null;
@@ -276,11 +277,15 @@ export interface AgencyDetailBlock {
   measures: MeasureRow[];
 }
 
+/** Backwards-compatible alias for the VIC agency-detail block. */
+export type AgencyDetailBlock = NonAdditiveBlock;
+
 export interface RegionDetail extends MeasureSummary {
   region: RegionRef;
   filters: RegionFilters;
   by_function: FunctionGroup[];
   measures: MeasureRow[];
+  non_additive?: NonAdditiveBlock[];
   agency_detail?: AgencyDetailBlock;
   area_profile?: AreaProfile | null;
 }
