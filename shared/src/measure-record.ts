@@ -281,6 +281,18 @@ export const MeasureRecordSchema = z.object({
   aihw_area_of_expenditure: z.string().min(1).optional(),
   aihw_printed_sign: z.enum(['positive', 'negative']).optional(),
   aihw_unit: z.string().min(1).optional(),
+  /** Exact published detailed funding source. */
+  aihw_detailed_source_of_funding: z.string().min(1).optional(),
+  /** State/territory code the published table applies to. */
+  aihw_state: z.string().min(1).optional(),
+  /** Separate funding marker: government vs non-government. */
+  aihw_funding_sector: z.enum(['government', 'non_government']).optional(),
+  /** Price basis of the published table (current prices). */
+  aihw_price_basis: z.string().min(1).optional(),
+  /** Published source table (for example Table B3). */
+  aihw_table: z.string().min(1).optional(),
+  /** AIHW release the table came from. */
+  aihw_release: z.string().min(1).optional(),
   /**
    * VIC council performance-indicator provenance (LGPRF). Performance values
    * are not money: a value may be a per-head amount, per-unit cost, percentage,

@@ -378,103 +378,128 @@ planning, complete/partial coverage, cap-warning rejection, header/unit detectio
 natural keys, multi-file de-duplication and idempotent re-runs, archive SHA-256 registration, and
 the missing-directory error path (existing rows preserved).
 
-## AIHW Health Expenditure (Phase 6.2)
+## AIHW Health Expenditure (Phase 6.2b — current 2024-25 release)
 
 Source id: `aihw-health-expenditure`. Publisher: Australian Institute of Health
-and Welfare. Dataset: **AIHW Health Expenditure Database**.
+and Welfare. Dataset: **AIHW Health expenditure Australia 2024–25 — supplementary
+tables** (HWE 110).
 
-### Premise test: METEOR is metadata-only
+### Premise test: current state × area × funding series exists
 
-The Phase 6.2 brief asked for the AIHW METEOR API first. METEOR is the AIHW
-**Metadata Online Registry**, not a data API: its homepage says
+METEOR is the AIHW **Metadata Online Registry**, not a data API: it says
+“METEOR does not contain any data, reports or statistical information.” It
+cannot expose the required expenditure matrix. The Phase 6.2 data.gov.au CSV was
+a superseded series ending at 2011-12.
 
-> “METEOR does not contain any data, reports or statistical information.”
+The current AIHW release publishes a live **state × area × funding** series in
+its supplementary data tables: tables **B1–B24** cover 2022-23, 2023-24 and
+2024-25 for all eight states/territories, 16 leaf areas of expenditure and seven
+detailed funding sources. This is the current COFOG 07 series; the old
+1997-98..2011-12 CSV is not shipped as current coverage.
 
-It serves data-element, data-set-specification and indicator _metadata_, so it
-cannot expose the required financial-year × state × area × funding-source
-expenditure matrix. The approved fallback is the official AIHW CSV published on
-data.gov.au CKAN under the AIHW organisation:
-
-- Dataset page: `https://data.gov.au/data/dataset/health-expenditure-in-australia`
-- Exact resource CSV:
-  `https://data.gov.au/data/dataset/f84b9baf-c1c1-437c-8c1e-654b2829848c/resource/88399d53-d55c-466c-8f4a-6cb965d24d6d/download/healthexpenditurebyareaandsource.csv`
-- SHA-256: `9eac6d733d96c2d81d684e6c2832ba3138999e304ec61b1e2b76106a1218016a`
-- Bytes: `469,727`
+- Report data page:
+  `https://www.aihw.gov.au/reports/health-welfare-expenditure/health-expenditure-australia-2024-25/data`
+- Exact XLSX:
+  `https://www.aihw.gov.au/getmedia/44735a41-5372-414e-9a18-d25f7c13fe4c/AIHW-HWE-110-HEA-2024-25-data-tables.xlsx`
+- SHA-256: `e4b98fa8a5ee5506d772af082e33b4cdc3d926ad1186fceba80a35012eeeca5b`
+- Bytes: `841,137`
+- Release/source date: 2024-25, published 14 October 2026
 - Licence: CC BY 3.0 Australia
-- Coverage: 1997-98 through 2011-12, eight states/territories, 15 areas of
-  expenditure, five detailed funding sources. The CKAN package description
-  explicitly says the data has been **superseded** by later AIHW releases; the
-  source note and row notes record that so no later year is inferred. The live
-  ingest therefore backfills a complete, audited historical matrix, not a fake
-  current-year figure.
+- Archived outside the repo at
+  `~/ausspend-source-archive/aihw-health-expenditure/AIHW-HWE-110-HEA-2024-25-data-tables.xlsx`;
+  metadata manifest `docs/source-archive/aihw-health-expenditure-2024-25.json`.
 
-The CSV is fetched live, SHA-256 archived outside the repo and hash-verified
-before parsing. `fetch_strategy` is `direct`.
+The live download is SHA-256 and byte-gated before parsing. The superseded CSV
+and its 6,778 rows are removed by the ingest script; no other source is touched.
 
-### Mapping (6,778 rows)
+### Mapping (1,747 rows)
 
-One row per financial year × state × area × broad source × detailed source:
+One row per fiscal year × state × leaf area × detailed funding source. Parent
+rows (`Hospital services`, `Primary health care`, `Other services`, `Total
+recurrent expenditure`, `Total health expenditure`) and funding total columns
+(Australian Government total, Government total, Non-government total, Total
+health expenditure) are used only for reconciliation and are never emitted.
 
-| CSV column                   | Stored as                                                             |
-| ---------------------------- | --------------------------------------------------------------------- |
-| `financial_year`             | `fiscal_year`                                                         |
-| `state`                      | `location.state` (state-wide only; no LGA/postcode is invented)       |
-| `area_of_expenditure`        | `aihw_area_of_expenditure` and `description`                          |
-| `broad_source_of_funding`    | `aihw_broad_source_of_funding` (`Government`/`Non-government`)        |
-| `detailed_source_of_funding` | `funding_source`                                                      |
-| `real_expenditure_millions`  | `amount_cents` at 1 $m = 100,000,000 cents (`aihw_unit` AUD_millions) |
+| Published column                                           | Stored as                                                             |
+| ---------------------------------------------------------- | --------------------------------------------------------------------- |
+| `fiscal_year` (2022-23..2024-25)                           | `fiscal_year`                                                         |
+| state from the table title                                 | `location.state`, `aihw_state` (state-wide only; no LGA/postcode)     |
+| `Area of expenditure`                                      | `aihw_area_of_expenditure` and `description`                          |
+| DVA / Health and other / Premium rebates / State and local | `aihw_detailed_source_of_funding` and `funding_source`                |
+| broad header (Government/Non-government)                   | `aihw_broad_source_of_funding`, `aihw_funding_sector`                 |
+| published $ million                                        | `amount_cents` at 1 $m = 100,000,000 cents (`aihw_unit` AUD_millions) |
 
-- `measure_type = actual`, `function_code = '07'` (COFOG Health),
-  `source_dataset = "AIHW Health Expenditure Database"`, `verified = true`,
-  `data_quality_flag = "verified"`.
+- **Field name:** the schema's canonical COFOG field is `function_code` (see
+  `shared/src/measure-record.ts` and `server/src/models/measure.ts`). The brief's
+  `function_cofog` refers to this field; there is no separate `function_cofog`
+  field. Every accepted AIHW row sets `function_code = '07'`, and the tests/DB
+  check assert that value.
+- `measure_type = actual`, `function_code = '07'` (COFOG Health) on every row,
+  `source_dataset = "AIHW Health Expenditure Australia 2024-25 — Supplementary
+tables"`, `verified = true`, `data_quality_flag = "verified"`.
 - **Government and Non-government are separate series.** Australian Government
-  rows are `jurisdiction_level=federal`, `jurisdiction="Australia"`. State and
-  local rows are `jurisdiction_level=state`, `jurisdiction=<state code>`.
-  Non-government rows are `jurisdiction_level=other`, `jurisdiction=<state
-code>` and never enter government spending.
+  detailed rows (DVA, Health and other, Premium rebates) are
+  `jurisdiction_level=federal`, `jurisdiction="Australia"`,
+  `aihw_funding_sector=government`. State and local government rows are
+  `jurisdiction_level=state`, `jurisdiction=<state code>`,
+  `aihw_funding_sector=government`. Non-government rows (HIF, Individuals,
+  Other) are `jurisdiction_level=other`, `jurisdiction=<state code>`,
+  `aihw_funding_sector=non_government`.
 - Every row is `aggregation_role=agency_detail` and therefore non-additive.
-  Government rows also carry `potential_double_count=true` because the same
-  services can be funded through both levels and state totals include
-  Commonwealth transfers. The API must never sum federal + state funding or
-  present total health expenditure as government spending.
-- The 122 negative constant-price values (mostly the medical-expense tax
-  rebate) are stored as non-negative magnitudes with
-  `aihw_printed_sign="negative"`; they are never dropped, flipped or zeroed.
-  Published zeros are kept as zero cents (a real published value, not a fill).
+  Government rows carry `potential_double_count=true` because the same services
+  can be funded through both levels; non-government rows carry `false`. The API
+  must never sum government + non-government, federal + state, or any
+  cross-state/area/source/year combination.
+- Values are published current-price $ million; each is converted explicitly to
+  integer cents. `. .` (not applicable), `—` (rounded to zero) and blank cells
+  are skipped, never zero-filled. A published numeric zero is kept.
+- No cross-source sums are created. The previous 1997-98..2011-12 series is not
+  mixed with the current 2022-23..2024-25 rows.
 
 ### Spot-check against AIHW published tables
 
-The CSV's 2011-12 state totals (sum of all funding rows) match the AIHW
-_Health expenditure Australia 2011–12_ report within published rounding:
+The emitted leaf-area × detailed-source components reconcile to each table's
+published `Total health expenditure` within the published rounded-$m tolerance
+(maximum difference across all 24 tables: $19m). Three independent spot checks:
 
-| State | CSV total ($m) | AIHW table | AIHW total ($m) | Difference |
-| ----- | -------------: | ---------- | --------------: | ---------: |
-| NSW   |         43,310 | Table B3   |          43,308 |         +2 |
-| VIC   |         34,035 | Table B6   |          34,033 |         +2 |
-| QLD   |         29,019 | Table B9   |          29,019 |          0 |
+| State | Year    | AIHW published total ($m) | Component sum ($m) | Difference |
+| ----- | ------- | ------------------------: | -----------------: | ---------: |
+| NSW   | 2024-25 |                    83,816 |             83,817 |         +1 |
+| VIC   | 2023-24 |                    67,958 |             67,959 |         +1 |
+| QLD   | 2024-25 |                    61,959 |             61,959 |          0 |
 
-National constant-price 2011-12 total: CSV 140,248 $m vs report Table A6
-140,241 $m (+7, rounding). The ±2 $m state differences are the published
-medical-expense-tax-rebate rounding; no value is adjusted to force a match.
+### DB delta and reproduce
+
+Before: **689,090** measures, AIHW **6,778**; after replacing only AIHW rows:
+**684,059** measures, AIHW **1,747** (all COFOG 07; 991 government + 756
+non-government; 8 states). Every other source is byte-for-byte unchanged
+(`other_sources_unchanged=true`).
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+npm run ingest:aihw
+# [ingest:aihw] before all=689090 aihw=6778 other_sources=682312
+# [ingest:aihw] deleted stale aihw-health-expenditure rows=6778
+# [ingest:aihw] aihw-health-expenditure: success fetched=1747 upserted=1747
+# [ingest:aihw] db source_rows=1747 cofog07=1747 states=8 additive_violations=0 other_sources_unchanged=true all_measures=684059
+```
 
 ### Verify
 
 ```bash
-# source status and row count
 mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
-  db.data_sources.findOne({source_id:"aihw-health-expenditure"});
-  db.measures.countDocuments({source_id:"aihw-health-expenditure"});
-'
-# government/non-government and jurisdiction split
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
-  db.measures.aggregate([{$match:{source_id:"aihw-health-expenditure"}},
-    {$group:{_id:{broad:"$aihw_broad_source_of_funding",level:"$jurisdiction_level"},n:{$sum:1}}}]).toArray()
+  print(db.measures.countDocuments({source_id:"aihw-health-expenditure"}));
+  print(db.measures.countDocuments({source_id:"aihw-health-expenditure",function_code:"07"}));
+  printjson(db.measures.aggregate([{$match:{source_id:"aihw-health-expenditure"}},
+    {$group:{_id:{year:"$fiscal_year",sector:"$aihw_funding_sector",level:"$jurisdiction_level"},n:{$sum:1}}}]).toArray())
 '
 ```
 
-Tests: `server/test/aihw-health-expenditure.test.ts` covers unit conversion,
-source/jurisdiction separation, no-sum, negative signs, COFOG 07, natural keys,
-idempotency, malformed-row reporting and no deletes.
+Tests: `server/test/aihw-health-expenditure.test.ts` covers the 24-table/8-state/
+3-year coverage, COFOG 07, current years, government/non-government and
+federal/state/other separation, unit conversion, skipped non-numeric markers,
+natural keys, idempotency, no-sum and three published state/year totals plus a
+SHA-verified real-archive parse.
 
 ## Narrow live run
 

@@ -146,8 +146,20 @@ export interface MeasureDocument {
   aihw_area_of_expenditure?: string;
   /** Printed sign when a negative AIHW amount is stored as a magnitude. */
   aihw_printed_sign?: 'positive' | 'negative';
-  /** AIHW published unit, AUD_millions (real/constant 2011-12 prices). */
+  /** AIHW published unit, AUD_millions (current prices). */
   aihw_unit?: string;
+  /** AIHW exact published detailed funding source. */
+  aihw_detailed_source_of_funding?: string;
+  /** AIHW state/territory code the published table applies to. */
+  aihw_state?: string;
+  /** AIHW separate funding marker: government vs non-government. */
+  aihw_funding_sector?: 'government' | 'non_government';
+  /** AIHW price basis (current_prices). */
+  aihw_price_basis?: string;
+  /** AIHW published source table (for example Table B3). */
+  aihw_table?: string;
+  /** AIHW release (2024-25). */
+  aihw_release?: string;
   /** VIC LGPRF performance value (non-monetary; may be negative or fractional). */
   performance_value?: number;
   /** Published textual result when the source result is not numeric. */
@@ -296,6 +308,16 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     aihw_area_of_expenditure: { type: String, index: true },
     aihw_printed_sign: { type: String, enum: ['positive', 'negative'] },
     aihw_unit: { type: String },
+    aihw_detailed_source_of_funding: { type: String, index: true },
+    aihw_state: { type: String, index: true },
+    aihw_funding_sector: {
+      type: String,
+      enum: ['government', 'non_government'],
+      index: true,
+    },
+    aihw_price_basis: { type: String, index: true },
+    aihw_table: { type: String },
+    aihw_release: { type: String },
     performance_value: { type: Number, required: false },
     performance_value_text: { type: String },
     performance_unit: { type: String, index: true },

@@ -188,11 +188,14 @@ AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, N
 QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401 + 48,815 historical, VIC VLGGC ABS1/ABS2-3 9,059 + 82,857 historical, ABS GFS PNFC
 18, Sydney Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5,
 Sydney Trains 6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
-Phase 6.2 adds **6,778 AIHW health-expenditure rows** (1997-98..2011-12, state × area × funding
-source) from the official data.gov.au AIHW CSV; METEOR is metadata-only and contains no data. Those
-rows are `agency_detail`, so government and non-government funding stay separate and no total is
-computed. The live DB is the authority for the current count (it also contains the VIC LGPRF rows
-landed concurrently); the latest verified snapshot is 689,090 measures.
+Phase 6.2b replaces the superseded AIHW 1997-98..2011-12 CSV with the current AIHW 2024-25
+supplementary tables: **1,747 AIHW health-expenditure rows** for 2022-23..2024-25, all COFOG 07,
+covering eight states/territories × 16 leaf areas × seven detailed funding sources. Government
+(991 rows, federal/state) and non-government (756 rows) funding stay separate; every row is
+`agency_detail` and no total is computed. METEOR remains metadata-only; the current series comes
+from the report data tables, not METEOR. Only `aihw-health-expenditure` rows are replaced; every
+other source is unchanged. The live DB is the authority for the current count (it also contains the
+VIC LGPRF rows landed concurrently); the latest verified snapshot is 684,059 measures.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
