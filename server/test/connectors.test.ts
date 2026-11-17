@@ -39,6 +39,7 @@ const LIVE_IDS = [
   'bayside-gpfs',
   'randwick-gpfs',
   'ryde-gpfs',
+  'north-sydney-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -57,9 +58,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships forty-nine connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(49);
-    expect(new Set(CONNECTOR_IDS).size).toBe(49);
+  it('ships fifty connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(50);
+    expect(new Set(CONNECTOR_IDS).size).toBe(50);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -231,6 +232,10 @@ describe('federal connector registry', () => {
     expect(getConnector('ryde-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('ryde-gpfs')?.source_url).toContain('ryde.nsw.gov.au');
     expect(getConnector('ryde-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('north-sydney-gpfs')?.status).toBe('active');
+    expect(getConnector('north-sydney-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('north-sydney-gpfs')?.source_url).toContain('northsydney.nsw.gov.au');
+    expect(getConnector('north-sydney-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');

@@ -184,7 +184,7 @@ describe('GET /api/meta/coverage', () => {
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
-    expect(response.body.connectors).toHaveLength(49);
+    expect(response.body.connectors).toHaveLength(50);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'abs-gfs' ||
@@ -218,6 +218,7 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'bayside-gpfs' ||
           connector.id === 'randwick-gpfs' ||
           connector.id === 'ryde-gpfs' ||
+          connector.id === 'north-sydney-gpfs' ||
           connector.id === 'vic-budget' ||
           connector.id === 'qld-budget' ||
           connector.id === 'qld-qgip' ||
