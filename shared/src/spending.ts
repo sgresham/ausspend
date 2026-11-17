@@ -155,6 +155,8 @@ export const SpendingMeasureRowSchema = z.object({
   /** VLGGC VGC1 provenance; absent on every other source. */
   statement: z.string().min(1).optional(),
   reconciliation_status: z.string().min(1).optional(),
+  /** Printed source-vs-comparator variance a human must confirm; never a silent pass. */
+  human_spot_check: z.string().min(1).optional(),
   vlgc_section: z.enum(['expense', 'revenue']).optional(),
   vlgc_measure: z.string().min(1).optional(),
   vlgc_function: z.string().min(1).optional(),

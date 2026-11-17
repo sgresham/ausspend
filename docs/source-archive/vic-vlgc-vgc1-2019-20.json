@@ -1,0 +1,30 @@
+{
+  "dataset": "VLGGC Annual Questionnaire VGC1 — Expenditure and Revenue 2019-20",
+  "fiscal_year": "2019-20",
+  "source_url": "https://www.localgovernment.vic.gov.au/funding-programs/victoria-grants-commission/consultation-and-operations",
+  "resource_url": "https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0030/168483/2019-20-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx",
+  "retrieved_from": "https://web.archive.org/web/20220309015720id_/https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0030/168483/2019-20-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx",
+  "snapshot_timestamp": "20220309015720",
+  "license": "VLGGC attribution/permission — NOT CC BY. Conditions of Use: \"Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.\" Councils provide permission for this online release; the Commission does not guarantee the material to be free from error. Derived rows only; the source workbook is not redistributed.",
+  "attribution": "Victorian Local Government Grants Commission data collection",
+  "conditions_of_use": "Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.",
+  "disclaimer": "The data in these spreadsheets is provided for information purposes only. These spreadsheets are produced from data sourced annually from Local Government (councils) in Victoria. Councils provide permission for this online release. The data has been analysed, but the Victorian Local Government Grants Commission does not guarantee the material to be free from error.",
+  "caveat": "Council-supplied VLGGC questionnaire return, not audited GPFS; provisional and unverified. Non-additive rows only; no cross-council total; never mixed with vic-budget, ABS GFS, LGPRF, waste or NSW council data.",
+  "retrieved_at": "2026-11-17T21:01:37.225Z",
+  "unit": "whole AUD (x100 cents); cells carry cents",
+  "sha256": "a9043c1af6dc1d1e7e16e6b40faace2a4d17ac957b1cf105e1cfb097b1219c5b",
+  "bytes": 853697,
+  "council_count": 79,
+  "totals_suppressed": 11,
+  "rows": 5426,
+  "source_totals_check": {
+    "expense_sum_cents": 939589108829,
+    "revenue_sum_cents": 1088833823846,
+    "expense_total_cents": 939589108828,
+    "revenue_total_cents": 1088833823846,
+    "expense_delta_cents": 1,
+    "revenue_delta_cents": 0
+  },
+  "reconciliation": null,
+  "notes": "Derived rows only; the workbook is not redistributed. The source Totals row is suppressed and no cross-council total is emitted. Every row is non-additive agency detail, provisional/local_government and verified=false. Per-year fiscal_year and natural keys prevent cross-year collision. The five 2024-25 VGC1 rows stay under the same source_id with their own fiscal_year."
+}

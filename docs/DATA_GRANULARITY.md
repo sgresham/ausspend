@@ -382,7 +382,10 @@ types. The no-sum rules are listed in §4.
 > near-statement financial granularity — expenditure/revenue by function and nature, capital
 > outlays, balance sheet and cash flow — but is council-supplied and unaudited. For Greater Bendigo
 > FY2024-25 its income-statement and balance-sheet totals reconcile exactly to the audited GPFS;
-> capital outlays differ by $473,353 and need a documented bridge. The LGPRF/Know Your Council data
+> capital outlays differ by $473,353 and need a documented bridge. The historical pilot adds
+> FY2019-20..FY2023-24 under the same two source ids (27,099 VGC1 + 44,548 ABS non-additive rows),
+> each year keyed by its own `fiscal_year`; FY2015-16..FY2018-19 are explicitly deferred. The
+> LGPRF/Know Your Council data
 > set covers all 79 councils but only with 59 performance indicators (CC BY 4.0), and no single
 > official dataset publishes the audited GPFS for all 79. The 28 `vic-budget` rows are statewide
 > state-budget rows, not council spending; council rows are never summed with state rows or with
