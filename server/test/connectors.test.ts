@@ -15,20 +15,21 @@ const LIVE_IDS = [
   'dubbo-council',
   'vic-budget',
   'qld-budget',
+  'qld-qgip',
 ];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships thirteen connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(13);
-    expect(new Set(CONNECTOR_IDS).size).toBe(13);
+  it('ships fourteen connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(14);
+    expect(new Set(CONNECTOR_IDS).size).toBe(14);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
     );
   });
 
-  it('registers AusTender, PBS, GrantConnect, NSW Budget, CKAN, Dubbo, VIC and QLD as live and the other five as stubs', () => {
+  it('registers AusTender, PBS, GrantConnect, NSW Budget, CKAN, Dubbo, VIC, QLD and QGIP as live and the other five as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -100,6 +101,10 @@ describe('federal connector registry', () => {
     expect(getConnector('qld-budget')?.status).toBe('active');
     expect(getConnector('qld-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('qld-budget')?.source_url).toContain('data.qld.gov.au');
+    expect(getConnector('qld-qgip')?.status).toBe('active');
+    expect(getConnector('qld-qgip')?.jurisdiction_level).toBe('state');
+    expect(getConnector('qld-qgip')?.source_url).toContain('data.qld.gov.au');
+    expect(getConnector('qld-qgip')?.notes).toMatch(/grant_award/);
     expect(getConnector('nope')).toBeUndefined();
   });
 });

@@ -40,6 +40,13 @@ link is year-stamped, treat it as "archive at retrieval" rather than permanently
 > only (3,174,540,400,000 cents) and BP4 (396,974,700,000 cents) is shown separately. BP4 revenue
 > measures and blank/zero/negative 2026-27 amounts are excluded. No COFOG function; rows are
 > provisional. See [QLD_INGESTION.md](QLD_INGESTION.md).
+>
+> **QGIP update (2026-11-17): ingested as a separate source `qld-qgip`.** The latest annual
+> consolidated QGIP expenditure CSV (2024-25) plus its data dictionary are archived and parsed.
+> Units are whole AUD per the dictionary. Only Grant (`grant_award`, 27,658 rows) and Frontline
+> service procurement (`contract`, 6,342 rows) are ingested; Concession, Loan and Direct government
+> investment (1,031 rows) and zero-dollar rows (21) are rejected. Grants and contracts are never
+> summed. See [PHASE4_INGESTION.md](PHASE4_INGESTION.md).
 
 - **Budget:** <https://budget.qld.gov.au/> (2026-27). Papers index
   <https://budget.qld.gov.au/budget-papers/> exposes BP1–BP4 PDFs and Service Delivery Statements.

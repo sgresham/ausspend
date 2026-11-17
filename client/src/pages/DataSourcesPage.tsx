@@ -202,6 +202,23 @@ export function DataSourcesPage() {
                       </Link>
                     </Typography>
                   ) : null}
+                  {source.source_id === 'qld-qgip' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link
+                        component={RouterLink}
+                        to="/search?measure_type=grant_award&jurisdiction_level=state"
+                      >
+                        Browse QLD QGIP grant_award rows with provenance →
+                      </Link>
+                      {' · '}
+                      <Link
+                        component={RouterLink}
+                        to="/search?measure_type=contract&jurisdiction_level=state"
+                      >
+                        Browse QLD QGIP contract rows →
+                      </Link>
+                    </Typography>
+                  ) : null}
 
                   {source.source_id === 'dubbo-council' ? (
                     <Typography variant="body2" sx={{ mt: 1.5 }}>

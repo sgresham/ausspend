@@ -1,0 +1,28 @@
+{
+  "dataset": "Queensland Government Investment Portal (QGIP) — Expenditure",
+  "fiscal_year": "2024-25",
+  "source_url": "https://www.data.qld.gov.au/dataset/queensland-government-investment-portal-expenditure-data-consolidated-view",
+  "license": "CC BY 4.0",
+  "attribution": "© State of Queensland (Queensland Treasury), 2025",
+  "retrieved_at": "2026-11-17T01:55:31.983Z",
+  "unit": "AUD dollars (x100 cents)",
+  "files": [
+    {
+      "title": "QGIP — QGIP expenditure data dictionary",
+      "filename": "expenditure-data-dictionary-data-file-standards-september-2024.pdf",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/80e06969-7193-4b94-a425-f52e27ece371/download/expenditure-data-dictionary-data-file-standards-september-2024.pdf",
+      "sha256": "71c3660e423006ff017bd0f4f133af552cafb2e697968b89e8a46f9ad1cb112a",
+      "bytes": 811721,
+      "archived_from": "direct"
+    },
+    {
+      "title": "QGIP — 2024-25 consolidated QGIP expenditure",
+      "filename": "2024-25-expenditure-consolidated.csv",
+      "url": "https://www.data.qld.gov.au/dataset/b102c881-2c7f-484a-a8b6-b056fe318964/resource/1c1786e3-16b7-4fc0-ac3f-4d9314e59bdf/download/2024-25-expenditure-consolidated.csv",
+      "sha256": "f0a7aeb6295a9b7c7ada6103d41b0802b337f2ad59e7fcc58337eac41cbb5ef4",
+      "bytes": 17846970,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "One annual consolidated QGIP expenditure CSV plus the official data dictionary. Only Grant (grant_award) and Frontline service procurement (contract) rows are ingested; Concession, Loan and Direct government investment are rejected as out-of-scope, as are zero-dollar rows. Grants and contracts are never summed into one QLD total. funding_source is the QLD funding agency acronym; location is statewide or the supplied service-delivery postcode/suburb/LGA. Bytes are archived outside the repo."
+}

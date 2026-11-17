@@ -1,11 +1,16 @@
-# Phase 4 — VIC Budget 2026-27 ingestion (DataVic CKAN)
+# Phase 4 — VIC Budget 2026-27 and QLD QGIP expenditure ingestion (CKAN)
 
-**Status: VIC only, live and ingested into `ausspend_dev` on 2026-11-17. No QLD, WA, SA,
-TAS, ACT, NT, ACNC, QGIP or ABS GFS source was started, fetched or written by this item.**
-**28 VIC rows: 20 additive COFOG rows and 8 explicitly non-additive DTF agency-detail rows.**
+**Status: live and ingested into `ausspend_dev` on 2026-11-17. Sources: VIC Budget 2026-27
+(DataVic CKAN) and the Queensland Government Investment Portal (QGIP) 2024-25 consolidated
+expenditure CSV (data.qld CKAN). No WA, SA, TAS, ACT, NT, ACNC or ABS GFS source was started,
+fetched or written by this work. QLD BP3/BP4 (`qld-budget`) remains a separate source and is
+preserved unchanged.**
+**VIC: 28 rows — 20 additive COFOG rows and 8 explicitly non-additive DTF agency-detail rows.**
+**QGIP: 34,000 rows — 27,658 `grant_award` and 6,342 `contract`, never summed together.**
+The QGIP section is at the end of this document.
 
-This document records exactly what was ingested, how the workbooks are structured, the units,
-the COFOG mapping, the source archive hashes, and the limitations. It is the reference for
+This document records exactly what was ingested, how the files are structured, the units, the
+COFOG/measure mapping, the source archive hashes, and the limitations. It is the reference for
 re-running and for any later Phase 4 source.
 
 ## Source discovery
@@ -213,3 +218,125 @@ db.measures.findOne({ source_id: 'vic-budget', function_code: '07', fiscal_year:
   question recorded in the row notes. Do not roll `045` into `04`; a human must confirm the mapping.
 - Nothing is human-verified: every VIC row is `verified: false`.
 - No cross-level or cross-measure-type summing is performed or implied.
+
+---
+
+# QGIP 2024-25 expenditure — Queensland Government Investment Portal (data.qld CKAN)
+
+**Source id `qld-qgip` (separate from `qld-budget`). 34,000 rows: 27,658 `grant_award` and
+6,342 `contract`. Grants and contracts are never summed into a single QLD total.**
+
+## Discovery
+
+data.qld CKAN is keyless: `https://www.data.qld.gov.au/api/3/action/`. The connector runs three
+`package_search` queries, 500 ms apart — `QGIP expenditure`,
+`grants and procured frontline services`, `Queensland Government Investment Portal` — then
+`package_show?id=b102c881-2c7f-484a-a8b6-b056fe318964`.
+
+Package: `queensland-government-investment-portal-expenditure-data-consolidated-view`
+(“Queensland Government Investment Portal - Expenditure Data (consolidated view)”, Queensland
+Treasury, CC BY 4.0, metadata modified 2025-12-18).
+
+Selected resource (newest annual expenditure CSV; program-funding and older years are ignored):
+`2024-25 consolidated QGIP expenditure`, resource id
+`1c1786e3-16b7-4fc0-ac3f-4d9314e59bdf`, 17,846,970 bytes, SHA-256
+`f0a7aeb6295a9b7c7ada6103d41b0802b337f2ad59e7fcc58337eac41cbb5ef4`. The official
+`QGIP expenditure data dictionary`, resource id `80e06969-7193-4b94-a425-f52e27ece371`, is
+archived alongside it (SHA-256 `71c3660e423006ff017bd0f4f133af552cafb2e697968b89e8a46f9ad1cb112a`).
+Both files are archived outside the repo; the committed metadata manifest is
+[`docs/source-archive/qld-qgip-2024-25.json`](source-archive/qld-qgip-2024-25.json).
+
+The CSV is **cp1252**, not UTF-8; it is decoded chunk-by-chunk and stream-parsed with the
+csv-parse stream (never loaded as one in-memory string). The file has 29 columns and 35,052 data
+rows.
+
+## Units — confirmed, never inferred
+
+The data dictionary states: “Financial year expenditure ... Total paid ... Figures should be
+entered without punctuation e.g. enter 150500 not $150,500.” Units are **whole Australian
+dollars**. Conversion is `Math.round(dollars × 100)` integer cents, checked with
+`Number.isSafeInteger`. The observed maximum is $2,410,403,853; the file also carries decimals
+(e.g. `...82.85` cents-level precision), which round to cents.
+
+## Grant vs contract — from `Assistance type1`, never defaulted
+
+`Assistance type1` is mandatory and has exactly five published values. The dictionary defines
+Concession, Loan and Direct government investment as distinct from grants and procurement. Only:
+
+| `Assistance type1`            | rows   | measure_type  |
+| ----------------------------- | ------ | ------------- |
+| Grant                         | 27,658 | `grant_award` |
+| Frontline service procurement | 6,342  | `contract`    |
+| Concession                    | 846    | **rejected**  |
+| Loan                          | 182    | **rejected**  |
+| Direct government investment  | 3      | **rejected**  |
+
+Rows are rejected, not relabelled. Zero/negative `Financial year expenditure` rows are also
+rejected as no-spend (21 in-scope rows: 12 Grant, 9 Frontline). Reconciliation:
+**35,052 source rows = 34,000 ingested + 1,052 rejected (1,031 out-of-scope + 21 zero)**. There is
+no overlap: the out-of-scope count is by assistance type over every amount, the zero count is the
+in-scope remainder.
+
+## Field mapping
+
+| Target field      | Source column / rule                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------- |
+| amount_cents      | `Financial year expenditure` (whole dollars × 100)                                    |
+| measure_type      | `Assistance type1`: Grant → `grant_award`; Frontline service procurement → `contract` |
+| fiscal_year       | dataset year `2024-25`                                                                |
+| project_name      | `Program title` (fallback `Sub-program title` / `Purpose`)                            |
+| description       | `Purpose` (fallback program/sub-program)                                              |
+| delivery_entity   | `Legal entity name` (fallback `Service provider name`)                                |
+| funding_source    | `Funding agency` QLD department acronym (26 agencies)                                 |
+| location          | `state: "QLD"` + `lga_name` from service-delivery LGA where supplied                  |
+| source_dataset    | `Queensland Government Investment Portal (QGIP) — Expenditure`                        |
+| source_url        | the CKAN resource download URL                                                        |
+| source_detail     | archive SHA-256 recorded in `notes` (there is no separate model field)                |
+| natural_key       | `hash(resource_id + row_hash + fiscal_year)`, prefix `qld-qgip:`                      |
+| verified          | `false`                                                                               |
+| data_quality_flag | `provisional` (+ `; statewide_only` / `; location_approximate`)                       |
+| aggregation_role  | `additive`                                                                            |
+
+The separate `Funding source` column (Queensland Government / Australian Government / Combined /
+Other) is a money-source classification, not the agency; it is recorded in `notes`.
+
+`row_hash` includes the 1-based data-row number as well as every cell, so genuinely repeated
+identical payments stay as separate rows instead of being silently collapsed; re-running the same
+resource is still idempotent.
+
+## Location
+
+- `Statewide = Yes` → `location: { state: "QLD" }`, flag `provisional; statewide_only`.
+- `Statewide = No` → service-delivery postcode/suburb/LGA where supplied; the LGA is stored as
+  `location.lga_name`, postcode/suburb in `notes`.
+- Published sentinels `1111` (multiple LGAs), `1001` (not applicable/privacy) and `1234`
+  (interstate) mean no fixed location → flag `provisional; location_approximate`. No coordinate is
+  parsed, averaged or invented.
+
+## Ingestion and idempotency
+
+```
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:phase4 -- --source=qld-qgip
+```
+
+The runner upserts on `natural_key`, so a second run updates the same 34,000 documents and creates
+none. It never deletes and never touches `qld-budget`, VIC, NSW, federal or other sources. The
+ingest script prints per-`measure_type` rows and cents and **no combined QLD total**.
+
+## API / UI
+
+- `GET /api/v1/meta/coverage` reports `qld-qgip` live, `qld_qgip_last_ingested_at` and
+  `qld_qgip_records`.
+- `GET /api/v1/data-sources` lists the source with its archive notes and record count.
+- `/data-sources` links to the `grant_award` and `contract` search filters (separately).
+- A QLD jurisdiction summary with both types present is `mixed: true` with a null total and
+  `total_by_measure_type`; grants and contracts are never added together.
+
+## Limitations
+
+- QGIP expenditure is **actual** cash-accounting expenditure for 2024-25, not budget.
+- No COFOG function is defensible from QGIP; `function_code` is blank and every row is
+  `provisional`.
+- 1,031 out-of-scope assistance types and 21 zero-dollar in-scope rows are intentionally excluded.
+- Nothing is human-verified: every row is `verified: false`.
+- No cross-measure-type summing is performed or implied.

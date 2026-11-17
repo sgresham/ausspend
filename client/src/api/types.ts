@@ -107,6 +107,10 @@ export interface CoverageResponse {
     degraded: string[];
     stubs: string[];
     nsw_ckan_last_ingested_at?: string | null;
+    vic_budget_last_ingested_at?: string | null;
+    qld_budget_last_ingested_at?: string | null;
+    qld_qgip_last_ingested_at?: string | null;
+    qld_qgip_records?: number;
     deferred_resources?: DeferredResource[];
     note: string;
   };
