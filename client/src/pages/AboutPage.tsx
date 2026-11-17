@@ -9,7 +9,7 @@ export function AboutPage() {
   return (
     <Box data-testid="about-page">
       <Typography variant="h1" gutterBottom>
-        About ausspend
+        About AusSpend
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         ausspend is an explorer for Australian government spending organised by COFOG function,

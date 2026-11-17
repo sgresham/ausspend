@@ -73,7 +73,7 @@ export function HomePage() {
   return (
     <Box>
       <Typography variant="h1" gutterBottom>
-        ausspend
+        AusSpend
       </Typography>
 
       <Card

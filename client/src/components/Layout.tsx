@@ -83,7 +83,7 @@ export function Layout() {
       <Toolbar sx={{ gap: 1 }}>
         <AccountBalanceIcon color="primary" />
         <Typography variant="h6" component="span" noWrap>
-          ausspend
+          AusSpend
         </Typography>
       </Toolbar>
       <Divider />
