@@ -110,8 +110,10 @@ export function DataSourcesPage() {
         recorded as a provenance caveat. Rows are provisional and unverified; government-named
         funding rows carry a potential-double-count warning. SOC rows are never added to government
         program spending, the PNFC benchmark, another SOC entity or each other, and are exposed only
-        at <code>/api/soc</code> with separate entity/source badges. WA remains a stub. No grant row
-        is estimated or zero-filled.
+        at <code>/api/soc</code> with separate entity/source badges. WA Budget EFO tables are live
+        from catalogue.data.wa.gov.au CKAN: no machine-readable BP2 agency-expense dataset is
+        published, so Chapter 5 major spending changes are provisional and Chapter 6 asset
+        investment is reconciled to its printed Total. No grant row is estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -435,9 +437,11 @@ export function DataSourcesPage() {
         is live for one local council only (Dubbo Regional Council), and{' '}
         <code>aihw-health-expenditure</code> is live from the official data.gov.au CKAN CSV (METEOR
         is metadata-only): its real/constant-price government and non-government series are
-        non-additive. <code>grantconnect</code> is blocked pending a usable adaptor (no public award
-        API; no direct scraper) and the remaining six connectors (three federal and VIC/QLD/WA) are
-        stubs. No other council is covered.
+        non-additive. <code>wa-budget</code> is live from catalogue.data.wa.gov.au CKAN EFO tables
+        (provisional, no BP2 machine-readable agency detail; no COFOG invented).{' '}
+        <code>grantconnect</code> is blocked pending a usable adaptor (no public award API; no
+        direct scraper) and the remaining two federal connectors are stubs. No other council is
+        covered.
       </Typography>
 
       {!coverage.data && coverage.error ? (

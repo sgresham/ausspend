@@ -1,5 +1,31 @@
 export { CONNECTORS, CONNECTOR_IDS, getConnector } from './registry.js';
 export {
+  WA_CAVEAT,
+  WA_CKAN_BASE,
+  WA_DATASET,
+  WA_ID,
+  WA_LICENSE,
+  WA_NAME,
+  WA_PUBLISHER,
+  WA_SOURCE_URL,
+  WA_UNIT,
+  WA_UNIT_LABEL,
+  WA_UNIT_TO_CENTS,
+  createWaBudgetConnector,
+  discoverWaEfo,
+  parseWaWorkbooksAsync,
+  selectLatestWaEfoPackage,
+  selectWaWorkbookResources,
+  waMeasureTypeForYear,
+  waMillionsToCents,
+  waNaturalKey,
+  waPackageYear,
+  type CkanPackage,
+  type CkanResource,
+  type WaParseResult,
+} from './wa-budget.js';
+
+export {
   AIHW_ATTRIBUTION,
   AIHW_CAVEAT,
   AIHW_DATASET,

@@ -71,7 +71,7 @@ const workingConnector = activeConnector(
   async () => [{ id: 'c-1' }],
 );
 
-const stubConnector = getConnector('wa-budget')!;
+const stubConnector = getConnector('federal-budget-portal')!;
 
 beforeAll(async () => {
   await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
@@ -90,14 +90,14 @@ describe('F1 ingestion runner', () => {
     });
 
     expect(result.results.map((entry) => `${entry.source_id}:${entry.log_status}`)).toEqual([
-      'wa-budget:skipped',
+      'federal-budget-portal:skipped',
       'fake-failing-source:error',
       'fake-contract-source:success',
     ]);
 
     const logs = await IngestionLogModel.find({}).sort({ source_id: 1 }).lean();
     expect(logs).toHaveLength(3);
-    expect(logs.find((log) => log.source_id === 'wa-budget')).toMatchObject({
+    expect(logs.find((log) => log.source_id === 'federal-budget-portal')).toMatchObject({
       status: 'skipped',
       records_fetched: 0,
       records_upserted: 0,
@@ -112,7 +112,7 @@ describe('F1 ingestion runner', () => {
       records_upserted: 1,
     });
 
-    const stubSource = await DataSourceModel.findOne({ source_id: 'wa-budget' }).lean();
+    const stubSource = await DataSourceModel.findOne({ source_id: 'federal-budget-portal' }).lean();
     expect(stubSource).toMatchObject({ status: 'stub', records_ingested: 0 });
     const failedSource = await DataSourceModel.findOne({
       source_id: 'fake-failing-source',
@@ -236,12 +236,12 @@ describe('F1 extended measure shape and API', () => {
     // ABS GFS, ABS GFS PNFC, AusTender, PBS, GrantConnect (manual export), NSW
     // Budget, CKAN, Dubbo, Dubbo GPFS, City of Sydney GPFS, Blacktown GPFS, Parramatta GPFS, Northern Beaches GPFS, Canterbury-Bankstown GPFS, Sutherland Shire GPFS, Wollongong GPFS, Newcastle GPFS, Lake Macquarie GPFS, Maitland GPFS, Coffs Harbour GPFS, MidCoast GPFS, Port Macquarie-Hastings GPFS, Tweed Shire GPFS, Shoalhaven GPFS, Shellharbour GPFS, Waverley GPFS, Willoughby City GPFS, Inner West GPFS, Bayside GPFS, Randwick GPFS, Ryde GPFS, North Sydney GPFS, Cumberland GPFS, Georges River GPFS, Fairfield GPFS, Liverpool GPFS, Ku-ring-gai GPFS, VIC Budget, QLD Budget, QLD QGIP, ACNC charity and
     // VIC VLGGC VGC1, VIC VLGGC ABS1/ABS2-3, Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation, Landcom,
-    // Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink SOC and AIHW health expenditure are wired; the remaining three are stubs.
+    // Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink SOC, AIHW health expenditure and WA Budget EFO are wired; the remaining two are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(57);
-    expect(coverage.body.connector_status_counts.stub).toBe(3);
+    ).toBe(58);
+    expect(coverage.body.connector_status_counts.stub).toBe(2);
     expect([
       ...coverage.body.federal_ingestion.live,
       ...coverage.body.federal_ingestion.degraded,
@@ -254,13 +254,19 @@ describe('F1 extended measure shape and API', () => {
     expect(logs.status).toBe(200);
     expect(logs.body.logs.length).toBeGreaterThanOrEqual(3);
     expect(logs.body.logs.map((log: { source_id: string }) => log.source_id)).toEqual(
-      expect.arrayContaining(['wa-budget', 'fake-failing-source', 'fake-contract-source']),
+      expect.arrayContaining([
+        'federal-budget-portal',
+        'fake-failing-source',
+        'fake-contract-source',
+      ]),
     );
 
-    const legacyLogs = await request(app).get('/api/ingestion-logs?source_id=wa-budget');
+    const legacyLogs = await request(app).get(
+      '/api/ingestion-logs?source_id=federal-budget-portal',
+    );
     expect(legacyLogs.status).toBe(200);
     expect(legacyLogs.body.logs[0]).toMatchObject({
-      source_id: 'wa-budget',
+      source_id: 'federal-budget-portal',
       status: 'skipped',
     });
   });
