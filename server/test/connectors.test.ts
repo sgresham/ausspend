@@ -33,6 +33,7 @@ const LIVE_IDS = [
   'tweed-shire-gpfs',
   'shoalhaven-gpfs',
   'shellharbour-gpfs',
+  'waverley-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -51,9 +52,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships forty-three connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(43);
-    expect(new Set(CONNECTOR_IDS).size).toBe(43);
+  it('ships forty-four connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(44);
+    expect(new Set(CONNECTOR_IDS).size).toBe(44);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -201,6 +202,10 @@ describe('federal connector registry', () => {
     expect(getConnector('shellharbour-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('shellharbour-gpfs')?.source_url).toContain('shellharbour.nsw.gov.au');
     expect(getConnector('shellharbour-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('waverley-gpfs')?.status).toBe('active');
+    expect(getConnector('waverley-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('waverley-gpfs')?.source_url).toContain('waverley.nsw.gov.au');
+    expect(getConnector('waverley-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
