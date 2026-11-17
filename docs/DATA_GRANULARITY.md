@@ -486,6 +486,17 @@ deep-detail work here; that is item p67.** Licence: each report is © the corpor
 public-interest research, not an open-data licence grant. **Priority P12 — do not deepen as a
 spending breakdown.**
 
+**Deep-detail update (2026-11-17, item p67):** the WaterNSW 2024-25 notes do publish parseable,
+reconciling line-item tables beyond the face statement. The deep-detail item added 39 note rows
+(Note 2 water-supply segments, Note 4 other-revenue categories, Note 5 employee components, Note 6
+other-operating categories, Note 7 depreciation components, Note 8 finance-cost components and the
+cash-flow capital-expenditure outflow), each reconciling exactly in `$’000` to its printed note
+subtotal. Every added row is `aggregation_role: agency_detail` and carries
+`soc_component_of`/`soc_note`, so it is a component and never additional spending. WaterNSW is now
+**47 rows** and the SOC layer **63 rows** (Sydney Water 10, WaterNSW 47, Hunter Water 6); the DB
+total is **349,020** (348,981 + 39 new rows, no deletes). See `SOC_INGESTION.md` §2A for the
+page/table/reconciliation evidence.
+
 ## Unit and reconciliation register
 
 Every amount is stored as integer cents. The published unit is never inferred from magnitude; it is

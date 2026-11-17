@@ -400,6 +400,89 @@ Note 3 total lines (revenue, expenses, employee, depreciation/amortisation, net
 result, NSW Government contributions). It is **medium** for the two smaller
 grant components. It is never a substitute for human verification.
 
+### Deep detail — note-level breakdown (2024-25)
+
+The premise for deep detail is satisfied by the published tables, not assumed
+from a narrative. The archived PDF (SHA-256
+`6240e733e2d2e5562553a15398b1dbe63c8ab454b6fe78a9d5000f354f338b09`) contains
+parseable, **reconciling** line-item tables beyond the face statement. Each
+table below is printed in `$’000`, read from the **consolidated current-year
+(2025)** column, and accepted only when its printed signs sum exactly to its
+printed subtotal. Every subtotal is itself a printed component of the face
+statement. No amount is inferred from magnitude and no allocation is invented.
+
+Pages are PDF pages (the printed page numbers are in the footer): statement
+page 59, cash-flow page 61, Note 2 page 63, Note 3 page 64, Notes 4–6 page 65,
+Notes 7–8 page 66.
+
+| Note / table                                  | Line items | Printed subtotal `$’000` | Exact reconciliation (signed)                                                                                           | Face-statement link                |
+| --------------------------------------------- | ---------: | -----------------------: | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Note 2 Revenue from water supply and delivery |          5 |                  379,720 | 224,540 + 96,158 + 24,204 + 25,304 + 9,514 = 379,720                                                                    | Revenue from water supply (line 2) |
+| Note 4 Other revenue                          |          7 |                   49,948 | 12,820 + 1,401 + 639 + 4,199 + 4,624 + 14,750 + 11,515 = 49,948                                                         | Other revenue (line 4)             |
+| Note 5 Employee related expenses              |          4 |                  163,654 | 186,924 − 43,838 + 2,827 + 17,741 = 163,654                                                                             | Employee related expenses          |
+| Note 6 Other operating expenses               |         14 |                  113,348 | 26,927 + 3,535 + 21,943 + 5,490 + 6,753 + 7,391 + 6,762 + 7,457 + 1,074 + 3,638 + 484 + 5,073 + 7,579 + 9,242 = 113,348 | Other operating expenses           |
+| Note 7 Depreciation and amortisation          |          3 |                  107,530 | 100,461 + 4,818 + 2,251 = 107,530                                                                                       | Depreciation and amortisation      |
+| Note 8 Finance costs                          |          5 |                   88,299 | 66,265 + 388 + 24,567 − 3,660 + 739 = 88,299                                                                            | Finance costs                      |
+| Statement of cash flows — investing           |          1 |                  170,828 | −170,828 + 3,267 = −167,561 (printed net cash used in investing activities)                                             | Investing cash outflow (not P&L)   |
+
+The note components add **39 rows** (38 note lines plus the capital-expenditure
+cash outflow) to the existing 8 WaterNSW rows, for **47 WaterNSW rows**. They
+are not additional spending:
+
+- every note row carries `soc_component_of` naming the printed subtotal it sums
+  to (`revenue_from_water_supply_and_delivery`, `other_revenue`,
+  `employee_expenses`, `other_operating_expenses`,
+  `depreciation_amortisation`, `finance_costs`);
+- `soc_section`, `soc_note` and `soc_breakdown` expose the grouping for the API
+  and UI (revenue segments, other-revenue categories, employee components,
+  other-operating categories, depreciation components, finance-cost components,
+  capital);
+- `aggregation_role` remains `agency_detail` and `potential_double_count` stays
+  false for own-source rows, so no note row can enter an additive total;
+- the printed deductions in Note 5 (capitalisation of employee expenses,
+  43,838) and Note 8 (borrowing costs capitalised, 3,660) are stored as
+  non-negative magnitudes with `soc_printed_sign: "negative"` because the model
+  money type is non-negative. The reconciliation uses their printed signs. The
+  UI shows a leading minus and a “printed deduction” caption.
+
+**Deliberate exclusions** (to avoid double counting or unit ambiguity):
+
+- Note 4 `Intra-group revenue – pipeline services` is parent-only (consolidated
+  column is nil), so it is not a consolidated note row.
+- Note 8 `Unwinding of discounts on provisions` is nil in 2025 (printed `-`), so
+  it is not emitted.
+- The Note 6 maintenance reconciliation (33,681) is a cross-cut of employee and
+  other operating expenses required by TPP06-6, not a separate expense, so it is
+  not ingested.
+- Note 31 equity transfer (669) is an equity contribution/asset transfer, not
+  revenue or expense; it is not ingested.
+- Cash-flow `Receipts of grants and subsidies` (66,146) is a cash receipt, while
+  Note 3 grants (65,336) are accrual revenue; ingesting both would double count,
+  so only Note 3 is stored.
+- The unaudited `$million` summary table (including the 160.6m accrual capital
+  expenditure) is rounded and not the audited `$’000` statement; the audited
+  cash-flow capex is stored instead.
+
+### Two additional lines flagged for human spot-check (not verified)
+
+1. **`water_supply_regulated_broken_hill_pipeline` (24,204 $’000)** — the
+   parent column is nil; confirm the consolidated current-year column is the
+   intended view and that the Broken Hill segment belongs to the consolidated
+   entity.
+2. **`capital_expenditure_cash` (170,828 $’000, printed as a cash outflow)** —
+   confirm the cash-flow capex definition is the intended capital measure
+   (it differs from the unaudited summary’s 160.6m accrual capital expenditure).
+
+Both carry `human_spot_check: required`. No WaterNSW row is marked verified.
+
+The API `/api/soc` returns `soc_section`, `soc_note`, `soc_component_of`,
+`soc_breakdown` and `soc_printed_sign` per row, plus counts by section and note.
+It still computes **no total**; the UI groups the rows by note in expandable
+sections and labels every group “no total”. Tests cover unit detection, exact
+subtotal reconciliation, the two-row deduction signs, zero-tolerance deferral on
+a one-unit mismatch, natural-key uniqueness/idempotency, and the no-sum API
+shape.
+
 ## 2B. Source: Hunter Water (third NSW SOC entity)
 
 ### Legal and entity basis

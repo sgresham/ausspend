@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   AlertTitle,
   Box,
@@ -20,6 +23,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { apiGet, buildQuery } from '../api';
 import type { SocResponse } from '../api/types';
 import { useApi } from '../hooks/useApi';
@@ -57,6 +61,34 @@ export function SocPage() {
   const sources = soc?.sources ?? [];
   const source = soc?.source;
 
+  // Group rows by printed note/table so the WaterNSW note breakdown is visible
+  // as an expandable hierarchy instead of being buried under the face rows.
+  // Every group is still non-additive: no group total is computed.
+  const groupOrder: Record<string, number> = {
+    'Face statement': 0,
+    'Note 2 Revenue from water supply and delivery': 1,
+    'Note 3 Grants and subsidies': 2,
+    'Note 4 Other revenue': 3,
+    'Note 5 Employee related expenses': 4,
+    'Note 6 Other operating expenses': 5,
+    'Note 7 Depreciation and amortisation': 6,
+    'Note 8 Finance costs': 7,
+    'Statement of cash flows — investing activities': 8,
+  };
+  const groups = (() => {
+    const map = new Map<string, typeof rows>();
+    for (const row of rows) {
+      const key = row.soc_note ?? 'Face statement';
+      const list = map.get(key);
+      if (list) list.push(row);
+      else map.set(key, [row]);
+    }
+    return [...map.entries()].sort((a, b) => {
+      const rank = (groupOrder[a[0]] ?? 99) - (groupOrder[b[0]] ?? 99);
+      return rank !== 0 ? rank : a[0].localeCompare(b[0]);
+    });
+  })();
+
   return (
     <Box>
       <Typography variant="h1" gutterBottom>
@@ -67,7 +99,10 @@ export function SocPage() {
         a <strong>separate layer</strong> from Australian government program spending and from the
         ABS GFS Public Non-Financial Corporations (PNFC) sector benchmark. Sydney Water and WaterNSW
         are <strong>separate entities</strong>: their rows are never added together. Coverage is
-        entity-level only: no project, LGA, SA2 or coordinate is present.
+        entity-level only: no project, LGA, SA2 or coordinate is present. WaterNSW is shown with its
+        published note-level breakdown (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure),
+        grouped and expandable; each component reconciles to its printed note subtotal and is never
+        added to the entity total.
       </Typography>
 
       <Alert severity="warning" data-testid="soc-caveat" sx={{ mb: 3 }}>
@@ -184,84 +219,146 @@ export function SocPage() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {soc?.note}
               </Typography>
-              <TableContainer>
-                <Table
-                  size="small"
-                  aria-label="NSW SOC entity statement lines"
-                  data-testid="soc-series"
-                >
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Entity</TableCell>
-                      <TableCell>Line item</TableCell>
-                      <TableCell>Funding source</TableCell>
-                      <TableCell align="right">Amount</TableCell>
-                      <TableCell>Unit</TableCell>
-                      <TableCell>Measure</TableCell>
-                      <TableCell>Confidence</TableCell>
-                      <TableCell>Flags</TableCell>
-                      <TableCell>Source</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {rows.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell>{entry.delivery_entity}</TableCell>
-                        <TableCell>
-                          <Typography variant="body2">
-                            {entry.soc_line_label ?? entry.soc_line_item}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {entry.soc_line_item}
-                          </Typography>
-                        </TableCell>
-                        <TableCell>{entry.funding_source ?? '—'}</TableCell>
-                        <TableCell align="right">
-                          <Amount cents={entry.amount_cents} />
-                        </TableCell>
-                        <TableCell>
+              <Box data-testid="soc-series">
+                {groups.map(([groupName, groupRows], groupIndex) => {
+                  const isFace = groupName === 'Face statement';
+                  const section = groupRows[0]?.soc_section ?? null;
+                  const componentOf = groupRows[0]?.soc_component_of ?? null;
+                  return (
+                    <Accordion
+                      key={groupName}
+                      defaultExpanded={isFace || groupIndex < 3}
+                      disableGutters
+                      data-testid="soc-group"
+                    >
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          <Typography variant="subtitle1">{groupName}</Typography>
+                          {section ? (
+                            <Chip size="small" variant="outlined" label={section} />
+                          ) : null}
                           <Chip
                             size="small"
                             variant="outlined"
-                            label={entry.soc_unit ?? source?.unit ?? 'unit unknown'}
+                            label={`${groupRows.length} row${groupRows.length === 1 ? '' : 's'}`}
                           />
-                        </TableCell>
-                        <TableCell>
-                          <MeasureTypeChip type={entry.measure_type} />
-                        </TableCell>
-                        <TableCell>{entry.extraction_confidence ?? '—'}</TableCell>
-                        <TableCell>
-                          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-                            <VerifiedBadge verified={entry.verified} />
-                            {entry.data_quality_flag ? (
-                              <Chip
-                                size="small"
-                                variant="outlined"
-                                color="warning"
-                                label={entry.data_quality_flag}
-                              />
-                            ) : null}
-                            {entry.potential_double_count ? (
-                              <Chip
-                                size="small"
-                                color="error"
-                                variant="outlined"
-                                label="potential double count"
-                                data-testid="soc-double-count"
-                              />
-                            ) : (
-                              <Chip size="small" variant="outlined" label="own source" />
-                            )}
-                          </Stack>
-                        </TableCell>
-                        <TableCell>
-                          <SourceLink sourceId={entry.source_id} sourceUrl={entry.source_url} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                          <Chip
+                            size="small"
+                            color="default"
+                            variant="outlined"
+                            label="no total"
+                            data-testid="soc-group-no-total"
+                          />
+                        </Stack>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ display: 'block', mb: 1 }}
+                        >
+                          {isFace
+                            ? 'Published face-statement lines. They overlap each other: total revenue includes the separately shown grants and total expenses includes employee, depreciation/amortisation and transfer lines.'
+                            : `Printed note components of ${componentOf ?? 'the note subtotal'}. They are not additional spending, are never added to the entity total, and the page computes no total.`}
+                        </Typography>
+                        <TableContainer>
+                          <Table
+                            size="small"
+                            aria-label={`NSW SOC entity statement lines — ${groupName}`}
+                          >
+                            <TableHead>
+                              <TableRow>
+                                <TableCell>Entity</TableCell>
+                                <TableCell>Line item</TableCell>
+                                <TableCell>Funding source</TableCell>
+                                <TableCell align="right">Amount</TableCell>
+                                <TableCell>Unit</TableCell>
+                                <TableCell>Measure</TableCell>
+                                <TableCell>Confidence</TableCell>
+                                <TableCell>Flags</TableCell>
+                                <TableCell>Source</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {groupRows.map((entry) => (
+                                <TableRow key={entry.id}>
+                                  <TableCell>{entry.delivery_entity}</TableCell>
+                                  <TableCell>
+                                    <Typography variant="body2">
+                                      {entry.soc_line_label ?? entry.soc_line_item}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {entry.soc_line_item}
+                                      {entry.soc_component_of
+                                        ? ` · component of ${entry.soc_component_of}`
+                                        : ''}
+                                      {entry.soc_printed_sign === 'negative'
+                                        ? ' · printed deduction'
+                                        : ''}
+                                    </Typography>
+                                  </TableCell>
+                                  <TableCell>{entry.funding_source ?? '—'}</TableCell>
+                                  <TableCell align="right">
+                                    {entry.soc_printed_sign === 'negative' ? '−' : ''}
+                                    <Amount cents={entry.amount_cents} />
+                                  </TableCell>
+                                  <TableCell>
+                                    <Chip
+                                      size="small"
+                                      variant="outlined"
+                                      label={entry.soc_unit ?? source?.unit ?? 'unit unknown'}
+                                    />
+                                  </TableCell>
+                                  <TableCell>
+                                    <MeasureTypeChip type={entry.measure_type} />
+                                  </TableCell>
+                                  <TableCell>{entry.extraction_confidence ?? '—'}</TableCell>
+                                  <TableCell>
+                                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                                      <VerifiedBadge verified={entry.verified} />
+                                      {entry.data_quality_flag ? (
+                                        <Chip
+                                          size="small"
+                                          variant="outlined"
+                                          color="warning"
+                                          label={entry.data_quality_flag}
+                                        />
+                                      ) : null}
+                                      {entry.potential_double_count ? (
+                                        <Chip
+                                          size="small"
+                                          color="error"
+                                          variant="outlined"
+                                          label="potential double count"
+                                          data-testid="soc-double-count"
+                                        />
+                                      ) : (
+                                        <Chip size="small" variant="outlined" label="own source" />
+                                      )}
+                                    </Stack>
+                                  </TableCell>
+                                  <TableCell>
+                                    <SourceLink
+                                      sourceId={entry.source_id}
+                                      sourceUrl={entry.source_url}
+                                    />
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </AccordionDetails>
+                    </Accordion>
+                  );
+                })}
+              </Box>
               <ProvenanceFooter
                 sources={rows.map((entry) => ({
                   source_id: entry.source_id,

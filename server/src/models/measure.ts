@@ -60,6 +60,16 @@ export interface MeasureDocument {
   soc_line_label?: string;
   /** SOC printed unit, e.g. AUD_thousands for "$’000". */
   soc_unit?: string;
+  /** SOC breakdown section: revenue, expenses, result, capital or transfer. */
+  soc_section?: 'revenue' | 'expenses' | 'result' | 'capital' | 'transfer';
+  /** SOC printed note/table grouping label, e.g. "Note 6 Other operating expenses". */
+  soc_note?: string;
+  /** Stable line key of the printed subtotal this component sums to. */
+  soc_component_of?: string;
+  /** Breakdown dimension the note exposes (e.g. other_operating_expense_category). */
+  soc_breakdown?: string;
+  /** Printed sign when amount_cents stores the non-negative magnitude. */
+  soc_printed_sign?: 'positive' | 'negative';
   /** Government-named funding row that may overlap government program data. */
   potential_double_count?: boolean;
 }
@@ -140,6 +150,15 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     soc_line_item: { type: String, index: true },
     soc_line_label: { type: String },
     soc_unit: { type: String },
+    soc_section: {
+      type: String,
+      enum: ['revenue', 'expenses', 'result', 'capital', 'transfer'],
+      index: true,
+    },
+    soc_note: { type: String, index: true },
+    soc_component_of: { type: String, index: true },
+    soc_breakdown: { type: String },
+    soc_printed_sign: { type: String, enum: ['positive', 'negative'] },
     potential_double_count: { type: Boolean, index: true },
   },
   { collection: 'measures', versionKey: false },

@@ -169,15 +169,259 @@ function grantsPage(options: { contributionsOverride?: number } = {}): PdfPage {
   };
 }
 
+const NOTE_LEFT_RIGHTS = [400, 457, 514, 571];
+const NOTE_RIGHT_RIGHTS = [940, 997, 1054, 1111];
+
+interface NoteFixtureRow {
+  label?: string;
+  values?: Array<number | null>;
+}
+
+function addNoteTable(
+  items: PdfTextItem[],
+  pageNumber: number,
+  side: 'left' | 'right',
+  yStart: number,
+  noteNumber: string,
+  title: string,
+  rows: NoteFixtureRow[],
+  total: number,
+): void {
+  const labelX = side === 'left' ? 62 : 620;
+  const numberX = side === 'left' ? 60 : 617;
+  const rights = side === 'left' ? NOTE_LEFT_RIGHTS : NOTE_RIGHT_RIGHTS;
+  items.push(item(noteNumber, numberX, yStart, pageNumber, 6));
+  items.push(item(title, labelX + 26, yStart, pageNumber));
+  items.push(item('Consolidated', rights[0]! - 30, yStart - 12, pageNumber));
+  items.push(item('Parent', rights[2]! - 12, yStart - 12, pageNumber));
+  [2025, 2024, 2025, 2024].forEach((year, index) =>
+    items.push(item(String(year), rights[index]! - 20, yStart - 24, pageNumber)),
+  );
+  rights.forEach((right) => items.push(item('$’000', right - 25, yStart - 36, pageNumber)));
+  let y = yStart - 50;
+  for (const row of rows) {
+    if (row.label) items.push(item(row.label, labelX, y, pageNumber));
+    (row.values ?? []).forEach((value, index) => {
+      if (value === null) return;
+      const text =
+        value < 0 ? `(${Math.abs(value).toLocaleString('en-AU')})` : value.toLocaleString('en-AU');
+      items.push(money(text, rights[index]!, y, pageNumber));
+    });
+    y -= 15;
+  }
+  [total, total, total, total].forEach((value, index) =>
+    items.push(money(value.toLocaleString('en-AU'), rights[index]!, y, pageNumber)),
+  );
+}
+
+function note2Page(): PdfPage {
+  const pageNumber = 63;
+  const items: PdfTextItem[] = [];
+  addNoteTable(
+    items,
+    pageNumber,
+    'left',
+    340,
+    '2',
+    'Revenue from water supply and delivery',
+    [
+      { label: 'Regulated – Greater Sydney', values: [224_540, 222_978, 224_540, 222_978] },
+      { label: 'Regulated – Rural', values: [96_158, 98_199, 96_158, 98_199] },
+      { label: 'Regulated – Broken Hill Pipeline', values: [24_204, 23_452, null, null] },
+      { label: 'Regulated - WAMC', values: [25_304, 22_594, 25_304, 22_594] },
+      { label: 'Other', values: [9_514, 9_267, 9_514, 9_267] },
+    ],
+    379_720,
+  );
+  return {
+    page_number: pageNumber,
+    text: '2 Revenue from water supply and delivery Regulated – Greater Sydney Regulated – Rural Regulated – Broken Hill Pipeline Regulated - WAMC Other',
+    items,
+  };
+}
+
+function notes456Page(options: { landTaxOverride?: number } = {}): PdfPage {
+  const pageNumber = 65;
+  const items: PdfTextItem[] = [];
+  addNoteTable(
+    items,
+    pageNumber,
+    'left',
+    780,
+    '4',
+    'Other revenue',
+    [
+      {
+        label: 'Murray-Darling Basin Authority (MDBA) and other utilities',
+        values: [12_820, 15_930, 12_820, 15_930],
+      },
+      { label: 'Operating leases', values: [1_401, 1_379, 1_401, 1_379] },
+      { label: 'Interest', values: [639, 901, 623, 882] },
+      { label: 'Ancillary services', values: [4_199, 2_892, 4_199, 2_892] },
+      { label: 'Miscellaneous revenue', values: [4_624, 8_704, 4_624, 8_679] },
+      { label: 'External engagements', values: [14_750, 8_942, 14_750, 8_942] },
+      { label: 'Insurance recoveries', values: [11_515, 15_228, 11_515, 15_228] },
+    ],
+    49_948,
+  );
+  addNoteTable(
+    items,
+    pageNumber,
+    'right',
+    675,
+    '5',
+    'Employee related expenses',
+    [
+      { label: 'Employee related expenses (excluding post employee' },
+      { values: [186_924, 166_077, 186_924, 166_077] },
+      {
+        label: 'Capitalisation of employee related expenses',
+        values: [-43_838, -42_334, -43_838, -42_334],
+      },
+      {
+        label: 'Superannuation – Defined benefit plans',
+        values: [2_827, 3_170, 2_827, 3_170],
+      },
+      {
+        label: 'Superannuation – Defined contribution plans',
+        values: [17_741, 14_674, 17_741, 14_674],
+      },
+    ],
+    163_654,
+  );
+  addNoteTable(
+    items,
+    pageNumber,
+    'right',
+    470,
+    '6',
+    'Other operating expenses',
+    [
+      { label: 'Contractors', values: [26_927, 32_826, 26_884, 32_656] },
+      { label: 'Electricity and other energy', values: [3_535, 2_971, 3_535, 2_971] },
+      { label: 'Data management', values: [21_943, 21_163, 21_943, 21_163] },
+      { label: 'Materials, plant and equipment', values: [5_490, 5_819, 5_490, 5_816] },
+      { label: 'Property', values: [6_753, 7_012, 6_752, 7_012] },
+      { label: 'Transport and travel', values: [7_391, 6_412, 7_383, 6_409] },
+      { label: 'Insurance premiums', values: [6_762, 6_470, 6_625, 6_335] },
+      { label: 'Other expenses from ordinary activities', values: [7_457, 3_910, 7_424, 3_866] },
+      {
+        label: 'Construction/installation for third parties',
+        values: [1_074, 4_353, 1_074, 4_353],
+      },
+      {
+        label: 'Operation and maintenance contract Broken Hill Pipeline',
+        values: [3_638, 3_257, null, null],
+      },
+      { label: 'Consultants', values: [484, 214, 484, 214] },
+      { label: 'Water monitoring', values: [5_073, 7_000, 5_073, 7_000] },
+      { label: 'Land management', values: [7_579, 10_303, 7_579, 10_303] },
+      { label: 'Land Tax', values: [options.landTaxOverride ?? 9_242, 7_885, 9_242, 7_885] },
+    ],
+    113_348,
+  );
+  return {
+    page_number: pageNumber,
+    text: '4 Other revenue Murray-Darling Basin Authority (MDBA) and other utilities Operating leases Interest Ancillary services Miscellaneous revenue External engagements Insurance recoveries 5 Employee related expenses Capitalisation of employee related expenses Superannuation – Defined benefit plans Superannuation – Defined contribution plans 6 Other operating expenses Operation and maintenance contract Broken Hill Pipeline Land Tax',
+    items,
+  };
+}
+
+function notes78Page(): PdfPage {
+  const pageNumber = 66;
+  const items: PdfTextItem[] = [];
+  addNoteTable(
+    items,
+    pageNumber,
+    'left',
+    590,
+    '7',
+    'Depreciation and amortisation',
+    [
+      { label: 'Depreciation', values: [100_461, 97_579, 94_778, 92_119] },
+      { label: 'Amortisation', values: [4_818, 5_602, 4_771, 5_555] },
+      { label: 'Depreciation – right of use assets', values: [2_251, 2_237, 2_251, 2_237] },
+    ],
+    107_530,
+  );
+  addNoteTable(
+    items,
+    pageNumber,
+    'right',
+    710,
+    '8',
+    'Finance costs',
+    [
+      { label: 'Interest expense on loans', values: [66_265, 42_251, 56_243, 33_872] },
+      { label: 'Other borrowing costs', values: [388, 635, 388, 635] },
+      { label: 'Government Guarantee Fee', values: [24_567, 26_534, 20_523, 22_344] },
+      { label: 'Borrowing costs capitalised', values: [-3_660, -2_717, -3_660, -2_717] },
+      { label: 'Interest expense on leases', values: [739, 785, 739, 785] },
+    ],
+    88_299,
+  );
+  return {
+    page_number: pageNumber,
+    text: '7 Depreciation and amortisation Depreciation – right of use assets Amortisation 8 Finance costs Borrowing costs capitalised Government Guarantee Fee',
+    items,
+  };
+}
+
+function cashFlowPage(): PdfPage {
+  const pageNumber = 61;
+  const rights = NOTE_LEFT_RIGHTS;
+  const items: PdfTextItem[] = [
+    item('Statements of cash flows', 62, 760, pageNumber),
+    item('Consolidated', rights[0]! - 30, 730, pageNumber),
+    item('Parent', rights[2]! - 12, 730, pageNumber),
+    item('2025', rights[0]! - 20, 716, pageNumber),
+    item('2024', rights[1]! - 20, 716, pageNumber),
+    item('2025', rights[2]! - 20, 716, pageNumber),
+    item('2024', rights[3]! - 20, 716, pageNumber),
+  ];
+  rights.forEach((right) => items.push(item('$’000', right - 25, 704, pageNumber)));
+  items.push(item('Payments for property, plant and equipment and', 65, 478, pageNumber));
+  items.push(item('intangibles', 65, 466, pageNumber));
+  [-170_828, -208_045, -170_610, -207_853].forEach((value, index) =>
+    items.push(
+      money(`(${Math.abs(value).toLocaleString('en-AU')})`, rights[index]!, 466, pageNumber),
+    ),
+  );
+  items.push(item('Proceeds from disposal of property, plant and', 65, 449, pageNumber));
+  items.push(item('equipment', 65, 437, pageNumber));
+  [3_267, 1_267, 3_267, 1_267].forEach((value, index) =>
+    items.push(money(value.toLocaleString('en-AU'), rights[index]!, 437, pageNumber)),
+  );
+  items.push(item('Net cash used in investing activities', 65, 420, pageNumber));
+  [-167_561, -206_778, -167_343, -206_586].forEach((value, index) =>
+    items.push(
+      money(`(${Math.abs(value).toLocaleString('en-AU')})`, rights[index]!, 420, pageNumber),
+    ),
+  );
+  return {
+    page_number: pageNumber,
+    text: 'Statements of cash flows Payments for property, plant and equipment and intangibles Net cash used in investing activities',
+    items,
+  };
+}
+
 function extraction(
   options: {
     statement?: Parameters<typeof statementPage>[0];
     grants?: Parameters<typeof grantsPage>[0];
+    notes456?: Parameters<typeof notes456Page>[0];
   } = {},
 ): PdfExtraction {
   return {
     source: { url: URL_2025, sha256: 'b'.repeat(64), bytes: 42_917_371 },
-    pages: [statementPage(options.statement), grantsPage(options.grants)],
+    pages: [
+      statementPage(options.statement),
+      grantsPage(options.grants),
+      note2Page(),
+      notes456Page(options.notes456),
+      notes78Page(),
+      cashFlowPage(),
+    ],
     text: 'Statements of comprehensive income for the year ended 30 June 2025',
     tables: [],
     warnings: [],
@@ -274,7 +518,7 @@ describe('WaterNSW exact reconciliation and rows', () => {
 
   it('maps the required lines, government grants and net result with provenance and exact cents', () => {
     const result = parseWaterNswExtraction(extraction(), context);
-    expect(result.records).toHaveLength(8);
+    expect(result.records).toHaveLength(47);
     const totalExpenses = recordFor(result, 'total_expenses');
     expect(totalExpenses).toMatchObject({
       amount_cents: 47_283_100_000,
@@ -348,6 +592,124 @@ describe('WaterNSW exact reconciliation and rows', () => {
     const result = parseWaterNswExtraction(extraction(), { ...context, fiscal_year: '2023-24' });
     expect(result.records).toHaveLength(0);
     expect(result.deferral?.phase).toBe('statement');
+  });
+});
+
+describe('WaterNSW note-level deep detail', () => {
+  it('parses every printed note table and reconciles each to its printed subtotal', () => {
+    const result = parseWaterNswExtraction(extraction(), context);
+    expect(result.deferral).toBeNull();
+    expect(result.note_tables).toHaveLength(6);
+    expect(result.note_tables?.every((table) => table.errors.length === 0)).toBe(true);
+    const checks = result.checks.join(' ');
+    expect(checks).toContain(
+      'Note 2 Revenue from water supply and delivery components exact: 224540 + 96158 + 24204 + 25304 + 9514 = 379720',
+    );
+    expect(checks).toContain(
+      'Note 4 Other revenue components exact: 12820 + 1401 + 639 + 4199 + 4624 + 14750 + 11515 = 49948',
+    );
+    expect(checks).toContain(
+      'Note 5 Employee related expenses components exact: 186924 + -43838 + 2827 + 17741 = 163654',
+    );
+    expect(checks).toContain('Note 6 Other operating expenses components exact:');
+    expect(checks).toContain('= 113348');
+    expect(checks).toContain('Note 7 Depreciation and amortisation components exact:');
+    expect(checks).toContain('= 107530');
+    expect(checks).toContain(
+      'Note 8 Finance costs components exact: 66265 + 388 + 24567 + -3660 + 739 = 88299',
+    );
+    expect(checks).toContain('cash-flow investing bridge exact: -170828 + 3267 = -167561');
+  });
+
+  it('adds 39 breakdown rows beyond the 8 face rows, with a stable unique key and cents', () => {
+    const result = parseWaterNswExtraction(extraction(), context);
+    expect(result.records).toHaveLength(47);
+    const lineItems = result.records.map((record) => record.soc_line_item);
+    expect(new Set(lineItems).size).toBe(47);
+    const naturalKeys = result.records.map((record) => record.natural_key);
+    expect(new Set(naturalKeys).size).toBe(47);
+    expect(recordFor(result, 'water_supply_regulated_greater_sydney')).toMatchObject({
+      amount_cents: 22_454_000_000,
+      soc_section: 'revenue',
+      soc_note: 'Note 2 Revenue from water supply and delivery',
+      soc_component_of: 'revenue_from_water_supply_and_delivery',
+      soc_breakdown: 'water_supply_segment',
+      soc_printed_sign: 'positive',
+      aggregation_role: 'agency_detail',
+    });
+    // A printed deduction keeps its sign in metadata while the stored cents stay non-negative.
+    expect(recordFor(result, 'employee_expenses_capitalisation')).toMatchObject({
+      amount_cents: 4_383_800_000,
+      soc_printed_sign: 'negative',
+      soc_component_of: 'employee_expenses',
+    });
+    expect(recordFor(result, 'finance_costs_borrowing_costs_capitalised')).toMatchObject({
+      amount_cents: 366_000_000,
+      soc_printed_sign: 'negative',
+    });
+    expect(recordFor(result, 'other_operating_land_tax')?.amount_cents).toBe(924_200_000);
+    expect(recordFor(result, 'capital_expenditure_cash')).toMatchObject({
+      amount_cents: 17_082_800_000,
+      soc_section: 'capital',
+      soc_printed_sign: 'negative',
+      soc_note: 'Statement of cash flows — investing activities',
+    });
+  });
+
+  it('keeps every note component non-additive and never duplicates a face row', () => {
+    const result = parseWaterNswExtraction(extraction(), context);
+    const noteRows = result.records.filter(
+      (record) => record.soc_note !== undefined && record.soc_note !== 'Face statement',
+    );
+    expect(noteRows).toHaveLength(42); // 38 note lines + 3 Note 3 grants + 1 capex
+    for (const record of noteRows) {
+      expect(record.jurisdiction_level).toBe('soc');
+      expect(record.aggregation_role).toBe('agency_detail');
+      expect(isAdditiveMeasure(record)).toBe(false);
+      if (record.soc_note?.startsWith('Note ')) {
+        expect(record.soc_component_of).toBeTruthy();
+      }
+    }
+    // The cash-flow capital row is a standalone investing outflow, not a note component.
+    expect(recordFor(result, 'capital_expenditure_cash')?.soc_component_of).toBeUndefined();
+    // Note components sum to their printed subtotal, but are not the same row as the total.
+    const note5 = result.records
+      .filter((record) => record.soc_component_of === 'employee_expenses')
+      .reduce(
+        (sum, record) =>
+          sum +
+          (record.soc_printed_sign === 'negative' ? -record.amount_cents : record.amount_cents),
+        0,
+      );
+    expect(note5).toBe(recordFor(result, 'employee_expenses')?.amount_cents);
+    expect(recordFor(result, 'employee_expenses')?.soc_component_of).toBeUndefined();
+    // The capital row is not an expense and is never folded into Total expenses.
+    expect(recordFor(result, 'capital_expenditure_cash')?.amount_cents).not.toBe(
+      recordFor(result, 'total_expenses')?.amount_cents,
+    );
+  });
+
+  it('defers when one note component breaks the printed subtotal by one unit', () => {
+    const result = parseWaterNswExtraction(
+      extraction({ notes456: { landTaxOverride: 9_243 } }),
+      context,
+    );
+    expect(result.records).toHaveLength(0);
+    expect(result.deferral?.phase).toBe('reconciliation');
+    expect(result.deferral?.reason).toMatch(/Note 6 Other operating expenses/);
+  });
+
+  it('defers when a note table has no explicit $’000 unit rather than guessing dollars', () => {
+    const base = extraction();
+    const pages = base.pages.map((page) =>
+      page.page_number === 63
+        ? { ...page, items: page.items.filter((entry) => !entry.str.includes('$’000')) }
+        : page,
+    );
+    const result = parseWaterNswExtraction({ ...base, pages }, context);
+    expect(result.records).toHaveLength(0);
+    expect(result.deferral?.phase).toBe('reconciliation');
+    expect(result.deferral?.reason).toMatch(/not explicit thousands/i);
   });
 });
 
