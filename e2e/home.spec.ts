@@ -16,6 +16,11 @@ test('home renders the shell, coverage banner and provenance', async ({ page }) 
   await expect(page.getByTestId('coverage-banner')).toContainText(
     'Live AusTender contract records, PBS budget line items, NSW Budget rows',
   );
+  await expect(page.getByTestId('coverage-banner')).toContainText('QLD QGIP 2018-19..2024-25');
+  await expect(page.getByTestId('coverage-banner')).toContainText('2019-20 QGIP is partial');
+  await expect(page.getByTestId('coverage-banner')).toContainText(
+    'QGIP grants and contracts are never summed',
+  );
   await expect(page.getByTestId('coverage-banner')).toContainText('human-verified');
   await expect(page.getByText('Provenance:').first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Data sources' }).first()).toBeVisible();

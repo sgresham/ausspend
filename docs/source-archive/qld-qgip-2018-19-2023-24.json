@@ -1,13 +1,6 @@
 {
   "dataset": "Queensland Government Investment Portal (QGIP) — Expenditure",
-  "years": [
-    "2018-19",
-    "2019-20",
-    "2020-21",
-    "2021-22",
-    "2022-23",
-    "2023-24"
-  ],
+  "years": ["2018-19", "2019-20", "2020-21", "2021-22", "2022-23", "2023-24"],
   "source_url": "https://www.data.qld.gov.au/dataset/queensland-government-investment-portal-expenditure-data-consolidated-view",
   "license": "CC BY 4.0",
   "attribution": "© State of Queensland (Queensland Treasury), 2025",
