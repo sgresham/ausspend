@@ -1,0 +1,22 @@
+{
+  "entity": "Sydney Water",
+  "jurisdiction": "NSW",
+  "dataset": "Sydney Water — Annual Report",
+  "publisher": "Sydney Water Corporation",
+  "discovery_page": "https://www.sydneywater.com.au/about/policies-publications/reports-publications/annual-report.html",
+  "license": "© Sydney Water Corporation. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T04:37:28.694Z",
+  "unit": "$’000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines. Never add to government program spending, to the PNFC sector benchmark, or to each other: total revenue includes the separately shown government grants; total expenses includes employee, depreciation/amortisation and transfer lines. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25",
+      "filename": "sydney-water-annual-report-2024-25.pdf",
+      "url": "https://www.sydneywater.com.au/content/dam/sydneywater/documents/sydney-water-annual-report-2024-25.pdf",
+      "sha256": "836f4e6b05ec966b58b3234d9acacdf61cadb24a5ec539704adb9420118c5017",
+      "bytes": 12000968,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest Sydney Water annual report discovered from the official annual-report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The face statement prints an explicit $’000 unit. Total expenses is the exact sum of the two printed expense totals (finance costs + other expenses) and is accepted only when the statement profit-before-tax bridge and both note subtotals reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add SOC actuals to government program spending, the PNFC benchmark, or each other."
+}

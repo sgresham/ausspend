@@ -32,6 +32,7 @@ const KNOWN_SOURCE_IDS = [
   'acnc-charity',
   'abs-gfs',
   'abs-gfs-pnfc',
+  'sydney-water',
 ];
 
 const results = [];
@@ -335,6 +336,61 @@ async function apiChecks() {
     return `${pnfc.body.series.length} PNFC cells, no combined total, excluded from /api/spending`;
   });
 
+  await check('Sydney Water SOC is entity-level, unit-checked and never totalled', async () => {
+    const soc = await getJson('/api/soc?fiscal_year=2024-25');
+    assert(soc.status === 200, `expected 200, got ${soc.status}`);
+    assert(soc.body?.source?.source_id === 'sydney-water', 'SOC source is not sydney-water');
+    assert(soc.body?.source?.unit === 'AUD_thousands', 'SOC unit is not AUD_thousands');
+    assert(soc.body?.source?.unit_to_cents === 100000, 'SOC scale is not 100,000 cents per unit');
+    assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
+    assert(
+      Array.isArray(soc.body?.series) && soc.body.series.length === 10,
+      'expected 10 SOC rows',
+    );
+    assert(
+      soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
+      'SOC rows are not jurisdiction_level soc',
+    );
+    assert(
+      soc.body.series.every((row) => row.verified === false),
+      'SOC rows must be unverified in this phase',
+    );
+    assert(
+      soc.body.series.every((row) => row.aggregation_role === 'agency_detail'),
+      'SOC rows are not non-additive agency detail',
+    );
+    const byLine = new Map(soc.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      byLine.get('total_expenses')?.amount_cents === 294954000000,
+      'derived total expenses is not 2,949,540 $’000 in cents',
+    );
+    assert(
+      byLine.get('total_revenue')?.amount_cents === 347966700000,
+      'total revenue is not 3,479,667 $’000 in cents',
+    );
+    assert(
+      byLine.get('total_expenses')?.potential_double_count === false,
+      'own-source total expenses is flagged as double count',
+    );
+    assert(
+      byLine.get('nsw_government_grants_social_programs')?.potential_double_count === true,
+      'NSW government grant row is not flagged as a potential double count',
+    );
+    const generic = await getJson('/api/spending?limit=5');
+    assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
+    const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
+    assert(
+      !genericRows.some((row) => row.jurisdiction_level === 'soc'),
+      'generic spending returned SOC entity rows',
+    );
+    const explicit = await getJson('/api/spending?jurisdiction_level=soc');
+    assert(
+      explicit.status === 400,
+      `explicit SOC generic query expected 400, got ${explicit.status}`,
+    );
+    return '10 entity rows, $’000, exact total expenses 2,949,540, no total, excluded from generic spending';
+  });
+
   await check('ABS GFS benchmark is separate and never totalled', async () => {
     const benchmark = await getJson('/api/benchmark?fiscal_year=2024-25');
     assert(benchmark.status === 200, `expected 200, got ${benchmark.status}`);
@@ -403,6 +459,7 @@ async function uiChecks(page, regionId, populatedRegionId) {
     '/states',
     '/states/NSW',
     '/benchmark',
+    '/soc',
     '/data-sources',
     '/about',
   ];
@@ -709,6 +766,7 @@ async function uiChecks(page, regionId, populatedRegionId) {
       'data-nsw-ckan',
       'dubbo-council',
       'grantconnect',
+      'sydney-water',
     ]) {
       assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
     }
@@ -788,6 +846,35 @@ async function uiChecks(page, regionId, populatedRegionId) {
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
     return 'sector-aggregate caveat visible, verified PNFC rows, no combined total';
   });
+
+  await check(
+    '/soc shows entity-level SOC rows with unit, unverified and double-count warning',
+    async () => {
+      pageErrors.length = 0;
+      await page.goto(`${WEB_URL}/soc`, { waitUntil: 'domcontentloaded' });
+      await page.getByTestId('soc-caveat').waitFor({ state: 'visible', timeout: 20_000 });
+      const caveat = (await page.getByTestId('soc-caveat').innerText()).replace(/\s+/g, ' ');
+      assert(/never add/i.test(caveat), 'SOC caveat does not forbid adding to government spending');
+      assert(
+        /government program spending/i.test(caveat),
+        'SOC caveat does not mention government spending',
+      );
+      const sourceCard = page.getByTestId('soc-source');
+      await sourceCard.waitFor({ state: 'visible', timeout: 20_000 });
+      const sourceText = (await sourceCard.innerText()).replace(/\s+/g, ' ');
+      assert(/AUD_thousands/.test(sourceText), 'SOC unit badge is missing');
+      assert(/Sydney Water/i.test(sourceText), 'SOC entity is not shown');
+      const table = page.getByTestId('soc-series');
+      await table.waitFor({ state: 'visible', timeout: 20_000 });
+      const text = (await table.innerText()).replace(/\s+/g, ' ');
+      assert(/Total expenses/i.test(text), 'SOC table has no total-expenses line');
+      assert(/Unverified/.test(text), 'SOC rows are not marked Unverified');
+      assert(/potential double count/i.test(text), 'SOC table has no double-count warning chip');
+      assert(!/combined total/i.test(text), 'SOC table claims a combined total');
+      assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
+      return 'SOC entity caveat, $’000 unit, unverified rows, double-count warning, no total';
+    },
+  );
 }
 
 async function main() {

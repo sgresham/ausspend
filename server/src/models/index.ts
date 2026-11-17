@@ -1,5 +1,9 @@
 export { DataSourceModel, type DataSourceDocument } from './data-source.js';
 export {
+  DeferredSocDocumentModel,
+  type DeferredSocDocumentDocument,
+} from './deferred-soc-document.js';
+export {
   SourceDocumentModel,
   type SourceArchivedFrom,
   type SourceDocumentDocument,

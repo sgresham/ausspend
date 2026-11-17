@@ -11,6 +11,7 @@ import { listFunctions } from './functions-list.js';
 import { listRegions } from './regions-list.js';
 import { getArea, getRegion, getState } from './region-detail.js';
 import { search } from './search.js';
+import { getSoc } from './soc.js';
 import { getSpending, listSpending } from './spending.js';
 
 export interface ApiRouterOptions {
@@ -23,6 +24,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.get('/meta/coverage', createCoverageHandler(options.pingDb));
   router.get('/benchmark', getBenchmark);
   router.get('/benchmark/pnfc', getPnfcBenchmark);
+  router.get('/soc', getSoc);
   router.get('/data-sources', listDataSources);
   router.get('/source-documents', listSourceDocuments);
   router.get('/ingestion-logs', listIngestionLogs);

@@ -9,6 +9,7 @@ import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { createQldBudgetConnector } from './qld-budget.js';
 import { createQgipConnector } from './qld-qgip.js';
+import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
@@ -130,6 +131,12 @@ export const CONNECTORS: readonly Connector[] = [
   // jurisdiction_level=charity and only total-expense rows feed a charity
   // headline; component rows are never summed with the total.
   createAcncCharityConnector(),
+  // SOC Phase 2: first NSW state-owned corporation — Sydney Water only. Its
+  // latest annual report is discovered, SHA-256 archived and parsed as
+  // entity-level SOC statement lines (jurisdiction_level "soc",
+  // aggregation_role "agency_detail"). Never added to government program
+  // spending or to the PNFC benchmark. Other SOCs are not implemented.
+  createSydneyWaterConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

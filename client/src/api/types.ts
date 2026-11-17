@@ -130,6 +130,19 @@ export interface CoverageResponse {
     caveat: string;
     note: string;
   };
+  soc_ingestion?: {
+    live: string[];
+    degraded: string[];
+    last_ingested_at: string | null;
+    records: number;
+    entity: string;
+    jurisdiction: string;
+    unit: string;
+    unit_label: string;
+    caveat: string;
+    label: string;
+    note: string;
+  };
   local_ingestion?: {
     live: string[];
     degraded: string[];
@@ -229,6 +242,10 @@ export interface MeasureRow {
   location?: { state?: string; postcode?: string; lga_name?: string; sa4_name?: string };
   expense_category?: string;
   unspsc?: string;
+  soc_line_item?: string;
+  soc_line_label?: string;
+  soc_unit?: string;
+  potential_double_count?: boolean;
 }
 
 /** Per-measure-type count and sum. The API never sums across types. */
@@ -381,6 +398,72 @@ export interface PnfcBenchmarkSeries {
   source_id: string;
   source_url: string;
   notes?: string;
+}
+
+/** GET /api/soc — entity-level NSW SOC statement lines, never a total. */
+export interface SocSeriesRow {
+  id: string;
+  source_id: string;
+  source_url: string;
+  source_dataset: string | null;
+  fiscal_year: string;
+  jurisdiction_level: 'soc';
+  jurisdiction: string;
+  delivery_entity: string;
+  funding_source: string | null;
+  soc_line_item: string | null;
+  soc_line_label: string | null;
+  soc_unit: string | null;
+  measure_type: MeasureType;
+  amount_cents: number;
+  potential_double_count: boolean;
+  verified: boolean;
+  data_quality_flag: string | null;
+  extraction_confidence: ExtractionConfidence | null;
+  aggregation_role: string | null;
+  location_state?: string;
+  notes?: string;
+}
+
+export interface SocDeferredDocument {
+  source_id: string;
+  entity: string;
+  jurisdiction: string;
+  fiscal_year: string | null;
+  title: string;
+  document_url: string;
+  sha256: string | null;
+  reason: string;
+  discovered_at: string;
+  status: 'deferred' | 'resolved';
+}
+
+export interface SocResponse {
+  source: {
+    source_id: string;
+    name: string;
+    entity: string;
+    jurisdiction: string;
+    jurisdiction_level: 'soc';
+    discovery_page: string;
+    unit: string;
+    unit_label: string;
+    unit_to_cents: number;
+    caveat: string;
+    label: string;
+  };
+  fiscal_years: string[];
+  entities: string[];
+  series: SocSeriesRow[];
+  deferred_documents: SocDeferredDocument[];
+  counts: {
+    series: number;
+    by_line: Record<string, number>;
+    by_entity: Record<string, number>;
+    potential_double_count: number;
+    deferred_documents: number;
+  };
+  note: string;
 }
 
 /** GET /api/benchmark/pnfc — ABS GFS PNFC sector benchmark, never a total. */

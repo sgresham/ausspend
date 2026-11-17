@@ -176,9 +176,10 @@ nonzero before it changes anything.
 
 ## Backup, restore and the AusTender backfill gate
 
-The live baseline is **348,957 real measures and 0 synthetic rows**: AusTender 117,894, ACNC
-charity 127,606, GrantConnect 62,128, QLD QGIP 34,000, data.nsw.gov.au CKAN 3,472, PBS 1,231,
-NSW Budget 1,115, QLD Budget 1,051, Dubbo 245, ABS GFS 169, VIC Budget 28 and ABS GFS PNFC 18.
+The live baseline after the NSW SOC phase is **348,967 real measures and 0 synthetic rows**:
+AusTender 117,894, ACNC charity 127,606, GrantConnect 62,128, QLD QGIP 34,000, data.nsw.gov.au
+CKAN 3,472, PBS 1,231, NSW Budget 1,115, QLD Budget 1,051, Dubbo 245, ABS GFS 169, VIC Budget
+28, ABS GFS PNFC 18 and Sydney Water SOC 10.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
@@ -611,8 +612,11 @@ absent from the current real-only register. It shows the AusTender and PBS cards
 last-ingested times/record counts and the PBS line-item caveat, and lists every connector from
 coverage metadata with id, name, publisher, source URL, status, jurisdiction level, last fetch and
 records ingested; stubs are marked **stub — not wired**. It also shows the API's coverage
-`limitations`. The `/about` page explains the current real-only scope, how provenance is attached,
-and why mixed measures never get a headline total.
+`limitations`. The `/soc` page adds the NSW State Owned Corporation layer: entity-level statement
+lines for Sydney Water only, with a `$’000` unit badge, Unverified badge, provenance link, a
+no-total rule and a **potential double count** chip for government-named funding rows. The `/about`
+page explains the current real-only scope, how provenance is attached, and why mixed measures never
+get a headline total.
 
 ### Measure-type and provenance rules
 
@@ -632,7 +636,9 @@ Every spending value carries a `SourceRef` (`source_id`, `source_url`, `verified
 as integer `MoneyCents`. Real project and charity rows remain `verified: false` until a human checks
 them; only the ABS GFS COFOG-A and ABS GFS PNFC benchmark rows are `verified: true`, and they are
 never summed with project data, SOC/entity data or each other. PNFC revenue and expense are separate
-flows. The seed asserts it produces no verified measures before reporting success.
+flows. Sydney Water SOC entity rows are provisional and `verified: false`; they are exposed only at
+`/api/soc` and are never added to government program spending, the PNFC benchmark or each other.
+The seed asserts it produces no verified measures before reporting success.
 
 ## Docker Compose (development)
 

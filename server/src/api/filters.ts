@@ -60,6 +60,10 @@ export function measureQuery(filters: MeasureFilters): Record<string, unknown> {
     // queries (which could add them to project totals); the dedicated
     // benchmark endpoint reads them directly.
     aggregation_role: { $ne: 'benchmark' },
+    // SOC entity statements are a separate layer. They are never exposed
+    // through the generic spending/state/function queries because their lines
+    // overlap each other and government program spending; /api/soc reads them.
+    jurisdiction_level: { $ne: 'soc' },
   };
   if (filters.fiscal_year) query.fiscal_year = filters.fiscal_year;
   if (filters.measure_type) query.measure_type = filters.measure_type;

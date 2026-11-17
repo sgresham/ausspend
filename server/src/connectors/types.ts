@@ -4,7 +4,7 @@ import type { DeferredResource } from '../models/data-source.js';
 export type ConnectorStatus = 'stub' | 'active' | 'degraded';
 
 export type ConnectorJurisdictionLevel =
-  'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'other';
+  'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'soc' | 'other';
 
 /** A source-native record before transformation. Connectors decide the shape. */
 export type RawRecord = Record<string, unknown>;
