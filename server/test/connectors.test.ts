@@ -31,6 +31,7 @@ const LIVE_IDS = [
   'mid-coast-gpfs',
   'port-macquarie-hastings-gpfs',
   'tweed-shire-gpfs',
+  'shoalhaven-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -49,9 +50,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships forty-one connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(41);
-    expect(new Set(CONNECTOR_IDS).size).toBe(41);
+  it('ships forty-two connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(42);
+    expect(new Set(CONNECTOR_IDS).size).toBe(42);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -191,6 +192,10 @@ describe('federal connector registry', () => {
     expect(getConnector('tweed-shire-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('tweed-shire-gpfs')?.source_url).toContain('tweed.nsw.gov.au');
     expect(getConnector('tweed-shire-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('shoalhaven-gpfs')?.status).toBe('active');
+    expect(getConnector('shoalhaven-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('shoalhaven-gpfs')?.source_url).toContain('shoalhaven.nsw.gov.au');
+    expect(getConnector('shoalhaven-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
