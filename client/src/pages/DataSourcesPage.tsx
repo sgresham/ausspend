@@ -64,16 +64,16 @@ export function DataSourcesPage() {
         never summed with project data. ABS GFS Public Non-Financial Corporations (PNFC) adds a
         separate sector benchmark from nine official annual XLSX data cubes (Australia all levels
         plus the eight states/territories); it is a sector aggregate — never add it to
-        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–9 add
-        eight separate entities: Sydney Water Corporation, WaterNSW (Water NSW), Hunter Water
-        Corporation, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW
-        and TAHE (Transport Asset Holding Entity of New South Wales). Each latest annual report is
-        discovered from the entity&apos;s official annual-report page (no hard-coded PDF URL),
-        SHA-256 archived outside the repo, and parsed as entity-level statement lines (
-        <code>jurisdiction_level: soc</code>, <code>aggregation_role: agency_detail</code>) with an
-        explicit printed $’000 unit (Forestry Corporation) or the entity’s own explicit unit.
-        WaterNSW&apos;s and Hunter Water&apos;s explicit printed Total expenses are accepted only
-        when their printed components and profit bridges reconcile exactly; Hunter Water&apos;s
+        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–10 add
+        nine separate entities: Sydney Water Corporation, WaterNSW (Water NSW), Hunter Water
+        Corporation, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW,
+        TAHE (Transport Asset Holding Entity of New South Wales) and Sydney Trains. Each latest
+        annual report is discovered from the entity&apos;s official annual-report page (no
+        hard-coded PDF URL), SHA-256 archived outside the repo, and parsed as entity-level statement
+        lines (<code>jurisdiction_level: soc</code>, <code>aggregation_role: agency_detail</code>)
+        with an explicit printed $’000 unit (Forestry Corporation) or the entity’s own explicit
+        unit. WaterNSW&apos;s and Hunter Water&apos;s explicit printed Total expenses are accepted
+        only when their printed components and profit bridges reconcile exactly; Hunter Water&apos;s
         one-dollar printed tax/NPAT rounding is retained only as the printed net result and flagged
         for human spot-check. Essential Energy prints in $M and has no single Total expenses
         subtotal, so its total expenses is the exact sum of the printed expense lines, accepted only
@@ -95,9 +95,15 @@ export function DataSourcesPage() {
         accepted only when its five revenue lines, five non-nil expense lines plus an explicitly
         printed nil valuation decrement and the net-result bridge reconcile exactly; its separately
         disclosed Grants and contributions line is flagged potential double count and two lines are
-        flagged for human spot-check. Rows are provisional and unverified; government-named funding
-        rows carry a potential-double-count warning. SOC rows are never added to government program
-        spending, the PNFC benchmark, another SOC entity or each other, and are exposed only at{' '}
+        flagged for human spot-check. Sydney Trains prints in $’000 with explicit printed Total
+        revenue and Total expenses excluding losses, accepted only when its four revenue lines, six
+        expense lines, deficit-before-grants, operations-result and net-result bridges (including
+        the below-the-line gains/losses) reconcile exactly; its separately disclosed Grants and
+        contributions line is flagged potential double count, two lines are flagged for human
+        spot-check, and the published Volume 2 PDF’s “Draft” footer is recorded as a provenance
+        caveat. Rows are provisional and unverified; government-named funding rows carry a
+        potential-double-count warning. SOC rows are never added to government program spending, the
+        PNFC benchmark, another SOC entity or each other, and are exposed only at{' '}
         <code>/api/soc</code> with separate entity/source badges. WA remains a stub. No grant row is
         estimated or zero-filled.
       </Typography>

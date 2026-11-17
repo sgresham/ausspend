@@ -236,11 +236,11 @@ describe('F1 extended measure shape and API', () => {
     // ABS GFS, ABS GFS PNFC, AusTender, PBS, GrantConnect (manual export), NSW
     // Budget, CKAN, Dubbo, VIC Budget, QLD Budget, QLD QGIP, ACNC charity and
     // Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation, Landcom,
-    // Port Authority of NSW and TAHE SOC are wired; the remaining four are stubs.
+    // Port Authority of NSW, TAHE and Sydney Trains SOC are wired; the remaining four are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(20);
+    ).toBe(21);
     expect(coverage.body.connector_status_counts.stub).toBe(4);
     expect([
       ...coverage.body.federal_ingestion.live,

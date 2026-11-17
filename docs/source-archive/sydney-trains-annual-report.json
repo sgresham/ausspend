@@ -1,0 +1,22 @@
+{
+  "entity": "Sydney Trains",
+  "jurisdiction": "NSW",
+  "dataset": "Sydney Trains — Annual Report",
+  "publisher": "Sydney Trains (Transport for NSW)",
+  "discovery_page": "https://www.transport.nsw.gov.au/news-and-events/reports-and-publications/sydney-trains-annual-reports",
+  "license": "© Transport for NSW. Published Sydney Trains annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T09:37:28.394Z",
+  "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for Sydney Trains only. Never add to government program spending, to the PNFC sector benchmark, or to each other: Total revenue (1,759,052 thousand) excludes the separately presented Grants and contributions line (3,500,212 thousand); Total expenses excluding losses (5,376,430 thousand) excludes the below-the-line Gains/(losses) on disposal, Other gains/(losses) and Impairment reversals/(losses) that are included in the printed net-result bridge; the net result is a deficit of 128,277 thousand. The published Volume 2 PDF carries a 'Draft for year end June 2025' footer alongside the signed Chief Executive statement and signed independent auditor's report, so the rows are provisional and unverified and are flagged for human spot-check.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25 — audited financial statements",
+      "filename": "sydney-trains-annual-report-2024-25-volume-2.pdf",
+      "url": "https://www.transport.nsw.gov.au/system/files/media/documents/2025/sydney-trains-annual-report-2024%E2%80%9325-volume-2.pdf",
+      "sha256": "676354a52c69dac616e9de05a62102ac3949c551fa0f4fae8490afef130d4eb0",
+      "bytes": 2104788,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest Sydney Trains annual report discovered from the official Transport for NSW Sydney Trains annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. Sydney Trains publishes two volumes; the audited Statement of comprehensive income is in Volume 2, so discovery selects the latest report year's financial-statements volume. The statement prints an explicit $'000 unit and explicit Total revenue and Total expenses excluding losses subtotals. Both printed totals are accepted only when the printed revenue lines, expense lines, deficit-before-grants bridge, operations-result bridge (adding Grants and contributions) and net-result bridge (adding gains/losses on disposal, other gains/losses and impairment reversals) reconcile exactly. Grants and contributions are separately disclosed, so one grant row carries potential_double_count=true. The published Volume 2 PDF carries a 'Draft for year end June 2025' footer even though it includes the signed Chief Executive statement and signed independent auditor's report; that provenance caveat is recorded and two lines are flagged for human spot-check. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Sydney Trains rows to government program spending, the PNFC benchmark, or any other SOC."
+}
