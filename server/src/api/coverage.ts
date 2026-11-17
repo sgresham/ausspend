@@ -7,6 +7,12 @@ import {
   ABS_GFS_PNFC_ID,
   CONNECTORS,
   GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
+  HUNTER_WATER_CAVEAT,
+  HUNTER_WATER_ENTITY,
+  HUNTER_WATER_ID,
+  HUNTER_WATER_JURISDICTION,
+  HUNTER_WATER_UNIT,
+  HUNTER_WATER_UNIT_LABEL,
   PBS_CAVEAT,
   SYDNEY_WATER_CAVEAT,
   SYDNEY_WATER_ENTITY,
@@ -105,7 +111,7 @@ function coverageLimitations(
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
     'ABS GFS Annual 2024-25 is a COFOG-A expense benchmark from the official XLSX (Key Tables 9/10). The ABS SDMX API has no GFS/COFOG dataflow, so no SDMX query is used. Every GFS row is a published official aggregate (verified: true, aggregation_role "benchmark") at federal/state/local level; it is never project-level and is never summed with project data, across levels or across measure types. The benchmark is exposed separately at /api/benchmark and excluded from the generic spending/search queries.',
     'ABS GFS Public Non-Financial Corporations (PNFC) is a separate sector benchmark from nine official Annual 2024-25 XLSX data cubes (Australia all levels plus the eight states/territories). The ABS SDMX API has no PNFC/GFS dataflow, so no SDMX query is used. Only the published Total GFS revenue and Total GFS expenses rows are ingested, as separate flows, with jurisdiction_level "pnfc", verified: true and aggregation_role "benchmark". It is a sector aggregate, exposed only at /api/benchmark/pnfc and excluded from generic spending/search: never add it to SOC/entity, government, charity or project data, and never sum across jurisdictions or revenue/expense flows.',
-    'NSW SOC (phase 2) covers one state-owned corporation only: Sydney Water Corporation. Its latest annual report is discovered from Sydney Water\'s annual-report page (no hard-coded PDF URL), SHA-256 archived outside the repo, and read as an entity-level statement (jurisdiction_level "soc", aggregation_role "agency_detail"). The printed unit is explicit $’000; total expenses is the exact sum of the two printed expense totals (finance costs + other expenses) and is accepted only when the statement profit-before-tax bridge and both Note 2 subtotals reconcile exactly. Every row is provisional and unverified. SOC rows are exposed only at /api/soc and are never added to government program spending, to the PNFC benchmark, or to each other; rows whose funding_source names a government agency/contribution are flagged potential_double_count. No other SOC, no VIC/QLD SOC, no BP1 Chapter 9 and no project/LGA/coordinate is covered.',
+    'NSW SOC (phase 2) covers one state-owned corporation only: Sydney Water Corporation. Its latest annual report is discovered from Sydney Water\'s annual-report page (no hard-coded PDF URL), SHA-256 archived outside the repo, and read as an entity-level statement (jurisdiction_level "soc", aggregation_role "agency_detail"). The printed unit is explicit $’000; total expenses is the exact sum of the two printed expense totals (finance costs + other expenses) and is accepted only when the statement profit-before-tax bridge and both Note 2 subtotals reconcile exactly. Every row is provisional and unverified. SOC rows are exposed only at /api/soc and are never added to government program spending, to the PNFC benchmark, or to each other; rows whose funding_source names a government agency/contribution are flagged potential_double_count. NSW SOC phase 4 adds a third entity, Hunter Water Corporation: the same discovery/SHA-256/$’000 gate, an explicit printed Total expenses accepted only when its printed components, the Note 3 operational-expenses subtotal and the profit-before-tax bridge reconcile exactly, with a one-dollar printed tax/NPAT rounding retained only as the printed net result and flagged for human spot-check. No other SOC, no VIC/QLD SOC, no BP1 Chapter 9 and no project/LGA/coordinate is covered.',
     'ACNC charity expenses are reported by registered charities, not government. They are jurisdiction_level "charity", have no COFOG function, and are never merged with federal/state/local spending. Every charity row has an explicit expense_category; total-expenses rows (aggregation_role expense_total) and component rows (expense_component) are never summed together. State/postcode comes only from AIS program operating locations, is single-state only and is flagged location_approximate.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory plus one S3 sub-state region (Dubbo, level "region", parent NSW). No other local council or other state has a connector. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
@@ -230,12 +236,17 @@ export function createCoverageHandler(
     const pnfcBenchmarkLive = absGfsPnfc?.status === 'active' || absGfsPnfc?.status === 'degraded';
     const sydneyWater = dataSourceById.get(SYDNEY_WATER_ID);
     const waterNsw = dataSourceById.get(WATERNSW_ID);
-    const socLiveIds = [SYDNEY_WATER_ID, WATERNSW_ID].filter((id) => {
+    const hunterWater = dataSourceById.get(HUNTER_WATER_ID);
+    const socLiveIds = [SYDNEY_WATER_ID, WATERNSW_ID, HUNTER_WATER_ID].filter((id) => {
       const source = dataSourceById.get(id);
       return source?.status === 'active' || source?.status === 'degraded';
     });
     const socLive = socLiveIds.length > 0;
-    const socLastIngested = [sydneyWater?.last_ingested_at, waterNsw?.last_ingested_at]
+    const socLastIngested = [
+      sydneyWater?.last_ingested_at,
+      waterNsw?.last_ingested_at,
+      hunterWater?.last_ingested_at,
+    ]
       .filter((value) => value !== null && value !== undefined)
       .sort((a, b) => new Date(b as Date).getTime() - new Date(a as Date).getTime())[0];
     const phaseBase = liveIngestion
@@ -258,6 +269,7 @@ export function createCoverageHandler(
           ? `+ NSW SOC (${[
               socLiveIds.includes(SYDNEY_WATER_ID) ? 'Sydney Water' : null,
               socLiveIds.includes(WATERNSW_ID) ? 'WaterNSW' : null,
+              socLiveIds.includes(HUNTER_WATER_ID) ? 'Hunter Water' : null,
             ]
               .filter(Boolean)
               .join(' + ')})`
@@ -379,18 +391,21 @@ export function createCoverageHandler(
       },
       soc_ingestion: {
         live: socLiveIds,
-        degraded: [SYDNEY_WATER_ID, WATERNSW_ID].filter(
+        degraded: [SYDNEY_WATER_ID, WATERNSW_ID, HUNTER_WATER_ID].filter(
           (id) => dataSourceById.get(id)?.status === 'degraded',
         ),
         last_ingested_at: socLastIngested ? new Date(socLastIngested).toISOString() : null,
         // Row counts only; entity amounts are never combined into a total.
-        records: (sydneyWater?.records_ingested ?? 0) + (waterNsw?.records_ingested ?? 0),
+        records:
+          (sydneyWater?.records_ingested ?? 0) +
+          (waterNsw?.records_ingested ?? 0) +
+          (hunterWater?.records_ingested ?? 0),
         // Kept for the single-source shape: the first SOC entity.
         entity: SYDNEY_WATER_ENTITY,
         jurisdiction: SYDNEY_WATER_JURISDICTION,
         unit: SYDNEY_WATER_UNIT,
         unit_label: SYDNEY_WATER_UNIT_LABEL,
-        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW is a separate SOC entity; its rows are never added to Sydney Water's or to any other total.`,
+        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW and Hunter Water are separate SOC entities; their rows are never added to Sydney Water's or to any other total.`,
         label: 'SOC entity statement — never add to government program spending',
         entities: [
           {
@@ -417,8 +432,20 @@ export function createCoverageHandler(
               : null,
             caveat: WATERNSW_CAVEAT,
           },
+          {
+            source_id: HUNTER_WATER_ID,
+            entity: HUNTER_WATER_ENTITY,
+            jurisdiction: HUNTER_WATER_JURISDICTION,
+            unit: HUNTER_WATER_UNIT,
+            unit_label: HUNTER_WATER_UNIT_LABEL,
+            records: hunterWater?.records_ingested ?? 0,
+            last_ingested_at: hunterWater?.last_ingested_at
+              ? new Date(hunterWater.last_ingested_at).toISOString()
+              : null,
+            caveat: HUNTER_WATER_CAVEAT,
+          },
         ],
-        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water and WaterNSW. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed $’000 unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the two entities are never summed together. Government-named funding rows carry potential_double_count.',
+        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water, WaterNSW and Hunter Water. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed $’000 unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges; Hunter Water: explicit printed Total expenses plus its component, Note 3 and profit-before-tax bridges). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the entities are never summed together. Government-named funding rows carry potential_double_count.',
       },
       local_ingestion: {
         live: localConnectors

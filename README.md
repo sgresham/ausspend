@@ -620,7 +620,7 @@ last-ingested times/record counts and the PBS line-item caveat, and lists every 
 coverage metadata with id, name, publisher, source URL, status, jurisdiction level, last fetch and
 records ingested; stubs are marked **stub — not wired**. It also shows the API's coverage
 `limitations`. The `/soc` page adds the NSW State Owned Corporation layer: entity-level statement
-lines for Sydney Water only, with a `$’000` unit badge, Unverified badge, provenance link, a
+lines for Sydney Water, WaterNSW and Hunter Water, with a `$’000` unit badge, Unverified badge, provenance link, a
 no-total rule and a **potential double count** chip for government-named funding rows. The `/about`
 page explains the current real-only scope, how provenance is attached, and why mixed measures never
 get a headline total. Every page also shows a site-wide footer notice linking to `/legal`, which
@@ -646,8 +646,9 @@ Every spending value carries a `SourceRef` (`source_id`, `source_url`, `verified
 as integer `MoneyCents`. Real project and charity rows remain `verified: false` until a human checks
 them; only the ABS GFS COFOG-A and ABS GFS PNFC benchmark rows are `verified: true`, and they are
 never summed with project data, SOC/entity data or each other. PNFC revenue and expense are separate
-flows. Sydney Water SOC entity rows are provisional and `verified: false`; they are exposed only at
-`/api/soc` and are never added to government program spending, the PNFC benchmark or each other.
+flows. Sydney Water, WaterNSW and Hunter Water SOC entity rows are provisional and `verified: false`;
+they are exposed only at `/api/soc` and are never added to government program spending, the PNFC
+benchmark or each other.
 The seed asserts it produces no verified measures before reporting success.
 
 ## Docker Compose (development)

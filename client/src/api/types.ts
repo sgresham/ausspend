@@ -467,7 +467,7 @@ export interface SocSource {
 export interface SocResponse {
   /** The requested or sole entity's source (kept for single-source callers). */
   source: SocSource;
-  /** Every registered SOC entity source, so Sydney Water and WaterNSW stay distinct. */
+  /** Every registered SOC entity source, so Sydney Water, WaterNSW and Hunter Water stay distinct. */
   sources: SocSource[];
   fiscal_years: string[];
   entities: string[];

@@ -1,13 +1,14 @@
-# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW)
+# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water)
 
 **Status:** the ABS GFS Public Non-Financial Corporations (PNFC) sector
-benchmark is implemented, and two NSW per-entity State Owned Corporation (SOC)
-adapters are implemented: **Sydney Water Corporation** and **WaterNSW (Water
-NSW)**. Per-entity NSW SOC extraction for any other entity, BP1 Chapter 9,
+benchmark is implemented, and three NSW per-entity State Owned Corporation (SOC)
+adapters are implemented: **Sydney Water Corporation**, **WaterNSW (Water NSW)**
+and **Hunter Water Corporation**. Per-entity NSW SOC extraction for any other entity, BP1 Chapter 9,
 VIC/QLD SOC and any synthetic SOC rows are out of scope and are not implemented.
-The two SOC entities are separate sources and are never summed with each other.
+The three SOC entities are separate sources and are never summed with each other.
 
-`npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW**,
+`npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW, then
+Hunter Water**,
 logging each source's success/failure and continuing after a source error.
 
 ## 1. Source: ABS GFS PNFC (Annual 2024-25 data cubes)
@@ -399,24 +400,147 @@ Note 3 total lines (revenue, expenses, employee, depreciation/amortisation, net
 result, NSW Government contributions). It is **medium** for the two smaller
 grant components. It is never a substitute for human verification.
 
+## 2B. Source: Hunter Water (third NSW SOC entity)
+
+### Legal and entity basis
+
+Hunter Water Corporation is a NSW statutory State Owned Corporation that
+provides water, wastewater, recycled water and stormwater services in the Lower
+Hunter region. Its general-purpose financial statements are prepared under the
+_Government Sector Finance Act 2018_, the _State Owned Corporations Act 1989_
+and NSW Treasury directions, and are audited by the Audit Office of New South
+Wales. The annual report for 2024-25 was authorised for issue on 28 August 2025.
+
+"Hunter Water" is the canonical `delivery_entity`. The entity-level statement is
+**not** a level of government, **not** project spending, **not** geographically
+disaggregated (no LGA, SA2, postcode or coordinate) and **not** the ABS PNFC
+sector aggregate. It is stored with `jurisdiction_level: "soc"` and
+`aggregation_role: "agency_detail"`. Hunter Water rows are never added to Sydney
+Water's, WaterNSW's or any other SOC's rows.
+
+### PDF discovery (no hard-coded URL)
+
+The connector starts at Hunter Water's official reports-and-publications page:
+
+`https://www.hunterwater.com.au/about/publications/reports-and-publications`
+
+It parses the annual-report sub-page links, selects the latest report year,
+then parses the PDF links on that sub-page. The CRFD, half-yearly and Statement
+of Corporate Intent documents are explicitly excluded. There is no hard-coded
+PDF URL; the discovery test proves the parser selects 2024-25 from a page that
+also lists the CRFD and 2023-24.
+
+Latest source found on 2026-11-17 (Annual Report 2024–25):
+
+- URL: `https://www.hunterwater.com.au/documents/assets/src/uploads/documents/Annual-Reports-Past-Reports/Annual-report-2024-25.pdf`
+- Discovery page: `https://www.hunterwater.com.au/about/publications/reports-and-publications/annual-report-2025`
+- SHA-256: `2040f377e551769e102fa6f792b215abe5efa2dda558caf0b2d4639f5668b23a`
+- Bytes: `13,658,943`
+- Archive: outside the repo (`AUSSPEND_SOURCE_ARCHIVE` /
+  `~/ausspend-source-archive/hunter-water/`)
+
+### Printed unit detection and the `$'000` guard
+
+The audited Income Statement (PDF page 77) prints `$'000` in both column
+headers, and the Basis of preparation (PDF page 82) states all amounts are
+rounded to the nearest thousand dollars. The adapter reads the statement unit
+row and calls the shared `detectMoneyUnit`; the only accepted unit is
+`thousands`. A statement whose header prints `$` (dollars) or no unit is
+rejected with `phase: "unit"` and no rows are ingested. One `$'000` unit =
+**100,000 cents**.
+
+### Zero-tolerance reconciliation
+
+The Income Statement prints (2025, `$'000`):
+
+| Printed line                            | 2025          |
+| --------------------------------------- | ------------- |
+| Services                                | 446,759       |
+| Other income                            | 290           |
+| **Total revenue**                       | **447,049**   |
+| Operational expenses                    | (198,606)     |
+| Depreciation and amortisation           | (107,778)     |
+| Finance costs                           | (88,870)      |
+| Superannuation expense                  | (9,489)       |
+| Asset revaluation increment/(decrement) | 7             |
+| Other                                   | (13,590)      |
+| **Total expenses**                      | **(418,326)** |
+| **Profit before income tax**            | **28,723**    |
+| Income tax expense                      | (9,316)       |
+| Profit after income tax                 | 19,406        |
+| Profit for the year                     | 19,406        |
+| Notes 3 operational expenses            | 198,606       |
+| Note 2 Government grants and rebates    | 19,901        |
+
+The adapter accepts the explicit printed `Total expenses` only when:
+
+- revenue components: 446,759 + 290 = 447,049 exactly;
+- expense components: −198,606 −107,778 −88,870 −9,489 + 7 −13,590 = −418,326
+  exactly (the +7 is the printed revaluation increment, a signed reduction);
+- profit before tax: 447,049 + (−418,326) = 28,723 exactly;
+- Note 3 operational expenses: 69,617 + 24,862 + 54,272 + 7,010 + 41,958 + 887
+  = 198,606 exactly.
+
+A one-unit mismatch in any of these bridges defers the whole document with
+`phase: "reconciliation"`. The audited statement itself prints a one-dollar
+tax/NPAT arithmetic rounding: PBT 28,723 − income tax 9,316 = 19,407, but the
+printed Profit for the year is 19,406 (Note 5 also totals 9,316). The adapter
+keeps the printed NPAT as the net-result line, records the difference as a
+warning, does not use it in any reconciliation, and flags it for a human
+spot-check. No figure is invented.
+
+### Extracted rows
+
+Every row is provisional, `verified: false`, `measure_type: "actual"`,
+`jurisdiction_level: "soc"`, `jurisdiction: "NSW"`, `delivery_entity:
+"Hunter Water"`, `location: { state: "NSW" }`, `source_dataset: "Hunter Water
+Annual Report 2024-25"`, `source_url` the exact PDF, `data_quality_flag:
+"provisional"`, `aggregation_role: "agency_detail"`, and a natural key
+`sha256(entity + fiscal_year + line_item + document_url)` prefixed
+`hunter-water:`.
+
+| `soc_line_item`                 | Printed source                                 | 2025 `$'000` | funding_source                       | `potential_double_count` |
+| ------------------------------- | ---------------------------------------------- | ------------ | ------------------------------------ | ------------------------ |
+| `total_revenue`                 | Statement Total revenue                        | 447,049      | Hunter Water                         | false                    |
+| `total_expenses`                | Statement Total expenses (explicit)            | **418,326**  | Hunter Water                         | false                    |
+| `employee_expenses`             | Note 3 Operational expenses — Employee related | 69,617       | Hunter Water                         | false                    |
+| `depreciation_amortisation`     | Statement Depreciation and amortisation        | 107,778      | Hunter Water                         | false                    |
+| `net_result`                    | Statement Profit after income tax              | 19,406       | Hunter Water                         | false                    |
+| `government_grants_and_rebates` | Note 2 Revenue                                 | 19,901       | NSW Government (agency not itemised) | **true**                 |
+
+No project, LGA, SA2, postcode or coordinate is written. No line item is
+invented: every value is a printed statement or note line.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (418,326 $'000)** — explicit printed total. Confirm it is
+   the intended "total expenses" definition and that the signed revaluation
+   increment is correctly treated as reducing expenses.
+2. **`net_result` (19,406 $'000)** — the printed Profit for the year, retained
+   despite the audited one-dollar tax/NPAT arithmetic rounding. Confirm the
+   printed NPAT is the intended net result and not the derived 19,407.
+
+Both rows carry `human_spot_check: required` in their notes. No Hunter Water row
+is marked verified in this phase.
+
 ## 3. Mapping (PNFC and SOC)
 
-| Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             |
-| ------------------------ | ----------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| `jurisdiction_level`     | `pnfc`                                          | `soc`                                                    | `soc`                                                    |
-| `jurisdiction`           | `Australia` or `NSW`/`VIC`/…                    | `NSW`                                                    | `NSW`                                                    |
-| `location`               | absent for national; `{ state }` for state rows | `{ state: "NSW" }` (statewide only)                      | `{ state: "NSW" }` (statewide only)                      |
-| `function_code`          | absent                                          | absent                                                   | absent                                                   |
-| `amount_cents`           | `$m × 100,000,000`                              | `$’000 × 100,000`                                        | `$’000 × 100,000`                                        |
-| `measure_type`           | `actual`                                        | `actual`                                                 | `actual`                                                 |
-| `aggregation_role`       | `benchmark`                                     | `agency_detail`                                          | `agency_detail`                                          |
-| `verified`               | `true`                                          | `false`                                                  | `false`                                                  |
-| `data_quality_flag`      | `verified`                                      | `provisional`                                            | `provisional`                                            |
-| `gfs_flow`               | `revenue` / `expense`                           | absent (`soc_line_item` carries the line)                | absent (`soc_line_item` carries the line)                |
-| `soc_line_item`          | absent                                          | stable line key (table above)                            | stable line key (table above)                            |
-| `soc_unit`               | absent                                          | `AUD_thousands`                                          | `AUD_thousands`                                          |
-| `potential_double_count` | absent                                          | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source |
-| `natural_key`            | `abs-gfs-pnfc:` + 40 hex                        | `sydney-water:` + 40 hex                                 | `waternsw:` + 40 hex                                     |
+| Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             | Hunter Water SOC                                         |
+| ------------------------ | ----------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| `jurisdiction_level`     | `pnfc`                                          | `soc`                                                    | `soc`                                                    | `soc`                                                    |
+| `jurisdiction`           | `Australia` or `NSW`/`VIC`/…                    | `NSW`                                                    | `NSW`                                                    | `NSW`                                                    |
+| `location`               | absent for national; `{ state }` for state rows | `{ state: "NSW" }` (statewide only)                      | `{ state: "NSW" }` (statewide only)                      | `{ state: "NSW" }` (statewide only)                      |
+| `function_code`          | absent                                          | absent                                                   | absent                                                   | absent                                                   |
+| `amount_cents`           | `$m × 100,000,000`                              | `$’000 × 100,000`                                        | `$’000 × 100,000`                                        | `$'000 × 100,000`                                        |
+| `measure_type`           | `actual`                                        | `actual`                                                 | `actual`                                                 | `actual`                                                 |
+| `aggregation_role`       | `benchmark`                                     | `agency_detail`                                          | `agency_detail`                                          | `agency_detail`                                          |
+| `verified`               | `true`                                          | `false`                                                  | `false`                                                  | `false`                                                  |
+| `data_quality_flag`      | `verified`                                      | `provisional`                                            | `provisional`                                            | `provisional`                                            |
+| `gfs_flow`               | `revenue` / `expense`                           | absent (`soc_line_item` carries the line)                | absent (`soc_line_item` carries the line)                | absent (`soc_line_item` carries the line)                |
+| `soc_line_item`          | absent                                          | stable line key (table above)                            | stable line key (table above)                            | stable line key (table above)                            |
+| `soc_unit`               | absent                                          | `AUD_thousands`                                          | `AUD_thousands`                                          | `AUD_thousands`                                          |
+| `potential_double_count` | absent                                          | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source |
+| `natural_key`            | `abs-gfs-pnfc:` + 40 hex                        | `sydney-water:` + 40 hex                                 | `waternsw:` + 40 hex                                     | `hunter-water:` + 40 hex                                 |
 
 ## 4. No-sum and double-count invariants (critical)
 
@@ -430,10 +554,10 @@ grant components. It is never a substitute for human verification.
   already includes the separately shown grants; `total_expenses` already
   includes employee, depreciation/amortisation and transfer lines; `net_result`
   is a result, not an expense. Summing any of them is invalid.
-- Sydney Water and WaterNSW are **separate sources and separate entities**.
+- Sydney Water, WaterNSW and Hunter Water are **separate sources and separate entities**.
   The API returns a `sources` array and an `entities` filter; the UI shows an
-  entity column and an entity selector. WaterNSW rows are never added to Sydney
-  Water's rows.
+  entity column and an entity selector. WaterNSW and Hunter Water rows are never
+  added to Sydney Water's rows or to each other.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
@@ -462,14 +586,15 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then Sydney Water, then WaterNSW, in order.
+1. Runs the PNFC connector first, then Sydney Water, WaterNSW and Hunter Water, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
 4. Never deletes any row and never touches any other source.
 5. Writes `docs/source-archive/abs-gfs-pnfc-2024-25.json`,
    `docs/source-archive/sydney-water-annual-report.json` and
-   `docs/source-archive/waternsw-annual-report.json`. The exact bytes stay
+   `docs/source-archive/waternsw-annual-report.json` and
+   `docs/source-archive/hunter-water-annual-report.json`. The exact bytes stay
    outside the repo.
 6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
 

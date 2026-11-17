@@ -1,5 +1,14 @@
 import type { RequestHandler } from 'express';
 import {
+  HUNTER_WATER_CAVEAT,
+  HUNTER_WATER_ENTITY,
+  HUNTER_WATER_ID,
+  HUNTER_WATER_JURISDICTION,
+  HUNTER_WATER_NAME,
+  HUNTER_WATER_SOURCE_URL,
+  HUNTER_WATER_UNIT,
+  HUNTER_WATER_UNIT_LABEL,
+  HUNTER_WATER_UNIT_TO_CENTS,
   SYDNEY_WATER_CAVEAT,
   SYDNEY_WATER_ENTITY,
   SYDNEY_WATER_ID,
@@ -31,7 +40,7 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
  * program spending. Each SOC entity (Sydney Water, WaterNSW) is a separate
- * source and is never summed with the other.
+ * source and is never summed with the others.
  */
 
 const SOC_SOURCES = [
@@ -56,6 +65,17 @@ const SOC_SOURCES = [
     unit_label: WATERNSW_UNIT_LABEL,
     unit_to_cents: WATERNSW_UNIT_TO_CENTS,
     caveat: WATERNSW_CAVEAT,
+  },
+  {
+    source_id: HUNTER_WATER_ID,
+    name: HUNTER_WATER_NAME,
+    entity: HUNTER_WATER_ENTITY,
+    jurisdiction: HUNTER_WATER_JURISDICTION,
+    discovery_page: HUNTER_WATER_SOURCE_URL,
+    unit: HUNTER_WATER_UNIT,
+    unit_label: HUNTER_WATER_UNIT_LABEL,
+    unit_to_cents: HUNTER_WATER_UNIT_TO_CENTS,
+    caveat: HUNTER_WATER_CAVEAT,
   },
 ] as const;
 

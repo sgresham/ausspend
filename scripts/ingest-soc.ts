@@ -12,6 +12,17 @@ import {
   ABS_GFS_PNFC_TABLES,
   ABS_GFS_PNFC_UNIT,
   ABS_GFS_PNFC_UNIT_TO_CENTS,
+  HUNTER_WATER_CAVEAT,
+  HUNTER_WATER_ENTITY,
+  HUNTER_WATER_ID,
+  HUNTER_WATER_JURISDICTION,
+  HUNTER_WATER_LICENSE,
+  HUNTER_WATER_NAME,
+  HUNTER_WATER_PUBLISHER,
+  HUNTER_WATER_SOURCE_URL,
+  HUNTER_WATER_UNIT,
+  HUNTER_WATER_UNIT_LABEL,
+  HUNTER_WATER_UNIT_TO_CENTS,
   SYDNEY_WATER_CAVEAT,
   SYDNEY_WATER_ENTITY,
   SYDNEY_WATER_ID,
@@ -52,7 +63,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *
  * It runs, in order: the ABS GFS Public Non-Financial Corporations (PNFC)
  * sector benchmark from the nine official ABS GFS Annual 2024-25 XLSX data
- * cubes, then the NSW SOC per-entity adapters — Sydney Water, then WaterNSW.
+ * cubes, then the NSW SOC per-entity adapters — Sydney Water, WaterNSW, then
+ * Hunter Water.
  * The ABS SDMX API has no PNFC/GFS dataflow, so the PNFC XLSX is the
  * human-approved fallback.
  *
@@ -63,16 +75,21 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * PNFC is a sector aggregate: jurisdiction_level "pnfc",
  * aggregation_role "benchmark", verified true. It is never added to SOC/entity,
  * government, charity or project data, and revenue/expense or jurisdictions are
- * never summed. The Sydney Water and WaterNSW entity adapters are separate SOC
+ * never summed. The Sydney Water, WaterNSW and Hunter Water entity adapters are separate SOC
  * sources and are never summed with each other or with PNFC. The runner prints
  * per-source counts only, never a combined total. It never deletes any row.
  */
 /**
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
- * per-entity adapters (Sydney Water, then WaterNSW). No other SOC adapter is
- * implemented, and the two entity adapters are never summed together.
+ * per-entity adapters (Sydney Water, WaterNSW, then Hunter Water). No other SOC adapter is
+ * implemented, and the three entity adapters are never summed together.
  */
-export const SOC_SOURCE_IDS = [ABS_GFS_PNFC_ID, SYDNEY_WATER_ID, WATERNSW_ID] as const;
+export const SOC_SOURCE_IDS = [
+  ABS_GFS_PNFC_ID,
+  SYDNEY_WATER_ID,
+  WATERNSW_ID,
+  HUNTER_WATER_ID,
+] as const;
 
 /**
  * Placeholder for the later per-entity NSW SOC adapters. Do not add ids here
@@ -185,6 +202,39 @@ async function writeWaterNswManifest(): Promise<void> {
   );
 }
 
+async function writeHunterWaterManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: HUNTER_WATER_ID });
+  const manifestPath = path.resolve(
+    process.env.HUNTER_WATER_MANIFEST ?? 'docs/source-archive/hunter-water-annual-report.json',
+  );
+  const manifest = {
+    entity: HUNTER_WATER_ENTITY,
+    jurisdiction: HUNTER_WATER_JURISDICTION,
+    dataset: HUNTER_WATER_NAME,
+    publisher: HUNTER_WATER_PUBLISHER,
+    discovery_page: HUNTER_WATER_SOURCE_URL,
+    license: HUNTER_WATER_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${HUNTER_WATER_UNIT_LABEL} (${HUNTER_WATER_UNIT}; x${HUNTER_WATER_UNIT_TO_CENTS} cents per unit)`,
+    caveat: HUNTER_WATER_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      'Latest Hunter Water annual report discovered from the official reports-and-publications page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The audited Income Statement prints an explicit $’000 unit. Total expenses is an explicit printed total and is accepted only when the printed revenue and expense components, the Note 3 operational-expenses subtotal and the profit-before-tax bridge reconcile exactly. The audited statement prints a one-dollar tax/NPAT arithmetic rounding; the printed NPAT is retained as the net-result line, is not used in any reconciliation, and is flagged for human spot-check. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Hunter Water rows to government program spending, the PNFC benchmark, Sydney Water, WaterNSW, or each other.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -224,6 +274,7 @@ async function main(): Promise<void> {
     await writePnfcManifest();
     await writeSydneyWaterManifest();
     await writeWaterNswManifest();
+    await writeHunterWaterManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -313,6 +364,33 @@ async function main(): Promise<void> {
     );
     for (const group of wnByLine) {
       console.log(`[ingest:soc] ${WATERNSW_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const hwRows = await MeasureModel.countDocuments({ source_id: HUNTER_WATER_ID });
+    const hwVerified = await MeasureModel.countDocuments({
+      source_id: HUNTER_WATER_ID,
+      verified: true,
+    });
+    const hwDoubleCount = await MeasureModel.countDocuments({
+      source_id: HUNTER_WATER_ID,
+      potential_double_count: true,
+    });
+    const hwByLine = await MeasureModel.aggregate([
+      { $match: { source_id: HUNTER_WATER_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const hwDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: HUNTER_WATER_ID,
+      status: 'deferred',
+    });
+    const hwArchived = await listArchivedRecords({ source_id: HUNTER_WATER_ID });
+    console.log(
+      `[ingest:soc] ${HUNTER_WATER_ID} rows=${hwRows} source_documents=${hwArchived.length} verified=${hwVerified} potential_double_count=${hwDoubleCount} deferred_documents=${hwDeferred} (entity-level SOC statement lines; no combined total is printed or computed)`,
+    );
+    for (const group of hwByLine) {
+      console.log(
+        `[ingest:soc] ${HUNTER_WATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW SOC adapters intentionally not implemented)`,
