@@ -597,7 +597,10 @@ notes; some are already stored. Deeper extraction could add further note compone
 components of the printed totals and must never be added to them. There is no published entity
 segment/program/LGA dollar breakdown in these audited statements. **Do not start WaterNSW
 deep-detail work here; that is item p67.** Licence: each report is © the corporation and used for
-public-interest research, not an open-data licence grant. **Priority P12 — do not deepen as a
+public-interest research, not an open-data licence grant. Other states do not use the same legal
+class or publish one comparable list; the state-by-state inventory and no-sum boundaries are in
+[docs/SOC_MULTI_STATE.md](./SOC_MULTI_STATE.md) (planning only; no other state row is ingested).
+**Priority P12 — do not deepen as a
 spending breakdown.**
 
 **Deep-detail update (2026-11-17, item p67):** the WaterNSW 2024-25 notes do publish parseable,

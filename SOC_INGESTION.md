@@ -8,7 +8,11 @@ NSW**, **Landcom**, **Port Authority of NSW**, **TAHE (Transport Asset
 Holding Entity of New South Wales)**, **Sydney Trains** and **NSW TrainLink**. Per-entity NSW SOC extraction for any
 other entity, BP1 Chapter 9, VIC/QLD SOC and any synthetic SOC rows are out of
 scope and are not implemented. The ten SOC entities are separate sources and
-are never summed with each other.
+are never summed with each other. The multi-state entity inventory — VIC, QLD,
+WA, SA, TAS, ACT and NT legal classes, official lists, annual reports,
+feasibility and gaps — is in
+[docs/SOC_MULTI_STATE.md](./docs/SOC_MULTI_STATE.md). It is planning only: no
+other state entity is in scope and no cross-state total exists.
 
 `npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW, then
 Hunter Water, then Essential Energy, then Forestry Corporation of NSW, then
