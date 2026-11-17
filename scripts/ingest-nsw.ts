@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import {
   COFFS_HARBOUR_GPFS_ID,
   LAKE_MACQUARIE_GPFS_ID,
+  LIVERPOOL_GPFS_ID,
   MID_COAST_GPFS_ID,
   PORT_MACQUARIE_HASTINGS_GPFS_ID,
   RANDWICK_GPFS_ID,
@@ -12,6 +13,7 @@ import {
   WOLLONGONG_GPFS_ID,
   createCoffsHarbourGpfsConnector,
   createLakeMacquarieGpfsConnector,
+  createLiverpoolGpfsConnector,
   createMidCoastGpfsConnector,
   createPortMacquarieHastingsGpfsConnector,
   createRandwickGpfsConnector,
@@ -26,6 +28,7 @@ import {
 import type { Connector } from '../server/src/connectors/types.js';
 import { fetchCoffsHarbourGpfsViaBrowser } from './coffs-harbour-gpfs-browser.js';
 import { fetchLakeMacquarieGpfsViaBrowser } from './lake-macquarie-gpfs-browser.js';
+import { fetchLiverpoolGpfsViaBrowser } from './liverpool-gpfs-browser.js';
 import { fetchMidCoastGpfsViaBrowser } from './mid-coast-gpfs-browser.js';
 import { fetchPortMacquarieHastingsGpfsViaBrowser } from './port-macquarie-hastings-gpfs-browser.js';
 import { fetchRandwickGpfsViaBrowser } from './randwick-gpfs-browser.js';
@@ -73,6 +76,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - cumberland-gpfs  GPFS expansion: Cumberland City Council's audited FY2024-25 GPFS
  *   - georges-river-gpfs  GPFS expansion: Georges River Council's audited FY2024-25 GPFS
  *   - fairfield-gpfs  GPFS expansion: Fairfield City Council's audited FY2024-25 GPFS
+ *   - liverpool-gpfs  GPFS expansion: Liverpool City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -83,8 +87,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Council, Shellharbour City Council, Waverley Council, Willoughby City
  * Council, Inner West Council, Bayside Council, Randwick City Council, the
  * Council of the City of Ryde, North Sydney Council, the City of Canada Bay
- * Council, Cumberland City Council, Georges River Council and Fairfield City
- * Council. No other councils, states/territories, SOC/charity or live state
+ * Council, Cumberland City Council, Georges River Council, Fairfield City
+ * Council and Liverpool City Council. No other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -120,6 +124,7 @@ export const NSW_SOURCE_IDS = [
   'cumberland-gpfs',
   'georges-river-gpfs',
   'fairfield-gpfs',
+  'liverpool-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -278,6 +283,23 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] north-sydney-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createNorthSydneyGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === LIVERPOOL_GPFS_ID) {
+      // Liverpool's Finance Reports page is behind a Cloudflare managed
+      // challenge that returns HTTP 403 to non-browser clients; the documented
+      // headless Chromium path clears it, and the connector still discovers the
+      // FY2024-25 "Audited Financial Statement" link under the "Financial Year
+      // 2024/2025" table from the cleared HTML and re-verifies the bytes.
+      console.log('[ingest:nsw] liverpool-gpfs: browser discovery/download starting');
+      const fetched = await fetchLiverpoolGpfsViaBrowser();
+      console.log(`[ingest:nsw] liverpool-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createLiverpoolGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
