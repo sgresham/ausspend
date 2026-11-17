@@ -20,7 +20,8 @@ Maitland City Council FY2024-25 GPFS (**§7.11**) then added exactly **7** `mait
 **17** `coffs-harbour-gpfs` rows (**515,629** → **515,646**); MidCoast Council FY2024-25 GPFS
 (**§7.13**) then added exactly **17** `mid-coast-gpfs` rows (**515,646** → **515,663**); Port
 Macquarie-Hastings Council FY2024-25 GPFS (**§7.14**) then added exactly **17**
-`port-macquarie-hastings-gpfs` rows (**515,663** → **515,680**).
+`port-macquarie-hastings-gpfs` rows (**515,663** → **515,680**). The Tweed Shire Council FY2024-25
+GPFS (**§7.15**) then added exactly **17** `tweed-shire-gpfs` rows (**515,680** → **515,697**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -235,7 +236,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 197 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 214 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -244,7 +245,9 @@ Sutherland Shire Council FY2024-25 (`sutherland-shire-gpfs`, §7.7), 17 for Woll
 FY2024-25 (`wollongong-gpfs`, §7.8), 17 for Newcastle City Council FY2024-25 (`newcastle-gpfs`,
 §7.9), 17 for Lake Macquarie City Council FY2024-25 (`lake-macquarie-gpfs`, §7.10), 7 for Maitland
 City Council FY2024-25 (`maitland-gpfs`, §7.11) and 17 for Coffs Harbour City Council FY2024-25
-(`coffs-harbour-gpfs`, §7.12) — all separate source ids. The existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS
+(`coffs-harbour-gpfs`, §7.12), 17 for MidCoast Council FY2024-25 (`mid-coast-gpfs`, §7.13), 17
+for Port Macquarie-Hastings Council FY2024-25 (`port-macquarie-hastings-gpfs`, §7.14) and 17 for
+Tweed Shire Council FY2024-25 (`tweed-shire-gpfs`, §7.15) — all separate source ids. The existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS
 actuals, and are not touched or summed with the GPFS rows.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
@@ -1442,6 +1445,69 @@ not added to expenditure.
 second ingest run upserted the same 17 natural keys and left the DB total unchanged (idempotent). No
 deletes or updates to any other source.
 
+### 7.15 Fifteenth council — Tweed Shire Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official "Annual and financial reports" page
+<https://www.tweed.nsw.gov.au/council/policies-plans-reports/annual-financial-reports> (no
+hard-coded document URL): the link text **"Financial Statements 2024–2025"** resolves to
+<https://www.tweed.nsw.gov.au/files/assets/public/v/1/documents/council/annual-and-financial-reports/tweed-shire-council-financial-statements-2024-2025.pdf>.
+The page is served over plain HTTP (no edge challenge). Exact bytes archived outside the repo at
+`~/ausspend-source-archive/tweed-shire-gpfs/tweed-shire-council-financial-statements-2024-2025.pdf`:
+**4,202,080 bytes**, SHA-256
+`8eabbdf40bf180e051598eaa90d542ca3ab8b7a27187ff0b8230b0433e7dee8f` (`hash_verified: true`). The
+printed unit is explicit `$ '000` (thousands) on the income statement and note B1-1; a missing or
+conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before
+each line label, so each emitted value is the first amount after the printed label (the FY2024-25
+actual). The printed expense-subtotal label is wrapped around the budget amount ("… impairment of
+non-financial 159,480 assets 186,872 175,509"), so the connector reads the value after the trailing
+word ("assets"), never the budget. The connector emits nothing unless all of these agree exactly:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                    |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ----------------------------------------- |
+| Total income from continuing operations (Income Statement)                                                                   |                          `$342,922` thousand | = `$342,922,000`                          |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$342,922` thousand | = printed total                           |
+| B1-1 Total functions and activities — income                                                                                 |                          `$342,922` thousand | = face statement                          |
+| Expense-by-nature components sum (employee + materials + borrowing + other + net loss on disposal)                           |                          `$186,872` thousand | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$70,596`)                           | `$186,872` + `$70,596` = `$257,468` thousand | = B1-1 expense total                      |
+| B1-1 Total functions and activities — expenses                                                                               |                          `$257,468` thousand | = `$257,468,000` (printed total)          |
+| Operating result / net operating result                                                                                      | `$342,922` − `$257,468` = `$85,454` thousand | = printed operating result                |
+| Net operating result for the year attributable to Council                                                                    |                           `$85,454` thousand | = operating result                        |
+| Net operating result before capital grants                                                                                   |    `$85,454` − `$79,561` = `$5,893` thousand | = printed before-capital result           |
+| B1-1 grants and contributions                                                                                                |                           `$97,530` thousand | = operating `$17,969` + capital `$79,561` |
+| Statement of Comprehensive Income net result                                                                                 |                           `$85,454` thousand | = Income Statement net result             |
+| Note B3-4 total depreciation and amortisation costs                                                                          |                           `$70,596` thousand | = face depreciation line                  |
+
+**Rows.** 17 rows, source id `tweed-shire-gpfs`, `source_dataset` "Tweed Shire Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Tweed Shire Council"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$342,922,000`, total expenses `$257,468,000`, employee expenses `$73,832,000`,
+depreciation/amortisation/impairment `$70,596,000`, operating government grants `$17,969,000`,
+capital government grants `$79,561,000` and net result `$85,454,000`; the face-statement revenue and
+expense components are included for provenance.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing
+same-entity rows are preserved untouched and never summed: **1 GrantConnect row** whose
+`delivery_entity` is exactly "Tweed Shire Council", plus **183 other rows** whose `delivery_entity`
+merely mentions Tweed under other strings (78 ACNC, 43 GrantConnect, 5 AusTender, 54 QLD QGIP and 3
+data.nsw rows); their per-source counts are identical before and after the ingest. All fourteen
+other council GPFS sources are unchanged (Dubbo 18, City of Sydney 18, Blacktown 17, Parramatta 17,
+Northern Beaches 18, Canterbury-Bankstown 17, Sutherland Shire 17, Wollongong 17, Newcastle 17, Lake
+Macquarie 17, Maitland 7, Coffs Harbour 17, MidCoast 17, Port Macquarie-Hastings 17). Government
+grant rows carry `potential_double_count: true` because they may overlap government program data;
+they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,680 → **515,697** (exactly +17);
+`tweed-shire-gpfs` **17**; `data-nsw-ckan` still **3,472**; `dubbo-council` still **245**; exact
+"Tweed Shire Council" rows 1 → **18** (the new 17 plus the pre-existing GrantConnect row);
+`data_sources` 40 → **41**. A second ingest run upserted the same 17 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -1471,7 +1537,8 @@ deletes or updates to any other source.
    expansion landed 2026-11-18:** Coffs Harbour City Council FY2024-25 GPFS, 17 non-additive rows
    (§7.12). **Twelfth expansion landed 2026-11-18:** MidCoast Council FY2024-25 GPFS, 17
    non-additive rows (§7.13). **Thirteenth expansion landed 2026-11-18:** Port Macquarie-Hastings
-   Council FY2024-25 GPFS, 17 non-additive rows (§7.14).
+   Council FY2024-25 GPFS, 17 non-additive rows (§7.14). **Fourteenth expansion landed
+   2026-11-18:** Tweed Shire Council FY2024-25 GPFS, 17 non-additive rows (§7.15).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
