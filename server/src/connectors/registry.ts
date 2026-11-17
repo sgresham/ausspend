@@ -15,6 +15,7 @@ import { createHunterWaterConnector } from './soc/nsw/hunter-water.js';
 import { createLandcomConnector } from './soc/nsw/landcom.js';
 import { createPortAuthorityConnector } from './soc/nsw/port-authority.js';
 import { createSydneyTrainsConnector } from './soc/nsw/sydney-trains.js';
+import { createNswTrainlinkConnector } from './soc/nsw/nsw-trainlink.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createTaheConnector } from './soc/nsw/tahe.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
@@ -188,6 +189,12 @@ export const CONNECTORS: readonly Connector[] = [
   // spending, the PNFC benchmark, or any other SOC. Other SOCs are not
   // implemented.
   createSydneyTrainsConnector(),
+  // SOC Phase 11: tenth NSW state-owned corporation — NSW TrainLink (legal
+  // entity NSW Trains). Latest annual report financial-statements volume
+  // discovered, SHA-256 archived and parsed as entity-level statement lines.
+  // Never added to government program spending, the PNFC benchmark, or any
+  // other SOC. Other SOCs are not implemented.
+  createNswTrainlinkConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

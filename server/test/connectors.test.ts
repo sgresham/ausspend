@@ -29,13 +29,14 @@ const LIVE_IDS = [
   'port-authority-nsw',
   'tahe',
   'sydney-trains',
+  'nsw-trainlink',
 ];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships twenty-five connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(25);
-    expect(new Set(CONNECTOR_IDS).size).toBe(25);
+  it('ships twenty-six connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(26);
+    expect(new Set(CONNECTOR_IDS).size).toBe(26);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),

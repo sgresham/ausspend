@@ -133,6 +133,18 @@ net-result bridge. The published Volume 2 PDF carries a “Draft for year end Ju
 alongside its signed declarations; that provenance caveat is recorded and two lines are flagged for
 human spot-check.
 
+After SOC phase 11 (NSW TrainLink, 6 new rows) the current baseline is **515,449** measures and **105
+SOC rows**; `nsw-trainlink` contributes 6 rows (total revenue 97,080, total expenses 377,742,
+employee 140,911, depreciation/amortisation 35,419, government grants/contributions 395,366 and
+net result 113,817 $’000) and every per-source count above is unchanged (no deletes). The 515,443
+measures before this phase are all preserved; NSW TrainLink adds six provisional, unverified rows.
+Its separately disclosed Grants and contributions line is flagged potential double count. Total
+revenue excludes grants (presented below the deficit line); Total expenses is the printed “Total
+expenses excluding losses” subtotal, with the below-the-line gains/losses included only in the
+net-result bridge. The report is branded NSW TrainLink but the audited statement is for the legal
+entity NSW Trains; that provenance caveat is recorded and two lines are flagged for human
+spot-check.
+
 ## Method and snapshot evidence
 
 Read-only commands used (no write operations):

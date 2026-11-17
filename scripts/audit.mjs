@@ -41,6 +41,7 @@ const KNOWN_SOURCE_IDS = [
   'port-authority-nsw',
   'tahe',
   'sydney-trains',
+  'nsw-trainlink',
 ];
 
 const results = [];
@@ -357,8 +358,8 @@ async function apiChecks() {
     // than mixed into the 2024-25 series. Sydney Trains' latest report IS
     // FY2024-25, so its six rows are part of the default view.
     assert(
-      Array.isArray(soc.body?.series) && soc.body.series.length === 93,
-      `expected 93 SOC rows (2024-25: Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7 + Landcom 6 + Port Authority of NSW 5 + Sydney Trains 6), got ${soc.body?.series?.length}`,
+      Array.isArray(soc.body?.series) && soc.body.series.length === 99,
+      `expected 99 SOC rows (2024-25: Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7 + Landcom 6 + Port Authority of NSW 5 + Sydney Trains 6 + NSW TrainLink 6), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -382,8 +383,9 @@ async function apiChecks() {
         soc.body.entities.includes('Landcom') &&
         soc.body.entities.includes('Port Authority of NSW') &&
         soc.body.entities.includes('TAHE') &&
-        soc.body.entities.includes('Sydney Trains'),
-      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains) are not returned',
+        soc.body.entities.includes('Sydney Trains') &&
+        soc.body.entities.includes('NSW TrainLink'),
+      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink) are not returned',
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
@@ -407,6 +409,7 @@ async function apiChecks() {
       'TAHE should have no rows in the default 2024-25 view',
     );
     assert(sources.get('sydney-trains')?.records === 6, 'Sydney Trains source count is not 6 rows');
+    assert(sources.get('nsw-trainlink')?.records === 6, 'NSW TrainLink source count is not 6 rows');
     for (const entity of [
       'sydney-water',
       'waternsw',
@@ -416,6 +419,7 @@ async function apiChecks() {
       'port-authority-nsw',
       'tahe',
       'sydney-trains',
+      'nsw-trainlink',
     ]) {
       assert(
         sources.get(entity)?.unit === 'AUD_thousands',
@@ -895,6 +899,57 @@ async function apiChecks() {
       'Sydney Trains own-source rows are incorrectly flagged as potential double counts',
     );
 
+    const nswTrainlink = await getJson('/api/soc?fiscal_year=2024-25&entity=NSW%20TrainLink');
+    assert(
+      nswTrainlink.status === 200,
+      `NSW TrainLink SOC expected 200, got ${nswTrainlink.status}`,
+    );
+    assert(
+      nswTrainlink.body?.series?.length === 6,
+      `expected 6 NSW TrainLink SOC rows, got ${nswTrainlink.body?.series?.length}`,
+    );
+    assert(
+      nswTrainlink.body?.source?.source_id === 'nsw-trainlink',
+      'NSW TrainLink SOC source is not nsw-trainlink',
+    );
+    assert(
+      nswTrainlink.body.series.every((row) => row.delivery_entity === 'NSW TrainLink'),
+      'NSW TrainLink SOC response contains another entity',
+    );
+    assert(!('total_cents' in nswTrainlink.body), 'NSW TrainLink SOC response has a total_cents');
+    const ntlByLine = new Map(nswTrainlink.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      ntlByLine.get('total_expenses')?.amount_cents === 37774200000,
+      'NSW TrainLink total expenses is not $377,742 thousand in cents',
+    );
+    assert(
+      ntlByLine.get('total_revenue')?.amount_cents === 9708000000,
+      'NSW TrainLink total revenue is not $97,080 thousand in cents',
+    );
+    assert(
+      ntlByLine.get('employee_expenses')?.amount_cents === 14091100000,
+      'NSW TrainLink employee expenses is not $140,911 thousand in cents',
+    );
+    assert(
+      ntlByLine.get('depreciation_amortisation')?.amount_cents === 3541900000,
+      'NSW TrainLink depreciation/amortisation is not $35,419 thousand in cents',
+    );
+    assert(
+      ntlByLine.get('government_grants')?.amount_cents === 39536600000 &&
+        ntlByLine.get('government_grants')?.potential_double_count === true,
+      'NSW TrainLink grants row is not $395,366 thousand with potential_double_count',
+    );
+    assert(
+      ntlByLine.get('net_result')?.amount_cents === 11381700000 &&
+        ntlByLine.get('net_result')?.soc_printed_sign === 'positive',
+      'NSW TrainLink net result is not the printed $113,817 thousand surplus',
+    );
+    assert(
+      ntlByLine.get('total_expenses')?.potential_double_count === false &&
+        ntlByLine.get('net_result')?.potential_double_count === false,
+      'NSW TrainLink own-source rows are incorrectly flagged as potential double counts',
+    );
+
     const generic = await getJson('/api/spending?limit=5');
     assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
     const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
@@ -907,7 +962,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '93 rows in the default 2024-25 SOC view (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7, Landcom 6, Port Authority of NSW 5, Sydney Trains 6) plus 6 separate FY2023-24 TAHE rows, $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7, 384,532, 213,995, 190,953, 5,376,430 and 1,722,046, no total, excluded from generic spending';
+    return '99 rows in the default 2024-25 SOC view (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7, Landcom 6, Port Authority of NSW 5, Sydney Trains 6, NSW TrainLink 6) plus 6 separate FY2023-24 TAHE rows, $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7, 384,532, 213,995, 190,953, 5,376,430, 377,742 and 1,722,046, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {

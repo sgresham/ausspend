@@ -99,10 +99,10 @@ export function SocPage() {
         a <strong>separate layer</strong> from Australian government program spending and from the
         ABS GFS Public Non-Financial Corporations (PNFC) sector benchmark. Sydney Water, WaterNSW,
         Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW,
-        TAHE and Sydney Trains are <strong>separate entities</strong>: their rows are never added
-        together. Coverage is entity-level only: no project, LGA, SA2 or coordinate is present.
-        WaterNSW is shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8 and
-        cash-flow capital expenditure), grouped and expandable; each component reconciles to its
+        TAHE, Sydney Trains and NSW TrainLink are <strong>separate entities</strong>: their rows are
+        never added together. Coverage is entity-level only: no project, LGA, SA2 or coordinate is
+        present. WaterNSW is shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8
+        and cash-flow capital expenditure), grouped and expandable; each component reconciles to its
         printed note subtotal and is never added to the entity total.
       </Typography>
 
@@ -208,7 +208,7 @@ export function SocPage() {
         rows.length === 0 ? (
           <EmptyState
             title="No NSW SOC rows"
-            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE and Sydney Trains)."
+            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink)."
           />
         ) : (
           <Card variant="outlined" sx={{ mb: 3 }}>
