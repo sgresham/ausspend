@@ -81,6 +81,8 @@ beforeAll(async () => {
       fiscal_year: '2024-25',
       measure_type: 'actual',
       amount_cents: 100_000,
+      jurisdiction_level: 'state',
+      jurisdiction: 'NSW',
     },
     {
       ...base,
@@ -89,6 +91,8 @@ beforeAll(async () => {
       fiscal_year: '2023-24',
       measure_type: 'budget',
       amount_cents: 150_000,
+      jurisdiction_level: 'state',
+      jurisdiction: 'NSW',
     },
     {
       ...base,

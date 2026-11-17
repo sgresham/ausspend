@@ -17,9 +17,9 @@ const MeasureFiltersSchema = z.object({
   measure_type: MeasureTypeSchema.optional(),
   region: z.string().min(1, 'region must be a region _id').optional(),
   /**
-   * Exact source id (for example `qld-qgip`). The state/region view is
-   * cross-source by default (state budget + location-tagged federal rows), so
-   * this filter isolates one source without changing that default.
+   * Exact source id (for example `qld-qgip`). A state page covers every state-
+   * jurisdiction source for that state (for QLD: `qld-budget` and `qld-qgip`),
+   * so this filter isolates one of those sources on request.
    */
   source_id: z.string().min(1).optional(),
   limit: z.coerce.number().int().positive().max(MAX_LIMIT).default(DEFAULT_LIMIT),

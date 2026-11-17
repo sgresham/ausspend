@@ -167,7 +167,7 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
           ? 'Area profile: local Dubbo rows, NSW-wide state rows, NSW-tagged federal AusTender rows and a separate Commonwealth-wide PBS panel. These levels overlap and are never added together.'
           : syntheticPresent
             ? 'Spending recorded for this region in the Phase 1 synthetic seed and live ingestions. Region detail is fetched by the region _id or a case-insensitive slug/name; state pages use the state/territory abbreviation. Group totals and per-type totals come from the API.'
-            : 'Real spending recorded for this region. Region pages match a curated region _id; state pages also match location.state. NSW, VIC and QLD budget feeds are live; no real feed covers national or sub-state actual/estimate spending with COFOG and region yet. Group totals and per-type totals come from the API.'}
+            : 'Real spending recorded for this region. Region pages match a curated region _id; state pages match the state jurisdiction (not merely a location tag). NSW, VIC and QLD state feeds are live; no real feed covers national or sub-state actual/estimate spending with COFOG and region yet. Group totals and per-type totals come from the API over the full match set.'}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
         <Button

@@ -20,6 +20,13 @@ import { areaQueries, buildAreaProfile, resolveRegion, type AreaProfile } from '
 /**
  * The full match set for a region/state page. Aggregates run over this query;
  * the row page is a separate `.limit(filters.limit)` query over the same match.
+ *
+ * A state page is the state government's own spending: it matches
+ * `jurisdiction = <code>` at `jurisdiction_level: "state"`. It deliberately
+ * does NOT match `location.state`: that would pull in federal AusTender
+ * contracts merely *located* in the state and make the page's count diverge
+ * from the state's `jurisdiction` dataset. Local-council rows (e.g. Dubbo,
+ * jurisdiction NSW but level local) are excluded by the level filter.
  */
 function regionBaseQuery(
   region: LeanRegion,
@@ -27,7 +34,7 @@ function regionBaseQuery(
   stateCode?: string,
 ): Record<string, unknown> {
   const regionMatch = stateCode
-    ? { $or: [{ region_id: region._id }, { 'location.state': stateCode }] }
+    ? { jurisdiction: stateCode, jurisdiction_level: 'state' }
     : { region_id: region._id };
   return { ...measureQuery(filters), ...regionMatch };
 }
@@ -271,6 +278,9 @@ export const getRegion: RequestHandler = async (req, res) => {
     res.json(await areaDetail(region, filters));
     return;
   }
+  // A curated region page matches the region `_id`. The state-government view
+  // (`/api/states/:code`) is the jurisdiction match; QGIP/QGIP-like state
+  // sources carry no curated region_id, so they appear on the state route.
   res.json(await regionDetail(region, filters));
 };
 

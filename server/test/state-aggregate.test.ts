@@ -63,9 +63,9 @@ beforeAll(async () => {
     aggregation_role: 'additive',
     location: { state: 'QLD' },
   }));
-  // A location-tagged federal contract: the state view is cross-source by
-  // default, so this must be counted in the bare aggregate but excluded when
-  // source_id=qld-qgip isolates the QGIP source.
+  // A federal contract merely *located* in QLD. The state page is the QLD
+  // government's own spending, so this must NOT be counted in the QLD page
+  // (jurisdiction is Commonwealth, not QLD).
   const ausTenderRows = Array.from({ length: AUS_TENDER_ROWS }, (_, index) => ({
     region_id: null,
     function_code: null,
@@ -90,10 +90,18 @@ afterAll(async () => {
 });
 
 describe('state page aggregates over the whole match set', () => {
-  it('reports full count and a mixed/null total over >2,000 mixed rows', async () => {
+  it('reports a full count that matches the DB QLD jurisdiction set', async () => {
     const response = await request(app).get('/api/states/QLD?fiscal_year=2024-25');
     expect(response.status).toBe(200);
-    expect(response.body.count).toBe(ALL_ROWS);
+    // The API must equal the state's jurisdiction dataset, not include the
+    // location-tagged federal rows.
+    const dbCount = await MeasureModel.countDocuments({
+      jurisdiction: 'QLD',
+      fiscal_year: '2024-25',
+    });
+    expect(dbCount).toBe(GRANT_ROWS + CONTRACT_ROWS);
+    expect(response.body.count).toBe(dbCount);
+    expect(response.body.count).not.toBe(ALL_ROWS);
     expect(response.body.mixed).toBe(true);
     expect(response.body.total_cents).toBeNull();
     expect(response.body.total_measure_type).toBeNull();
@@ -113,12 +121,27 @@ describe('state page aggregates over the whole match set', () => {
       total_cents: GRANT_ROWS * GRANT_CENTS,
     });
     expect(byType.get('contract')).toMatchObject({
-      count: CONTRACT_ROWS + AUS_TENDER_ROWS,
-      total_cents: CONTRACT_ROWS * CONTRACT_CENTS + AUS_TENDER_ROWS * 1_000,
+      count: CONTRACT_ROWS,
+      total_cents: CONTRACT_ROWS * CONTRACT_CENTS,
     });
+    // DB per-type totals agree with the API per-type totals.
+    const [dbGrant, dbContract] = await Promise.all([
+      MeasureModel.countDocuments({
+        jurisdiction: 'QLD',
+        fiscal_year: '2024-25',
+        measure_type: 'grant_award',
+      }),
+      MeasureModel.countDocuments({
+        jurisdiction: 'QLD',
+        fiscal_year: '2024-25',
+        measure_type: 'contract',
+      }),
+    ]);
+    expect(byType.get('grant_award')?.count).toBe(dbGrant);
+    expect(byType.get('contract')?.count).toBe(dbContract);
   });
 
-  it('isolates one source with source_id without changing the cross-source default', async () => {
+  it('isolates one source with source_id', async () => {
     const response = await request(app).get(
       '/api/states/QLD?fiscal_year=2024-25&source_id=qld-qgip',
     );

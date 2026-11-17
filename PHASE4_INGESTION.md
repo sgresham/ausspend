@@ -198,7 +198,8 @@ db.measures.findOne({ source_id: 'vic-budget', function_code: '07', fiscal_year:
   the UI can render the DTF rows separately; the state page headline shows 10 additive rows.
 - `GET /api/v1/spending?...` also excludes `aggregation_role: "agency_detail"` from its summary and
   per-type totals while returning the rows (labelled "Not additive" in the UI table).
-- `GET /api/v1/states/VIC` (state page) matches `location.state = 'VIC'`.
+- `GET /api/v1/states/VIC` (state page) matches `jurisdiction = 'VIC'` at
+  `jurisdiction_level: 'state'`.
 - `GET /api/v1/data-sources/coverage` reports `vic-budget` live and `vic_budget_last_ingested_at`.
 - `/data-sources` links to the VIC state page; the coverage banner, About and Home text name VIC.
 
@@ -340,14 +341,21 @@ summary and the per-function totals over the whole match set in Mongo and apply 
 `measures` row page. The response carries `rows_returned` and `rows_truncated`; the UI shows a
 "showing the first N of M rows, totals cover all M" note instead of silently truncating.
 
-The state view is cross-source by design: it matches `region_id` **or** `location.state`. For
-`GET /api/states/QLD?fiscal_year=2024-25` the full match is 40,700 rows —
-34,000 QGIP (27,658 `grant_award` + 6,342 `contract`), 6,670 federal AusTender contracts tagged
-`location.state=QLD`, and 30 synthetic-seed QLD rows (10 each `actual`/`budget`/`estimate`).
-It returns `mixed: true`, `total_cents: null`, and separate per-type totals
-(`grant_award` 27,658; `contract` 13,012 = 6,342 QGIP + 6,670 AusTender).
+A state page is the **state government's own** spending: it matches `jurisdiction = <code>` at
+`jurisdiction_level: "state"`. It deliberately does **not** match `location.state`, so a federal
+AusTender contract merely _located_ in QLD is not counted as QLD state spending, and local-council
+rows are excluded by the level filter. The API count therefore equals the state's `jurisdiction`
+dataset exactly.
 
-To isolate the QGIP source, use the additive `source_id` filter:
+For `GET /api/states/QLD?fiscal_year=2024-25` the match is exactly the DB QLD 2024-25 set:
+34,000 rows = 27,658 `grant_award` + 6,342 `contract` (all QGIP). It returns `mixed: true`,
+`total_cents: null`, and the full per-type totals
+(`grant_award` 27,658; `contract` 6,342). No 2,000-row partial total is possible, and the 6,670
+AusTender contracts tagged `location.state=QLD` are excluded because their jurisdiction is
+Commonwealth.
+
+To isolate one state source (for example QGIP, excluding a same-year `qld-budget` series), use the
+additive `source_id` filter:
 
 ```
 GET /api/states/QLD?fiscal_year=2024-25&source_id=qld-qgip
