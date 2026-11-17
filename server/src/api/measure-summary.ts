@@ -58,6 +58,17 @@ export interface MeasureRow {
   budget_year?: string;
   expense_category?: string;
   unspsc?: string;
+  statement?: string;
+  reconciliation_status?: string;
+  vlgc_section?: 'expense' | 'revenue';
+  vlgc_measure?: string;
+  vlgc_function?: string;
+  vlgc_function_code?: string;
+  vlgc_nature?: string;
+  vlgc_line_code?: string;
+  vlgc_council_label?: string;
+  vlgc_unit?: string;
+  vlgc_printed_sign?: 'positive' | 'negative';
 }
 
 export interface MeasureSummary {
@@ -137,6 +148,19 @@ export function serializeMeasure(measure: LeanMeasure): MeasureRow {
     ...(measure.category ? { category: measure.category } : {}),
     ...(measure.budget_year ? { budget_year: measure.budget_year } : {}),
     ...(measure.unspsc ? { unspsc: measure.unspsc } : {}),
+    ...(measure.statement ? { statement: measure.statement } : {}),
+    ...(measure.reconciliation_status
+      ? { reconciliation_status: measure.reconciliation_status }
+      : {}),
+    ...(measure.vlgc_section ? { vlgc_section: measure.vlgc_section } : {}),
+    ...(measure.vlgc_measure ? { vlgc_measure: measure.vlgc_measure } : {}),
+    ...(measure.vlgc_function ? { vlgc_function: measure.vlgc_function } : {}),
+    ...(measure.vlgc_function_code ? { vlgc_function_code: measure.vlgc_function_code } : {}),
+    ...(measure.vlgc_nature ? { vlgc_nature: measure.vlgc_nature } : {}),
+    ...(measure.vlgc_line_code ? { vlgc_line_code: measure.vlgc_line_code } : {}),
+    ...(measure.vlgc_council_label ? { vlgc_council_label: measure.vlgc_council_label } : {}),
+    ...(measure.vlgc_unit ? { vlgc_unit: measure.vlgc_unit } : {}),
+    ...(measure.vlgc_printed_sign ? { vlgc_printed_sign: measure.vlgc_printed_sign } : {}),
   };
 }
 

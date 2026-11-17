@@ -1,0 +1,31 @@
+{
+  "dataset": "VLGGC Annual Questionnaire VGC1 — Expenditure and Revenue 2024-25",
+  "fiscal_year": "2024-25",
+  "source_url": "https://www.localgovernment.vic.gov.au/funding-programs/victoria-grants-commission/consultation-and-operations",
+  "resource_url": "https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0030/225957/2024-25-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx",
+  "retrieved_from": "https://web.archive.org/web/20260818214833id_/https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0030/225957/2024-25-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx",
+  "snapshot_timestamp": "20260818214833",
+  "license": "VLGGC attribution/permission — NOT CC BY. Conditions of Use: \"Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.\" Councils provide permission for this online release; the Commission does not guarantee the material to be free from error. Derived rows only; the source workbook is not redistributed.",
+  "attribution": "Victorian Local Government Grants Commission data collection",
+  "conditions_of_use": "Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission data collection.",
+  "disclaimer": "The data in these spreadsheets is provided for information purposes only. These spreadsheets are produced from data sourced annually from Local Government (councils) in Victoria. Councils provide permission for this online release. The data has been analysed, but the Victorian Local Government Grants Commission does not guarantee the material to be free from error.",
+  "caveat": "Council-supplied VLGGC questionnaire return, not audited GPFS; provisional and unverified. Totals reconcile to Bendigo GPFS only at the printed $1,000 rounding. No cross-council total; non-additive rows only; never mixed with vic-budget, ABS GFS, LGPRF, waste or NSW council data.",
+  "retrieved_at": "2026-11-17T20:22:03.881Z",
+  "unit": "whole AUD (x100 cents); cells carry cents",
+  "sha256": "9d72ff7005a48acec0361b36d47e54057363ee5503ddffedebc6158fc54b5572",
+  "bytes": 847818,
+  "council_count": 79,
+  "totals_suppressed": 11,
+  "rows": 5401,
+  "reconciliation": {
+    "council": "Greater Bendigo City Council",
+    "vgc_expenses_cents": 25276099996,
+    "vgc_revenue_cents": 27700200017,
+    "gpfs_expenses_thousand": 252761,
+    "gpfs_revenue_thousand": 277002,
+    "expenses_rounding_cents": -4,
+    "revenue_rounding_cents": 17,
+    "status": "VGC1 whole-AUD totals reconcile to the audited GPFS $1,000 rounding (expenses -4 cents, revenue +17 cents); non-total categories remain questionnaire/unaudited"
+  },
+  "notes": "Derived rows only; the workbook is not redistributed. The source Totals row is suppressed and no cross-council total is emitted. Every row is non-additive agency detail, provisional/local_government and verified=false. VGC1 function/nature dimensions are not COFOG."
+}

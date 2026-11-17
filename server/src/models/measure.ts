@@ -98,6 +98,28 @@ export interface MeasureDocument {
   gpfs_component_of?: string;
   /** Printed sign when a negative result is stored as a non-negative magnitude. */
   gpfs_printed_sign?: 'positive' | 'negative';
+  /** Statement type; VGC1 council rows are the council income statement. */
+  statement?: string;
+  /** Reconciled to the audited GPFS, or an unreconciled questionnaire return. */
+  reconciliation_status?: string;
+  /** VLGGC VGC1 section (expense or revenue cut of the income statement). */
+  vlgc_section?: 'expense' | 'revenue';
+  /** Printed VGC1 row type (total_expenditure, expense_function_nature, ...). */
+  vlgc_measure?: string;
+  /** Exact printed VLGGC function name (not a COFOG function). */
+  vlgc_function?: string;
+  /** Exact printed VLGGC function code (for example 01199). */
+  vlgc_function_code?: string;
+  /** Exact printed VLGGC expense nature (Employee Benefits, ...). */
+  vlgc_nature?: string;
+  /** Exact printed VLGGC line code (for example 01999). */
+  vlgc_line_code?: string;
+  /** Council label exactly as printed in the workbook (for example Alpine (S)). */
+  vlgc_council_label?: string;
+  /** Printed VGC1 unit; whole AUD, converted to cents at x100. */
+  vlgc_unit?: string;
+  /** Printed sign when a negative amount is stored as a non-negative magnitude. */
+  vlgc_printed_sign?: 'positive' | 'negative';
   /** Government-named funding row that may overlap government program data. */
   potential_double_count?: boolean;
 }
@@ -206,6 +228,17 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     gpfs_statement: { type: String },
     gpfs_component_of: { type: String, index: true },
     gpfs_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    statement: { type: String, index: true },
+    reconciliation_status: { type: String, index: true },
+    vlgc_section: { type: String, enum: ['expense', 'revenue'], index: true },
+    vlgc_measure: { type: String, index: true },
+    vlgc_function: { type: String },
+    vlgc_function_code: { type: String, index: true },
+    vlgc_nature: { type: String, index: true },
+    vlgc_line_code: { type: String },
+    vlgc_council_label: { type: String },
+    vlgc_unit: { type: String },
+    vlgc_printed_sign: { type: String, enum: ['positive', 'negative'] },
     potential_double_count: { type: Boolean, index: true },
   },
   { collection: 'measures', versionKey: false },

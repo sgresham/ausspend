@@ -91,6 +91,17 @@ Longitude`. Values use quoted thousands (`"1,805"`) and literal `N/A`; multiple 
 > into `04`; a human must confirm the mapping. See
 > [PHASE4_INGESTION.md](PHASE4_INGESTION.md).
 
+> **VIC council pilot A (2026-11-18): ingested.** `vic-vlgc-vgc1` adds the VLGGC 2024-25 VGC1
+> Expenditure and Revenue questionnaire for all 79 Victorian councils: 5,401 non-additive rows
+> (income statement by 9 functions × 5 expense natures, revenue by function and the printed
+> bridges/totals). It is a council-supplied, unaudited questionnaire, not the GPFS; every row is
+> `aggregation_role: agency_detail`, `provisional/local_government`, `verified: false`, and the
+> source Totals row is suppressed (no cross-council total). VLGGC is **attribution/permission, not
+> CC BY**. Whole AUD is converted explicitly to cents. City of Greater Bendigo FY2024-25 total
+> expenditure `$252,760,999.96` and revenue `$277,002,000.17` reconcile to its audited GPFS
+> (`$252,761k` / `$277,002k`) at the printed $1,000 rounding. See
+> [docs/VIC_COUNCILS.md](docs/VIC_COUNCILS.md) §11.
+
 - **Budget:** <https://www.dtf.vic.gov.au/state-budget>; 2026-27 delivered 5 May 2026. Capital
   program page <https://www.dtf.vic.gov.au/2026-27-state-capital-program>.
 - **Open data:** CKAN <https://discover.data.vic.gov.au>, API

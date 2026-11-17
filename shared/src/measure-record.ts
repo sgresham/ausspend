@@ -206,6 +206,30 @@ export const MeasureRecordSchema = z.object({
    */
   gpfs_printed_sign: z.enum(['positive', 'negative']).optional(),
   /**
+   * VLGGC VGC1 council questionnaire provenance. `statement` is `income` for
+   * every VGC1 row (the return is the council income statement); `vlgc_section`
+   * separates the expense and revenue cuts. `vlgc_function`/`vlgc_nature` are
+   * the exact printed VLGGC dimensions and are NOT COFOG functions (so
+   * `function_code` stays absent). `vlgc_measure` names the printed row type
+   * (total_expenditure, expense_function_total, expense_function_nature,
+   * revenue_function_total, revenue_other, functions_subtotal, total_revenue).
+   * `reconciliation_status` records whether a row reconciles to the audited
+   * GPFS (`reconciled_to_gpfs`) or remains an unreconciled questionnaire return
+   * (`questionnaire_unaudited`). VGC1 rows are non-additive agency detail and
+   * are never summed across councils or with any other source.
+   */
+  statement: z.string().min(1).optional(),
+  reconciliation_status: z.string().min(1).optional(),
+  vlgc_section: z.enum(['expense', 'revenue']).optional(),
+  vlgc_measure: z.string().min(1).optional(),
+  vlgc_function: z.string().min(1).optional(),
+  vlgc_function_code: z.string().min(1).optional(),
+  vlgc_nature: z.string().min(1).optional(),
+  vlgc_line_code: z.string().min(1).optional(),
+  vlgc_council_label: z.string().min(1).optional(),
+  vlgc_unit: z.string().min(1).optional(),
+  vlgc_printed_sign: z.enum(['positive', 'negative']).optional(),
+  /**
    * True when the row's funding source names a government agency or a
    * separately disclosed government contribution/transfer. Such a row may
    * overlap government program spending, so the UI warns and the row is never
