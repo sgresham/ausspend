@@ -1,0 +1,21 @@
+{
+  "dataset": "ABS Government Finance Statistics (GFS)",
+  "fiscal_year": "2024-25",
+  "source_url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO094_202425.xlsx",
+  "catalogue_url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25",
+  "license": "CC BY 4.0",
+  "retrieved_at": "2026-11-17T03:16:20.015Z",
+  "unit": "$m (x100000000 cents per unit)",
+  "sdmx_status": "ABS SDMX API (https://data.api.abs.gov.au/rest/v1) has no GFS/COFOG dataflow; the full ABS dataflow catalogue (1,228 dataflows) contains no GFS, COFOG or Government Finance dataflow and every plausible GFS dataflow id returns HTTP 404. No SDMX query is used.",
+  "files": [
+    {
+      "title": "ABS GFS Annual 2024-25 — Key Tables",
+      "filename": "55120DO094_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO094_202425.xlsx",
+      "sha256": "5a4da532acba8efd05b71e2c84bdb5837860e9539a1cf8a3a2b750e953c7c679",
+      "bytes": 175454,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Official ABS GFS Annual 2024-25 Key Tables 9/10 \"Expenses by purpose\" (COFOG-A) XLSX. Units are $m confirmed from workbook row 7. Every row is an official aggregate: measure_type=actual, verified=true, data_quality_flag=verified, aggregation_role=benchmark. Levels are federal/state/local; jurisdiction is Australia or the state/territory code; no LGA/coordinates are invented. Total rows and the \"All levels of government\" columns are not ingested. Transport is stored as 045 and must not be rolled into 04. ABS GFS is a top-down statistical aggregate supplied by the ABS. It is a benchmark, not a sum of projects. Never add GFS rows to project data, and never sum across levels of government or across measure types. Bytes are archived outside the repo."
+}

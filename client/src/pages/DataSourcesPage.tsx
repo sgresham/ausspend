@@ -58,8 +58,10 @@ export function DataSourcesPage() {
         API and no scraper is built, and wide exports above the 50,000-result cap are rejected, so
         its coverage is reported as partial until complete date-range chunks cover the period. VIC
         and QLD are live as of Phase 4, and the ACNC Annual Information Statement adds
-        charity-expense rows (expenses only, never government spending). WA remains a stub. No grant
-        row is estimated or zero-filled.
+        charity-expense rows (expenses only, never government spending). ABS GFS Annual 2024-25 adds
+        official COFOG-A expense aggregates by level of government from the Annual XLSX (the ABS
+        SDMX API has no GFS/COFOG dataflow); they are row-level verified top-down benchmarks and are
+        never summed with project data. WA remains a stub. No grant row is estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -150,6 +152,17 @@ export function DataSourcesPage() {
                   {source.notes ? (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                       {source.notes}
+                    </Typography>
+                  ) : null}
+
+                  {source.source_id === 'abs-gfs' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      Official ABS GFS COFOG-A aggregates have row-level{' '}
+                      <strong>verified: true</strong> and <code>aggregation_role: benchmark</code>.
+                      They are a top-down benchmark, not project data.{' '}
+                      <Link component={RouterLink} to="/benchmark">
+                        Open the ABS GFS benchmark view →
+                      </Link>
                     </Typography>
                   ) : null}
 

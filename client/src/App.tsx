@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { CoverageProvider } from './coverage';
 import { Layout } from './components/Layout';
 import { AboutPage } from './pages/AboutPage';
+import { BenchmarkPage } from './pages/BenchmarkPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
 import { FunctionsPage } from './pages/FunctionsPage';
 import { HomePage } from './pages/HomePage';
@@ -25,6 +26,7 @@ export function App() {
           <Route path="/areas/:slug" element={<RegionsPage />} />
           <Route path="/states" element={<StatesPage />} />
           <Route path="/states/:code" element={<StatesPage />} />
+          <Route path="/benchmark" element={<BenchmarkPage />} />
           <Route path="/data-sources" element={<DataSourcesPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Route>

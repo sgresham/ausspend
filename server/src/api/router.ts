@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { DbStatus } from '../db.js';
+import { getBenchmark } from './benchmark.js';
 import { createCoverageHandler } from './coverage.js';
 import { listDataSources } from './data-sources.js';
 import { listIngestionLogs } from './ingestion-logs.js';
@@ -19,6 +20,7 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   const router = Router();
 
   router.get('/meta/coverage', createCoverageHandler(options.pingDb));
+  router.get('/benchmark', getBenchmark);
   router.get('/data-sources', listDataSources);
   router.get('/source-documents', listSourceDocuments);
   router.get('/ingestion-logs', listIngestionLogs);

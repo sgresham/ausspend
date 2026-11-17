@@ -30,6 +30,7 @@ const KNOWN_SOURCE_IDS = [
   'qld-budget',
   'qld-qgip',
   'acnc-charity',
+  'abs-gfs',
 ];
 
 const results = [];
@@ -299,6 +300,36 @@ async function apiChecks() {
     return `${body.data.length} federal contract rows, ${body.summary.total_by_measure_type[0]?.total_cents ?? 0} cents`;
   });
 
+  await check('ABS GFS benchmark is separate and never totalled', async () => {
+    const benchmark = await getJson('/api/benchmark?fiscal_year=2024-25');
+    assert(benchmark.status === 200, `expected 200, got ${benchmark.status}`);
+    assert(benchmark.body?.source?.source_id === 'abs-gfs', 'benchmark source is not abs-gfs');
+    assert(benchmark.body?.source?.unit === '$m', 'benchmark unit is not $m');
+    assert(benchmark.body?.source?.unit_to_cents === 100000000, 'benchmark scale is wrong');
+    assert(!('total_cents' in benchmark.body), 'benchmark response has a total_cents');
+    assert(
+      Array.isArray(benchmark.body?.series) && benchmark.body.series.length > 0,
+      'no benchmark series',
+    );
+    assert(
+      benchmark.body.series.every(
+        (row) => row.verified === true && row.data_quality_flag === 'verified',
+      ),
+      'benchmark rows are not verified official aggregates',
+    );
+    assert(
+      benchmark.body.series.every((row) => !('total_cents' in row)),
+      'benchmark series carries a total',
+    );
+    const spending = await getJson('/api/spending?function=07&measure_type=actual');
+    assert(spending.status === 200, `spending expected 200, got ${spending.status}`);
+    assert(
+      !spending.body.data.some((row) => row.source_id === 'abs-gfs'),
+      'generic spending query returned ABS GFS benchmark rows',
+    );
+    return `${benchmark.body.series.length} benchmark cells, no combined total, excluded from /api/spending`;
+  });
+
   return regionId;
 }
 
@@ -336,6 +367,7 @@ async function uiChecks(page, regionId) {
     `/regions/${regionId}`,
     '/states',
     '/states/NSW',
+    '/benchmark',
     '/data-sources',
     '/about',
   ];
@@ -655,6 +687,23 @@ async function uiChecks(page, regionId) {
     );
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
     return `source Unverified, ${expectedStubs} stubs, ${expectedActive} active (incl. Dubbo), PBS caveat, limitations present`;
+  });
+
+  await check('/benchmark labels ABS GFS as a benchmark and never sums', async () => {
+    pageErrors.length = 0;
+    await page.goto(`${WEB_URL}/benchmark`, { waitUntil: 'domcontentloaded' });
+    await page.getByTestId('benchmark-caveat').waitFor({ state: 'visible', timeout: 20_000 });
+    const caveat = (await page.getByTestId('benchmark-caveat').innerText()).replace(/\s+/g, ' ');
+    assert(/benchmark/i.test(caveat), 'benchmark caveat is missing');
+    assert(/never add/i.test(caveat), 'benchmark caveat does not forbid adding project data');
+    const table = page.getByTestId('benchmark-series');
+    await table.waitFor({ state: 'visible', timeout: 20_000 });
+    const text = (await table.innerText()).replace(/\s+/g, ' ');
+    assert(/abs-gfs/.test(text), 'benchmark rows have no abs-gfs source id');
+    assert(/Verified/.test(text), 'benchmark rows are not marked Verified');
+    assert(!/Total/.test(text), 'benchmark table shows a total');
+    assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
+    return 'caveat visible, verified abs-gfs rows, no total';
   });
 }
 

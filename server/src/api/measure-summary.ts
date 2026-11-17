@@ -37,7 +37,12 @@ export interface MeasureRow {
   source_date?: string;
   data_quality_flag?: string;
   aggregation_role?:
-    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component';
+    | 'additive'
+    | 'agency_detail'
+    | 'policy_measure'
+    | 'expense_total'
+    | 'expense_component'
+    | 'benchmark';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: { state?: string; postcode?: string; lga_name?: string };
   expense_category?: string;
@@ -125,20 +130,27 @@ export async function loadMeasures(
 }
 
 /**
- * Missing `aggregation_role` means `additive` for older sources. Both
- * `agency_detail` (single-agency statements) and `policy_measure` (BP4 policy
- * decisions that overlap another series) are shown for provenance but must
- * never enter an additive total.
+ * Missing `aggregation_role` means `additive` for older sources.
+ * `agency_detail` (single-agency statements), `policy_measure` (BP4 policy
+ * decisions that overlap another series), `expense_component` (ACNC components
+ * that overlap their total) and `benchmark` (ABS GFS top-down aggregates) are
+ * shown for provenance but must never enter an additive total.
  */
 export function isAgencyDetail(measure: {
-  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure' | null;
+  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure' | 'benchmark' | null;
 }): boolean {
   return measure.aggregation_role === 'agency_detail';
 }
 
 export function isNonAdditiveMeasure(measure: {
   aggregation_role?:
-    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
+    | 'additive'
+    | 'agency_detail'
+    | 'policy_measure'
+    | 'expense_total'
+    | 'expense_component'
+    | 'benchmark'
+    | null;
 }): boolean {
   return (
     measure.aggregation_role !== undefined &&
@@ -153,21 +165,39 @@ export function isNonAdditiveMeasure(measure: {
 
 export function isAdditiveMeasure(measure: {
   aggregation_role?:
-    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
+    | 'additive'
+    | 'agency_detail'
+    | 'policy_measure'
+    | 'expense_total'
+    | 'expense_component'
+    | 'benchmark'
+    | null;
 }): boolean {
   return !isNonAdditiveMeasure(measure);
 }
 
 export function isExpenseTotalMeasure(measure: {
   aggregation_role?:
-    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
+    | 'additive'
+    | 'agency_detail'
+    | 'policy_measure'
+    | 'expense_total'
+    | 'expense_component'
+    | 'benchmark'
+    | null;
 }): boolean {
   return measure.aggregation_role === 'expense_total';
 }
 
 export function isExpenseComponentMeasure(measure: {
   aggregation_role?:
-    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
+    | 'additive'
+    | 'agency_detail'
+    | 'policy_measure'
+    | 'expense_total'
+    | 'expense_component'
+    | 'benchmark'
+    | null;
 }): boolean {
   return measure.aggregation_role === 'expense_component';
 }

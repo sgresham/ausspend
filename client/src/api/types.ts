@@ -122,6 +122,13 @@ export interface CoverageResponse {
     acnc_records?: number;
     note: string;
   };
+  benchmark_ingestion?: {
+    live: string[];
+    last_ingested_at: string | null;
+    records: number;
+    caveat: string;
+    note: string;
+  };
   local_ingestion?: {
     live: string[];
     degraded: string[];
@@ -211,7 +218,12 @@ export interface MeasureRow {
   source_date?: string;
   data_quality_flag?: string;
   aggregation_role?:
-    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component';
+    | 'additive'
+    | 'agency_detail'
+    | 'policy_measure'
+    | 'expense_total'
+    | 'expense_component'
+    | 'benchmark';
   extraction_confidence?: ExtractionConfidence;
   location?: { state?: string; postcode?: string; lga_name?: string; sa4_name?: string };
   expense_category?: string;
@@ -312,6 +324,42 @@ export interface RegionDetail extends MeasureSummary {
 
 export interface StateDetail extends RegionDetail {
   state: RegionRef;
+}
+
+export interface BenchmarkSeries {
+  id: string;
+  function_code: string;
+  function_name: string;
+  jurisdiction_level: JurisdictionLevel;
+  jurisdiction: string;
+  jurisdiction_name: string;
+  amount_cents: number;
+  fiscal_year: string;
+  verified: boolean;
+  data_quality_flag?: string;
+  source_id: string;
+  source_url: string;
+  notes?: string;
+}
+
+/** GET /api/benchmark — ABS GFS published cells, never a computed total. */
+export interface BenchmarkResponse {
+  source: {
+    source_id: string;
+    name: string;
+    dataset: string;
+    source_url: string;
+    catalogue_url: string;
+    fiscal_year: string;
+    unit: string;
+    unit_to_cents: number;
+    caveat: string;
+  };
+  fiscal_years: string[];
+  functions: Array<{ code: string; name: string }>;
+  series: BenchmarkSeries[];
+  counts: { series: number; by_level: Record<string, number> };
+  note: string;
 }
 
 export interface SearchResponse {

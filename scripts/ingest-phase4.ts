@@ -3,6 +3,15 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import mongoose from 'mongoose';
 import {
+  ABS_GFS_BENCHMARK_CAVEAT,
+  ABS_GFS_DATASET,
+  ABS_GFS_FISCAL_YEAR,
+  ABS_GFS_ID,
+  ABS_GFS_KEY_TABLES_URL,
+  ABS_GFS_LICENSE,
+  ABS_GFS_RELEASE_URL,
+  ABS_GFS_UNIT,
+  ABS_GFS_UNIT_TO_CENTS,
   ACNC_DATASET,
   ACNC_ID,
   ACNC_LICENSE,
@@ -31,12 +40,19 @@ import { MeasureModel } from '../server/src/models/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
- * Phase 4 ingestion runner (VIC Budget + QLD QGIP expenditure).
+ * Phase 4 ingestion runner (ABS GFS benchmark + VIC Budget + QLD QGIP + ACNC).
  *
  *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
  *   AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo npm run ingest:phase4
  *
- * Runs the Phase 4 state connectors:
+ * Runs the Phase 4 connectors:
+ *   - abs-gfs: ABS GFS Annual 2024-25 Key Tables 9/10 COFOG-A expense
+ *     aggregates from the official XLSX. The ABS SDMX API has no GFS/COFOG
+ *     dataflow, so this is the human-approved XLSX fallback. Every row is an
+ *     official aggregate (verified, aggregation_role benchmark) at
+ *     federal/state/local level, never project-level, and never added to
+ *     project data or across levels/measures. The generic spending/search
+ *     queries exclude these rows; they are exposed at /api/benchmark.
  *   - vic-budget: COFOG-A aggregate expenses XLSX plus the Department of
  *     Treasury and Finance statement. DTF rows are non-additive agency detail.
  *   - qld-qgip: the latest annual QGIP consolidated expenditure CSV plus its
@@ -55,7 +71,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * a metadata-only manifest is written under docs/source-archive/. Bytes stay
  * outside the repo.
  */
-export const PHASE4_SOURCE_IDS = [VIC_ID, QGIP_ID, ACNC_ID] as const;
+export const PHASE4_SOURCE_IDS = [ABS_GFS_ID, VIC_ID, QGIP_ID, ACNC_ID] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
   for (let index = 0; index < argv.length; index += 1) {
@@ -64,6 +80,38 @@ function requestedSource(argv: readonly string[]): string | null {
     if (arg === '--source') return argv[index + 1] ?? null;
   }
   return null;
+}
+
+async function writeAbsGfsManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: ABS_GFS_ID });
+  const manifestPath = path.resolve(
+    process.env.ABS_GFS_MANIFEST ?? 'docs/source-archive/abs-gfs-2024-25.json',
+  );
+  const manifest = {
+    dataset: ABS_GFS_DATASET,
+    fiscal_year: ABS_GFS_FISCAL_YEAR,
+    source_url: ABS_GFS_KEY_TABLES_URL,
+    catalogue_url: ABS_GFS_RELEASE_URL,
+    license: ABS_GFS_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${ABS_GFS_UNIT} (x${ABS_GFS_UNIT_TO_CENTS} cents per unit)`,
+    sdmx_status:
+      'ABS SDMX API (https://data.api.abs.gov.au/rest/v1) has no GFS/COFOG dataflow; the full ABS dataflow catalogue (1,228 dataflows) contains no GFS, COFOG or Government Finance dataflow and every plausible GFS dataflow id returns HTTP 404. No SDMX query is used.',
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes: `Official ABS GFS Annual ${ABS_GFS_FISCAL_YEAR} Key Tables 9/10 "Expenses by purpose" (COFOG-A) XLSX. Units are $m confirmed from workbook row 7. Every row is an official aggregate: measure_type=actual, verified=true, data_quality_flag=verified, aggregation_role=benchmark. Levels are federal/state/local; jurisdiction is Australia or the state/territory code; no LGA/coordinates are invented. Total rows and the "All levels of government" columns are not ingested. Transport is stored as 045 and must not be rolled into 04. ${ABS_GFS_BENCHMARK_CAVEAT} Bytes are archived outside the repo.`,
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:phase4] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
 }
 
 async function writeManifest(): Promise<void> {
@@ -170,9 +218,10 @@ async function main(): Promise<void> {
         `unknown Phase 4 source "${id}"; expected one of ${PHASE4_SOURCE_IDS.join(', ')}`,
       );
     }
-    if (!['state', 'charity'].includes(connector.jurisdiction_level)) {
+    const allowedLevels = id === ABS_GFS_ID ? ['federal'] : ['state', 'charity'];
+    if (!allowedLevels.includes(connector.jurisdiction_level)) {
       throw new Error(
-        `${id} is neither a state nor a charity source (${connector.jurisdiction_level})`,
+        `${id} is not an allowed Phase 4 source level (${connector.jurisdiction_level})`,
       );
     }
     if (connector.status !== 'active') throw new Error(`${id} connector is ${connector.status}`);
@@ -198,9 +247,53 @@ async function main(): Promise<void> {
       const archived = await listArchivedRecords({ source_id: sourceId });
       for (const record of archived) await persistArchivedRecord(record);
     }
+    if (sourceIds.includes(ABS_GFS_ID)) await writeAbsGfsManifest();
     if (sourceIds.includes(VIC_ID)) await writeManifest();
     if (sourceIds.includes(QGIP_ID)) await writeQgipManifest();
     if (sourceIds.includes(ACNC_ID)) await writeAcncManifest();
+
+    if (sourceIds.includes(ABS_GFS_ID)) {
+      const archived = await listArchivedRecords({ source_id: ABS_GFS_ID });
+      const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_ID });
+      const byLevel = await MeasureModel.aggregate([
+        { $match: { source_id: ABS_GFS_ID } },
+        {
+          $group: {
+            _id: { level: '$jurisdiction_level', jurisdiction: '$jurisdiction' },
+            rows: { $sum: 1 },
+            cents: { $sum: '$amount_cents' },
+          },
+        },
+        { $sort: { '_id.level': 1, '_id.jurisdiction': 1 } },
+      ]);
+      const byFunction = await MeasureModel.aggregate([
+        { $match: { source_id: ABS_GFS_ID } },
+        { $group: { _id: '$function_code', rows: { $sum: 1 } } },
+        { $sort: { '_id.code': 1 } },
+      ]);
+      const verified = await MeasureModel.countDocuments({
+        source_id: ABS_GFS_ID,
+        verified: true,
+        data_quality_flag: 'verified',
+      });
+      const benchmark = await MeasureModel.countDocuments({
+        source_id: ABS_GFS_ID,
+        aggregation_role: 'benchmark',
+      });
+      console.log(
+        `[ingest:phase4] abs-gfs rows=${total} source_documents=${archived.length} verified=${verified} benchmark=${benchmark} (no combined total is printed or computed)`,
+      );
+      for (const group of byLevel) {
+        console.log(
+          `[ingest:phase4] abs-gfs level=${group._id.level} jurisdiction=${group._id.jurisdiction} rows=${group.rows} cents=${group.cents}`,
+        );
+      }
+      for (const group of byFunction) {
+        console.log(
+          `[ingest:phase4] abs-gfs function=${group._id ?? '(blank)'} rows=${group.rows}`,
+        );
+      }
+    }
 
     if (sourceIds.includes(VIC_ID)) {
       const archived = await listArchivedRecords({ source_id: VIC_ID });

@@ -36,7 +36,12 @@ export interface MeasureDocument {
   source_date?: string;
   data_quality_flag?: string;
   aggregation_role?:
-    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component';
+    | 'additive'
+    | 'agency_detail'
+    | 'policy_measure'
+    | 'expense_total'
+    | 'expense_component'
+    | 'benchmark';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: SpendingLocationDocument;
   /** Explicit ACNC expense category; never overloads measure_type. */
@@ -100,7 +105,14 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     // for provenance but excluded from every additive total by the API.
     aggregation_role: {
       type: String,
-      enum: ['additive', 'agency_detail', 'policy_measure', 'expense_total', 'expense_component'],
+      enum: [
+        'additive',
+        'agency_detail',
+        'policy_measure',
+        'expense_total',
+        'expense_component',
+        'benchmark',
+      ],
       index: true,
     },
     extraction_confidence: { type: String, enum: ['low', 'medium', 'high'] },

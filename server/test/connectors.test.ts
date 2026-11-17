@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { ABS_GFS_ID } from '../src/connectors/abs-gfs.js';
 import {
   CONNECTORS,
   CONNECTOR_IDS,
@@ -7,6 +8,7 @@ import {
 } from '../src/connectors/index.js';
 
 const LIVE_IDS = [
+  'abs-gfs',
   'aus-tender',
   'data-gov-au-pbs',
   'grantconnect',
@@ -30,7 +32,7 @@ describe('federal connector registry', () => {
     );
   });
 
-  it('registers the federal, state, local and charity sources as live and the other five as stubs', () => {
+  it('registers the federal/state/local/charity sources as live and the remaining four as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -78,6 +80,10 @@ describe('federal connector registry', () => {
 
   it('looks connectors up by id and marks GrantConnect as a manual-export connector', () => {
     expect(getConnector('federal-budget-portal')?.publisher).toMatch(/Finance/);
+    expect(getConnector(ABS_GFS_ID)?.status).toBe('active');
+    expect(getConnector(ABS_GFS_ID)?.jurisdiction_level).toBe('federal');
+    expect(getConnector(ABS_GFS_ID)?.source_url).toContain('abs.gov.au');
+    expect(getConnector(ABS_GFS_ID)?.notes).toMatch(/benchmark/i);
     expect(getConnector('aus-tender')?.jurisdiction_level).toBe('federal');
     expect(getConnector('aus-tender')?.publisher).toMatch(/Finance/);
     expect(getConnector('data-gov-au-pbs')?.status).toBe('active');

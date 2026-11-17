@@ -1,6 +1,8 @@
 import type { RequestHandler } from 'express';
 import { MEASURE_TYPES, REGION_LEVELS, SYNTHETIC_SOURCE } from '@ausspend/shared';
 import {
+  ABS_GFS_BENCHMARK_CAVEAT,
+  ABS_GFS_ID,
   CONNECTORS,
   GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
   PBS_CAVEAT,
@@ -23,10 +25,10 @@ export const PENDING_FEDERAL_SOURCES = [] as const;
 /** Real-feed gaps that the synthetic seed used to paper over. */
 export const COVERAGE_GAPS = [
   {
-    dimension: 'national actual / budget / estimate with COFOG',
-    status: 'missing',
+    dimension: 'national actual / budget / estimate project series with COFOG and region',
+    status: 'partial',
     detail:
-      'No real source provides a national actual, budget or estimate series broken down by COFOG function. PBS is budget only, programme-level and not a national expense series.',
+      'ABS GFS Annual 2024-25 supplies a top-down national and state/local COFOG-A expense benchmark (Key Tables 9/10). It is an official statistical aggregate, not project-level spending, has no curated region below the state, and is never summed with project data. PBS is budget only and programme-level; no source supplies a national project-level actual series broken down by COFOG and region.',
   },
   {
     dimension: 'state/territory actual / estimate with COFOG and region',
@@ -80,13 +82,14 @@ function coverageLimitations(
 
   return [
     syntheticLine,
-    'No records are human-verified: seeded measures, ingested AusTender contracts and ingested PBS budget rows all carry verified: false.',
+    'Synthetic and ingested project rows are unverified: seeded measures, AusTender contracts, PBS budget rows, state budget/project rows and charity rows carry verified: false. The only verified rows are the official ABS GFS COFOG-A aggregates (aggregation_role "benchmark"), which are top-down benchmarks and are never added to project data.',
     liveFederal
       ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. The eight other registered connectors are stubs and make no network call.'
       : 'No live ingestion has run yet: aus-tender, data-gov-au-pbs and grantconnect plus the eight other registered connectors are stubs; no request leaves the API until the runner runs.',
     pbsLive
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
+    'ABS GFS Annual 2024-25 is a COFOG-A expense benchmark from the official XLSX (Key Tables 9/10). The ABS SDMX API has no GFS/COFOG dataflow, so no SDMX query is used. Every GFS row is a published official aggregate (verified: true, aggregation_role "benchmark") at federal/state/local level; it is never project-level and is never summed with project data, across levels or across measure types. The benchmark is exposed separately at /api/benchmark and excluded from the generic spending/search queries.',
     'ACNC charity expenses are reported by registered charities, not government. They are jurisdiction_level "charity", have no COFOG function, and are never merged with federal/state/local spending. Every charity row has an explicit expense_category; total-expenses rows (aggregation_role expense_total) and component rows (expense_component) are never summed together. State/postcode comes only from AIS program operating locations, is single-state only and is flagged location_approximate.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory plus one S3 sub-state region (Dubbo, level "region", parent NSW). No other local council or other state has a connector. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
@@ -205,6 +208,8 @@ export function createCoverageHandler(
     );
     const acnc = dataSourceById.get('acnc-charity');
     const charityLive = charityConnectors.some((connector) => connector.status === 'active');
+    const absGfs = dataSourceById.get(ABS_GFS_ID);
+    const benchmarkLive = absGfs?.status === 'active' || absGfs?.status === 'degraded';
     const phaseBase = liveIngestion
       ? pbsLive
         ? stateLive
@@ -217,7 +222,12 @@ export function createCoverageHandler(
 
     res.set('Cache-Control', 'no-store');
     res.json({
-      phase: charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
+      phase: [
+        charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
+        benchmarkLive ? '+ ABS GFS benchmark' : null,
+      ]
+        .filter(Boolean)
+        .join(' '),
       // Derived from the live measures collection, not a hard-coded flag: after
       // `clean:synthetic` this becomes false automatically.
       synthetic: syntheticMeasures > 0,
@@ -266,7 +276,7 @@ export function createCoverageHandler(
         grantconnect_caveat: GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
         grantconnect_note: grantconnect?.notes ?? GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
         note: liveIngestion
-          ? 'AusTender OCDS contracts and data.gov.au PBS budget line items are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. Every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense.'
+          ? 'AusTender OCDS contracts, data.gov.au PBS budget line items and the ABS GFS COFOG-A benchmark are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. Every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense, and ABS GFS is a top-down benchmark that is never added to project data.'
           : 'No federal source is live yet. AusTender, PBS and GrantConnect are pending.',
       },
       state_ingestion: {
@@ -310,6 +320,15 @@ export function createCoverageHandler(
           : null,
         acnc_records: acnc?.records_ingested ?? 0,
         note: 'ACNC Annual Information Statement charity expenses are expenses only: jurisdiction_level "charity", no COFOG function, and never merged with government spending. Every row has an explicit expense_category; total and component rows are never summed together. The AIS spreadsheet has no address, so state/postcode comes only from AIS program operating locations, single-state only, flagged location_approximate. Source files are SHA-256 archived outside the repo.',
+      },
+      benchmark_ingestion: {
+        live: benchmarkLive && absGfs ? [ABS_GFS_ID] : [],
+        last_ingested_at: absGfs?.last_ingested_at
+          ? new Date(absGfs.last_ingested_at).toISOString()
+          : null,
+        records: absGfs?.records_ingested ?? 0,
+        caveat: ABS_GFS_BENCHMARK_CAVEAT,
+        note: 'ABS GFS COFOG-A expense aggregates from the official Annual 2024-25 XLSX (Key Tables 9/10). The ABS SDMX API has no GFS/COFOG dataflow; this is the approved XLSX fallback. Rows are official aggregates (verified true, aggregation_role benchmark) at federal/state/local level and are exposed only through /api/benchmark. They are never project-level and are never summed with project data, across levels or across measure types.',
       },
       local_ingestion: {
         live: localConnectors
