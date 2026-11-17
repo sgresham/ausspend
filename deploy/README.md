@@ -102,7 +102,9 @@ If the rate-limit key changes, a `reload` is refused with
 - `/api/source-documents` and `/api/ingestion-logs` (and `/api/v1/...` variants)
   return **404** at the edge. Both leak filesystem paths when called directly;
   the handlers additionally omit `local_path`/`backup_path` unless
-  `EXPOSE_SOURCE_PATHS=true`.
+  `EXPOSE_SOURCE_PATHS=true`. The block is case-insensitive because Express
+  route matching is case-insensitive (a mixed-case path would otherwise reach
+  the handler).
 - `limit_req`: 10 r/s per visitor with `burst=20`, keyed on
   `CF-Connecting-IP` behind Cloudflare (falls back to the socket address for
   direct/loopback traffic); excess gets `429`.
