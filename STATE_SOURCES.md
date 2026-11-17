@@ -41,12 +41,17 @@ link is year-stamped, treat it as "archive at retrieval" rather than permanently
 > measures and blank/zero/negative 2026-27 amounts are excluded. No COFOG function; rows are
 > provisional. See [QLD_INGESTION.md](QLD_INGESTION.md).
 >
-> **QGIP update (2026-11-17): ingested as a separate source `qld-qgip`.** The latest annual
-> consolidated QGIP expenditure CSV (2024-25) plus its data dictionary are archived and parsed.
-> Units are whole AUD per the dictionary. Only Grant (`grant_award`, 27,658 rows) and Frontline
-> service procurement (`contract`, 6,342 rows) are ingested; Concession, Loan and Direct government
-> investment (1,031 rows) and zero-dollar rows (21) are rejected. Grants and contracts are never
-> summed. See [PHASE4_INGESTION.md](PHASE4_INGESTION.md).
+> **QGIP update (2026-11-17): ingested as a separate source `qld-qgip`.** QLD QGIP
+> grant/contract payment-level rows cover **2018-19 through 2024-25** (200,387 rows): the
+> latest annual consolidated QGIP expenditure CSV (2024-25) plus the 2018-19..2023-24 years
+> and the data dictionary are archived and parsed. 2019-20 is partial because the publisher
+> left annual expenditure blank on most rows (a source gap, not a spending fall). Units are
+> whole AUD per the dictionary. Only Grant (`grant_award`, 27,658 rows for 2024-25) and
+> Frontline service procurement (`contract`, 6,342 rows for 2024-25) are ingested; Concession,
+> Loan and Direct government investment (1,031 rows) and zero-dollar rows (21) are rejected.
+> Grants and contracts are never summed and data remain provisional and unverified. See
+> [PHASE4_INGESTION.md](PHASE4_INGESTION.md) and
+> [docs/DATA_GRANULARITY.md](docs/DATA_GRANULARITY.md).
 
 - **Budget:** <https://budget.qld.gov.au/> (2026-27). Papers index
   <https://budget.qld.gov.au/budget-papers/> exposes BP1–BP4 PDFs and Service Delivery Statements.

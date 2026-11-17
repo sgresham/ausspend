@@ -87,6 +87,13 @@ export function DataSourcesPage() {
         <strong>PBS budget caveat.</strong> {PBS_CAVEAT}
       </Alert>
 
+      <Alert severity="info" data-testid="qgip-coverage-caveat" sx={{ mb: 3 }}>
+        <strong>QLD QGIP coverage.</strong> QLD QGIP grant/contract payment-level rows cover 2018-19
+        through 2024-25. 2019-20 is partial because the publisher left annual expenditure blank on
+        most rows (a source gap, not a spending fall). QGIP grants and contracts are never summed,
+        and the data are provisional and unverified.
+      </Alert>
+
       {state.loading ? <LoadingState label="Loading source register…" /> : null}
       {state.error ? <ApiErrorState error={state.error} /> : null}
 

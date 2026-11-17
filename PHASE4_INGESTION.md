@@ -229,6 +229,14 @@ db.measures.findOne({ source_id: 'vic-budget', function_code: '07', fiscal_year:
 **Source id `qld-qgip` (separate from `qld-budget`). 34,000 rows: 27,658 `grant_award` and
 6,342 `contract`. Grants and contracts are never summed into a single QLD total.**
 
+> **P1 update (2026-11-17):** `qld-qgip` now covers **2018-19 through 2024-25** (200,387
+> payment-level rows in total). 2019-20 is partial because the publisher left annual
+> expenditure blank on 22,530 of 27,308 rows (a source gap, not a spending fall). Grants and
+> contracts are never summed; data remain provisional and unverified. See
+> [docs/DATA_GRANULARITY.md](DATA_GRANULARITY.md) and
+> [docs/source-archive/qld-qgip-2018-19-2023-24.json](source-archive/qld-qgip-2018-19-2023-24.json).
+> This Phase 4 section records the original 2024-25 ingest only.
+
 ## Discovery
 
 data.qld CKAN is keyless: `https://www.data.qld.gov.au/api/3/action/`. The connector runs three
@@ -368,7 +376,8 @@ GET /api/states/QLD?fiscal_year=2024-25&source_id=qld-qgip
 
 ## Limitations
 
-- QGIP expenditure is **actual** cash-accounting expenditure for 2024-25, not budget.
+- The Phase 4 QGIP rows are **actual** cash-accounting expenditure for 2024-25, not budget;
+  the P1 earlier-year rows are annual actual payments for their own fiscal years.
 - No COFOG function is defensible from QGIP; `function_code` is blank and every row is
   `provisional`.
 - 1,031 out-of-scope assistance types and 21 zero-dollar in-scope rows are intentionally excluded.

@@ -22,15 +22,21 @@ export function AboutPage() {
           <>
             Synthetic development seed rows sit beside live AusTender contracts and data.gov.au PBS
             budget line items. Every figure is unverified; the synthetic rows are not published
-            government figures, and PBS line items do not sum to the federal total.
+            government figures, and PBS line items do not sum to the federal total. QLD QGIP
+            grant/contract payment-level rows cover 2018-19 through 2024-25; 2019-20 is partial
+            because the publisher left annual expenditure blank on most rows (a source gap, not a
+            spending fall); QGIP grants and contracts are never summed.
           </>
         ) : (
           <>
             No synthetic seed rows are present. Live AusTender contracts, PBS budget line items, NSW
             Budget/CKAN rows, VIC Budget 2026-27 rows, QLD Budget 2026-27 BP3/BP4 rows, QLD QGIP
-            2024-25 grant/contract expenditure and Dubbo rows are real published records but remain
-            unverified, and PBS line items do not sum to the federal total. National/state actual
-            and estimate spending with COFOG and region is not covered by a real feed yet.
+            grant/contract payment-level rows covering 2018-19 through 2024-25 and Dubbo rows are
+            real published records but remain unverified, and PBS line items do not sum to the
+            federal total. 2019-20 QGIP is partial because the publisher left annual expenditure
+            blank on most rows (a source gap, not a spending fall), and QGIP grants and contracts
+            are never summed. The data are provisional and unverified. National/state actual and
+            estimate spending with COFOG and region is not covered by a real feed yet.
           </>
         )}
       </Alert>
