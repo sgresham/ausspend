@@ -519,6 +519,17 @@ official dataset provides GPFS statement-line granularity for all 128 councils, 
 one-council GPFS pilot before any bulk council ingestion. It is research only: no council
 ingestion, no cross-council totals, and council spending is never state spending.
 
+[docs/VIC_COUNCILS.md](./docs/VIC_COUNCILS.md) is the planning inventory for the 79 Victorian
+councils: the official September 2026 local government directory, the VLGGC annual questionnaire
+(VGC1/ABS1/ABS2-3), the Know Your Council/LGPRF data set, individual council annual reports/GPFS,
+Grants Commission allocations, data.vic and the waste dashboard, with units, licences, reporting
+dates and a double-count map. It records that no single official dataset publishes the audited GPFS
+for all 79, but that the VLGGC workbooks do cover all 79 at near-statement financial granularity
+(council-supplied and unaudited); for Greater Bendigo FY2024-25 the VLGGC income-statement and
+balance-sheet totals reconcile exactly to the audited GPFS. It recommends a VLGGC 2024-25 plus
+one-council (Bendigo) reconciliation pilot before any bulk council ingestion. It is research only:
+no council ingestion, no cross-council totals, and council spending is never state spending.
+
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
 not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this
 document state that wherever PBS figures appear; the budget per-measure-type total is the PBS
