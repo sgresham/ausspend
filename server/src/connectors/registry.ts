@@ -51,6 +51,7 @@ import { createTaheConnector } from './soc/nsw/tahe.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
+import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -467,6 +468,16 @@ export const CONNECTORS: readonly Connector[] = [
   // total is emitted. Never mixed with vic-budget, ABS GFS, LGPRF, waste or NSW
   // council data.
   createVgc1Connector(),
+  // VIC council pilot B: the VLGGC 2024-25 ABS1 and ABS2-3 workbooks cover all
+  // 79 Victorian councils at capital-outlay, balance-sheet, cash-flow and
+  // income-statement category granularity. They are council-supplied and
+  // unaudited, and VLGGC is attribution/permission, NOT CC BY. Every row is
+  // non-additive agency_detail, provisional/local_government and unverified;
+  // the source Totals rows are suppressed and no cross-council total is
+  // emitted. Bendigo balance-sheet totals reconcile exactly and capital outlays
+  // carry a documented accrual/cash bridge. Never mixed with VGC1, vic-budget,
+  // ABS GFS, LGPRF, waste or NSW council data.
+  createVlgcAbsConnector(),
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),

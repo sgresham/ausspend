@@ -1,10 +1,13 @@
 # Victorian local councils — source inventory, double-count review and pilot plan
 
 **Status (updated 18 November 2026):** the inventory in §§0–10 is the original research/planning
-pass. **VIC council pilot A is now implemented** as source `vic-vlgc-vgc1`: 5,401 non-additive VGC1
-2024-25 rows across all 79 councils (see §11). The planning pass touched docs only; pilot A is a
-separate ingestion item. The database was **515,449 measures** at planning time, **515,955** on the
-eve of pilot A, and **521,356** after it (exact delta +5,401). No council PDFs were queued.
+pass. **VIC council pilot A is implemented** as source `vic-vlgc-vgc1`: 5,401 non-additive VGC1
+2024-25 rows across all 79 councils (see §11). **VIC council pilot B is implemented** as source
+`vic-vlgc-abs`: 9,059 non-additive ABS1/ABS2-3 2024-25 rows across the same 79 councils (see §12).
+The planning pass touched docs only; pilots A and B are separate ingestion items. The database was
+**515,449 measures** at planning time, **515,955** on the eve of pilot A, **521,356** after it
+(exact delta +5,401), and **530,415** after pilot B (exact delta +9,059). No council PDFs were
+queued.
 
 **As at:** 17 November 2026. **Scope:** Victorian local government — the 79 councils — not state
 government, and not a cross-council spending total.
@@ -503,8 +506,9 @@ The 245 `dubbo-council` rows are NSW budget/estimate lines and must not be mixed
 ### 4.2 No VIC council rows
 
 At planning time there was no `vic-council`, `vic-vlgc` or council annual-report source in the DB.
-Pilot A now adds the VLGGC VGC1 source `vic-vlgc-vgc1` (5,401 non-additive rows, 79 councils; see
-§11); the LGPRF, ABS1 and ABS2-3 workbooks are still **not ingested**. Ingestion upserts on a
+Pilot A adds the VLGGC VGC1 source `vic-vlgc-vgc1` (5,401 non-additive rows, 79 councils; see §11)
+and pilot B adds `vic-vlgc-abs` for ABS1/ABS2-3 (9,059 non-additive rows, same 79 councils; see
+§12); the LGPRF and the individual council GPFS PDFs are still **not ingested**. Ingestion upserts on a
 natural key that includes the council, fiscal year, statement, function/nature line and measure
 type so counts stay stable and no duplicate natural keys appear.
 
@@ -834,3 +838,94 @@ ports 3103/5176 (38/38 checks passed, 0 failed). Every changed file passes Prett
 `npm run format:check` still reports five pre-existing, untouched files (`deploy/README.md`,
 `.tmp-audit/persist-ingest.ts`, `docs/NSW_COUNCIL_DATA_NSW_SWEEP.md`, `docs/SOC_MULTI_STATE.md`,
 `e2e/search.spec.ts`) that already failed at the branch base.
+
+## 12. Pilot B implementation record (18 November 2026)
+
+**Scope delivered:** VLGGC 2024-25 ABS1 (Capital Outlays and Sales) and ABS2-3 (Balance Sheets and
+Other Finances) only — all 79 Victorian councils. No 79-PDF batch, no VGC1 re-ingest, no other state.
+
+**Source and archive**
+
+- Official landing page:
+  <https://www.localgovernment.vic.gov.au/funding-programs/victoria-grants-commission/consultation-and-operations>
+- ABS1 resource:
+  <https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0024/225960/2024-25-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx>
+  — **477,675 bytes, SHA-256 `639fe70a6de9cbe27c44c5a59ec75c79a99827db706a92aa1353bfd574985f61`**.
+- ABS2-3 resource:
+  <https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0025/225961/2024-25-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx>
+  — **147,062 bytes, SHA-256 `6975d1d9abf0d43f8776dc28fd73882670a8907f988d3bb94ad6c4055c50891f`**.
+- The live page/asset returns a Cloudflare challenge (HTTP 403) to automated clients. The connector
+  resolves the documented Wayback snapshot (`20260818214834`) through the availability API, retains
+  the official URLs as provenance, and refuses to publish unless both byte streams match the verified
+  hashes.
+- Archived outside the repo under `~/ausspend-source-archive/vic-vlgc-abs/` — both exact XLSX files.
+  Metadata-only manifest:
+  [`docs/source-archive/vic-vlgc-abs-2024-25.json`](./source-archive/vic-vlgc-abs-2024-25.json).
+
+**Licence / attribution (not CC BY).** The workbook's Conditions of Use say (verbatim):
+_“Content from this spreadsheet should be attributed as Victorian Local Government Grants Commission
+data collection.”_ The disclaimer adds that councils _“provide permission for this online release”_
+and the Commission _“does not guarantee the material to be free from error.”_ This is **attribution
+
+- permission**, not a CC licence. The source metadata records the terms verbatim; only derived rows
+  are emitted and neither workbook is redistributed.
+
+**Units.** Whole AUD (cells carry cents), converted explicitly to integer cents at ×100. The unit is
+never inferred from magnitude.
+
+**Rows and no-cross-total proof**
+
+- 79 council entities, exact expanded names (`Alpine (S)` → `Alpine Shire Council`,
+  `Queenscliffe (B)` → `Borough of Queenscliffe`); the printed label is retained in
+  `vlgc_abs_council_label`.
+- **9,059 records**: capital 1,173; balance 2,709; cash-flow 3,157; income 2,020.
+- The four source **Totals rows** (`Total Outlays`, `O-Total`, `Balance Sheets`,
+  `Sources & Applications`) are suppressed; no record has a Totals entity and no cross-council total
+  is published or computed.
+- Every row is `source_id: vic-vlgc-abs`, `jurisdiction_level: local`, `jurisdiction: VIC`,
+  `measure_type: actual`, `aggregation_role: agency_detail`,
+  `data_quality_flag: provisional/local_government`, `verified: false`, and carries `statement`
+  (`capital`, `balance`, `cash_flow`, `income`), `statement_section`, `statement_line`,
+  `vlgc_abs_measure`, `vlgc_abs_line_code`, `reconciliation_status`, and `asset_class` where a
+  printed asset class applies.
+- Zero cells are not emitted. Functions, asset classes, balance-sheet lines, cash-flow lines,
+  income-statement categories and Sources & Applications rows are separate non-additive cuts; no
+  section, function, asset class, statement or council is summed.
+- No row is mixed with `vic-vlgc-vgc1`, `vic-budget`, ABS GFS, LGPRF, waste or NSW council data.
+  ABS1 functions/asset classes are questionnaire dimensions, **not COFOG**; no `function_code` is set.
+
+**Bendigo reconciliation gate.** City of Greater Bendigo FY2024-25 (whole AUD in VLGGC, `$'000` in
+the audited GPFS):
+
+| Line              | ABS workbook (whole AUD) | Audited GPFS (`$'000`) | Result                       |
+| ----------------- | -----------------------: | ---------------------: | ---------------------------- |
+| Total assets      |      `$2,595,603,000.00` |          `$2,595,603k` | exact                        |
+| Total liabilities |        `$123,597,000.00` |            `$123,597k` | exact                        |
+| Total equity      |      `$2,472,006,000.00` |          `$2,472,006k` | exact                        |
+| Capital outlays   |         `$56,221,353.20` |   cash flow `$55,748k` | **differs by `$473,353.20`** |
+
+The capital difference is **0.85%** and is a documented accrual/cash classification bridge, not a
+reconciliation failure. It is recorded on the Bendigo total-capital row
+(`reconciliation_status: bridged_to_gpfs_cash_flow`), in the manifest and here. Equality is never
+forced. Only Bendigo total assets/liabilities/equity carry `reconciled_to_gpfs`; every other
+category row remains `questionnaire_unaudited`.
+
+**DB delta.** Before pilot B: **521,356** measures. After: **530,415** (+9,059, all
+`vic-vlgc-abs`). No deletes, no updates to another source, no synthetic rows.
+
+**Reproduce.**
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export ABS1_SOURCE_PATH=/path/to/2024-25-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx
+export ABS23_SOURCE_PATH=/path/to/2024-25-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx
+npm run ingest:vic-vlgc-abs
+# [ingest:vic-vlgc-abs] vic-vlgc-abs: success fetched=9059 upserted=9059
+# [ingest:vic-vlgc-abs] db source_rows=9059 distinct_councils=79 totals_entities=0 all_measures=530415
+```
+
+**Checks.** `npm run typecheck`, `npm run lint`, `npm test` (including
+`server/test/vic-vlgc-abs.test.ts`: 79 entities, four-Totals-row suppression, unit conversion,
+Bendigo balance reconciliation and capital bridge, no-cross-total, idempotency, natural keys and
+licence metadata), `npm run build`, mocked `npm run test:e2e` and live `npm run audit` on alternate
+ports. Do not run these against 3001/5173 or the production nginx.
