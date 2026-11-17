@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Twenty-eight council GPFS sources have landed as
+**Status:** the inventory and plan below are unchanged. Thirty council GPFS sources have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -40,7 +40,8 @@ FY2024-25 GPFS (**§7.25**) then added exactly **17** `canada-bay-gpfs` rows (**
 (**§7.27**) then added exactly **16** `georges-river-gpfs` rows (**515,888** → **515,904**).
 Fairfield City Council FY2024-25 GPFS (**§7.28**) then added exactly **17** `fairfield-gpfs` rows
 (**515,904** → **515,921**). Liverpool City Council FY2024-25 GPFS (**§7.29**) then added exactly
-**17** `liverpool-gpfs` rows (**515,921** → **515,938**).
+**17** `liverpool-gpfs` rows (**515,921** → **515,938**). Ku-ring-gai Council FY2024-25 GPFS
+(**§7.30**) then added exactly **17** `ku-ring-gai-gpfs` rows (**515,938** → **515,955**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -92,6 +93,10 @@ AusTender/GrantConnect/ACNC/data.nsw rows whose `delivery_entity` merely mention
 the 1 pre-existing uppercase AusTender contract whose string is exactly "GEORGES RIVER COUNCIL"
 (the only case-insensitive exact row before this ingest) and the 21 other
 AusTender/GrantConnect/ACNC/data.nsw rows whose `delivery_entity` merely mentions Georges River,
+the 1 pre-existing GrantConnect row whose `delivery_entity` is exactly "Ku-ring-gai Council" plus the
+1 uppercase "KU-RING-GAI COUNCIL" GrantConnect grant (the 2 case-insensitive exact rows before this
+ingest) and the 58 other GrantConnect/ACNC/data.nsw/AusTender rows whose `delivery_entity` merely
+mentions Ku-ring-gai (29 GrantConnect, 27 ACNC, 1 data.nsw, 1 AusTender),
 and every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 18 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
@@ -176,7 +181,7 @@ category is the 128.
 | Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                   In DB now |
 | --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------------------: |
 | OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                           0 |
-| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **438** (28 council GPFS sources, FY2024-25; separate non-additive sources) |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **506** (30 council GPFS sources, FY2024-25; separate non-additive sources) |
 | LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                           0 |
 | data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                          3,472 rows, none council financial |
 | Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                           0 |
@@ -287,7 +292,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 438 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 506 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -308,7 +313,8 @@ Council FY2024-25 (`randwick-gpfs`, §7.22) and 17 for the Council of the City o
 for the City of Canada Bay Council FY2024-25 (`canada-bay-gpfs`, §7.25) and 17 for Cumberland City
 Council FY2024-25 (`cumberland-gpfs`, §7.26) and 16 for Georges River Council FY2024-25
 (`georges-river-gpfs`, §7.27) and 17 for Fairfield City Council FY2024-25 (`fairfield-gpfs`,
-§7.28) and 17 for Liverpool City Council FY2024-25 (`liverpool-gpfs`, §7.29) — all separate source
+§7.28) and 17 for Liverpool City Council FY2024-25 (`liverpool-gpfs`, §7.29) and 17 for Ku-ring-gai
+Council FY2024-25 (`ku-ring-gai-gpfs`, §7.30) — all separate source
 ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
@@ -2871,6 +2877,110 @@ case-insensitive exact rows 5 → **22**; rows whose `delivery_entity` mentions 
 `data_sources` 54 → **55**. A second ingest run upserted the same 17 natural keys and left the DB
 total unchanged (idempotent). No deletes or updates to any other source.
 
+### 7.30 Thirtieth council — Ku-ring-gai Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from Ku-ring-gai Council's official Finance page
+<https://www.krg.nsw.gov.au/Council/Strategic-plans-finance-reports-and-publications/Finance>. The page
+lists the audited document under the printed link text **"Financial statements 2024-2025"** (a future
+"Financial statements 2025-2026" entry sits above it and is deliberately not selected). The FY2024-25
+link is
+<https://www.krg.nsw.gov.au/files/assets/public/v/1/hptrim/information-management-publications-public-website-ku-ring-gai-council-website-council/annual-financial-statements-for-the-year-ending-30-06-2025.pdf>.
+The official page returns **HTTP 403** to non-browser clients, so the documented headless Chromium path
+(`scripts/ku-ring-gai-gpfs-browser.ts`) loads the page, saves the cleared HTML and downloads the exact
+PDF bytes. The connector still parses the PDF link from that HTML (no hard-coded document URL) and
+SHA-256 re-verifies the bytes.
+
+The 98-page PDF (printed "Page x of 76") contains the signed General Purpose Financial Statements —
+Income Statement PDF p7 / printed p5; Statement of Comprehensive Income PDF p8 / printed p6; B1-1
+"Total functions and activities" PDF p16 / printed p14; note B3-4 depreciation PDF p27 / printed p25 —
+and the independent auditor's reports, including the Report on the Conduct of the Audit (PDF p71-72 /
+printed p69-70). The printed unit is explicit `$ '000` on the Income Statement, Statement of
+Comprehensive Income, B1-1 and note B3-4; a missing or conflicting unit rejects the whole extraction.
+
+Exact bytes archived outside the repo at
+`~/ausspend-source-archive/ku-ring-gai-gpfs/ku-ring-gai-council-annual-financial-statements-2024-25.pdf`:
+**2,141,582 bytes**, SHA-256
+`5af98c1ac3e9def0dbbb6bdbdb596e5e2f5be9d88ace71a4047730c6112d40be` (`hash_verified: true`). The
+cleared Finance HTML and the `source_documents` metadata JSON are stored alongside it.
+
+**Layout note.** Ku-ring-gai prints each row's Original unaudited budget amount to the **left** of the
+printed label and the Actual 2025 / Actual 2024 columns to its right. The adapter groups text items by
+y, reads the Actual 2025 column by its x band, and never sums a page's components to obtain a printed
+total. The B1-1 total row prints five column pairs; the adapter reads the FY2024-25 income, expenses,
+operating-result and grants values by their printed x order and never sums the six function rows.
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                                               |                                                                                                                                                 Printed / derived | Result                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Total income from continuing operations (Income Statement)                                                                                          |                                                                                                                                               `$182,600` thousand | = `$182,600,000`                                                                                                                                                                                              |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income + net gain on disposal) |                                                                                                                                               `$182,600` thousand | = printed total                                                                                                                                                                                               |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses)                                                          |                                                                                                 `$51,963` + `$75,053` + `$1,173` + `$5,352` = `$133,541` thousand | = printed expenses excluding depreciation                                                                                                                                                                     |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$27,062`)                                                  |                                                                                                                      `$133,541` + `$27,062` = `$160,603` thousand | = printed B1-1 total expenses                                                                                                                                                                                 |
+| B1-1 Total functions and activities — income                                                                                                        |                                                                                                                                               `$182,600` thousand | = face statement                                                                                                                                                                                              |
+| B1-1 Total functions and activities — expenses                                                                                                      |                                                                                                                                               `$160,603` thousand | = `$160,603,000` (printed total)                                                                                                                                                                              |
+| B1-1 Total functions and activities — operating result                                                                                              |                                                                                                                                                `$21,997` thousand | = face net result                                                                                                                                                                                             |
+| B1-1 grants and contributions                                                                                                                       |                                                                                                                                                `$26,502` thousand | = operating `$8,459` + capital `$18,043`                                                                                                                                                                      |
+| Operating result / net operating result                                                                                                             |                                                                                                                      `$182,600` − `$160,603` = `$21,997` thousand | = printed operating result                                                                                                                                                                                    |
+| Operating result before depreciation                                                                                                                |                                                                                                                      `$182,600` − `$133,541` = `$49,059` thousand | = printed before-depreciation result (evidence only)                                                                                                                                                          |
+| Net operating result before capital grants                                                                                                          |                                                                                                                         `$21,997` − `$18,043` = `$3,954` thousand | = printed before-capital surplus (evidence only)                                                                                                                                                              |
+| Statement of Comprehensive Income net result                                                                                                        |                                                                                                                                                `$21,997` thousand | = Income Statement net result                                                                                                                                                                                 |
+| Statement of Comprehensive Income total (`$21,997` + `$48,118` other comprehensive income)                                                          |                                                                                                                                                `$70,115` thousand | = printed total comprehensive income                                                                                                                                                                          |
+| Note B3-4 "Total depreciation, amortisation and impairment costs expensed"                                                                          |                                                                                                                                                `$27,062` thousand | = face depreciation/amortisation/impairment line                                                                                                                                                              |
+| Independent auditor's Report on the Conduct of the Audit — one-decimal-million table                                                                | operating result `21.9`, rates `103.5`, operating grants `8.4`, capital grants `18.0`, depreciation `27.06`, materials and services `75.1`, before-capital `3.94` | numeric values agree with the GPFS within the printed one-decimal-million rounding tolerance except the operating-result and operating-grants truncations recorded below; no total-expenses figure is printed |
+
+Total expenses is the printed B1-1 "Total functions and activities" expense total (`$160,603`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$133,541` thousand) plus printed
+depreciation/amortisation/impairment (`$27,062` thousand), and equals printed total income
+(`$182,600` thousand) less the printed operating result (`$21,997` thousand). The B1-1 income,
+expenses, operating result and grants reconcile exactly to the face statement — there is **no
+face-vs-B1-1 discrepancy**.
+
+**Internal printed narrative discrepancy (human spot check required).** The auditor's Report on the
+Conduct of the Audit prints a one-decimal-million table in which the 2025 operating result is `21.9`,
+but the same page's prose says the result was `$0.31 million higher` than the 2023–24 `21.7` (which
+implies `22.0`) and its own prior-two-year graph prints `21.99`; the GPFS prints `21,997` thousand. The
+operating-grants line is similarly printed `8.4` while the GPFS prints `8,459` thousand (which rounds to
+`8.5`). These are internal printed truncation/rounding inconsistencies in the narrative, not
+differences in the audited face statement, B1-1, comprehensive-income or note B3-4 totals, which
+reconcile exactly. Per the ingestion rule the connector does not silently reconcile them — it records
+them in the reconciliation evidence and adds `human_spot_check: required` to the `total_expenses`,
+`total_expenses_excluding_depreciation` and `net_result` notes (total expenses `$160,603` thousand;
+net result `$21,997` thousand), so a human confirms how the narrative presentation should be read
+before the affected total is treated as final.
+
+**Rows.** 17 rows, source id `ku-ring-gai-gpfs`, `source_dataset` "Ku-ring-gai Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Ku-ring-gai Council"` (the exact published entity name in
+the audited statements), `data_quality_flag: "provisional/local_government"`, `verified: false`. The
+minimum lines are total revenue `$182,600,000`, total expenses `$160,603,000`, employee expenses
+`$51,963,000`, depreciation/amortisation/impairment `$27,062,000`, operating government grants
+`$8,459,000`, capital government grants `$18,043,000`, borrowing costs `$1,173,000`, net gain on
+disposal of assets `$3,675,000` and net result `$21,997,000`; the printed face-statement revenue and
+expense components are included for provenance. The nil 2025 "Net loss from the disposal of assets"
+line and the printed before-capital surplus are not emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing same-entity
+rows are preserved untouched and never summed: before this ingest there was **1 row** whose
+`delivery_entity` is exactly "Ku-ring-gai Council" (a GrantConnect grant) and **1 uppercase
+"KU-RING-GAI COUNCIL" GrantConnect grant** (2 case-insensitive exact rows), plus **58 other rows**
+whose `delivery_entity` merely mentions Ku-ring-gai under other strings (29 GrantConnect, 27 ACNC,
+1 data.nsw and 1 AusTender); their per-source counts are identical before and after. All twenty-nine
+other council GPFS sources are unchanged. Government grant rows carry `potential_double_count: true`
+because they may overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,938 → **515,955** (exactly +17);
+`ku-ring-gai-gpfs` **17**; all twenty-nine other GPFS sources unchanged (Liverpool still 17, Fairfield
+still 17, Georges River still 16, Cumberland still 17, dubbo-council-gpfs still 18); `data-nsw-ckan`
+still **3,472**; `dubbo-council` still **245**; exact-case "Ku-ring-gai Council" rows 1 → **18** and
+case-insensitive exact rows 2 → **19**; rows whose `delivery_entity` mentions Ku-ring-gai 58 → **75**;
+`data_sources` 55 → **56**. A second ingest run upserted the same 17 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -2918,7 +3028,8 @@ total unchanged (idempotent). No deletes or updates to any other source.
    **Twenty-seventh expansion landed 2026-11-18:** Georges River Council FY2024-25 GPFS, 16
    non-additive rows (§7.27). **Twenty-eighth expansion landed 2026-11-18:** Fairfield City Council
    FY2024-25 GPFS, 17 non-additive rows (§7.28). **Twenty-ninth expansion landed 2026-11-18:**
-   Liverpool City Council FY2024-25 GPFS, 17 non-additive rows (§7.29).
+   Liverpool City Council FY2024-25 GPFS, 17 non-additive rows (§7.29). **Thirtieth expansion landed
+   2026-11-18:** Ku-ring-gai Council FY2024-25 GPFS, 17 non-additive rows (§7.30).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -3165,6 +3276,30 @@ migration were performed.
 
 ---
 
+**GPFS thirtieth-council checks (2026-11-18):**
+
+- Ku-ring-gai Council official Finance page fetched through the documented headless Chromium path
+  (plain HTTP returns 403); the FY2024-25 **"Financial statements 2024-2025"** link was discovered
+  from the cleared HTML, not a hard-coded document URL. The future 2025-2026 entry was ignored.
+- GPFS PDF downloaded from the official link (2,141,582 bytes) and SHA-256 archived outside the repo;
+  SHA-256 `5af98c1ac3e9def0dbbb6bdbdb596e5e2f5be9d88ace71a4047730c6112d40be`.
+- Printed `$ '000` unit detected on the income statement, comprehensive-income statement, B1-1 and
+  note B3-4; the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$182,600,000`, expenses `$160,603,000` (printed bridge of expenses excluding depreciation
+  `$133,541,000` plus depreciation `$27,062,000`), net result `$21,997,000`; B1-1 grants
+  `$26,502,000` = operating `$8,459,000` + capital `$18,043,000`.
+- The auditor's Report on the Conduct of the Audit prints `21.9` in its table but says the result was
+  `$0.31 million higher` than the 2023–24 `21.7` (implying `22.0`) and graphs `21.99`; the GPFS prints
+  `21,997`. The connector records the discrepancy and adds `human_spot_check: required` to the
+  `total_expenses`, `total_expenses_excluding_depreciation` and `net_result` notes.
+- `ku-ring-gai-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: measures 515,938 → 515,955 (+17 only); `liverpool-gpfs` still 17; `dubbo-council` still 245;
+  `data-nsw-ckan` still 3,472; `data_sources` 55 → 56; a second run upserted the same 17 natural keys
+  with no count change.
+
+---
+
 ## 10. Ambiguities / open questions (verbatim where possible)
 
 1. **OLG licence.** _"All rights reserved. No part of this publication may be reproduced by any
@@ -3209,6 +3344,6 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.20 GPFS sources: twenty councils, one audited year each,
+The only ingestions are the §7.1–§7.30 GPFS sources: thirty councils, one audited year each,
 non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
