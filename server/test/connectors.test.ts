@@ -21,6 +21,7 @@ const LIVE_IDS = [
   'blacktown-gpfs',
   'parramatta-gpfs',
   'northern-beaches-gpfs',
+  'canterbury-bankstown-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -39,9 +40,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships thirty-one connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(31);
-    expect(new Set(CONNECTOR_IDS).size).toBe(31);
+  it('ships thirty-two connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(32);
+    expect(new Set(CONNECTOR_IDS).size).toBe(32);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -139,6 +140,10 @@ describe('federal connector registry', () => {
       'northernbeaches.nsw.gov.au',
     );
     expect(getConnector('northern-beaches-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('canterbury-bankstown-gpfs')?.status).toBe('active');
+    expect(getConnector('canterbury-bankstown-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('canterbury-bankstown-gpfs')?.source_url).toContain('cbcity.nsw.gov.au');
+    expect(getConnector('canterbury-bankstown-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');

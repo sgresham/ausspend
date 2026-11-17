@@ -5,10 +5,10 @@ and state. This repository is the Phase 1 application: an npm-workspace monorepo
 client, an Express API and shared TypeScript/Zod contracts.
 
 > The app runs on **real published feeds only**. The synthetic development seed has been retired:
-> the database holds **515,537 real measures** and **0 synthetic rows**. Real sources include
+> the database holds **515,554 real measures** and **0 synthetic rows**. Real sources include
 > **AusTender federal contracts**, **data.gov.au PBS budget line items**, **GrantConnect** grant
 > awards (a human-downloaded, SHA-256-archived XLSX export; no API and no scraper), NSW/VIC/QLD
-> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus five audited council GPFS sources (Dubbo, City of Sydney, Blacktown, City of Parramatta, Northern Beaches), ACNC
+> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus six audited council GPFS sources (Dubbo, City of Sydney, Blacktown, City of Parramatta, Northern Beaches, Canterbury-Bankstown), ACNC
 > charity expenses and the official ABS GFS COFOG-A benchmark. Project and charity rows are real
 > published records but remain unverified (`verified: false`); only the ABS GFS benchmark rows are
 > `verified: true` and they are never summed with project data. The app never sums across measure
@@ -178,9 +178,9 @@ nonzero before it changes anything.
 
 The live baseline after the QGIP earlier-years, Essential Energy, Forestry Corporation of NSW,
 Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink ingests plus the Dubbo GPFS
-pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches GPFS expansion is **515,537 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
+pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown GPFS expansion is **515,554 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
 AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115,
-QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, ABS GFS 169, WaterNSW 47, VIC Budget 28, ABS GFS PNFC
+QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, ABS GFS PNFC
 18, Sydney Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5,
 Sydney Trains 6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
 The pre-removal
@@ -374,7 +374,7 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 
 ### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers thirty-one Australian public-spending sources, including the five separate council GPFS sources (`dubbo-council-gpfs`, `city-of-sydney-gpfs`, `blacktown-gpfs`, `parramatta-gpfs` and `northern-beaches-gpfs`). **AusTender
+`server/src/connectors` registers thirty-two Australian public-spending sources, including the six separate council GPFS sources (`dubbo-council-gpfs`, `city-of-sydney-gpfs`, `blacktown-gpfs`, `parramatta-gpfs`, `northern-beaches-gpfs` and `canterbury-bankstown-gpfs`). **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
