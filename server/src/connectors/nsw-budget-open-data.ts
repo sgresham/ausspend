@@ -160,6 +160,33 @@ function text(value: unknown): string | null {
   return null;
 }
 
+/**
+ * Published placeholders that mean "no value". They are not dimensions and
+ * must never be copied into a structured field as if they were a real agency,
+ * region or LGA.
+ */
+const NOT_AVAILABLE_DIMENSION =
+  /^(?:n\.?a\.?|unknown|not applicable|not stated|null|none|various|-+)$/i;
+
+/**
+ * `Various` and `Regionnotfound` are published ArcGIS region values but do not
+ * name one deterministic region, so they stay absent rather than being guessed.
+ */
+const AMBIGUOUS_REGION = new Set(['various', 'regionnotfound']);
+
+/** A deterministic published dimension; blank/placeholder values become null. */
+export function nswProjectDimension(value: unknown): string | null {
+  const cleaned = text(value);
+  if (!cleaned || NOT_AVAILABLE_DIMENSION.test(cleaned)) return null;
+  return cleaned;
+}
+
+export function nswProjectRegion(value: unknown): string | null {
+  const cleaned = nswProjectDimension(value);
+  if (!cleaned || AMBIGUOUS_REGION.has(cleaned.toLowerCase())) return null;
+  return cleaned;
+}
+
 function numberValue(value: unknown): number | null {
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value !== 'string') return null;
@@ -668,9 +695,16 @@ export function mapCapitalFeature(
   if (amountCents === null) return null;
   const projectName = text(feature.Project_name);
   if (!projectName) return null;
-  const agency = text(feature.Agency_Name);
-  const lga = text(feature.LGA);
-  const usableLga = lga && !/^(n\.?a\.?|unknown|not applicable)$/i.test(lga) ? lga : null;
+  const projectId = text(feature.Project_ID);
+  const agency = nswProjectDimension(feature.Agency_Name);
+  const sector = nswProjectDimension(feature.Sector);
+  const cluster = nswProjectDimension(feature.Cluster_PNFC_Sector);
+  const electorate = nswProjectDimension(feature.Electorate);
+  const region = nswProjectRegion(feature.Region);
+  const lga = nswProjectDimension(feature.LGA);
+  const usableLga = lga;
+  const status = nswProjectDimension(feature.Project_Status);
+  const category = nswProjectDimension(feature.Project_Category);
   const functionCode = nswCofogForAgency(agency);
   const dataQualityFlag = usableLga ? 'provisional' : 'statewide_only';
   void occurrence;
@@ -694,12 +728,22 @@ export function mapCapitalFeature(
     source_date: ARCGIS_SOURCE_DATE,
     data_quality_flag: dataQualityFlag,
     project_name: projectName,
-    description:
-      [text(feature.Project_Category), text(feature.Project_Status)].filter(Boolean).join(' — ') ||
-      undefined,
+    description: [category, status].filter(Boolean).join(' — ') || undefined,
     delivery_entity: agency ?? undefined,
-    funding_source: text(feature.Cluster_PNFC_Sector) ?? text(feature.Sector) ?? 'NSW Treasury',
+    funding_source: cluster ?? sector ?? 'NSW Treasury',
     location: { state: 'NSW', ...(usableLga ? { lga_name: usableLga } : {}) },
+    // Deterministic ArcGIS metadata promoted to explicit dimensions. Missing
+    // published values stay absent; nothing here changes amount_cents.
+    ...(projectId ? { project_id: projectId } : {}),
+    ...(agency ? { agency } : {}),
+    ...(sector ? { sector } : {}),
+    ...(cluster ? { cluster } : {}),
+    ...(electorate ? { electorate } : {}),
+    ...(region ? { region } : {}),
+    ...(usableLga ? { lga: usableLga } : {}),
+    ...(status ? { status } : {}),
+    ...(category ? { category } : {}),
+    budget_year: NSW_FISCAL_YEAR,
     notes: capitalNote(feature, sourceSha256),
     ...(functionCode ? { function_code: functionCode } : {}),
   };

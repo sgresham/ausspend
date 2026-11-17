@@ -15,6 +15,7 @@ import {
   measureTypeForIndicatorYear,
   nswNaturalKey,
   transformNswRaw,
+  type NswCellRaw,
   type NswSourceFile,
   type NswWorkbookRows,
 } from '../src/connectors/index.js';
@@ -366,7 +367,7 @@ describe('NSW historical fiscal indicators', () => {
 });
 
 describe('NSW capital projects', () => {
-  it('converts $000 to cents, carries LGA/electorate into location/notes and never infers an LGA', () => {
+  it('converts $000 to cents and promotes the real ArcGIS project metadata to structured fields', () => {
     const record = mapCapitalFeature(capitalFeature());
     expect(record).not.toBeNull();
     expect(record!.amount_cents).toBe(118_100_000);
@@ -377,16 +378,224 @@ describe('NSW capital projects', () => {
     expect(record!.location).toEqual({ state: 'NSW', lga_name: 'DUNGOG' });
     expect(record!.notes).toContain('electorate UPPER HUNTER');
     expect(record!.function_code).toBe('06');
+    expect(record).toMatchObject({
+      project_id: '104155',
+      agency: 'Hunter Water Corporation',
+      sector: 'Public Non-Financial Corporations',
+      cluster: 'NA/Water',
+      electorate: 'UPPER HUNTER',
+      region: 'Hunter',
+      lga: 'DUNGOG',
+      status: 'Works in Progress',
+      category: 'Major Works',
+      budget_year: '2025-26',
+    });
+    // Existing descriptive/provenance fields are unchanged.
+    expect(record!.delivery_entity).toBe('Hunter Water Corporation');
+    expect(record!.funding_source).toBe('NA/Water');
+    expect(record!.description).toBe('Major Works — Works in Progress');
+  });
 
-    const noLga = mapCapitalFeature(capitalFeature({ LGA: 'n.a.', Electorate: 'SYDNEY' }));
+  it('never invents a dimension for a published placeholder or an ambiguous region', () => {
+    const noLga = mapCapitalFeature(
+      capitalFeature({ LGA: 'n.a.', Electorate: 'SYDNEY', Region: 'Various' }),
+    );
+    expect(noLga).not.toBeNull();
     expect(noLga!.location).toEqual({ state: 'NSW' });
     expect(noLga!.data_quality_flag).toBe('statewide_only');
     expect(noLga!.notes).toContain('electorate SYDNEY');
+    expect(noLga!.lga).toBeUndefined();
+    expect(noLga!.region).toBeUndefined();
+    expect(noLga!.electorate).toBe('SYDNEY');
+
+    for (const region of ['Regionnotfound', 'null', 'n.a.', '']) {
+      expect(mapCapitalFeature(capitalFeature({ Region: region }))!.region).toBeUndefined();
+    }
+    expect(
+      mapCapitalFeature(capitalFeature({ Cluster_PNFC_Sector: 'not applicable' }))!.cluster,
+    ).toBeUndefined();
+    // A project published with no Project_ID still maps, but gets no id.
+    const noId = mapCapitalFeature(capitalFeature({ Project_ID: undefined }));
+    expect(noId).not.toBeNull();
+    expect(noId!.project_id).toBeUndefined();
+    expect(noId!.agency).toBe('Hunter Water Corporation');
+    expect(noId!.budget_year).toBe('2025-26');
+
+    // A real cluster whose label starts with "NA/" is data, not a placeholder.
+    expect(mapCapitalFeature(capitalFeature({ Cluster_PNFC_Sector: 'NA/Other' }))!.cluster).toBe(
+      'NA/Other',
+    );
   });
 
   it('does not invent a project without a usable budget amount or name', () => {
     expect(mapCapitalFeature(capitalFeature({ Budget_Year_FY_2025_26_000: 'n.a.' }))).toBeNull();
     expect(mapCapitalFeature(capitalFeature({ Project_name: null }))).toBeNull();
+  });
+});
+
+describe('NSW source-row invariants (803 projects + 171 no-budget + 312 statements)', () => {
+  /** 803 real-shaped ArcGIS features from the published layer's attribute set. */
+  function projectFeatures(count = 803): Record<string, unknown>[] {
+    const agencies = [
+      'Transport for NSW',
+      'Department of Education',
+      'Ministry of Health',
+      'TAFE Commission',
+      'Sydney Water Corporation',
+    ];
+    const regions = ['Hunter', 'Sydney', 'Central West', 'Riverina', 'Illawarra'];
+    const lgas = ['DUNGOG', 'BLACKTOWN', 'DUBBO REGIONAL', 'ALBURY', 'WOLLONGONG'];
+    return Array.from({ length: count }, (_, index) =>
+      capitalFeature({
+        OBJECTID: 1000 + index,
+        Project_ID: String(200000 + index),
+        Agency_Name: agencies[index % agencies.length],
+        Region: regions[index % regions.length],
+        LGA: lgas[index % lgas.length],
+        Project_name: `Capital project ${index + 1}`,
+        Budget_Year_FY_2025_26_000: String(100 + index),
+      }),
+    );
+  }
+
+  /** 171 published features whose FY2025-26 amount is the literal `n.a.`. */
+  function unallocatedFeatures(): Record<string, unknown>[] {
+    return Array.from({ length: 171 }, (_, index) =>
+      capitalFeature({
+        OBJECTID: 5000 + index,
+        Project_ID: String(300000 + index),
+        Project_name: `Unallocated project ${index + 1}`,
+        Budget_Year_FY_2025_26_000: 'n.a.',
+      }),
+    );
+  }
+
+  /** 312 statement-shaped cells (the 2025-26 statement half of the source). */
+  function statementCells(): NswCellRaw[] {
+    return Array.from({ length: 312 }, (_, index) => ({
+      kind: 'financial' as const,
+      filename: '2025-26-Budget-Financial-Statements.xlsx',
+      sheet: index < 156 ? 'GG Operating Statement' : 'PNFC Operating Statement',
+      row: 10 + index,
+      headers: ['Budget'],
+      fiscal_year: '2025-26',
+      measure_type: 'budget' as const,
+      label: `Statement expense line ${index + 1}`,
+      column_header: 'Budget ($m)',
+      raw_value: 1 + index,
+      unit: '$m',
+      sector: 'General government sector',
+      source_date: '2025-11-14',
+      source_sha256: 'abc',
+    }));
+  }
+
+  it('parses all 803 projects, preserves amounts and leaves the 171 no-budget features unallocated', () => {
+    const features = projectFeatures();
+    const raw: RawRecord[] = features.map((feature) => ({
+      kind: 'capital',
+      feature,
+      source_date: '2026-06-22',
+      source_sha256: 'sha',
+    }));
+    const result = transformNswRaw(raw);
+    expect(result.records).toHaveLength(803);
+    expect(result.skipped).toHaveLength(0);
+
+    const fieldNames = [
+      'project_id',
+      'agency',
+      'sector',
+      'cluster',
+      'electorate',
+      'region',
+      'lga',
+      'status',
+      'category',
+      'budget_year',
+    ] as const;
+    for (const record of result.records) {
+      for (const field of fieldNames) {
+        expect(record[field], `${record.project_name} missing ${field}`).toBeTruthy();
+      }
+      expect(record.fiscal_year).toBe('2025-26');
+      expect(record.measure_type).toBe('budget');
+      expect(record.budget_year).toBe('2025-26');
+    }
+    expect(new Set(result.records.map((record) => record.project_id)).size).toBe(803);
+    const expectedCents = features.reduce(
+      (sum, feature) => sum + Number(feature.Budget_Year_FY_2025_26_000) * 100_000,
+      0,
+    );
+    expect(result.records.reduce((sum, record) => sum + record.amount_cents, 0)).toBe(
+      expectedCents,
+    );
+
+    const unallocated: RawRecord[] = unallocatedFeatures().map((feature) => ({
+      kind: 'capital',
+      feature,
+      source_date: '2026-06-22',
+      source_sha256: 'sha',
+    }));
+    const mixed = transformNswRaw([...raw, ...unallocated]);
+    // The 171 no-budget features are not rows and receive no amount or agency.
+    expect(mixed.records).toHaveLength(803);
+    expect(mixed.skipped).toHaveLength(171);
+    expect(
+      mixed.skipped.every((entry) =>
+        entry.reason.includes('missing/unusable Budget_Year_FY_2025_26_000'),
+      ),
+    ).toBe(true);
+    const ids = new Set(mixed.records.map((record) => record.project_id));
+    for (let index = 0; index < 171; index += 1) {
+      expect(ids.has(String(300000 + index))).toBe(false);
+    }
+  });
+
+  it('leaves all 312 statement rows free of project fields (null/absent, never guessed)', () => {
+    const result = transformNswRaw(statementCells());
+    expect(result.records).toHaveLength(312);
+    for (const record of result.records) {
+      for (const field of [
+        'project_id',
+        'agency',
+        'sector',
+        'cluster',
+        'electorate',
+        'region',
+        'lga',
+        'status',
+        'category',
+        'budget_year',
+      ] as const) {
+        expect(record[field]).toBeUndefined();
+      }
+      expect(record.measure_type).toBe('budget');
+      expect(record.location).toEqual({ state: 'NSW' });
+    }
+  });
+
+  it('keeps 803 + 312 = 1,115 nsw-budget rows and is idempotent on re-transform', () => {
+    const raw: RawRecord[] = [
+      ...projectFeatures().map((feature) => ({
+        kind: 'capital' as const,
+        feature,
+        source_date: '2026-06-22',
+        source_sha256: 'sha',
+      })),
+      ...statementCells(),
+    ];
+    const first = transformNswRaw(raw);
+    const second = transformNswRaw(raw);
+    expect(first.records).toHaveLength(1_115);
+    expect(new Set(first.records.map((record) => record.natural_key)).size).toBe(1_115);
+    expect(second.records).toHaveLength(first.records.length);
+    expect(second.records.map((record) => record.natural_key)).toEqual(
+      first.records.map((record) => record.natural_key),
+    );
+    expect(second.records.map((record) => record.amount_cents)).toEqual(
+      first.records.map((record) => record.amount_cents),
+    );
   });
 });
 
