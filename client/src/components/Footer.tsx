@@ -36,7 +36,7 @@ export function Footer() {
             Data sources and provenance
           </Link>
           <Link component={RouterLink} to="/about" variant="body2">
-            About ausspend
+            About AusSpend
           </Link>
         </Stack>
         <Typography variant="caption" color="text.secondary">

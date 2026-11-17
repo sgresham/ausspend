@@ -8,7 +8,11 @@ test.beforeEach(async ({ page }) => {
 test('home renders the shell, coverage banner and provenance', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.getByRole('heading', { level: 1, name: 'ausspend' })).toBeVisible();
+  await expect(page).toHaveTitle('AusSpend — Australian government spending');
+  await expect(page.getByRole('heading', { level: 1, name: 'AusSpend' })).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Main navigation' }).getByText('AusSpend'),
+  ).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
   await expect(page.getByTestId('coverage-banner')).toContainText(
     'Phase 1 + F2/F3 + S1/S2/S3 (AusTender + PBS + NSW + Dubbo live).',
