@@ -2513,6 +2513,10 @@ are total revenue `$277,139,000`, total expenses `$242,565,000`, employee expens
 depreciation/amortisation/impairment `$48,954,000`, operating government grants `$16,225,000`, capital
 government grants `$26,185,000`, net loss on disposal of assets `$261,000` and net result
 `$34,574,000`; the printed face-statement revenue and expense components are included for provenance.
+The `total_expenses` and `net_result` rows carry `human_spot_check: required` in their notes, naming
+the published `$1` thousand B1-1 function-row rounding (B1-1 expenses `$242,564` thousand / operating
+result `$34,575` thousand vs face expenses `$242,565` thousand / operating result `$34,574` thousand)
+that a human must reconcile before those two totals are treated as final.
 
 **No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
 `gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude

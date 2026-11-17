@@ -280,6 +280,9 @@ describe('Cumberland City Council GPFS exact reconciliation', () => {
     expect(recordByLine(records, 'net_loss_from_disposal_of_assets').gpfs_component_of).toBe(
       'total_expenses_excluding_depreciation',
     );
+    expect(recordByLine(records, 'total_expenses').notes).toContain('human_spot_check: required');
+    expect(recordByLine(records, 'net_result').notes).toContain('human_spot_check: required');
+    expect(recordByLine(records, 'employee_expenses').notes).not.toContain('human_spot_check');
     expect(recordByLine(records, 'net_result').potential_double_count).toBeUndefined();
     expect(recordByLine(records, 'total_revenue').potential_double_count).toBeUndefined();
     expect(recordByLine(records, 'total_expenses').potential_double_count).toBeUndefined();
