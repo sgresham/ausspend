@@ -176,9 +176,10 @@ nonzero before it changes anything.
 
 ## Backup, restore and the AusTender backfill gate
 
-The live baseline is **348,939 real measures and 0 synthetic rows**: AusTender 117,894, ACNC
+The live baseline is **348,957 real measures and 0 synthetic rows**: AusTender 117,894, ACNC
 charity 127,606, GrantConnect 62,128, QLD QGIP 34,000, data.nsw.gov.au CKAN 3,472, PBS 1,231,
-NSW Budget 1,115, QLD Budget 1,051, Dubbo 245, ABS GFS 169 and VIC Budget 28. The pre-removal
+NSW Budget 1,115, QLD Budget 1,051, Dubbo 245, ABS GFS 169, VIC Budget 28 and ABS GFS PNFC 18.
+The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
 historical backfill:
@@ -617,8 +618,9 @@ total, ranked states and a bar. Every figure, group and table row keeps its sour
 
 Every spending value carries a `SourceRef` (`source_id`, `source_url`, `verified`) and is expressed
 as integer `MoneyCents`. Real project and charity rows remain `verified: false` until a human checks
-them; only the ABS GFS COFOG-A benchmark rows are `verified: true`, and they are never summed with
-project data. The seed asserts it produces no verified measures before reporting success.
+them; only the ABS GFS COFOG-A and ABS GFS PNFC benchmark rows are `verified: true`, and they are
+never summed with project data, SOC/entity data or each other. PNFC revenue and expense are separate
+flows. The seed asserts it produces no verified measures before reporting success.
 
 ## Docker Compose (development)
 

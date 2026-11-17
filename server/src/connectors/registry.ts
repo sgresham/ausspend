@@ -1,4 +1,5 @@
 import { createAbsGfsConnector } from './abs-gfs.js';
+import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
 import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
@@ -62,6 +63,13 @@ export const CONNECTORS: readonly Connector[] = [
   // aggregation_role=benchmark, and are never summed with project data or
   // across levels/measures.
   createAbsGfsConnector(),
+  // Phase 5: ABS GFS Annual 2024-25 PNFC operating statements for Australia
+  // (all levels) and the eight states/territories, from nine official XLSX data
+  // cubes. The ABS SDMX API has no PNFC/GFS dataflow. Every row is a verified
+  // sector benchmark (jurisdiction_level=pnfc, aggregation_role=benchmark);
+  // never add it to SOC/entity, government, charity or project data, and never
+  // sum across jurisdictions or revenue/expense flows.
+  createAbsGfsPnfcConnector(),
   stub({
     id: 'aihw-health-expenditure',
     name: 'Health Expenditure Australia',

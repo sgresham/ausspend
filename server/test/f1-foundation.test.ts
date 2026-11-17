@@ -233,13 +233,13 @@ describe('F1 extended measure shape and API', () => {
 
     const coverage = await request(app).get('/api/v1/meta/coverage');
     expect(coverage.status).toBe(200);
-    // ABS GFS, AusTender, PBS, GrantConnect (manual export), NSW Budget, CKAN,
-    // Dubbo, VIC Budget, QLD Budget, QLD QGIP and ACNC charity are wired; the
-    // remaining four are stubs.
+    // ABS GFS, ABS GFS PNFC, AusTender, PBS, GrantConnect (manual export), NSW
+    // Budget, CKAN, Dubbo, VIC Budget, QLD Budget, QLD QGIP and ACNC charity are
+    // wired; the remaining four are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(11);
+    ).toBe(12);
     expect(coverage.body.connector_status_counts.stub).toBe(4);
     expect([
       ...coverage.body.federal_ingestion.live,

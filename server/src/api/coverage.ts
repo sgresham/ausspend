@@ -3,6 +3,8 @@ import { MEASURE_TYPES, REGION_LEVELS, SYNTHETIC_SOURCE } from '@ausspend/shared
 import {
   ABS_GFS_BENCHMARK_CAVEAT,
   ABS_GFS_ID,
+  ABS_GFS_PNFC_BENCHMARK_CAVEAT,
+  ABS_GFS_PNFC_ID,
   CONNECTORS,
   GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
   PBS_CAVEAT,
@@ -90,6 +92,7 @@ function coverageLimitations(
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
     'ABS GFS Annual 2024-25 is a COFOG-A expense benchmark from the official XLSX (Key Tables 9/10). The ABS SDMX API has no GFS/COFOG dataflow, so no SDMX query is used. Every GFS row is a published official aggregate (verified: true, aggregation_role "benchmark") at federal/state/local level; it is never project-level and is never summed with project data, across levels or across measure types. The benchmark is exposed separately at /api/benchmark and excluded from the generic spending/search queries.',
+    'ABS GFS Public Non-Financial Corporations (PNFC) is a separate sector benchmark from nine official Annual 2024-25 XLSX data cubes (Australia all levels plus the eight states/territories). The ABS SDMX API has no PNFC/GFS dataflow, so no SDMX query is used. Only the published Total GFS revenue and Total GFS expenses rows are ingested, as separate flows, with jurisdiction_level "pnfc", verified: true and aggregation_role "benchmark". It is a sector aggregate, exposed only at /api/benchmark/pnfc and excluded from generic spending/search: never add it to SOC/entity, government, charity or project data, and never sum across jurisdictions or revenue/expense flows.',
     'ACNC charity expenses are reported by registered charities, not government. They are jurisdiction_level "charity", have no COFOG function, and are never merged with federal/state/local spending. Every charity row has an explicit expense_category; total-expenses rows (aggregation_role expense_total) and component rows (expense_component) are never summed together. State/postcode comes only from AIS program operating locations, is single-state only and is flagged location_approximate.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory plus one S3 sub-state region (Dubbo, level "region", parent NSW). No other local council or other state has a connector. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
@@ -210,6 +213,8 @@ export function createCoverageHandler(
     const charityLive = charityConnectors.some((connector) => connector.status === 'active');
     const absGfs = dataSourceById.get(ABS_GFS_ID);
     const benchmarkLive = absGfs?.status === 'active' || absGfs?.status === 'degraded';
+    const absGfsPnfc = dataSourceById.get(ABS_GFS_PNFC_ID);
+    const pnfcBenchmarkLive = absGfsPnfc?.status === 'active' || absGfsPnfc?.status === 'degraded';
     const phaseBase = liveIngestion
       ? pbsLive
         ? stateLive
@@ -225,6 +230,7 @@ export function createCoverageHandler(
       phase: [
         charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
         benchmarkLive ? '+ ABS GFS benchmark' : null,
+        pnfcBenchmarkLive ? '+ ABS GFS PNFC benchmark' : null,
       ]
         .filter(Boolean)
         .join(' '),
@@ -329,6 +335,16 @@ export function createCoverageHandler(
         records: absGfs?.records_ingested ?? 0,
         caveat: ABS_GFS_BENCHMARK_CAVEAT,
         note: 'ABS GFS COFOG-A expense aggregates from the official Annual 2024-25 XLSX (Key Tables 9/10). The ABS SDMX API has no GFS/COFOG dataflow; this is the approved XLSX fallback. Rows are official aggregates (verified true, aggregation_role benchmark) at federal/state/local level and are exposed only through /api/benchmark. They are never project-level and are never summed with project data, across levels or across measure types.',
+      },
+      pnfc_benchmark_ingestion: {
+        live: pnfcBenchmarkLive && absGfsPnfc ? [ABS_GFS_PNFC_ID] : [],
+        last_ingested_at: absGfsPnfc?.last_ingested_at
+          ? new Date(absGfsPnfc.last_ingested_at).toISOString()
+          : null,
+        records: absGfsPnfc?.records_ingested ?? 0,
+        caveat: ABS_GFS_PNFC_BENCHMARK_CAVEAT,
+        label: 'Sector aggregate — never add to project/entity data',
+        note: 'ABS GFS Public Non-Financial Corporations operating statements from nine official Annual 2024-25 XLSX data cubes (Australia all levels plus the eight states/territories). The ABS SDMX API has no PNFC/GFS dataflow; this is the approved XLSX fallback. Only the published Total GFS revenue and Total GFS expenses rows are ingested, as separate flows. Every row is jurisdiction_level "pnfc", verified true, aggregation_role benchmark, and is exposed only through /api/benchmark/pnfc. It is a sector aggregate, never added to SOC/entity, government, charity or project data, and never summed across jurisdictions or flows.',
       },
       local_ingestion: {
         live: localConnectors
