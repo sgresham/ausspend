@@ -17,7 +17,8 @@ Wollongong City Council FY2024-25 GPFS (**§7.8**) then added exactly **17** `wo
 GPFS (**§7.10**) then added exactly **17** `lake-macquarie-gpfs` rows (**515,605** → **515,622**);
 Maitland City Council FY2024-25 GPFS (**§7.11**) then added exactly **7** `maitland-gpfs` rows
 (**515,622** → **515,629**); Coffs Harbour City Council FY2024-25 GPFS (**§7.12**) then added exactly
-**17** `coffs-harbour-gpfs` rows (**515,629** → **515,646**).
+**17** `coffs-harbour-gpfs` rows (**515,629** → **515,646**); MidCoast Council FY2024-25 GPFS
+(**§7.13**) then added exactly **17** `mid-coast-gpfs` rows (**515,646** → **515,663**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -1269,6 +1270,90 @@ still **245**; `dubbo-council-gpfs` still **18**; `CITY OF COFFS HARBOUR` AusTen
 `data_sources` 37 → **38**. A second ingest run upserted the same 17 natural keys and left the DB
 total unchanged (idempotent). No deletes or updates to any other source.
 
+### 7.13 Thirteenth council — MidCoast Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official "Reporting our progress" page
+<https://www.midcoast.nsw.gov.au/Your-Council/About-MidCoast-Council/Plans-strategies-and-policies/Reporting-our-progress>.
+Node's direct HTTP fetch to `midcoast.nsw.gov.au` is rejected by an Akamai-style edge with **HTTP 403**,
+which is not proof of absence; the documented headless Chromium/Playwright path
+(`scripts/mid-coast-gpfs-browser.ts`) clears it and the connector still discovers the FY2024-25 link
+from the cleared page HTML (never hard-coded). The FY2024-25 anchor **"Financial Statement 2024-2025
+(PDF, 3MB)"** resolves to
+<https://www.midcoast.nsw.gov.au/files/assets/public/v/1/document-resources/council/plans-amp-publications/operational-plans-amp-fees-amp-charges/financial-statements/financial-statements-2024-2025.pdf>
+(2,972,797 bytes). The older years ("Financial Statement 2023-2024", "2022-2023", …) and the annual
+report/annual-report-summary anchors are discovered but not selected. Exact bytes are archived outside
+the repo at
+`/home/steve/ausspend-source-archive/mid-coast-gpfs/financial-statements-2024-2025.pdf`,
+SHA-256 `f8f7ede3d8c09467e5f1aea72e697a9278d4d78fd527778c63ccb0d9e3a5e3fe`, with the archive
+metadata record alongside (`hash_verified: true`). The printed unit is explicit `$ '000` on the
+Income Statement (PDF page 6, printed p4), the Statement of Comprehensive Income (PDF page 7, printed
+p5), note B1-1 (PDF page 15, printed p13) and note B3-4 (PDF page 26, printed p24); a missing or
+conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before
+each line label, so each emitted value is the first amount after the printed label (the FY2024-25
+actual). The Income Statement does not print a combined "Total expenses" line. Total expenses is the
+printed B1-1 "Total functions and activities" expense total `$335,094` thousand, which equals the
+printed expenses-excluding-depreciation line `$240,404` thousand plus the printed depreciation line
+`$94,690` thousand, and equals printed total income `$374,152` thousand less the printed operating
+result `$39,058` thousand. The printed net result equals the printed operating result (there are no
+discontinued operations) and the Statement of Comprehensive Income repeats it. Those top-level printed
+totals reconcile exactly:
+
+| Check                                                                                                                       |              Printed / derived | Result                                                                  |
+| --------------------------------------------------------------------------------------------------------------------------- | -----------------------------: | ----------------------------------------------------------------------- |
+| Total income from continuing operations (Income Statement p4)                                                               |            `$374,152` thousand | = `$374,152,000`                                                        |
+| Revenue components sum (rates + user charges + other revenue + operating grants + capital grants + interest + other income) |            `$374,152` thousand | = printed total income                                                  |
+| Total expenses (printed B1-1 p13; equals expenses excluding depreciation + depreciation)                                    |            `$335,094` thousand | = `$240,404 + $94,690`                                                  |
+| Expenses excluding depreciation = expense-by-nature components sum                                                          |            `$240,404` thousand | exact (employee + materials + borrowing + other + net loss on disposal) |
+| Employee benefits and on-costs                                                                                              |             `$96,581` thousand | printed                                                                 |
+| Depreciation, amortisation and impairment (Income Statement p4) = note B3-4 total                                           |             `$94,690` thousand | exact                                                                   |
+| Operating grants / capital grants                                                                                           | `$32,764` / `$70,923` thousand | B1-1 grants `$103,687` = `$32,764 + $70,923`                            |
+| Operating result from continuing operations (Income Statement p4)                                                           |             `$39,058` thousand | = printed total income − printed total expenses                         |
+| Net operating result for the year attributable to Council (Income Statement p4)                                             |             `$39,058` thousand | = printed operating result (no discontinued operations)                 |
+| Statement of Comprehensive Income net result (p5)                                                                           |             `$39,058` thousand | = Income Statement net result                                           |
+| Net result before capital grants                                                                                            |           `$(31,865)` thousand | = `$39,058 − $70,923` (negative; evidence only)                         |
+
+The connector emits only the printed Income Statement categories; printed totals are never recomputed
+from components. The positive net result is stored as a non-negative magnitude; the negative
+before-capital result is reconciliation evidence only and is never a stored row. The connector does
+**not** use OLG all-rights data or any data.nsw fallback.
+
+**Rows.** **17 rows**, source id `mid-coast-gpfs`, `source_dataset` "MidCoast Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`, `jurisdiction:
+"NSW"`, `delivery_entity: "MidCoast Council"` (the exact published entity name in the audited
+statements), `data_quality_flag: "provisional/local_government"`, `verified: false`. Only printed
+Income Statement categories are emitted: total revenue `$374,152,000`, total expenses
+`$335,094,000`, total expenses excluding depreciation `$240,404,000`, employee expenses
+`$96,581,000`, materials and services `$100,060,000`, borrowing costs `$9,625,000`, other expenses
+`$13,415,000`, net loss from disposal of assets `$20,723,000`, depreciation/amortisation/impairment
+`$94,690,000`, rates and annual charges `$184,721,000`, user charges and fees `$54,668,000`, other
+revenues `$5,130,000`, operating government grants `$32,764,000`, capital government grants
+`$70,923,000`, interest and investment income `$18,518,000`, other income `$7,428,000` and net result
+`$39,058,000`. No B1-1 function split and no region/LGA allocation are emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`; the generic additive API and area panels exclude them. The rows have **no
+`region_id` and no `location`/LGA allocation**, so they cannot be summed into any other council or
+state rows. There are **2 pre-existing AusTender federal contract rows whose `delivery_entity` is
+exactly "MidCoast Council"** (`D157039636`, `D157042061`); they share the published entity name but a
+different `source_id`, are preserved untouched, and are never summed with the 17 GPFS rows. A further
+31 rows mention Mid-Coast/MidCoast under other delivery_entity strings (10 AusTender, 5 GrantConnect,
+16 ACNC charities such as "MIDCOAST MARINE INTERNATIONAL PTY LTD" and "MidCoast Christian College,
+Taree"). Their per-source counts are identical before and after the ingest, and they are never summed
+with the GPFS rows. Government grant rows carry `potential_double_count: true` because they may
+overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,646 → **515,663** (exactly +17);
+`mid-coast-gpfs` **17**; `coffs-harbour-gpfs` still **17**; `maitland-gpfs` still **7**;
+`lake-macquarie-gpfs` still **17**; `newcastle-gpfs` still **17**; `wollongong-gpfs` still **17**;
+`sutherland-shire-gpfs` still **17**; `canterbury-bankstown-gpfs` still **17**; `northern-beaches-gpfs`
+still **18**; `parramatta-gpfs` still **17**; `blacktown-gpfs` still **17**; `city-of-sydney-gpfs`
+still **18**; `dubbo-council` still **245**; `dubbo-council-gpfs` still **18**; `data-nsw-ckan` still
+**3,472**; exact "MidCoast Council" rows 2 → **19** (2 pre-existing + 17 GPFS, distinguished by
+`source_id`); `data_sources` 38 → **39**. A second ingest run upserted the same 17 natural keys and
+left the DB total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -1292,7 +1377,12 @@ total unchanged (idempotent). No deletes or updates to any other source.
    expansion landed 2026-11-17:** Sutherland Shire Council FY2024-25 GPFS, 17 non-additive rows
    (§7.7). **Seventh expansion landed 2026-11-18:** Wollongong City Council FY2024-25 GPFS, 17
    non-additive rows (§7.8). **Eighth expansion landed 2026-11-18:** Newcastle City Council
-   FY2024-25 GPFS, 17 non-additive rows (§7.9).
+   FY2024-25 GPFS, 17 non-additive rows (§7.9). **Ninth expansion landed 2026-11-18:** Lake
+   Macquarie City Council FY2024-25 GPFS, 17 non-additive rows (§7.10). **Tenth expansion landed
+   2026-11-18:** Maitland City Council FY2024-25 GPFS, 7 non-additive rows (§7.11). **Eleventh
+   expansion landed 2026-11-18:** Coffs Harbour City Council FY2024-25 GPFS, 17 non-additive rows
+   (§7.12). **Twelfth expansion landed 2026-11-18:** MidCoast Council FY2024-25 GPFS, 17
+   non-additive rows (§7.13).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).

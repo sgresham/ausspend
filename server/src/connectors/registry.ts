@@ -16,6 +16,7 @@ import { createNewcastleGpfsConnector } from './newcastle-gpfs.js';
 import { createLakeMacquarieGpfsConnector } from './lake-macquarie-gpfs.js';
 import { createMaitlandGpfsConnector } from './maitland-gpfs.js';
 import { createCoffsHarbourGpfsConnector } from './coffs-harbour-gpfs.js';
+import { createMidCoastGpfsConnector } from './mid-coast-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -224,6 +225,15 @@ export const CONNECTORS: readonly Connector[] = [
   // other council, the Dubbo budget rows, the existing council GPFS rows or State
   // rows.
   createCoffsHarbourGpfsConnector(),
+  // GPFS expansion: thirteenth council only (MidCoast Council). Its audited
+  // FY2024-25 General Purpose Financial Statements are a separate source id:
+  // every row is non-additive agency_detail, has no region/LGA allocation, and
+  // reconciles exactly to the printed Income Statement, B1-1 "Total functions
+  // and activities" and comprehensive-income totals. The PDF is discovered from
+  // the official reporting page over plain HTTP; the exact bytes are SHA-256
+  // archived outside the repo. Never summed with any other council, the Dubbo
+  // budget rows, the existing council GPFS rows or State rows.
+  createMidCoastGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),

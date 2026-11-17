@@ -3,9 +3,11 @@ import mongoose from 'mongoose';
 import {
   COFFS_HARBOUR_GPFS_ID,
   LAKE_MACQUARIE_GPFS_ID,
+  MID_COAST_GPFS_ID,
   WOLLONGONG_GPFS_ID,
   createCoffsHarbourGpfsConnector,
   createLakeMacquarieGpfsConnector,
+  createMidCoastGpfsConnector,
   createWollongongGpfsConnector,
   ensureDubboRegion,
   getConnector,
@@ -14,6 +16,7 @@ import {
 import type { Connector } from '../server/src/connectors/types.js';
 import { fetchCoffsHarbourGpfsViaBrowser } from './coffs-harbour-gpfs-browser.js';
 import { fetchLakeMacquarieGpfsViaBrowser } from './lake-macquarie-gpfs-browser.js';
+import { fetchMidCoastGpfsViaBrowser } from './mid-coast-gpfs-browser.js';
 import { fetchWollongongGpfsViaBrowser } from './wollongong-gpfs-browser.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
@@ -39,15 +42,16 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - lake-macquarie-gpfs  GPFS expansion: Lake Macquarie City Council's audited FY2024-25 GPFS
  *   - maitland-gpfs       GPFS expansion: Maitland City Council's audited FY2024-25 GPFS
  *   - coffs-harbour-gpfs  GPFS expansion: Coffs Harbour City Council's audited FY2024-25 GPFS
+ *   - mid-coast-gpfs     GPFS expansion: MidCoast Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
  * Northern Beaches Council, Canterbury-Bankstown Council, Sutherland Shire
  * Council, Wollongong City Council, Newcastle City Council, Lake Macquarie City
- * Council, Maitland City Council and Coffs Harbour City Council. No other
- * councils, states/territories, SOC/charity or live state connectors are
- * touched. The runner upserts on natural_key, so re-running is idempotent and
- * never deletes existing federal/synthetic rows.
+ * Council, Maitland City Council, Coffs Harbour City Council and MidCoast
+ * Council. No other councils, states/territories, SOC/charity or live state
+ * connectors are touched. The runner upserts on natural_key, so re-running is
+ * idempotent and never deletes existing federal/synthetic rows.
  */
 export const NSW_SOURCE_IDS = [
   'nsw-budget',
@@ -65,6 +69,7 @@ export const NSW_SOURCE_IDS = [
   'lake-macquarie-gpfs',
   'maitland-gpfs',
   'coffs-harbour-gpfs',
+  'mid-coast-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -109,6 +114,22 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] lake-macquarie-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createLakeMacquarieGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === MID_COAST_GPFS_ID) {
+      // MidCoast's site rejects Node's direct HTTP fetch with an Akamai 403; the
+      // documented headless Chromium path clears it, and the connector still
+      // discovers the FY2024-25 financial-statements link from the cleared
+      // reporting page HTML and re-verifies the bytes.
+      console.log('[ingest:nsw] mid-coast-gpfs: browser discovery/download starting');
+      const fetched = await fetchMidCoastGpfsViaBrowser();
+      console.log(`[ingest:nsw] mid-coast-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createMidCoastGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
