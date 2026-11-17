@@ -221,6 +221,17 @@ describe('Ryde GPFS exact reconciliation', () => {
     );
     expect(recordByLine(records, 'rates_and_annual_charges').amount_cents).toBe(11_584_200_000);
     expect(recordByLine(records, 'net_result').gpfs_printed_sign).toBeUndefined();
+    // The printed B1-1/face $15 thousand function-allocation discrepancy is a
+    // human review gate on the two authoritative totals, not a silent note.
+    expect(recordByLine(records, 'total_expenses').notes).toContain('human_spot_check: required');
+    expect(recordByLine(records, 'net_result').notes).toContain('human_spot_check: required');
+    expect(recordByLine(records, 'total_expenses').notes).toMatch(
+      /\$15 thousand.*function-allocation discrepancy/,
+    );
+    expect(recordByLine(records, 'net_result').notes).toMatch(
+      /\$15 thousand.*function-allocation discrepancy/,
+    );
+    expect(recordByLine(records, 'employee_expenses').notes).not.toContain('human_spot_check');
     // The printed before-capital deficit is evidence only and is not a row.
     expect(
       records.some((record) => record.gpfs_line_item === 'net_result_before_capital_grants'),

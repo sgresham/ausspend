@@ -701,6 +701,9 @@ function notesFor(
     `printed_label: ${printedLineLabel(spec)}`,
     `unit: ${unit} (explicit; ${unitReason})`,
     `reconciliation: ${reconciliationNote}`,
+    spec.key === 'total_expenses' || spec.key === 'net_result'
+      ? 'human_spot_check: required — the printed B1-1 Total functions and activities expense total ($178,792 thousand) and operating result ($36,669 thousand) differ from the face-statement totals ($178,807 thousand and $36,654 thousand) by $15 thousand; a human must reconcile this printed function-allocation discrepancy before the total expenses and net result are treated as final'
+      : null,
     'the audited General Purpose Financial Statements for the year ended 30 June 2025 are a standalone PDF linked from the official Financial Reports and Statements page; the independent auditor’s reports on the financial statements are included in the same PDF; provisional/local_government; non-additive agency detail; no region/LGA allocation; never summed with any other council or state rows; unverified',
   ]
     .filter((part): part is string => Boolean(part))

@@ -2216,7 +2216,11 @@ false`. The minimum lines are total revenue `$215,461,000`, total expenses `$178
 expenses `$65,215,000`, depreciation/amortisation/impairment `$30,119,000`, operating government grants
 `$5,133,000`, capital government grants `$42,063,000`, net loss on disposal of assets `$17,882,000` and
 net result `$36,654,000`; the printed face-statement revenue and expense components are included for
-provenance.
+provenance. The `total_expenses` and `net_result` rows carry `human_spot_check: required` in their
+notes, naming the printed `$15` thousand B1-1 function-allocation discrepancy (B1-1 expenses
+`$178,792` thousand / operating result `$36,669` thousand vs face expenses `$178,807` thousand /
+operating result `$36,654` thousand) that a human must reconcile before those two totals are treated
+as final.
 
 **No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
 `gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
@@ -2238,8 +2242,9 @@ because they may overlap government program data; they are not added to expendit
 `dubbo-council` still **245**; exact case-insensitive "Council of the City of Ryde" rows 1 → **18**
 (the new 17 plus the 1 pre-existing uppercase AusTender contract) and exact published-string rows 0 →
 **17**; rows whose `delivery_entity` mentions Ryde 205 → **222**; `data_sources` 48 → **49**. A second
-ingest run upserted the same 17 natural keys and left the DB total unchanged (idempotent). No deletes
-or updates to any other source.
+ingest run upserted the same 17 natural keys and left the DB total unchanged (idempotent); a later
+in-place upsert added `human_spot_check: required` to the `total_expenses` and `net_result` notes and
+left the row count and amounts unchanged. No deletes or updates to any other source.
 
 ---
 
