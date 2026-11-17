@@ -328,6 +328,17 @@ types. The no-sum rules are listed in §4.
 > statement-line detail for all councils. The 245 `dubbo-council` rows are 2026/27 budget/estimate
 > lines, not GPFS actuals; council rows are never summed with state or federal rows.
 
+> Victorian council inventory and pilot plan: [VIC_COUNCILS.md](./VIC_COUNCILS.md). It records that
+> the VLGGC annual questionnaire (VGC1/ABS1/ABS2-3) covers all 79 Victorian councils at
+> near-statement financial granularity — expenditure/revenue by function and nature, capital
+> outlays, balance sheet and cash flow — but is council-supplied and unaudited. For Greater Bendigo
+> FY2024-25 its income-statement and balance-sheet totals reconcile exactly to the audited GPFS;
+> capital outlays differ by $473,353 and need a documented bridge. The LGPRF/Know Your Council data
+> set covers all 79 councils but only with 59 performance indicators (CC BY 4.0), and no single
+> official dataset publishes the audited GPFS for all 79. The 28 `vic-budget` rows are statewide
+> state-budget rows, not council spending; council rows are never summed with state rows or with
+> the ABS GFS local-government aggregate.
+
 #### `nsw-budget` — 1,115 rows (312 statement lines + 803 capital projects)
 
 - **In DB:** 312 rows from the 2025-26 financial-statements workbook (GG, NFPS and PNFC Operating
