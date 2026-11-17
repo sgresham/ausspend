@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { apiGet, buildQuery } from '../api';
-import type { BenchmarkResponse } from '../api/types';
+import type { BenchmarkResponse, PnfcBenchmarkResponse } from '../api/types';
 import { useApi } from '../hooks/useApi';
 import { Amount, ProvenanceFooter, SourceLink, VerifiedBadge } from '../components/Provenance';
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
@@ -48,6 +48,14 @@ export function BenchmarkPage() {
   const years = benchmark?.fiscal_years ?? [];
   const source = benchmark?.source;
 
+  const pnfcState = useApi(`benchmark:pnfc:${year || 'latest'}`, () =>
+    apiGet<PnfcBenchmarkResponse>(
+      `/api/benchmark/pnfc${buildQuery({ fiscal_year: year || undefined })}`,
+    ),
+  );
+  const pnfc = pnfcState.data;
+  const pnfcSeries = pnfc?.series ?? [];
+
   return (
     <Box>
       <Typography variant="h1" gutterBottom>
@@ -57,7 +65,9 @@ export function BenchmarkPage() {
         Official ABS Government Finance Statistics (GFS) COFOG-A expense aggregates for the general
         government sector, by level of government. This is a{' '}
         <strong>top-down statistical benchmark</strong>, not a sum of projects. It is kept separate
-        from the project, contract and charity data.
+        from the project, contract and charity data. The page also shows the ABS GFS Public
+        Non-Financial Corporations (PNFC) sector aggregate, which is a separate sector benchmark and
+        is never added to any other population.
       </Typography>
 
       <Alert severity="warning" data-testid="benchmark-caveat" sx={{ mb: 3 }}>
@@ -220,6 +230,125 @@ export function BenchmarkPage() {
           </>
         )
       ) : null}
+
+      <Box id="pnfc" sx={{ mt: 4, scrollMarginTop: '88px' }}>
+        <Typography variant="h2" gutterBottom>
+          ABS GFS PNFC sector aggregate
+        </Typography>
+        <Alert severity="warning" data-testid="pnfc-benchmark-caveat" sx={{ mb: 3 }}>
+          <AlertTitle>Sector aggregate — never add to project/entity data</AlertTitle>
+          {pnfc?.source.caveat ??
+            'ABS GFS Public Non-Financial Corporations is a top-down sector aggregate. Never add it to SOC/entity, government, charity or project data, and never sum across jurisdictions or revenue/expense flows.'}{' '}
+          This page shows published ABS cells only; it does not calculate a combined total.
+        </Alert>
+
+        {pnfc && pnfc.source ? (
+          <Card variant="outlined" sx={{ mb: 3 }} data-testid="pnfc-benchmark-source">
+            <CardContent>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="h6" component="h2">
+                  {pnfc.source.dataset}
+                </Typography>
+                <VerifiedBadge verified />
+              </Stack>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Published unit: <code>{pnfc.source.unit}</code>; stored as integer cents at{' '}
+                <code>×{pnfc.source.unit_to_cents.toLocaleString('en-AU')}</code> per unit. Fiscal
+                year {pnfc.source.fiscal_year ?? 'latest'}. Source release:{' '}
+                <Link href={pnfc.source.source_url} target="_blank" rel="noopener noreferrer">
+                  ABS GFS Annual release
+                </Link>
+                . Nine official PNFC data cubes (Australia all levels plus the eight
+                states/territories) are SHA-256 archived outside the repo. The ABS SDMX API has no
+                PNFC/GFS dataflow, so the official XLSX is the approved fallback.
+              </Typography>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {pnfcState.loading ? <LoadingState label="Loading ABS GFS PNFC benchmark…" /> : null}
+        {pnfcState.error ? (
+          <ApiErrorState
+            error={pnfcState.error}
+            hint="The PNFC benchmark endpoint needs an API process connected to the database."
+          />
+        ) : null}
+
+        {!pnfcState.loading && !pnfcState.error ? (
+          pnfcSeries.length === 0 ? (
+            <EmptyState
+              title="No ABS GFS PNFC benchmark rows"
+              message="Run npm run ingest:soc to load the official ABS GFS Annual 2024-25 PNFC data cubes."
+            />
+          ) : (
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h6" component="h2" gutterBottom>
+                  Published PNFC revenue and expense totals
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {pnfc?.note}
+                </Typography>
+                <TableContainer>
+                  <Table
+                    size="small"
+                    aria-label="ABS GFS PNFC benchmark series"
+                    data-testid="pnfc-benchmark-series"
+                  >
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Flow</TableCell>
+                        <TableCell>Published line</TableCell>
+                        <TableCell>Jurisdiction</TableCell>
+                        <TableCell align="right">Amount</TableCell>
+                        <TableCell>Verification</TableCell>
+                        <TableCell>Source</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {pnfcSeries.map((entry) => (
+                        <TableRow key={entry.id}>
+                          <TableCell sx={{ textTransform: 'capitalize' }}>
+                            {entry.gfs_flow ?? '—'}
+                          </TableCell>
+                          <TableCell>
+                            {entry.gfs_line_label ?? entry.gfs_line_item ?? '—'}
+                          </TableCell>
+                          <TableCell>
+                            {entry.jurisdiction === 'Australia'
+                              ? 'Australia (all levels)'
+                              : `${entry.jurisdiction} — ${entry.jurisdiction_name}`}
+                          </TableCell>
+                          <TableCell align="right">
+                            <Amount cents={entry.amount_cents} />
+                          </TableCell>
+                          <TableCell>
+                            <VerifiedBadge verified={entry.verified} />
+                          </TableCell>
+                          <TableCell>
+                            <SourceLink sourceId={entry.source_id} sourceUrl={entry.source_url} />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+                <ProvenanceFooter
+                  sources={[
+                    {
+                      source_id: pnfc!.source.source_id,
+                      source_url: pnfc!.source.source_url,
+                      verified: true,
+                      notes: pnfc!.source.caveat,
+                    },
+                  ]}
+                  note={`${pnfcSeries.length} published ABS PNFC aggregate cells. No total is computed or displayed. Sector aggregate — never add to project/entity data.`}
+                />
+              </CardContent>
+            </Card>
+          )
+        ) : null}
+      </Box>
     </Box>
   );
 }

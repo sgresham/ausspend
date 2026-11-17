@@ -61,7 +61,11 @@ export function DataSourcesPage() {
         charity-expense rows (expenses only, never government spending). ABS GFS Annual 2024-25 adds
         official COFOG-A expense aggregates by level of government from the Annual XLSX (the ABS
         SDMX API has no GFS/COFOG dataflow); they are row-level verified top-down benchmarks and are
-        never summed with project data. WA remains a stub. No grant row is estimated or zero-filled.
+        never summed with project data. ABS GFS Public Non-Financial Corporations (PNFC) adds a
+        separate sector benchmark from nine official annual XLSX data cubes (Australia all levels
+        plus the eight states/territories); it is a sector aggregate — never add it to
+        project/entity data, and revenue and expense are separate flows. WA remains a stub. No grant
+        row is estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -162,6 +166,20 @@ export function DataSourcesPage() {
                       They are a top-down benchmark, not project data.{' '}
                       <Link component={RouterLink} to="/benchmark">
                         Open the ABS GFS benchmark view →
+                      </Link>
+                    </Typography>
+                  ) : null}
+
+                  {source.source_id === 'abs-gfs-pnfc' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      ABS GFS Public Non-Financial Corporations is a{' '}
+                      <strong>sector aggregate — never add to project/entity data</strong>. Every
+                      row is a published official aggregate with <strong>verified: true</strong>,{' '}
+                      <code>jurisdiction_level: pnfc</code> and{' '}
+                      <code>aggregation_role: benchmark</code>. Revenue and expense are separate
+                      flows and are never summed.{' '}
+                      <Link component={RouterLink} to="/benchmark#pnfc">
+                        Open the PNFC benchmark view →
                       </Link>
                     </Typography>
                   ) : null}

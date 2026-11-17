@@ -28,7 +28,7 @@ export interface MeasureDocument {
   natural_key?: string;
   project_name?: string;
   description?: string;
-  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'other';
+  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'other';
   jurisdiction?: string;
   delivery_entity?: string;
   funding_source?: string;
@@ -46,6 +46,12 @@ export interface MeasureDocument {
   location?: SpendingLocationDocument;
   /** Explicit ACNC expense category; never overloads measure_type. */
   expense_category?: string;
+  /** ABS GFS operating-statement flow: revenue or expense. */
+  gfs_flow?: 'revenue' | 'expense';
+  /** Stable ABS GFS line-item key, e.g. total_revenue. */
+  gfs_line_item?: string;
+  /** Published ABS GFS line label. */
+  gfs_line_label?: string;
   unspsc?: string;
 }
 
@@ -118,6 +124,9 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     extraction_confidence: { type: String, enum: ['low', 'medium', 'high'] },
     location: { type: LocationSchema },
     expense_category: { type: String, index: true },
+    gfs_flow: { type: String, enum: ['revenue', 'expense'], index: true },
+    gfs_line_item: { type: String },
+    gfs_line_label: { type: String },
     unspsc: { type: String, index: true },
   },
   { collection: 'measures', versionKey: false },

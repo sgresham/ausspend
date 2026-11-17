@@ -31,6 +31,7 @@ const KNOWN_SOURCE_IDS = [
   'qld-qgip',
   'acnc-charity',
   'abs-gfs',
+  'abs-gfs-pnfc',
 ];
 
 const results = [];
@@ -300,6 +301,38 @@ async function apiChecks() {
       assert(row.provenance?.source_id === 'aus-tender', `row ${row.id} provenance is wrong`);
     }
     return `${body.data.length} federal contract rows, ${body.summary.total_by_measure_type[0]?.total_cents ?? 0} cents`;
+  });
+
+  await check('ABS GFS PNFC is separate and never totalled', async () => {
+    const pnfc = await getJson('/api/benchmark/pnfc?fiscal_year=2024-25');
+    assert(pnfc.status === 200, `expected 200, got ${pnfc.status}`);
+    assert(pnfc.body?.source?.source_id === 'abs-gfs-pnfc', 'PNFC source is not abs-gfs-pnfc');
+    assert(pnfc.body?.source?.unit === '$m', 'PNFC unit is not $m');
+    assert(pnfc.body?.source?.unit_to_cents === 100000000, 'PNFC scale is wrong');
+    assert(!('total_cents' in pnfc.body), 'PNFC response has a total_cents');
+    assert(
+      Array.isArray(pnfc.body?.series) && pnfc.body.series.length > 0,
+      'no PNFC benchmark series',
+    );
+    assert(
+      pnfc.body.series.every((row) => row.jurisdiction_level === 'pnfc'),
+      'PNFC rows are not jurisdiction_level pnfc',
+    );
+    assert(
+      pnfc.body.series.every((row) => row.verified === true),
+      'PNFC rows are not verified official aggregates',
+    );
+    assert(
+      pnfc.body.series.every((row) => !('total_cents' in row)),
+      'PNFC series carries a total',
+    );
+    const generic = await getJson('/api/spending?jurisdiction_level=pnfc&fiscal_year=2024-25');
+    assert(generic.status === 200, `generic PNFC query expected 200, got ${generic.status}`);
+    assert(
+      Array.isArray(generic.body?.data) && generic.body.data.length === 0,
+      'generic spending query returned PNFC benchmark rows',
+    );
+    return `${pnfc.body.series.length} PNFC cells, no combined total, excluded from /api/spending`;
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {
@@ -734,6 +767,26 @@ async function uiChecks(page, regionId, populatedRegionId) {
     assert(!/Total/.test(text), 'benchmark table shows a total');
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
     return 'caveat visible, verified abs-gfs rows, no total';
+  });
+
+  await check('/benchmark shows PNFC as a separate sector aggregate with no total', async () => {
+    pageErrors.length = 0;
+    await page.goto(`${WEB_URL}/benchmark#pnfc`, { waitUntil: 'domcontentloaded' });
+    await page.getByTestId('pnfc-benchmark-caveat').waitFor({ state: 'visible', timeout: 20_000 });
+    const caveat = (await page.getByTestId('pnfc-benchmark-caveat').innerText()).replace(
+      /\s+/g,
+      ' ',
+    );
+    assert(/sector aggregate/i.test(caveat), 'PNFC caveat does not call it a sector aggregate');
+    assert(/never add/i.test(caveat), 'PNFC caveat does not forbid adding project/entity data');
+    const table = page.getByTestId('pnfc-benchmark-series');
+    await table.waitFor({ state: 'visible', timeout: 20_000 });
+    const text = (await table.innerText()).replace(/\s+/g, ' ');
+    assert(/abs-gfs-pnfc/.test(text), 'PNFC rows have no abs-gfs-pnfc source id');
+    assert(/Verified/.test(text), 'PNFC rows are not marked Verified');
+    assert(!/combined total/i.test(text), 'PNFC table shows a combined total');
+    assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
+    return 'sector-aggregate caveat visible, verified PNFC rows, no combined total';
   });
 }
 

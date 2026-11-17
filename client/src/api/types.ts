@@ -7,7 +7,8 @@
 
 export type MeasureType = 'actual' | 'budget' | 'estimate' | 'contract' | 'grant_award';
 
-export type JurisdictionLevel = 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'other';
+export type JurisdictionLevel =
+  'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'other';
 
 export type ExtractionConfidence = 'low' | 'medium' | 'high';
 
@@ -359,6 +360,52 @@ export interface BenchmarkResponse {
   functions: Array<{ code: string; name: string }>;
   series: BenchmarkSeries[];
   counts: { series: number; by_level: Record<string, number> };
+  note: string;
+}
+
+/** One published ABS GFS PNFC operating-statement total. */
+export interface PnfcBenchmarkSeries {
+  id: string;
+  gfs_flow: 'revenue' | 'expense' | null;
+  gfs_line_item: string | null;
+  gfs_line_label: string | null;
+  jurisdiction_level: 'pnfc';
+  jurisdiction: string;
+  jurisdiction_name: string;
+  location_state?: string;
+  amount_cents: number;
+  fiscal_year: string;
+  verified: boolean;
+  aggregation_role?: string;
+  data_quality_flag?: string;
+  source_id: string;
+  source_url: string;
+  notes?: string;
+}
+
+/** GET /api/benchmark/pnfc — ABS GFS PNFC sector benchmark, never a total. */
+export interface PnfcBenchmarkResponse {
+  source: {
+    source_id: string;
+    name: string;
+    dataset: string;
+    source_url: string;
+    catalogue_url: string;
+    fiscal_year: string;
+    unit: string;
+    unit_to_cents: number;
+    caveat: string;
+    label: string;
+  };
+  fiscal_years: string[];
+  flows: Array<'revenue' | 'expense'>;
+  jurisdictions: Array<{ code: string; name: string; level: 'pnfc' }>;
+  series: PnfcBenchmarkSeries[];
+  counts: {
+    series: number;
+    by_flow: Record<string, number>;
+    by_jurisdiction: Record<string, number>;
+  };
   note: string;
 }
 

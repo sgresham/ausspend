@@ -9,6 +9,7 @@ import {
 
 const LIVE_IDS = [
   'abs-gfs',
+  'abs-gfs-pnfc',
   'aus-tender',
   'data-gov-au-pbs',
   'grantconnect',
@@ -23,9 +24,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships fifteen connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(15);
-    expect(new Set(CONNECTOR_IDS).size).toBe(15);
+  it('ships sixteen connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(16);
+    expect(new Set(CONNECTOR_IDS).size).toBe(16);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -84,6 +85,9 @@ describe('federal connector registry', () => {
     expect(getConnector(ABS_GFS_ID)?.jurisdiction_level).toBe('federal');
     expect(getConnector(ABS_GFS_ID)?.source_url).toContain('abs.gov.au');
     expect(getConnector(ABS_GFS_ID)?.notes).toMatch(/benchmark/i);
+    expect(getConnector('abs-gfs-pnfc')?.status).toBe('active');
+    expect(getConnector('abs-gfs-pnfc')?.jurisdiction_level).toBe('pnfc');
+    expect(getConnector('abs-gfs-pnfc')?.notes).toMatch(/sector aggregate/i);
     expect(getConnector('aus-tender')?.jurisdiction_level).toBe('federal');
     expect(getConnector('aus-tender')?.publisher).toMatch(/Finance/);
     expect(getConnector('data-gov-au-pbs')?.status).toBe('active');

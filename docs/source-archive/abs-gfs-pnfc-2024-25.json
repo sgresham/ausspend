@@ -1,0 +1,149 @@
+{
+  "dataset": "ABS GFS — Public Non-Financial Corporations",
+  "fiscal_year": "2024-25",
+  "source_url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25",
+  "license": "CC BY 4.0",
+  "retrieved_at": "2026-11-17T03:58:30.158Z",
+  "unit": "$m (x100000000 cents per unit)",
+  "sdmx_status": "ABS SDMX API (https://data.api.abs.gov.au/rest/v1) has no PNFC/GFS dataflow: the full ABS dataflow catalogue (1,228 dataflows) contains zero PNFC, Public Non-Financial, GFS, COFOG or Government Finance dataflows, and every plausible PNFC dataflow id returns HTTP 404. No SDMX query is used.",
+  "tables": [
+    {
+      "file_id": "55120DO033_202425",
+      "jurisdiction": "Australia",
+      "jurisdiction_name": "Australia (all levels of government)",
+      "level": "national",
+      "filename": "55120DO033_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO023_202425",
+      "jurisdiction": "NSW",
+      "jurisdiction_name": "New South Wales",
+      "level": "state",
+      "filename": "55120DO023_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO024_202425",
+      "jurisdiction": "VIC",
+      "jurisdiction_name": "Victoria",
+      "level": "state",
+      "filename": "55120DO024_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO025_202425",
+      "jurisdiction": "QLD",
+      "jurisdiction_name": "Queensland",
+      "level": "state",
+      "filename": "55120DO025_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO026_202425",
+      "jurisdiction": "SA",
+      "jurisdiction_name": "South Australia",
+      "level": "state",
+      "filename": "55120DO026_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO027_202425",
+      "jurisdiction": "WA",
+      "jurisdiction_name": "Western Australia",
+      "level": "state",
+      "filename": "55120DO027_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO028_202425",
+      "jurisdiction": "TAS",
+      "jurisdiction_name": "Tasmania",
+      "level": "state",
+      "filename": "55120DO028_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO029_202425",
+      "jurisdiction": "NT",
+      "jurisdiction_name": "Northern Territory",
+      "level": "state",
+      "filename": "55120DO029_202425.xlsx"
+    },
+    {
+      "file_id": "55120DO030_202425",
+      "jurisdiction": "ACT",
+      "jurisdiction_name": "Australian Capital Territory",
+      "level": "state",
+      "filename": "55120DO030_202425.xlsx"
+    }
+  ],
+  "files": [
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC Australia (all levels of government)",
+      "filename": "55120DO033_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO033_202425.xlsx",
+      "sha256": "1493f05829967748a8c237b5473291de0a0f94c01f659ca7afa13a01900e8337",
+      "bytes": 57339,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC Queensland",
+      "filename": "55120DO025_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO025_202425.xlsx",
+      "sha256": "40fa60a422250c95f2370ecbf2cf3699c19615b6e739d1f2a8c465dd30e8c0bc",
+      "bytes": 60599,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC Victoria",
+      "filename": "55120DO024_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO024_202425.xlsx",
+      "sha256": "73ae42ba684098add1dc97b89d8334d851f55579a670ce2e1135b766a953d627",
+      "bytes": 59268,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC Tasmania",
+      "filename": "55120DO028_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO028_202425.xlsx",
+      "sha256": "7510e9355f37f7601729d4c871fdaf931521e0a03bb9f2960d346ea33a69baa7",
+      "bytes": 61155,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC New South Wales",
+      "filename": "55120DO023_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO023_202425.xlsx",
+      "sha256": "b298d3056cb0e97bea7c5e4e85cd72b396367bcc4c9dba4215bed44be9715ccf",
+      "bytes": 60527,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC Australian Capital Territory",
+      "filename": "55120DO030_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO030_202425.xlsx",
+      "sha256": "c635962a3eb117676e15939a5be896243bf7f75b9fd521afbbd74c2c1dcefcd3",
+      "bytes": 62655,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC South Australia",
+      "filename": "55120DO026_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO026_202425.xlsx",
+      "sha256": "e0fac83f4d865ea36dab737ce826fda7b4297dfc86b8328c667214d6feac6f85",
+      "bytes": 61656,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC Northern Territory",
+      "filename": "55120DO029_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO029_202425.xlsx",
+      "sha256": "e120bc0e79168b98110ba9ac92fdda52885aaf1e7f9631b6dc35b17755b44e42",
+      "bytes": 62329,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ABS GFS Annual 2024-25 — PNFC Western Australia",
+      "filename": "55120DO027_202425.xlsx",
+      "url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25/55120DO027_202425.xlsx",
+      "sha256": "e64308af728dd2ac23c79d2e011c7beae1240a5cb25b873f37aa548c366d8c77",
+      "bytes": 60906,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "ABS GFS Annual 2024-25 Public Non-Financial Corporations operating statements for Australia (all levels) and the eight state/territory jurisdictions. Only the published \"Total GFS revenue\" and \"Total GFS expenses\" rows for FY2024-25 are ingested; units are $m confirmed from workbook row 6. Every row is an official aggregate: jurisdiction_level=pnfc, measure_type=actual, verified=true, data_quality_flag=verified, aggregation_role=benchmark. ABS GFS PNFC is a top-down sector aggregate supplied by the ABS. It is a benchmark, not a sum of projects or entities. Never add it to SOC/entity, government, charity or project data, and never sum across jurisdictions or across revenue/expense flows. Bytes are archived outside the repo."
+}

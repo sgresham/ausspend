@@ -13,6 +13,10 @@ export const JURISDICTION_LEVELS = [
   'territory',
   'local',
   'charity',
+  // ABS GFS public non-financial corporations sector aggregate. It is a
+  // sector benchmark, not a level of government and not an entity-level SOC
+  // row, so it must never be merged with federal/state/local/charity data.
+  'pnfc',
   'other',
 ] as const;
 
@@ -74,6 +78,18 @@ export const EXPENSE_CATEGORY_LABELS = {
 
 export type ExpenseCategory = keyof typeof EXPENSE_CATEGORY_LABELS;
 
+/**
+ * ABS GFS flow classification. `revenue` and `expense` are separate published
+ * operating-statement aggregates and are never summed together or with project
+ * data. This is deliberately distinct from `measure_type`, which stays
+ * `actual` for an official ABS aggregate.
+ */
+export const GFS_FLOWS = ['revenue', 'expense'] as const;
+
+export const GfsFlowSchema = z.enum(GFS_FLOWS);
+
+export type GfsFlow = z.infer<typeof GfsFlowSchema>;
+
 export type SpendingLocation = z.infer<typeof SpendingLocationSchema>;
 
 /**
@@ -107,8 +123,14 @@ export const MeasureRecordSchema = z.object({
   aggregation_role: AggregationRoleSchema.optional(),
   extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
-  /** Explicit expense component (ACNC). Never used as a measure type. */
+  /** Explicit ACNC expense component (ACNC). Never used as a measure type. */
   expense_category: z.string().min(1).optional(),
+  /** ABS GFS operating-statement flow: revenue or expense. */
+  gfs_flow: GfsFlowSchema.optional(),
+  /** Stable ABS GFS line-item key (for example total_revenue). */
+  gfs_line_item: z.string().min(1).optional(),
+  /** Published ABS GFS line label. */
+  gfs_line_label: z.string().min(1).optional(),
   unspsc: z.string().min(1).optional(),
 });
 

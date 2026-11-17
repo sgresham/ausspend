@@ -29,7 +29,7 @@ export interface MeasureRow {
   natural_key?: string;
   project_name?: string;
   description?: string;
-  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'other';
+  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'other';
   jurisdiction?: string;
   delivery_entity?: string;
   funding_source?: string;
