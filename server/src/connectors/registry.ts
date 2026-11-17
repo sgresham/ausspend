@@ -10,6 +10,7 @@ import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { createQldBudgetConnector } from './qld-budget.js';
 import { createQgipConnector } from './qld-qgip.js';
 import { createEssentialEnergyConnector } from './soc/nsw/essential-energy.js';
+import { createForestryCorporationConnector } from './soc/nsw/forestry-corporation.js';
 import { createHunterWaterConnector } from './soc/nsw/hunter-water.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
@@ -156,6 +157,11 @@ export const CONNECTORS: readonly Connector[] = [
   // statement lines. Never added to government program spending, the PNFC
   // benchmark, or any other SOC. Other SOCs are not implemented.
   createEssentialEnergyConnector(),
+  // SOC Phase 6: fifth NSW state-owned corporation — Forestry Corporation of
+  // NSW. Latest annual report discovered, SHA-256 archived and parsed as
+  // entity-level statement lines. Never added to government program spending,
+  // the PNFC benchmark, or any other SOC. Other SOCs are not implemented.
+  createForestryCorporationConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

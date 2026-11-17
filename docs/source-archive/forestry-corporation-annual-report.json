@@ -1,0 +1,22 @@
+{
+  "entity": "Forestry Corporation of NSW",
+  "jurisdiction": "NSW",
+  "dataset": "Forestry Corporation of NSW — Annual Report",
+  "publisher": "Forestry Corporation of NSW",
+  "discovery_page": "https://www.forestrycorporation.com.au/about/pubs/corporate/annual-report",
+  "license": "© Forestry Corporation of New South Wales. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T08:24:03.284Z",
+  "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for Forestry Corporation of NSW only. Never add to government program spending, to the PNFC sector benchmark, or to each other: total revenue includes the separately shown government grant lines; total expenses is the printed subtotal and is the exact sum of the four printed expense lines; the net result is a profit. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25",
+      "filename": "annual-report-2024-25.pdf",
+      "url": "https://www.forestrycorporation.com.au/__data/assets/pdf_file/0009/1650285/annual-report-2024-25.pdf",
+      "sha256": "18f9fa57718cd6177d505298d0fd214f897028b2db76e8a3e257376aa392be10",
+      "bytes": 6448775,
+      "archived_from": "other"
+    }
+  ],
+  "notes": "Latest Forestry Corporation of NSW annual report discovered from the official annual-report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The statement of profit or loss and other comprehensive income prints an explicit $'000 unit. Total expenses is the explicit printed subtotal and is accepted only when the four printed expense lines, Note 5 Other income, Note 8 Other operating expenses, Note 9 Employee benefits, Note 10 Finance costs and the profit-before-tax/net-result bridges reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Forestry Corporation rows to government program spending, the PNFC benchmark, or any other SOC."
+}

@@ -176,11 +176,11 @@ nonzero before it changes anything.
 
 ## Backup, restore and the AusTender backfill gate
 
-The live baseline after the QGIP earlier-years and Essential Energy ingests is **515,413 real
-measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606, AusTender 117,894,
-GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115, QLD Budget 1,051,
-Dubbo 245, ABS GFS 169, WaterNSW 47, VIC Budget 28, ABS GFS PNFC 18, Sydney Water 10, Hunter Water
-6 and Essential Energy 6.
+The live baseline after the QGIP earlier-years, Essential Energy and Forestry Corporation of NSW
+ingests is **515,420 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
+AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115,
+QLD Budget 1,051, Dubbo 245, ABS GFS 169, WaterNSW 47, VIC Budget 28, ABS GFS PNFC 18, Sydney
+Water 10, Forestry Corporation of NSW 7, Hunter Water 6 and Essential Energy 6.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
