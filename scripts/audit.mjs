@@ -347,8 +347,8 @@ async function apiChecks() {
     );
     assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
     assert(
-      Array.isArray(soc.body?.series) && soc.body.series.length === 24,
-      `expected 24 SOC rows (Sydney Water 10 + WaterNSW 8 + Hunter Water 6), got ${soc.body?.series?.length}`,
+      Array.isArray(soc.body?.series) && soc.body.series.length === 63,
+      `expected 63 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -371,7 +371,7 @@ async function apiChecks() {
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
-    assert(sources.get('waternsw')?.records === 8, 'WaterNSW source count is not 8 rows');
+    assert(sources.get('waternsw')?.records === 47, 'WaterNSW source count is not 47 rows');
     assert(sources.get('hunter-water')?.records === 6, 'Hunter Water source count is not 6 rows');
     for (const entity of ['sydney-water', 'waternsw', 'hunter-water']) {
       assert(
@@ -415,8 +415,8 @@ async function apiChecks() {
     const waterNsw = await getJson('/api/soc?fiscal_year=2024-25&entity=WaterNSW');
     assert(waterNsw.status === 200, `WaterNSW SOC expected 200, got ${waterNsw.status}`);
     assert(
-      waterNsw.body?.series?.length === 8,
-      `expected 8 WaterNSW SOC rows, got ${waterNsw.body?.series?.length}`,
+      waterNsw.body?.series?.length === 47,
+      `expected 47 WaterNSW SOC rows, got ${waterNsw.body?.series?.length}`,
     );
     assert(waterNsw.body?.source?.source_id === 'waternsw', 'WaterNSW SOC source is not waternsw');
     assert(
@@ -439,6 +439,86 @@ async function apiChecks() {
     assert(
       wnByLine.get('nsw_government_contributions_to_operations')?.potential_double_count === true,
       'WaterNSW NSW government contribution is not flagged as a potential double count',
+    );
+
+    // Deep detail: the WaterNSW notes are exposed as non-additive components.
+    assert(
+      !('total_cents' in waterNsw.body) &&
+        !('total_amount' in waterNsw.body) &&
+        !('combined_total' in waterNsw.body),
+      'WaterNSW SOC response must not contain a computed total',
+    );
+    const sectionCounts = waterNsw.body?.counts?.by_section;
+    const noteCounts = waterNsw.body?.counts?.by_note;
+    assert(sectionCounts && typeof sectionCounts === 'object', 'WaterNSW by_section is missing');
+    assert(noteCounts && typeof noteCounts === 'object', 'WaterNSW by_note is missing');
+    assert(
+      sectionCounts.revenue === 16 &&
+        sectionCounts.expenses === 29 &&
+        sectionCounts.result === 1 &&
+        sectionCounts.capital === 1,
+      `WaterNSW by_section is not {revenue:16, expenses:29, result:1, capital:1}: ${JSON.stringify(sectionCounts)}`,
+    );
+    assert(
+      noteCounts['Face statement'] === 5 &&
+        noteCounts['Note 2 Revenue from water supply and delivery'] === 5 &&
+        noteCounts['Note 3 Grants and subsidies'] === 3 &&
+        noteCounts['Note 4 Other revenue'] === 7 &&
+        noteCounts['Note 5 Employee related expenses'] === 4 &&
+        noteCounts['Note 6 Other operating expenses'] === 14 &&
+        noteCounts['Note 7 Depreciation and amortisation'] === 3 &&
+        noteCounts['Note 8 Finance costs'] === 5 &&
+        noteCounts['Statement of cash flows — investing activities'] === 1,
+      `WaterNSW by_note counts are wrong: ${JSON.stringify(noteCounts)}`,
+    );
+    const wnNoteRows = waterNsw.body.series.filter(
+      (row) => typeof row.soc_note === 'string' && row.soc_note.startsWith('Note '),
+    );
+    assert(
+      wnNoteRows.length === 41,
+      `expected 41 WaterNSW printed-note rows (38 note components + 3 Note 3 grants), got ${wnNoteRows.length}`,
+    );
+    assert(
+      wnNoteRows.every(
+        (row) => typeof row.soc_component_of === 'string' && row.soc_component_of.length > 0,
+      ),
+      'a WaterNSW note row is missing soc_component_of',
+    );
+    const signedCents = (row) =>
+      row.soc_printed_sign === 'negative' ? -row.amount_cents : row.amount_cents;
+    const componentSum = (subtotal) =>
+      waterNsw.body.series
+        .filter((row) => row.soc_component_of === subtotal)
+        .reduce((sum, row) => sum + signedCents(row), 0);
+    for (const [subtotal, expected] of [
+      ['revenue_from_water_supply_and_delivery', 37972000000],
+      ['other_revenue', 4994800000],
+      ['employee_expenses', 16365400000],
+      ['other_operating_expenses', 11334800000],
+      ['depreciation_amortisation', 10753000000],
+      ['finance_costs', 8829900000],
+    ]) {
+      assert(
+        componentSum(subtotal) === expected,
+        `WaterNSW ${subtotal} components sum to ${componentSum(subtotal)}, expected ${expected} cents`,
+      );
+    }
+    const capex = wnByLine.get('capital_expenditure_cash');
+    assert(
+      capex?.amount_cents === 17082800000 &&
+        capex?.soc_printed_sign === 'negative' &&
+        capex?.soc_section === 'capital',
+      'WaterNSW cash-flow capital expenditure row is missing or not a printed outflow',
+    );
+    const wnDoubleCount = waterNsw.body.series
+      .filter((row) => row.potential_double_count)
+      .map((row) => row.soc_line_item)
+      .sort();
+    assert(
+      wnDoubleCount.length === 3 &&
+        wnDoubleCount.join(',') ===
+          'nsw_government_contributions_to_operations,nsw_government_subsidies,other_government_grants',
+      `WaterNSW potential_double_count rows are not the 3 government grants: ${wnDoubleCount.join(',')}`,
     );
 
     const hunterWater = await getJson('/api/soc?fiscal_year=2024-25&entity=Hunter%20Water');
@@ -493,7 +573,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '24 entity rows (Sydney Water 10, WaterNSW 8, Hunter Water 6), $’000, exact total expenses 2,949,540, 472,831 and 418,326, no total, excluded from generic spending';
+    return '63 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6), $’000, exact total expenses 2,949,540, 472,831 and 418,326, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {
