@@ -5,6 +5,7 @@ import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
 import { createDubboConnector } from './dubbo-council.js';
 import { createDubboGpfsConnector } from './dubbo-gpfs.js';
+import { createCityOfSydneyGpfsConnector } from './city-of-sydney-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -130,6 +131,12 @@ export const CONNECTORS: readonly Connector[] = [
   // agency_detail, has no region/LGA allocation, and reconciles exactly to the
   // OLG FY2024-25 totals. Never summed with the 245 dubbo-council rows.
   createDubboGpfsConnector(),
+  // GPFS expansion: second council only (City of Sydney). Its audited FY2024-25
+  // General Purpose Financial Statements are a separate source id: every row is
+  // non-additive agency_detail, has no region/LGA allocation, and reconciles
+  // exactly to the printed Income Statement, B1-1 and comprehensive-income
+  // totals. Never summed with any other council, the Dubbo rows or state rows.
+  createCityOfSydneyGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),

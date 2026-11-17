@@ -374,7 +374,7 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 
 ### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers twenty-seven Australian public-spending sources, including the separate Dubbo GPFS pilot source (`dubbo-council-gpfs`). **AusTender
+`server/src/connectors` registers twenty-eight Australian public-spending sources, including the two separate council GPFS sources (`dubbo-council-gpfs` and `city-of-sydney-gpfs`). **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
