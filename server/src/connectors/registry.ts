@@ -53,6 +53,7 @@ import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
 import { createFagConnector } from './vic-vlgc-fag.js';
+import { createLgprfConnector } from './vic-lgprf.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -488,6 +489,14 @@ export const CONNECTORS: readonly Connector[] = [
   // The report's copyright page is CC BY 3.0 AU for non-logo content; the
   // underlying VLGGC data collection is attribution/permission, NOT CC BY.
   createFagConnector(),
+  // VIC council performance layer: the LGPRF 2020-25 full data set covers all
+  // 79 councils for 2020-21..2024-25 (58 indicators in the first three years,
+  // 59 in the last two) under CC BY 4.0. These are performance indicators, not
+  // spending: every row is non-additive agency_detail, amount_cents is 0 and
+  // the published result lives in performance_value. No sum or average across
+  // councils, indicators or years; never mixed with VGC1/ABS, FAG, vic-budget,
+  // ABS GFS, waste or NSW council data.
+  createLgprfConnector(),
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),

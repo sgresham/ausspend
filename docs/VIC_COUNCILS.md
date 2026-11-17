@@ -1301,3 +1301,101 @@ repo-wide check still lists five pre-existing unrelated files), `npm test` (75 f
 keys, idempotency, no-sum, overlap semantics and licence metadata), `npm run build`, mocked
 `npm run test:e2e` on alternate ports `3103/5176` (51 passed) and live `npm run audit` on
 `3104/5177` (38/38 checks passed). Ports 3001/5173 and the production nginx were not touched.
+
+## 17. VIC council performance layer — LGPRF 2020-25 (18 November 2026)
+
+**Scope delivered:** source `vic-lgprf`, the official Local Government Performance Reporting
+Framework full data set for **FY2020-21..FY2024-25**, all **79 councils** in every year,
+**58 indicators** in 2020-21..2022-23 and **59** in 2023-24..2024-25. This is a performance
+layer only: no council spending, no GPFS lines and no new financial source family. No NSW,
+OLG, ABS GFS, VGC1/ABS or waste rows were touched.
+
+### 17.1 Source, archive and licence
+
+- Official LGPRF page:
+  <https://www.localgovernment.vic.gov.au/strengthening-councils/performance-reporting>
+- DataVic package:
+  <https://discover.data.vic.gov.au/dataset/local-government-performance-reporting>
+  (`license_id: cc-by`; **CC BY 4.0**)
+- Resource:
+  <https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0019/191008/LGPRF-2020-2025-Full-Council-Data-Set-Nov25-Final-Release.xlsx>
+- Live asset returned HTTP 403 to automated clients. The exact bytes were retrieved from the
+  documented Wayback snapshot `20251118075622`:
+  <https://web.archive.org/web/20251118075622id_/https://www.localgovernment.vic.gov.au/__data/assets/excel_doc/0019/191008/LGPRF-2020-2025-Full-Council-Data-Set-Nov25-Final-Release.xlsx>
+- Archived outside the repo at
+  `~/ausspend-source-archive/vic-lgprf/LGPRF-2020-2025-Full-Council-Data-Set-Nov25-Final-Release.xlsx`
+  — **3,241,185 bytes, SHA-256
+  `d88f7ede3a154f1beb6359850dc25a68159d08e23478fec8f138d67d1b787376`** (matches the documented
+  hash exactly). Metadata-only manifest:
+  [`docs/source-archive/vic-lgprf-2020-25.json`](./source-archive/vic-lgprf-2020-25.json).
+- The workbook is not redistributed; only derived indicator rows are emitted. The source's own
+  disclaimer is recorded verbatim: the data set must not be used to aid the publication of
+  “overly simplistic league tables of councils”.
+
+### 17.2 Rows, indicators and non-additive semantics
+
+| Fiscal year | Councils | Indicators |       Rows | Blank Results | `No data` rows |
+| ----------- | -------: | ---------: | ---------: | ------------: | -------------: |
+| 2020-21     |       79 |         58 |      4,582 |            43 |             43 |
+| 2021-22     |       79 |         58 |      4,582 |            99 |             99 |
+| 2022-23     |       79 |         58 |      4,582 |             0 |             43 |
+| 2023-24     |       79 |         59 |      4,661 |             0 |             43 |
+| 2024-25     |       79 |         59 |      4,661 |             0 |             38 |
+| **Total**   |          |            | **23,068** |       **142** |        **266** |
+
+- One row per **council × fiscal year × indicator**, natural key
+  `vic-lgprf:<sha256(fiscal_year|council|indicator)>`; re-running upserts on `natural_key` with no
+  deletes.
+- The two indicator generations differ explicitly rather than by assumption: 2020-21..2022-23
+  include `LB1` (physical library collection usage), `LB4` (active library borrowers) and `WC1`
+  (kerbside bin collection requests); 2023-24..2024-25 replace them with `FS5` (food safety
+  samples), `LB6` (loans per head), `LB7` (library membership) and `LB8` (library visits per head).
+  **62 distinct indicator codes** appear across the five years.
+- Every row is `source_id: vic-lgprf`, `measure_type: actual`, `jurisdiction_level: local`,
+  `jurisdiction: VIC`, `aggregation_role: agency_detail`, `performance_non_additive: true`,
+  `verified: false`. `amount_cents` is **0** on every performance row; the published result is
+  stored in `performance_value`. No row is ever summed or averaged across councils, indicators or
+  years, and no ratio/per-head result is converted to a dollar total.
+- Blanks are preserved as an absent `performance_value` (142 rows), never zero-filled. Where the
+  source prints a literal `0` together with `Data applicable? = No data`, the 0 is kept and the
+  no-data flag is retained; it is not treated as a measured zero.
+- Council labels are expanded to the platform's VIC names (for example `Borough of Queenscliffe`,
+  `Greater Shepparton City Council`, `Colac Otway Shire Council`). Each year has 79 councils; the
+  union across years is **80 names** because 2020-21 prints `Moreland City` and later years print
+  `Merri-bek City` (the documented rename, not an extra council).
+- There is no Totals row in this data set, and no Totals entity is emitted.
+
+### 17.3 Units
+
+The full data set has no unit column, so the unit is defined per indicator from the published
+`Description` and the official LGV Performance Reporting Indicator Guide 2025-26, and stored in
+`performance_unit`. Examples: `AUD per person` (`C1`), `AUD per visit` (`AF7`), `AUD per square
+metre` (`R3`), `days` (`AM1`, `SP1`), `score out of 100` (`G2`, `R5`), `ratio` (`L1`, `OP1`),
+`visits per person` (`AF6`), `bins per 10,000 scheduled bin lifts` (`WC2`). Percentage indicators
+whose published result is a 0-1 fraction are labelled `percentage (0-1 fraction)`; values are
+never silently multiplied by 100 and never converted to dollars.
+
+### 17.4 DB delta and reproduce
+
+Before: **659,244** measures. After: **682,312** (+23,068, all `vic-lgprf`; 79 distinct councils
+per year, 80 distinct names across years, Totals entities 0, non-additive/amount-cent violations
+0). The second run is idempotent: it upserts the same 23,068 natural keys and leaves the DB at
+**682,312**. No other source's rows were changed or deleted.
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export LGPRF_ARCHIVE_ROOT=/home/steve/ausspend-source-archive
+export LGPRF_SOURCE_PATH=/path/to/LGPRF-2020-2025-Full-Council-Data-Set-Nov25-Final-Release.xlsx
+npm run ingest:vic-lgprf
+# [ingest:vic-lgprf] vic-lgprf: success fetched=23068 upserted=23068
+# [ingest:vic-lgprf] db source_rows=23068 distinct_councils=80 totals_entities=0 non_additive_violations=0 all_measures=682312
+# [ingest:vic-lgprf] by_year=2020-21=4582/58ind,2021-22=4582/58ind,2022-23=4582/58ind,2023-24=4661/59ind,2024-25=4661/59ind
+```
+
+**Checks run on 18 November 2026:** `npm run typecheck`, `npm run lint`, changed files pass
+Prettier, `npm test` (76 files, 843 passed, 2 skipped; includes
+`server/test/vic-lgprf.test.ts`: 79 councils/year, 58/59 indicators, 23,068 rows, unit
+preservation, blank/no-data handling, natural keys, idempotency, no-sum semantics, licence
+metadata and a SHA-verified real-archive parse), `npm run build`, alt-port e2e (51 passed on
+`3107/5178`) and live `npm run audit` on `3107/5178` (38/38 checks passed). Ports 3001/5173 and
+the production nginx were not touched.

@@ -269,6 +269,29 @@ export const MeasureRecordSchema = z.object({
    * added to an additive total.
    */
   potential_double_count: z.boolean().optional(),
+  /**
+   * VIC council performance-indicator provenance (LGPRF). Performance values
+   * are not money: a value may be a per-head amount, per-unit cost, percentage,
+   * ratio, score, count or days. `performance_value` stores the published
+   * result exactly (absent when the source published a blank); it is never
+   * converted to dollars and never summed or averaged. `amount_cents` is 0 for
+   * these rows and is not used as the measure value.
+   */
+  performance_value: z.number().optional(),
+  /** Published textual result, when the source result is not numeric. */
+  performance_value_text: z.string().min(1).optional(),
+  /** Unit exactly as published/defined for the indicator. */
+  performance_unit: z.string().min(1).optional(),
+  performance_indicator_code: z.string().min(1).optional(),
+  performance_indicator_name: z.string().min(1).optional(),
+  performance_indicator_group: z.string().min(1).optional(),
+  performance_service_provided: z.string().min(1).optional(),
+  /** Published `Data applicable?` value (for example applicable or No data). */
+  performance_data_applicable: z.string().min(1).optional(),
+  /** Council label exactly as printed in the LGPRF workbook. */
+  performance_council_label: z.string().min(1).optional(),
+  /** Explicit marker that the row must never participate in a sum/average. */
+  performance_non_additive: z.boolean().optional(),
 });
 
 export type MeasureRecord = z.infer<typeof MeasureRecordSchema>;

@@ -59,6 +59,7 @@ const KNOWN_SOURCE_IDS = [
   'vic-vlgc-vgc1',
   'vic-vlgc-abs',
   'vic-vlgc-fag',
+  'vic-lgprf',
   'qld-budget',
   'qld-qgip',
   'acnc-charity',
