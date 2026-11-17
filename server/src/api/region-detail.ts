@@ -4,6 +4,7 @@ import { FunctionModel, RegionModel } from '../models/index.js';
 import { notFound } from './errors.js';
 import { measureQuery, parseMeasureFilters, sumCents, type MeasureFilters } from './filters.js';
 import {
+  isAdditiveMeasure,
   perMeasureTypeTotals,
   serializeMeasure,
   serializeRegion,
@@ -32,7 +33,8 @@ async function loadRegionMeasures(
 
 async function groupByFunction(measures: readonly LeanMeasure[], mixed: boolean) {
   const withFunction = measures.filter(
-    (measure): measure is LeanMeasure & { function_code: string } => Boolean(measure.function_code),
+    (measure): measure is LeanMeasure & { function_code: string } =>
+      Boolean(measure.function_code) && isAdditiveMeasure(measure),
   );
   const functions = await FunctionModel.find({
     code: { $in: [...new Set(withFunction.map((measure) => measure.function_code))] },
@@ -68,9 +70,31 @@ async function groupByFunction(measures: readonly LeanMeasure[], mixed: boolean)
     .sort((a, b) => a.function.code.localeCompare(b.function.code));
 }
 
+/**
+ * Single-agency detail is listed separately and is never added to the
+ * consolidated totals. The label is explicit in the API response so the UI
+ * cannot present it as part of the headline.
+ */
+function agencyDetailBlock(measures: readonly LeanMeasure[]) {
+  const detail = measures.filter((measure) => !isAdditiveMeasure(measure));
+  const measureTypes = [...new Set(detail.map((measure) => measure.measure_type))].sort();
+  const mixed = measureTypes.length > 1;
+  return {
+    label: 'Agency detail — not additive',
+    aggregation_role: 'agency_detail' as const,
+    count: detail.length,
+    mixed,
+    total_cents:
+      detail.length === 0 || mixed ? null : sumCents(detail.map((measure) => measure.amount_cents)),
+    total_by_measure_type: perMeasureTypeTotals(detail, { includeAgencyDetail: true }),
+    measures: detail.map(serializeMeasure),
+  };
+}
+
 async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCode?: string) {
   const measures = await loadRegionMeasures(region, filters, stateCode);
   const summary = summarizeMeasures(measures);
+  const additiveMeasures = measures.filter(isAdditiveMeasure);
 
   return {
     region: serializeRegion(region),
@@ -80,8 +104,9 @@ async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCo
       limit: filters.limit,
     },
     ...summary,
-    by_function: await groupByFunction(measures, summary.mixed),
+    by_function: await groupByFunction(additiveMeasures, summary.mixed),
     measures: measures.map(serializeMeasure),
+    agency_detail: agencyDetailBlock(measures),
   };
 }
 

@@ -1,4 +1,4 @@
-import { Button, Stack, Typography } from '@mui/material';
+import { Alert, AlertTitle, Button, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
@@ -10,6 +10,7 @@ import { typeTotalsFromApi } from '../measures';
 import { titleCase } from '../format';
 import { FilterBar, type FilterSelection } from './FilterBar';
 import { uniqueSources } from '../provenance';
+import { Amount } from './Provenance';
 import { MeasureTypeStackedBar, SpendingBarChart, type BarDatum } from './SpendingCharts';
 import {
   FunctionBreakdownTable,
@@ -117,7 +118,6 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
 
   const region = detail.region;
   const areaProfile = detail.area_profile ?? null;
-  const sources = uniqueSources(detail.measures);
   const totals = typeTotalsFromApi(detail.total_by_measure_type);
   const functionNames = new Map(
     detail.by_function.map((group) => [
@@ -135,6 +135,10 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
     value: group.total_cents as number,
   }));
   const functionBarSources = uniqueSources(singleFunctionGroups.flatMap((group) => group.measures));
+  const additiveRows = detail.measures.filter((row) => row.aggregation_role !== 'agency_detail');
+  const agencyDetail = detail.agency_detail;
+  const agencyRows = agencyDetail?.measures ?? [];
+  const sources = uniqueSources(additiveRows);
 
   const exploreParams = new URLSearchParams(
     areaProfile ? { area: areaProfile.area.slug } : { region: region._id },
@@ -242,11 +246,34 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
           <FunctionBreakdownTable groups={detail.by_function} />
 
           <MeasureRowsTable
-            rows={detail.measures}
+            rows={additiveRows}
             labelFor={labelFor}
-            caption="Every row carries its own source id, source URL and verification status."
+            caption="Additive rows only. Non-additive agency detail is listed separately below."
             testId="region-measure-rows"
           />
+
+          {agencyRows.length > 0 ? (
+            <>
+              <Alert severity="info" sx={{ mb: 2 }} data-testid="agency-detail-note">
+                <AlertTitle>{agencyDetail?.label ?? 'Agency detail — not additive'}</AlertTitle>
+                {agencyRows.length} single-agency row(s)
+                {agencyDetail?.total_cents !== null && agencyDetail?.total_cents !== undefined ? (
+                  <>
+                    {' '}
+                    totalling <Amount cents={agencyDetail.total_cents} />
+                  </>
+                ) : null}
+                . This detail overlaps the consolidated COFOG series and is excluded from the
+                headline total and every additive view. Do not add it to the COFOG total.
+              </Alert>
+              <MeasureRowsTable
+                rows={agencyRows}
+                labelFor={labelFor}
+                caption="Non-additive agency detail: shown for provenance, never added to consolidated totals."
+                testId="agency-detail-rows"
+              />
+            </>
+          ) : null}
         </>
       )}
     </>

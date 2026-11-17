@@ -31,6 +31,7 @@ export interface MeasureRow {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
+  aggregation_role?: 'additive' | 'agency_detail';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: { state?: string; lga_name?: string };
   unspsc?: string;
@@ -38,6 +39,8 @@ export interface MeasureRow {
 
 export interface MeasureSummary {
   count: number;
+  additive_count: number;
+  non_additive_count: number;
   measure_types: Array<MeasureDocument['measure_type']>;
   mixed: boolean;
   total_cents: number | null;
@@ -95,6 +98,7 @@ export function serializeMeasure(measure: LeanMeasure): MeasureRow {
     ...(measure.source_dataset ? { source_dataset: measure.source_dataset } : {}),
     ...(measure.source_date ? { source_date: measure.source_date } : {}),
     ...(measure.data_quality_flag ? { data_quality_flag: measure.data_quality_flag } : {}),
+    ...(measure.aggregation_role ? { aggregation_role: measure.aggregation_role } : {}),
     ...(measure.extraction_confidence
       ? { extraction_confidence: measure.extraction_confidence }
       : {}),
@@ -114,16 +118,35 @@ export async function loadMeasures(
 }
 
 /**
- * Count and sum for each measure type present. These per-type totals are always
- * returned; they are the only totals that are safe to add up, and only within a
- * single type. Never sum across types.
+ * Missing `aggregation_role` means `additive` for older sources. Agency detail
+ * is shown for provenance but must never enter an additive total.
+ */
+export function isAgencyDetail(measure: {
+  aggregation_role?: 'additive' | 'agency_detail' | null;
+}): boolean {
+  return measure.aggregation_role === 'agency_detail';
+}
+
+export function isAdditiveMeasure(measure: {
+  aggregation_role?: 'additive' | 'agency_detail' | null;
+}): boolean {
+  return !isAgencyDetail(measure);
+}
+
+/**
+ * Count and sum for each measure type present. Agency detail is excluded by
+ * default (pass `includeAgencyDetail` only for the labelled non-additive
+ * block). These per-type totals are the only totals that are safe to add up,
+ * and only within a single type. Never sum across types.
  */
 export function perMeasureTypeTotals(
-  measures: readonly Pick<LeanMeasure, 'amount_cents' | 'measure_type'>[],
+  measures: readonly Pick<LeanMeasure, 'amount_cents' | 'measure_type' | 'aggregation_role'>[],
+  options: { includeAgencyDetail?: boolean } = {},
 ): PerMeasureTypeTotal[] {
   const byType = new Map<MeasureDocument['measure_type'], { count: number; amounts: number[] }>();
 
   for (const measure of measures) {
+    if (!options.includeAgencyDetail && isAgencyDetail(measure)) continue;
     const entry = byType.get(measure.measure_type) ?? { count: 0, amounts: [] };
     entry.count += 1;
     entry.amounts.push(measure.amount_cents);
@@ -146,16 +169,23 @@ export function perMeasureTypeTotals(
  */
 export function summarizeMeasures(measures: readonly LeanMeasure[]): MeasureSummary {
   const measureTypes = [...new Set(measures.map((measure) => measure.measure_type))].sort();
-  const mixed = measureTypes.length > 1;
-  const singleType = measureTypes.length === 1 ? measureTypes[0]! : null;
+  const additive = measures.filter(isAdditiveMeasure);
+  const additiveTypes = [...new Set(additive.map((measure) => measure.measure_type))].sort();
+  const mixed = additiveTypes.length > 1;
+  const singleType = additiveTypes.length === 1 ? additiveTypes[0]! : null;
 
   return {
     count: measures.length,
+    additive_count: additive.length,
+    non_additive_count: measures.length - additive.length,
     measure_types: measureTypes,
     mixed,
-    total_cents: mixed ? null : sumCents(measures.map((measure) => measure.amount_cents)),
+    total_cents:
+      additive.length === 0 || mixed
+        ? null
+        : sumCents(additive.map((measure) => measure.amount_cents)),
     total_measure_type: singleType,
-    total_by_measure_type: perMeasureTypeTotals(measures),
+    total_by_measure_type: perMeasureTypeTotals(additive),
   };
 }
 
@@ -207,7 +237,9 @@ export async function groupByRegion(
     .map(([regionId, rows]) => {
       const region = regions.get(regionId);
       const measureTypes = [...new Set(rows.map((row) => row.measure_type))].sort();
-      const mixed = summary.mixed || measureTypes.length > 1;
+      const additiveRows = rows.filter(isAdditiveMeasure);
+      const additiveTypes = [...new Set(additiveRows.map((row) => row.measure_type))].sort();
+      const mixed = summary.mixed || additiveTypes.length > 1;
       return {
         region: region
           ? serializeRegion(region)
@@ -220,8 +252,11 @@ export async function groupByRegion(
             },
         measure_types: measureTypes,
         mixed,
-        total_cents: mixed ? null : sumCents(rows.map((row) => row.amount_cents)),
-        total_by_measure_type: perMeasureTypeTotals(rows),
+        total_cents:
+          additiveRows.length === 0 || mixed
+            ? null
+            : sumCents(additiveRows.map((row) => row.amount_cents)),
+        total_by_measure_type: perMeasureTypeTotals(additiveRows),
         measures: rows.map(serializeMeasure),
       };
     })

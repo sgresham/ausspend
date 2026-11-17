@@ -20,6 +20,7 @@ export function TotalsPanel({
   note?: string;
 }) {
   if (summary.count === 0) return null;
+  const additiveRows = summary.additive_count ?? summary.count;
 
   if (summary.mixed) {
     return (
@@ -53,11 +54,11 @@ export function TotalsPanel({
             <Amount cents={summary.total_cents} />
           </Typography>
           <MeasureTypeChip type={summary.total_measure_type} />
-          <Chip size="small" variant="outlined" label={`${summary.count} measure rows`} />
+          <Chip size="small" variant="outlined" label={`${additiveRows} additive rows`} />
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-          {scopeLabel} · sum of {summary.count} rows for one measure type. The total is returned by
-          the API over the whole filtered set.
+          {scopeLabel} · sum of {additiveRows} additive rows for one measure type. The total is
+          returned by the API over the whole filtered set; non-additive agency detail is excluded.
         </Typography>
         <ProvenanceFooter sources={sources} note={note} />
       </CardContent>

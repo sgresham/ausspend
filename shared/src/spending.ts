@@ -119,6 +119,7 @@ export const SpendingMeasureRowSchema = z.object({
   source_dataset: z.string().min(1).optional(),
   source_date: z.string().min(1).optional(),
   data_quality_flag: z.string().min(1).optional(),
+  aggregation_role: z.enum(['additive', 'agency_detail']).optional(),
   extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
   unspsc: z.string().min(1).optional(),

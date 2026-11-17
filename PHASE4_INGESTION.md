@@ -2,6 +2,7 @@
 
 **Status: VIC only, live and ingested into `ausspend_dev` on 2026-11-17. No QLD, WA, SA,
 TAS, ACT, NT, ACNC, QGIP or ABS GFS source was started, fetched or written by this item.**
+**28 VIC rows: 20 additive COFOG rows and 8 explicitly non-additive DTF agency-detail rows.**
 
 This document records exactly what was ingested, how the workbooks are structured, the units,
 the COFOG mapping, the source archive hashes, and the limitations. It is the reference for
@@ -75,17 +76,22 @@ skipped; measure types are never summed. The total row is excluded to avoid doub
 `Not allocated by function` is excluded because it has no COFOG code and carries negative values
 (the model stores non-negative spending; negatives are skipped, never sign-flipped).
 
-### Departmental workbook (DTF) — archived and parsed, NOT additive
+### Departmental workbook (DTF) — non-additive agency detail
 
 The `DTF` sheet contains Comprehensive Operating statement, Balance sheet, Statement of cash flows,
 Statement of changes in equity and Administered items statement blocks, all in `($ million)`.
 
-The parser validates the **Comprehensive Operating statement → Expenses from transactions**
-component lines (`Employee benefits`, `Depreciation`, `Grant expense`, `Other operating expenses`)
-for the **2025-26 budget** and **2026-27 budget** columns. Those 8 agency lines are **not written to
-`measures`**: the consolidated COFOG workbook already covers general government expenses, so adding
-one agency's detail would make the VIC budget total double count. The workbook remains in the
-SHA-256 archive and in the manifest, and its parser is unit-tested (`parseDepartmentalWorkbook`).
+The **Comprehensive Operating statement → Expenses from transactions** component lines
+(`Employee benefits`, `Depreciation`, `Grant expense`, `Other operating expenses`) are ingested for
+the **2025-26 budget** and **2026-27 budget** columns: 8 rows. They are stored with
+`aggregation_role: "agency_detail"`, `function_code` absent, `data_quality_flag: "provisional"`, and
+`delivery_entity`/`funding_source` set to the department.
+
+These rows are **never added to any total**. The API lists them in a separate `agency_detail` block
+(labelled "Agency detail — not additive"), and every additive total, per-type total, function total
+and coverage count excludes `aggregation_role: "agency_detail"`. The consolidated COFOG series is
+the only additive VIC series. The DTF 2026-27 agency detail totals 49,614,471,612 cents and must not
+be added to the 11,616,887,942,498-cent COFOG total.
 
 Totals, revenue lines, the balance sheet, cash flow, changes in equity and the Administered items
 statement are excluded from parsing. Administered items are transfers/payments on behalf of the
@@ -116,11 +122,14 @@ Every COFOG row has `data_quality_flag: "statewide_only"`, `jurisdiction_level: 
 `jurisdiction: "VIC"`, `location.state: "VIC"` and `verified: false`. No region, LGA or coordinate is
 invented.
 
-The Transport/Economic-affairs relationship and the budget-only scope were raised with the
-orchestrator before the mapper was written (two `otto_pool_ask` attempts returned no answer in the
-wait window). The defaults above are the documented, defensible resolution; if the orchestrator
-rules differently, only `COFOG_ROW_MAP` and the year filter in `server/src/connectors/vic-budget.ts`
-change, and re-ingestion upserts the same natural keys.
+**Transport is not resolved.** The row is stored as `045` because that is the only shared code
+whose name matches Transport, but VIC's disclosure treats Transport as a separate major group and
+its `04` row excludes transport. The exact question for a human is: _should VIC's Transport major
+group map to the shared subdivision 045, and should 045 never be rolled into 04?_ Until confirmed,
+both Transport rows carry `data_quality_flag: "statewide_only; transport_mapping_unconfirmed"` and a
+`MAPPING UNCONFIRMED` note. If the ruling differs, change only `COFOG_ROW_MAP` in
+`server/src/connectors/vic-budget.ts`; re-ingestion upserts the same natural keys. The budget-only
+scope (2025-26 and 2026-27 budget columns) is settled.
 
 ## Ingestion and idempotency
 
@@ -137,34 +146,33 @@ never deletes another source's rows. Natural key =
 Observed result (2026-11-17):
 
 ```text
-[ingest:phase4] removed 8 legacy non-additive VIC departmental row(s)
-[ingest:phase4] vic-budget: success fetched=20 upserted=20
-[ingest:phase4] vic-budget rows=20 source_documents=2
-[ingest:phase4] fiscal_year=2025-26 rows=10 cents=10908810832141
-[ingest:phase4] fiscal_year=2026-27 rows=10 cents=11616887942498
+[ingest:phase4] vic-budget: success fetched=28 upserted=28
+[ingest:phase4] vic-budget rows=28 source_documents=2
+[ingest:phase4] fiscal_year=2025-26 role=additive rows=10 cents=10908810832141
+[ingest:phase4] fiscal_year=2025-26 role=agency_detail rows=4 cents=50051697480
+[ingest:phase4] fiscal_year=2026-27 role=additive rows=10 cents=11616887942498
+[ingest:phase4] fiscal_year=2026-27 role=agency_detail rows=4 cents=49614471612
 [ingest:phase4] function=01 rows=2 ... function=10 rows=2, function=045 rows=2
 ```
 
 - 20 COFOG rows = 10 function rows × 2 budget years. **This is the only additive VIC series.**
-- The DTF workbook is archived and parsed (8 expense lines) but creates no measures. The script
-  removes only legacy VIC non-additive departmental rows (`source_id: vic-budget`,
-  `delivery_entity: Department of Treasury and Finance`, no `function_code`). No other source is
-  touched.
-- A second identical run again reported `fetched=20 upserted=20`; the total `measures` count stayed
-  at 186,915 (186,895 pre-existing + 20 VIC COFOG), proving upsert idempotency (no duplicates, no
-  other deletes).
+- 8 DTF rows = 4 expense component lines × 2 budget years, `aggregation_role: "agency_detail"`.
+- data_sources `records_ingested` = 28.
+- A second identical run again reported `fetched=28 upserted=28`; the total `measures` count stayed
+  at 186,923 (186,895 pre-existing + 28 VIC rows), proving upsert idempotency.
 - Other source counts were unchanged (AusTender 117,894; GrantConnect 62,128; data.nsw CKAN 3,472;
   PBS 1,231; NSW Budget 1,115; synthetic 810; Dubbo 245).
 
 ## Five source-backed spot checks
 
-| Record                                     | Workbook cell           | Workbook value     | Stored cents      |
-| ------------------------------------------ | ----------------------- | ------------------ | ----------------- |
-| Health 2026-27 (COFOG 07)                  | `Expenses by COFOG!Y62` | 34,822.05860446 $m | 3,482,205,860,446 |
-| Transport 2026-27 (COFOG 045)              | `Expenses by COFOG!Y66` | 10,068.32051527 $m | 1,006,832,051,527 |
-| General public services 2026-27 (COFOG 01) | `Expenses by COFOG!Y57` | 12,198.99378378 $m | 1,219,899,378,378 |
-| Education 2026-27 (COFOG 09)               | `Expenses by COFOG!Y64` | 27,346.69332067 $m | 2,734,669,332,067 |
-| Social protection 2026-27 (COFOG 10)       | `Expenses by COFOG!Y65` | 9,187.78617346 $m  | 918,778,617,346   |
+| Record                                       | Workbook cell           | Workbook value     | Stored cents      |
+| -------------------------------------------- | ----------------------- | ------------------ | ----------------- |
+| Health 2026-27 (COFOG 07)                    | `Expenses by COFOG!Y62` | 34,822.05860446 $m | 3,482,205,860,446 |
+| Transport 2026-27 (COFOG 045)                | `Expenses by COFOG!Y66` | 10,068.32051527 $m | 1,006,832,051,527 |
+| General public services 2026-27 (COFOG 01)   | `Expenses by COFOG!Y57` | 12,198.99378378 $m | 1,219,899,378,378 |
+| Education 2026-27 (COFOG 09)                 | `Expenses by COFOG!Y64` | 27,346.69332067 $m | 2,734,669,332,067 |
+| Social protection 2026-27 (COFOG 10)         | `Expenses by COFOG!Y65` | 9,187.78617346 $m  | 918,778,617,346   |
+| DTF Employee benefits 2026-27 (non-additive) | `DTF!F17`               | 250.34378853 $m    | 25,034,378,853    |
 
 Check with:
 
@@ -176,10 +184,15 @@ db.measures.findOne({ source_id: 'vic-budget', function_code: '07', fiscal_year:
 
 - `GET /api/v1/spending?jurisdiction_level=state` and
   `GET /api/v1/spending?jurisdiction=VIC&fiscal_year=2026-27` return VIC rows.
-- `GET /api/v1/states/VIC?fiscal_year=2026-27&measure_type=budget` returns **count=10,
-  total_cents=11,616,887,942,498** ($116,168.87942498m): the sum of the 10 COFOG function rows for
-  2026-27, with no DTF agency lines. The source has 20 rows in total (10 functions × 2025-26 and
-  2026-27). This is the correct additive VIC budget total.
+- `GET /api/v1/states/VIC?fiscal_year=2026-27&measure_type=budget` returns **count=14,
+  additive_count=10, non_additive_count=4, total_cents=11,616,887,942,498**
+  ($116,168.87942498m): the sum of the 10 COFOG function rows for 2026-27. The 4 DTF rows are in a
+  separate `agency_detail` block with `total_cents=49,614,471,612` and are **not** in the headline
+  total. The source has 28 rows in total.
+- `GET /api/v1/states/VIC` exposes `agency_detail: { label: "Agency detail — not additive", ... }` so
+  the UI can render the DTF rows separately; the state page headline shows 10 additive rows.
+- `GET /api/v1/spending?...` also excludes `aggregation_role: "agency_detail"` from its summary and
+  per-type totals while returning the rows (labelled "Not additive" in the UI table).
 - `GET /api/v1/states/VIC` (state page) matches `location.state = 'VIC'`.
 - `GET /api/v1/data-sources/coverage` reports `vic-budget` live and `vic_budget_last_ingested_at`.
 - `/data-sources` links to the VIC state page; the coverage banner, About and Home text name VIC.
@@ -189,11 +202,14 @@ db.measures.findOne({ source_id: 'vic-budget', function_code: '07', fiscal_year:
 - VIC figures are **Budgeted**, not audited actuals. The workbook also contains actual/revised
   columns; those are not ingested.
 - Statewide only: no VIC region, LGA, electorate or coordinate.
-- The Department of Treasury and Finance statement is archived and parsed for validation but creates
-  no measures (single-agency detail is non-additive with consolidated COFOG). Other VIC departments
-  are discoverable in the same CKAN package but out of scope for this item.
+- The Department of Treasury and Finance statement is ingested as non-additive agency detail
+  (`aggregation_role: "agency_detail"`). It is shown separately, never added to COFOG totals. Other
+  VIC departments are discoverable in the same CKAN package but out of scope for this item.
 - The VIC State Capital Program (Budget Paper No. 4) and VIC infrastructure pipeline are **not**
   ingested.
-- Transport is `045`, not a division; do not roll it into `04` or add it to `04` in any total.
+- **Transport mapping is unconfirmed.** VIC reports Transport as a separate COFOG major group and its
+  Economic affairs (`04`) row excludes transport. The row is stored as `045` (the shared subdivision
+  code) and flagged `data_quality_flag: "statewide_only; transport_mapping_unconfirmed"`, with the
+  question recorded in the row notes. Do not roll `045` into `04`; a human must confirm the mapping.
 - Nothing is human-verified: every VIC row is `verified: false`.
 - No cross-level or cross-measure-type summing is performed or implied.

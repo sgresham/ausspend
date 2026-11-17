@@ -1,6 +1,7 @@
 import {
   Card,
   CardContent,
+  Chip,
   Link,
   Table,
   TableBody,
@@ -107,6 +108,15 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                       type={row.measure_type}
                       budgeted={row.source_id === 'nsw-budget'}
                     />
+                    {row.aggregation_role === 'agency_detail' ? (
+                      <Chip
+                        size="small"
+                        color="warning"
+                        variant="outlined"
+                        label="Not additive"
+                        sx={{ ml: 0.5 }}
+                      />
+                    ) : null}
                   </TableCell>
                   <TableCell align="right">
                     <Amount cents={row.amount_cents} />

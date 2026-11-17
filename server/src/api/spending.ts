@@ -18,7 +18,12 @@ import {
 } from '../models/index.js';
 import { badRequest, notFound } from './errors.js';
 import { sumCents } from './filters.js';
-import { perMeasureTypeTotals, type LeanMeasure, type LeanRegion } from './measure-summary.js';
+import {
+  isAdditiveMeasure,
+  perMeasureTypeTotals,
+  type LeanMeasure,
+  type LeanRegion,
+} from './measure-summary.js';
 import { areaQueries, buildAreaProfile, resolveRegion, type AreaProfile } from './area-profile.js';
 
 type LeanFunction = FunctionDocument & { _id: mongoose.Types.ObjectId };
@@ -33,7 +38,7 @@ type LeanFunction = FunctionDocument & { _id: mongoose.Types.ObjectId };
  */
 type SummaryMeasure = Pick<
   LeanMeasure,
-  '_id' | 'amount_cents' | 'measure_type' | 'function_code' | 'region_id'
+  '_id' | 'amount_cents' | 'measure_type' | 'function_code' | 'region_id' | 'aggregation_role'
 >;
 
 const SUMMARY_PROJECTION = {
@@ -41,6 +46,7 @@ const SUMMARY_PROJECTION = {
   measure_type: 1,
   function_code: 1,
   region_id: 1,
+  aggregation_role: 1,
 } as const;
 
 const SORTS: Record<SpendingSort, Record<string, 1 | -1>> = {
@@ -111,6 +117,7 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.source_dataset ? { source_dataset: measure.source_dataset } : {}),
     ...(measure.source_date ? { source_date: measure.source_date } : {}),
     ...(measure.data_quality_flag ? { data_quality_flag: measure.data_quality_flag } : {}),
+    ...(measure.aggregation_role ? { aggregation_role: measure.aggregation_role } : {}),
     ...(measure.extraction_confidence
       ? { extraction_confidence: measure.extraction_confidence }
       : {}),
@@ -220,6 +227,8 @@ function buildSummary(
   lookups: Lookups,
 ): {
   count: number;
+  additive_count: number;
+  non_additive_count: number;
   currency: 'AUD';
   total_cents: number | null;
   total_measure_type: LeanMeasure['measure_type'] | null;
@@ -230,19 +239,26 @@ function buildSummary(
   breakdown_by_region: SpendingByRegion[];
 } {
   const measureTypes = sortedTypes(measures);
-  const mixed = measureTypes.length > 1;
-  const singleType = measureTypes.length === 1 ? measureTypes[0]! : null;
+  const additive = measures.filter(isAdditiveMeasure);
+  const additiveTypes = sortedTypes(additive);
+  const mixed = additiveTypes.length > 1;
+  const singleType = additiveTypes.length === 1 ? additiveTypes[0]! : null;
 
   return {
     count: measures.length,
+    additive_count: additive.length,
+    non_additive_count: measures.length - additive.length,
     currency: 'AUD',
-    total_cents: mixed ? null : sumCents(measures.map((measure) => measure.amount_cents)),
+    total_cents:
+      additive.length === 0 || mixed
+        ? null
+        : sumCents(additive.map((measure) => measure.amount_cents)),
     total_measure_type: singleType,
-    total_by_measure_type: perMeasureTypeTotals(measures),
+    total_by_measure_type: perMeasureTypeTotals(additive),
     measure_types: measureTypes,
     mixed,
-    breakdown_by_function: breakdownByFunction(measures, mixed, lookups),
-    breakdown_by_region: breakdownByRegion(measures, mixed, lookups),
+    breakdown_by_function: breakdownByFunction(additive, mixed, lookups),
+    breakdown_by_region: breakdownByRegion(additive, mixed, lookups),
   };
 }
 
@@ -318,6 +334,8 @@ export const listSpending: RequestHandler = async (req, res) => {
     | ReturnType<typeof buildSummary>
     | {
         count: number;
+        additive_count: number;
+        non_additive_count: number;
         currency: 'AUD';
         total_cents: null;
         total_measure_type: null;
@@ -331,8 +349,11 @@ export const listSpending: RequestHandler = async (req, res) => {
   if (areaRegion) {
     // Never emit a cross-level or cross-type total in area mode.
     areaProfile = await buildAreaProfile(areaRegion);
+    const areaAdditive = matching.filter(isAdditiveMeasure);
     summary = {
       count: matching.length,
+      additive_count: areaAdditive.length,
+      non_additive_count: matching.length - areaAdditive.length,
       currency: 'AUD',
       total_cents: null,
       total_measure_type: null,
