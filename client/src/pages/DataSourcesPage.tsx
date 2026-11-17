@@ -195,6 +195,13 @@ export function DataSourcesPage() {
                       </Link>
                     </Typography>
                   ) : null}
+                  {source.source_id === 'qld-budget' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link component={RouterLink} to="/states/QLD">
+                        Open the QLD Budget 2026-27 state page (BP3/BP4 budget rows) →
+                      </Link>
+                    </Typography>
+                  ) : null}
 
                   {source.source_id === 'dubbo-council' ? (
                     <Typography variant="body2" sx={{ mt: 1.5 }}>

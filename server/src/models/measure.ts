@@ -5,6 +5,7 @@ export type MeasureType = 'actual' | 'budget' | 'estimate' | 'contract' | 'grant
 export interface SpendingLocationDocument {
   state?: string;
   lga_name?: string;
+  sa4_name?: string;
 }
 
 /**
@@ -43,6 +44,7 @@ const LocationSchema = new Schema<SpendingLocationDocument>(
   {
     state: { type: String },
     lga_name: { type: String },
+    sa4_name: { type: String },
   },
   { _id: false },
 );

@@ -34,6 +34,8 @@ export type ExtractionConfidence = z.infer<typeof ExtractionConfidenceSchema>;
 export const SpendingLocationSchema = z.object({
   state: z.string().min(1).optional(),
   lga_name: z.string().min(1).optional(),
+  /** SA4 name(s) exactly as published; may be a comma-separated list. */
+  sa4_name: z.string().min(1).optional(),
 });
 
 export type SpendingLocation = z.infer<typeof SpendingLocationSchema>;

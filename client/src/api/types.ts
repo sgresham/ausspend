@@ -200,7 +200,7 @@ export interface MeasureRow {
   data_quality_flag?: string;
   aggregation_role?: 'additive' | 'agency_detail';
   extraction_confidence?: ExtractionConfidence;
-  location?: { state?: string; lga_name?: string };
+  location?: { state?: string; lga_name?: string; sa4_name?: string };
   unspsc?: string;
 }
 

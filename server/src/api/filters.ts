@@ -3,8 +3,11 @@ import { z } from 'zod';
 import { MeasureTypeSchema } from '@ausspend/shared';
 import { badRequest } from './errors.js';
 
-export const DEFAULT_LIMIT = 500;
-export const MAX_LIMIT = 1000;
+// State/function detail returns full summaries over projects as well as
+// statement lines; QLD BP3 alone contributes 943 rows. 2,000 covers the
+// largest current source while keeping the response bounded.
+export const DEFAULT_LIMIT = 2000;
+export const MAX_LIMIT = 2000;
 
 const MeasureFiltersSchema = z.object({
   fiscal_year: z

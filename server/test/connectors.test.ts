@@ -14,6 +14,7 @@ const LIVE_IDS = [
   'data-nsw-ckan',
   'dubbo-council',
   'vic-budget',
+  'qld-budget',
 ];
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
@@ -27,7 +28,7 @@ describe('federal connector registry', () => {
     );
   });
 
-  it('registers AusTender, PBS, GrantConnect, NSW Budget, CKAN, Dubbo and VIC as live and the other six as stubs', () => {
+  it('registers AusTender, PBS, GrantConnect, NSW Budget, CKAN, Dubbo, VIC and QLD as live and the other five as stubs', () => {
     for (const id of LIVE_IDS) {
       const connector = getConnector(id);
       expect(connector?.status).toBe('active');
@@ -96,6 +97,9 @@ describe('federal connector registry', () => {
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
+    expect(getConnector('qld-budget')?.status).toBe('active');
+    expect(getConnector('qld-budget')?.jurisdiction_level).toBe('state');
+    expect(getConnector('qld-budget')?.source_url).toContain('data.qld.gov.au');
     expect(getConnector('nope')).toBeUndefined();
   });
 });
