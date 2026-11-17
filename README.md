@@ -511,6 +511,14 @@ transactional, summary-only or inherently aggregate, the unit/reconciliation rul
 ambiguities and a prioritised list of follow-up items. It records the current 348,981-measure
 baseline and the no-sum rules for SOC, ABS GFS/PNFC, ACNC and overlapping budget series.
 
+[docs/NSW_COUNCILS.md](./docs/NSW_COUNCILS.md) is the planning inventory for the 128 NSW general
+purpose councils (plus county councils and Joint Organisations): the OLG *Your Council* time-series,
+individual council General Purpose Financial Statements, Grants Commission allocations and data.nsw
+coverage, with units, licences, reporting dates and a double-count map. It records that no single
+official dataset provides GPFS statement-line granularity for all 128 councils, and recommends a
+one-council GPFS pilot before any bulk council ingestion. It is research only: no council
+ingestion, no cross-council totals, and council spending is never state spending.
+
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do
 not sum to the Budget Paper 1 total general government expense. The UI, coverage metadata and this
 document state that wherever PBS figures appear; the budget per-measure-type total is the PBS

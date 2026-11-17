@@ -322,6 +322,12 @@ types. The no-sum rules are listed in §4.
 
 ### NSW and local government
 
+> Council-level inventory and pilot plan: [NSW_COUNCILS.md](./NSW_COUNCILS.md). It records that the
+> OLG *Your Council* time-series covers all 128 general purpose councils but only at council-level
+> summary/service-category granularity, and that no single official dataset provides GPFS
+> statement-line detail for all councils. The 245 `dubbo-council` rows are 2026/27 budget/estimate
+> lines, not GPFS actuals; council rows are never summed with state or federal rows.
+
 #### `nsw-budget` — 1,115 rows (312 statement lines + 803 capital projects)
 
 - **In DB:** 312 rows from the 2025-26 financial-statements workbook (GG, NFPS and PNFC Operating
