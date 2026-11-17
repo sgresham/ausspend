@@ -49,14 +49,15 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - port-macquarie-hastings-gpfs  GPFS expansion: Port Macquarie-Hastings Council's audited FY2024-25 GPFS
  *   - tweed-shire-gpfs  GPFS expansion: Tweed Shire Council's audited FY2024-25 GPFS
  *   - shoalhaven-gpfs  GPFS expansion: Shoalhaven City Council's audited FY2024-25 GPFS
+ *   - shellharbour-gpfs  GPFS expansion: Shellharbour City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
  * Northern Beaches Council, Canterbury-Bankstown Council, Sutherland Shire
  * Council, Wollongong City Council, Newcastle City Council, Lake Macquarie City
  * Council, Maitland City Council, Coffs Harbour City Council, MidCoast Council,
- * Port Macquarie-Hastings Council, Tweed Shire Council and Shoalhaven City
- * Council. No other councils,
+ * Port Macquarie-Hastings Council, Tweed Shire Council, Shoalhaven City
+ * Council and Shellharbour City Council. No other councils,
  * states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
@@ -81,6 +82,7 @@ export const NSW_SOURCE_IDS = [
   'port-macquarie-hastings-gpfs',
   'tweed-shire-gpfs',
   'shoalhaven-gpfs',
+  'shellharbour-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {

@@ -20,6 +20,7 @@ import { createMidCoastGpfsConnector } from './mid-coast-gpfs.js';
 import { createPortMacquarieHastingsGpfsConnector } from './port-macquarie-hastings-gpfs.js';
 import { createTweedShireGpfsConnector } from './tweed-shire-gpfs.js';
 import { createShoalhavenGpfsConnector } from './shoalhaven-gpfs.js';
+import { createShellharbourGpfsConnector } from './shellharbour-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -268,6 +269,17 @@ export const CONNECTORS: readonly Connector[] = [
   // council, the Dubbo budget rows, the existing council GPFS rows or State
   // rows.
   createShoalhavenGpfsConnector(),
+  // GPFS expansion: seventeenth council only (Shellharbour City Council). Its
+  // audited FY2024-25 General Purpose Financial Statements are a separate source
+  // id: every row is non-additive agency_detail, has no region/LGA allocation,
+  // and reconciles exactly to the printed Income Statement, B1-1 "Total
+  // functions and activities" and comprehensive-income totals. The audited
+  // statements are the financial-statements section of the official Annual
+  // Report 2024 - 2025; the PDF is discovered from the official "Annual reports"
+  // page, and the exact bytes are SHA-256 archived outside the repo. Never
+  // summed with any other council, the Dubbo budget rows, the existing council
+  // GPFS rows or State rows.
+  createShellharbourGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
