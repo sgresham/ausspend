@@ -297,6 +297,14 @@ export const MeasureRecordSchema = z.object({
   aihw_table: z.string().min(1).optional(),
   /** AIHW release the table came from. */
   aihw_release: z.string().min(1).optional(),
+  /** SA GFS/Government Purpose Classification provenance. */
+  sa_gpc_code: z.string().min(1).optional(),
+  sa_gpc_description: z.string().min(1).optional(),
+  sa_economic_type_code: z.string().min(1).optional(),
+  sa_economic_type_description: z.string().min(1).optional(),
+  sa_unit: z.string().min(1).optional(),
+  sa_printed_sign: z.enum(['positive', 'negative']).optional(),
+  sa_year_basis: z.string().min(1).optional(),
   /**
    * VIC council performance-indicator provenance (LGPRF). Performance values
    * are not money: a value may be a per-head amount, per-unit cost, percentage,

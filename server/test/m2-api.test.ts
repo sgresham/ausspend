@@ -184,7 +184,7 @@ describe('GET /api/meta/coverage', () => {
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
-    expect(response.body.connectors).toHaveLength(60);
+    expect(response.body.connectors).toHaveLength(61);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'abs-gfs' ||
@@ -232,6 +232,7 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'vic-vlgc-abs' ||
           connector.id === 'vic-vlgc-fag' ||
           connector.id === 'vic-lgprf' ||
+          connector.id === 'sa-budget-gfs' ||
           connector.id === 'qld-budget' ||
           connector.id === 'qld-qgip' ||
           connector.id === 'acnc-charity' ||
@@ -258,6 +259,7 @@ describe('GET /api/meta/coverage', () => {
       'nsw-budget',
       'data-nsw-ckan',
       'vic-budget',
+      'sa-budget-gfs',
       'qld-budget',
       'qld-qgip',
       'wa-budget',

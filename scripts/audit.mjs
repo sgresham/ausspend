@@ -61,6 +61,7 @@ const KNOWN_SOURCE_IDS = [
   'vic-vlgc-fag',
   'vic-lgprf',
   'aihw-health-expenditure',
+  'sa-budget-gfs',
   'qld-budget',
   'qld-qgip',
   'acnc-charity',
@@ -1046,7 +1047,10 @@ async function assertRowProvenance(locator, label) {
       KNOWN_SOURCE_IDS.some((sourceId) => text.includes(sourceId)),
       `${label} row ${index + 1} has no source id`,
     );
-    assert(/Unverified/.test(text), `${label} row ${index + 1} has no verification status`);
+    assert(
+      /Unverified|Verified/.test(text),
+      `${label} row ${index + 1} has no verification status`,
+    );
   }
   return `${count} rows`;
 }
