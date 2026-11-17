@@ -74,7 +74,7 @@ export function HomePage() {
         region and state.{' '}
         {coverage.data?.synthetic
           ? 'Synthetic seed rows sit alongside live AusTender contracts and data.gov.au PBS budget line items'
-          : 'Live AusTender contracts, PBS budget line items, NSW Budget rows and Dubbo council rows are shown with provenance'}
+          : 'Live AusTender contracts, PBS budget line items, NSW and VIC Budget rows and Dubbo council rows are shown with provenance'}
         ; no figure is verified or a single federal total.
       </Typography>
 

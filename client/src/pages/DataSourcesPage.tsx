@@ -188,6 +188,13 @@ export function DataSourcesPage() {
                       </Link>
                     </Typography>
                   ) : null}
+                  {source.source_id === 'vic-budget' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link component={RouterLink} to="/states/VIC">
+                        Open the VIC Budget 2026-27 state page (COFOG-A budget rows) →
+                      </Link>
+                    </Typography>
+                  ) : null}
 
                   {source.source_id === 'dubbo-council' ? (
                     <Typography variant="body2" sx={{ mt: 1.5 }}>

@@ -27,9 +27,9 @@ export function AboutPage() {
         ) : (
           <>
             No synthetic seed rows are present. Live AusTender contracts, PBS budget line items, NSW
-            Budget/CKAN rows and Dubbo rows are real published records but remain unverified, and
-            PBS line items do not sum to the federal total. National/state actual and estimate
-            spending with COFOG and region is not covered by a real feed yet.
+            Budget/CKAN rows, VIC Budget 2026-27 rows and Dubbo rows are real published records but
+            remain unverified, and PBS line items do not sum to the federal total. National/state
+            actual and estimate spending with COFOG and region is not covered by a real feed yet.
           </>
         )}
       </Alert>

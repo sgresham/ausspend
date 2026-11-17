@@ -4,6 +4,7 @@ import { createDubboConnector } from './dubbo-council.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
+import { createVicBudgetConnector } from './vic-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -35,8 +36,9 @@ function stub(metadata: Omit<ConnectorMetadata, 'status'>): Connector {
 /**
  * The registered Australian public-spending sources. AusTender is live as of F2
  * (contractPublished OCDS feed), data.gov.au PBS as of F3 (CKAN package_show +
- * streamed program-expense CSV), NSW/Dubbo as of S1/S2/S3, and GrantConnect as
- * a manual, chunked DownloadResult XLSX import (no scraper, no paid adaptor).
+ * streamed program-expense CSV), NSW/Dubbo as of S1/S2/S3, VIC Budget as of
+ * Phase 4, and GrantConnect as a manual, chunked DownloadResult XLSX import
+ * (no scraper, no paid adaptor).
  * The remaining connectors are stubs: their `fetch` rejects with a clear
  * "not implemented" error and no request leaves the process.
  */
@@ -101,14 +103,9 @@ export const CONNECTORS: readonly Connector[] = [
   // PDF is archived and parsed by a Dubbo-specific adapter on top of the shared
   // PDF foundation. Other councils are not covered.
   createDubboConnector(),
-  stub({
-    id: 'vic-budget',
-    name: 'Victorian State Budget',
-    publisher: 'Victorian Department of Treasury and Finance',
-    source_url: 'https://www.dtf.vic.gov.au/state-budget',
-    jurisdiction_level: 'state',
-    // TODO: ingest Victorian Budget papers and DTF data tables (XLSX).
-  }),
+  // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
+  // expenses XLSX plus one departmental statement XLSX. Budget columns only.
+  createVicBudgetConnector(),
   stub({
     id: 'qld-budget',
     name: 'Queensland Budget',

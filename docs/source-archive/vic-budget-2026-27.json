@@ -1,0 +1,28 @@
+{
+  "dataset": "VIC Budget 2026-27 Open Data",
+  "fiscal_year": "2026-27",
+  "source_url": "https://discover.data.vic.gov.au/dataset/state-budget-2026-27-aggregate-financial-statements",
+  "license": "CC BY 4.0",
+  "attribution": "© State of Victoria (Department of Treasury and Finance), 2026",
+  "retrieved_at": "2026-11-17T00:45:36.426Z",
+  "unit": "$ million (x100,000,000 cents)",
+  "files": [
+    {
+      "title": "VIC Budget 2026-27 — Consolidated expenses by classification of the functions of government - General government sector",
+      "filename": "1.5_2026-27-budget-consolidated-gg-expenses-by-cofog.xlsx",
+      "url": "https://discover.data.vic.gov.au/dataset/28acff34-a406-417c-ac2d-2403590b80e8/resource/72c90f3b-30b0-466f-9d0b-abeb0d59454f/download/1.5_2026-27-budget-consolidated-gg-expenses-by-cofog.xlsx",
+      "sha256": "cb275843f768ff63666e45a96801aea2700f03981b9dfbd92027c4eb3230a584",
+      "bytes": 73786,
+      "archived_from": "direct"
+    },
+    {
+      "title": "VIC Budget 2026-27 — Department of Treasury and Finance - Financial statement",
+      "filename": "department-of-treasury-and-finance-2026-27-bp5-online-data.xlsx",
+      "url": "https://discover.data.vic.gov.au/dataset/23de15a7-5117-46c9-82af-6950574c3242/resource/1f6a4c12-4f42-42ec-8993-4d84089d38a9/download/department-of-treasury-and-finance-2026-27-bp5-online-data.xlsx",
+      "sha256": "dfc67008b65bc46bce71f9fbbcfd6d5c0d6b9006cc86210d86618ba80f855e01",
+      "bytes": 27045,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Only 2025-26 and 2026-27 budget columns are ingested. Transport is a VIC COFOG major group tagged 045; do not roll 045 into 04. Departmental rows are provisional and carry no COFOG function. Workbook bytes are archived outside the repo."
+}

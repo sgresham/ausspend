@@ -26,6 +26,7 @@ const KNOWN_SOURCE_IDS = [
   'data-nsw-ckan',
   'dubbo-council',
   'grantconnect',
+  'vic-budget',
 ];
 
 const results = [];
@@ -434,7 +435,7 @@ async function uiChecks(page, regionId) {
     const perType = await page.getByTestId('spending-per-type-totals').innerText();
     assert(/Provenance:/.test(perType), 'per-type totals have no provenance footer');
     assert(
-      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council/.test(
+      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council|vic-budget|grantconnect/.test(
         perType,
       ),
       'per-type totals footer has no known source id',
@@ -442,7 +443,7 @@ async function uiChecks(page, regionId) {
     const headline = await page.getByTestId('headline-total').innerText();
     assert(/Provenance:/.test(headline), 'headline total has no provenance footer');
     assert(
-      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council/.test(
+      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council|vic-budget|grantconnect/.test(
         headline,
       ),
       'headline total footer has no known source id',
