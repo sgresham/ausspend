@@ -37,6 +37,7 @@ docker compose ps
 curl -s http://localhost:3001/api/health
 curl -s http://localhost:3001/api/data-sources
 curl -s 'http://localhost:3001/api/spending?function=07'
+curl -s 'http://localhost:3001/api/spending?q=New%20Dubbo%20Bridge'
 curl -s 'http://localhost:3001/api/v1/spending?jurisdiction_level=federal'
 curl -s 'http://localhost:3001/api/v1/ingestion-logs'
 npm run audit

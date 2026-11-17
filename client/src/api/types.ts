@@ -510,6 +510,7 @@ export interface SpendingAppliedFilters {
   postcode?: string | null;
   expense_category?: string | null;
   function: string | null;
+  q: string | null;
   region: string | null;
   area?: string | null;
   min_amount: number | null;

@@ -42,6 +42,13 @@ describe('SpendingQuery', () => {
     expect(SpendingQuerySchema.parse({ area: 'dubbo' }).area).toBe('dubbo');
   });
 
+  it('trims and bounds the project/item text filter q, treating empty as no filter', () => {
+    expect(SpendingQuerySchema.parse({ q: '  New Dubbo Bridge  ' }).q).toBe('New Dubbo Bridge');
+    expect(SpendingQuerySchema.parse({ q: '' }).q).toBe('');
+    expect(SpendingQuerySchema.safeParse({ q: 'a'.repeat(100) }).success).toBe(true);
+    expect(SpendingQuerySchema.safeParse({ q: 'a'.repeat(101) }).success).toBe(false);
+  });
+
   it('rejects bad codes, amounts, pages and sorts', () => {
     const bad = [
       { fiscal_year: '2024' },

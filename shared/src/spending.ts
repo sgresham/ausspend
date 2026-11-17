@@ -58,6 +58,13 @@ export const SpendingQuerySchema = z
     /** Explicit ACNC expense category (total or a component). */
     expense_category: z.string().trim().min(1).max(100).optional(),
     function: SpendingFunctionCodeSchema.optional(),
+    /**
+     * Case-insensitive text match over project_name, description and
+     * delivery_entity. Trimmed and bounded; an empty value means no filter. It
+     * is a literal substring match (regex metacharacters escaped), not a fuzzy
+     * search, and it never contributes a total of its own.
+     */
+    q: z.string().trim().max(100, 'q must be at most 100 characters').optional(),
     // A 24-character region _id (exact filter) or a case-insensitive slug/name.
     region: z.string().trim().min(1).max(100).optional(),
     // Explicit area slug; resolves to the same area profile as a region slug.
@@ -244,6 +251,8 @@ export const SpendingAppliedFiltersSchema = z.object({
   postcode: z.string().nullable().optional(),
   expense_category: z.string().nullable().optional(),
   function: z.string().nullable(),
+  /** The trimmed text filter, or null when no project/item text filter is applied. */
+  q: z.string().nullable(),
   region: z.string().nullable(),
   area: z.string().nullable().optional(),
   min_amount: z.number().int().nonnegative().nullable(),

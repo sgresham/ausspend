@@ -327,22 +327,30 @@ states by code. Bad parameters are `400`.
 
 `GET /api/spending` accepts:
 
-| Parameter                 | Values / constraints                                                         |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `fiscal_year`             | `YYYY-YY`, e.g. `2024-25`                                                    |
-| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                  |
-| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                          |
-| `function`                | two-digit division (`07`) or three-digit subdivision (`074`)                 |
-| `region`                  | a 24-character hex region `_id` (never a code)                               |
-| `min_amount`/`max_amount` | non-negative integer cents, inclusive; `min <= max`                          |
-| `page`                    | default 1, `>= 1`                                                            |
-| `page_size`               | default 20, `1..100`                                                         |
-| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc` |
+| Parameter                 | Values / constraints                                                                                                                    |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `fiscal_year`             | `YYYY-YY`, e.g. `2024-25`                                                                                                               |
+| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                                                                             |
+| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                                                                                     |
+| `function`                | two-digit division (`07`) or three-digit subdivision (`074`)                                                                            |
+| `q`                       | literal project/item text match over `project_name`, `description` and `delivery_entity`; trimmed, max 100 chars, empty means no filter |
+| `region`                  | a 24-character hex region `_id` (never a code)                                                                                          |
+| `min_amount`/`max_amount` | non-negative integer cents, inclusive; `min <= max`                                                                                     |
+| `page`                    | default 1, `>= 1`                                                                                                                       |
+| `page_size`               | default 20, `1..100`                                                                                                                    |
+| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc`                                                            |
 
 Every parameter is validated with Zod; bad values return JSON `400`, an unknown function code or
 region `_id` returns `404`. The envelope is `{ data, summary, pagination, applied_filters }`.
 `pagination` is `{page, page_size, total, total_pages, has_next}` and `applied_filters` echoes the
 normalised query (absent filters as `null`).
+
+The `q` filter is a **literal text match**, not a fuzzy search: regex metacharacters such as `.*`
+and `(` match themselves, and only `project_name`, `description` and `delivery_entity` are searched
+(never `notes` or `source_url`). It composes with every other filter and contributes **no total of
+its own** — the same summary rules apply. For example,
+`GET /api/spending?q=New%20Dubbo%20Bridge` returns the nsw-budget New Dubbo Bridge row, and
+`GET /api/v1/spending?q=New%20Dubbo%20Bridge` is the versioned alias of the same filter.
 
 `summary` covers the **whole filtered set, not just the page**: `count`, `currency: "AUD"`,
 `total_cents` (null when mixed), `total_measure_type` (null when mixed), `total_by_measure_type`,
@@ -574,22 +582,26 @@ navigating.
 `/search` keeps all state in the query string, so reload and browser back/forward restore the same
 view. Every filter change resets `page` to 1; pagination and page size preserve the filters.
 
-| Parameter                 | UI / wire behaviour                                                          |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `function`                | two- or three-digit COFOG code from `GET /api/functions`                     |
-| `region`                  | region `_id` chosen from autocomplete over `GET /api/regions`                |
-| `fiscal_year`             | one of the coverage metadata's distinct fiscal years                         |
-| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                  |
-| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                          |
-| `min_amount`/`max_amount` | dollars in the URL/UI; converted to integer cents on the wire                |
-| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc` |
-| `page`/`page_size`        | pagination; page size is one of 10/20/50/100                                 |
+| Parameter                 | UI / wire behaviour                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------- |
+| `function`                | two- or three-digit COFOG code from `GET /api/functions`                                      |
+| `q`                       | "Project or item" text box; literal match over project/description/delivery entity, not fuzzy |
+| `region`                  | region `_id` chosen from autocomplete over `GET /api/regions`                                 |
+| `fiscal_year`             | one of the coverage metadata's distinct fiscal years                                          |
+| `measure_type`            | `actual`, `budget`, `estimate`, `contract` or `grant_award`                                   |
+| `jurisdiction_level`      | `federal`, `state`, `territory`, `local` or `other`                                           |
+| `min_amount`/`max_amount` | dollars in the URL/UI; converted to integer cents on the wire                                 |
+| `sort`                    | `amount_desc` (default), `amount_asc`, `fiscal_year_desc`, `fiscal_year_asc`                  |
+| `page`/`page_size`        | pagination; page size is one of 10/20/50/100                                                  |
 
 The page shows the API's whole-set summary (count, per-measure-type totals and function/region
 breakdowns), then one page of rows with function, region, year, measure type, amount and per-row
-source/verification. Empty, loading, `400`, `404` and network failures each render a visible state.
-A reset button clears the query string. Each function/region/state detail page has an “Explore this
-in the spending search” link that prefills the relevant filters.
+source/verification. The "Project or item" field sends `q` and shows the matching row count; its
+chip can be removed to clear the text filter. This is a text match over project name, description
+and delivery entity — not a fuzzy search, and not a total. Empty, loading, `400`, `404` and network
+failures each render a visible state. A reset button clears the query string. Each
+function/region/state detail page has an “Explore this in the spending search” link that prefills
+the relevant filters.
 
 ### Coverage, connectors and the about page
 
