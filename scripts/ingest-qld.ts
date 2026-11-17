@@ -107,12 +107,15 @@ async function main(): Promise<void> {
       { $match: { source_id: QLD_ID } },
       {
         $group: {
-          _id: '$fiscal_year',
+          _id: {
+            fiscal_year: '$fiscal_year',
+            role: { $ifNull: ['$aggregation_role', 'additive'] },
+          },
           rows: { $sum: 1 },
           cents: { $sum: '$amount_cents' },
         },
       },
-      { $sort: { _id: 1 } },
+      { $sort: { '_id.fiscal_year': 1, '_id.role': 1 } },
     ]);
     const withFunction = await MeasureModel.countDocuments({
       source_id: QLD_ID,
@@ -123,7 +126,10 @@ async function main(): Promise<void> {
         `source_documents=${archived.length} unit=${QLD_UNIT}`,
     );
     for (const group of byFiscalYear) {
-      console.log(`[ingest:qld] fiscal_year=${group._id} rows=${group.rows} cents=${group.cents}`);
+      console.log(
+        `[ingest:qld] fiscal_year=${group._id.fiscal_year} role=${group._id.role} ` +
+          `rows=${group.rows} cents=${group.cents}`,
+      );
     }
     const failed = result.results.filter((entry) => entry.log_status === 'error').length;
     console.log(`[ingest:qld] done target=${databaseName} errored=${failed}`);

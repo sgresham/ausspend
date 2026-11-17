@@ -514,6 +514,7 @@ function bp4Record(raw: QldBp4Raw): SpendingRecord | null {
     `CSV row: ${raw.row}; source ID: ${raw.id}`,
     `Unit: ${QLD_UNIT} confirmed by the BP4 data dictionary ("2026-27 ($'000)"); converted at ${QLD_UNIT_TO_CENTS} cents per $'000`,
     `Report: ${raw.report_title}; section: ${raw.section}`,
+    'NON-ADDITIVE policy measure: BP4 policy decisions overlap the BP3 capital program (some project names appear in both); excluded from every additive total',
     'BP4 budget measure (expense/capital); revenue measures are excluded at parse time',
     'No COFOG function is defensible from BP4; function left blank and row flagged provisional',
     'Budget measure series, not a complete QLD expense total',
@@ -533,7 +534,7 @@ function bp4Record(raw: QldBp4Raw): SpendingRecord | null {
     source_dataset: QLD_DATASET,
     source_date: raw.source_date,
     data_quality_flag: 'provisional',
-    aggregation_role: 'additive',
+    aggregation_role: 'policy_measure',
     project_name: raw.measure,
     description: `${raw.report_title} — ${raw.section}`,
     delivery_entity: raw.department,
@@ -707,7 +708,7 @@ export function createQldBudgetConnector(options: QldConnectorOptions = {}): Con
     status: 'active',
     jurisdiction_level: 'state',
     license: QLD_LICENSE,
-    notes: `${QLD_ATTRIBUTION} 2026-27 BP3 Capital Statement and BP4 Budget Measures CSV from data.qld CKAN, plus archived dictionaries/explanatory notes. Units are '$'000 per the dictionaries. Budgeted figures only; BP4 revenue measures, and blank/zero/negative 2026-27 amounts, are excluded. No COFOG function; provisional. BP3 capital projects and BP4 measures are separate series, not a complete QLD total.`,
+    notes: `${QLD_ATTRIBUTION} 2026-27 BP3 Capital Statement and BP4 Budget Measures CSV from data.qld CKAN, plus archived dictionaries/explanatory notes. Units are '$'000 per the dictionaries. BP3 capital rows are additive; BP4 policy measures are non-additive (aggregation_role=policy_measure) and excluded from every total. BP4 revenue measures and blank/zero/negative 2026-27 amounts are excluded. No COFOG function; provisional.`,
     async fetch(): Promise<RawRecord[]> {
       metadata.errors = [];
       const loaded = await loadQldSources(options);

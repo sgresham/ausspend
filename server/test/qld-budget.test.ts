@@ -126,7 +126,6 @@ describe('QLD record mapping and idempotency', () => {
       expect(record.fiscal_year).toBe(QLD_FISCAL_YEAR);
       expect(record.location?.state).toBe('QLD');
       expect(record.function_code).toBeUndefined();
-      expect(record.aggregation_role).toBe('additive');
       expect(record.verified).toBe(false);
       expect(Number.isSafeInteger(record.amount_cents)).toBe(true);
       expect(record.natural_key).toMatch(/^qld-budget:[0-9a-f]{40}$/);
@@ -140,13 +139,17 @@ describe('QLD record mapping and idempotency', () => {
       location: { state: 'QLD', sa4_name: 'Brisbane - North' },
     });
     expect(bp3Record?.notes).toMatch(/may be multi-valued/);
+    const bp3Only = first.records.find((record) => record.project_name === 'New hospital');
+    expect(bp3Only?.aggregation_role).toBe('additive');
     const bp4Record = first.records.find((record) => record.project_name === 'Expense measure A');
     expect(bp4Record).toMatchObject({
       amount_cents: 50_000_000,
       delivery_entity: 'Department of Education',
       funding_source: 'Department of Education',
       data_quality_flag: 'provisional',
+      aggregation_role: 'policy_measure',
     });
+    expect(bp4Record?.notes).toMatch(/NON-ADDITIVE policy measure/);
   });
 
   it('deduplicates repeated raw rows on natural_key', () => {

@@ -108,7 +108,8 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                       type={row.measure_type}
                       budgeted={row.source_id === 'nsw-budget'}
                     />
-                    {row.aggregation_role === 'agency_detail' ? (
+                    {row.aggregation_role === 'agency_detail' ||
+                    row.aggregation_role === 'policy_measure' ? (
                       <Chip
                         size="small"
                         color="warning"

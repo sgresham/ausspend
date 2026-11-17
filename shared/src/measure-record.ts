@@ -19,7 +19,7 @@ export type JurisdictionLevel = z.infer<typeof JurisdictionLevelSchema>;
  * department's statement) are listed for provenance but must never be added to
  * a consolidated series.
  */
-export const AGGREGATION_ROLES = ['additive', 'agency_detail'] as const;
+export const AGGREGATION_ROLES = ['additive', 'agency_detail', 'policy_measure'] as const;
 
 export const AggregationRoleSchema = z.enum(AGGREGATION_ROLES);
 

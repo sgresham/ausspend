@@ -33,11 +33,13 @@ link is year-stamped, treat it as "archive at retrieval" rather than permanently
 ### Queensland — recommended next state
 
 > **Phase 4 update (2026-11-17): ingested.** `qld-budget` is live from data.qld CKAN: BP3 Capital
-> Statement (943 project-level capital rows) and BP4 Budget Measures (108 expense/capital measures).
-> Units are confirmed by the archived BP3/BP4 dictionaries as `$'000` (x100,000 cents). BP4 revenue
+> Statement (943 additive project-level capital rows) and BP4 Budget Measures (108 expense/capital
+> policy measures). Units are confirmed by the archived BP3/BP4 dictionaries as `$'000` (x100,000
+> cents). BP4 rows are non-additive (`aggregation_role: policy_measure`) because policy measures
+> overlap the BP3 capital program (7 project names appear in both); the additive QLD total is BP3
+> only (3,174,540,400,000 cents) and BP4 (396,974,700,000 cents) is shown separately. BP4 revenue
 > measures and blank/zero/negative 2026-27 amounts are excluded. No COFOG function; rows are
-> provisional. BP3 and BP4 are separate series, not a complete QLD total. See
-> [QLD_INGESTION.md](QLD_INGESTION.md).
+> provisional. See [QLD_INGESTION.md](QLD_INGESTION.md).
 
 - **Budget:** <https://budget.qld.gov.au/> (2026-27). Papers index
   <https://budget.qld.gov.au/budget-papers/> exposes BP1–BP4 PDFs and Service Delivery Statements.

@@ -57,7 +57,8 @@ Every row:
 - `measure_type: "budget"`, `fiscal_year: "2026-27"`
 - `amount_cents` = confirmed `$'000` × 100,000
 - `source_id: "qld-budget"`, exact CSV `source_url`, `source_dataset: "QLD Budget 2026-27 BP3/BP4"`
-- `verified: false`, `aggregation_role: "additive"`, no COFOG function
+- `verified: false`, no COFOG function
+- `aggregation_role`: **`additive` for BP3 capital rows; `policy_measure` for BP4 budget measures**
 - `data_quality_flag: "provisional"`; BP3 rows with coordinates use
   `"provisional; approximate_location"`
 
@@ -67,7 +68,19 @@ text is preserved in `notes` only — it may be multi-valued, so no coordinate i
 invented.
 
 BP4: `project_name` = Measure; `delivery_entity`/`funding_source` = Department; `description` =
-Report Title + Section.
+Report Title + Section. BP4 rows are stored with `aggregation_role: "policy_measure"` because Budget
+Paper 4 policy decisions overlap the BP3 capital program: 7 BP4 project names also appear in BP3
+(Infrastructure Activation Fund, Rockhampton Railyards, Camera Detected Offence Program ×3, Kirwan
+Police Complex, Wacol Police Precinct). BP4 is therefore **never added** to BP3.
+
+## Non-additive BP4 policy measures
+
+- BP3 additive: **3,174,540,400,000 cents** (943 rows).
+- BP4 non-additive policy detail: **396,974,700,000 cents** (108 rows).
+- The API state total is BP3 only. BP4 is returned in a separate
+  `non_additive: [{ aggregation_role: "policy_measure", label: "Policy measures — not additive" }]`
+  block and excluded from every additive total.
+- The old combined 3,571,515,100,000 total is not used anywhere as a QLD total.
 
 Natural keys:
 
@@ -87,7 +100,8 @@ Observed:
 ```text
 [ingest:qld] qld-budget: success fetched=1051 upserted=1051
 [ingest:qld] qld-budget rows=1051 with_function=0 source_documents=5 unit=$'000
-[ingest:qld] fiscal_year=2026-27 rows=1051 cents=3571515100000
+[ingest:qld] fiscal_year=2026-27 role=additive rows=943 cents=3174540400000
+[ingest:qld] fiscal_year=2026-27 role=policy_measure rows=108 cents=396974700000
 ```
 
 - A second identical run again reported `fetched=1051 upserted=1051`; total measures stayed
@@ -100,7 +114,10 @@ Observed:
 ## API / UI
 
 - `GET /api/states/QLD?fiscal_year=2026-27&measure_type=budget` returns all 1,051 rows (state
-  detail default limit is 2,000), all QLD/state, total 3,571,515,100,000 cents.
+  detail default limit is 2,000). `count=1051`, `additive_count=943`, `non_additive_count=108`,
+  `total_cents=3,174,540,400,000` (BP3 only). The BP4 block is
+  `non_additive[0] = { aggregation_role: "policy_measure", label: "Policy measures — not additive",
+count: 108, total_cents: 396,974,700,000 }`.
 - `GET /api/spending?jurisdiction_level=state&fiscal_year=2026-27` includes QLD rows; per-measure
   totals are never summed across types.
 - `GET /api/meta/coverage` reports `qld-budget` active with `records_ingested=1051` and
@@ -111,8 +128,8 @@ Observed:
 
 - No COFOG function is defensible from BP3/BP4: every row has `function_code` absent and is
   `provisional`.
-- BP3 capital projects and BP4 budget measures are separate published series, not a complete QLD
-  expense total. A state-page sum of same-measure-type rows is not an official QLD budget total.
+- BP3 capital projects and BP4 budget measures are separate published series. BP4 is **non-additive
+  policy detail** and is excluded from every additive total; the additive QLD total is BP3 only.
 - BP4 revenue measures are excluded. Zero/negative 2026-27 impacts are skipped.
 - BP3 SA4 is raw text (multiple SA4s can be listed). Coordinates are raw source text in notes and
   may be multi-valued; no LGA/SA2/coordinate is invented.

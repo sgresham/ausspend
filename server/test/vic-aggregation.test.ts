@@ -54,6 +54,16 @@ beforeAll(async () => {
       project_name: 'Employee benefits',
       data_quality_flag: 'provisional',
     },
+    {
+      ...base,
+      aggregation_role: 'policy_measure',
+      amount_cents: 700_000,
+      delivery_entity: 'Queensland Treasury',
+      funding_source: 'Queensland Treasury',
+      natural_key: 'vic-agg:policy',
+      project_name: 'Policy measure',
+      data_quality_flag: 'provisional',
+    },
   ]);
 });
 
@@ -62,15 +72,15 @@ afterAll(async () => {
   await mongoose.disconnect();
 });
 
-describe('non-additive agency detail', () => {
+describe('non-additive agency/policy detail', () => {
   it('excludes agency_detail from /api/states/VIC totals and exposes it separately', async () => {
     const response = await request(app).get(
       '/api/states/VIC?fiscal_year=2026-27&measure_type=budget',
     );
     expect(response.status).toBe(200);
-    expect(response.body.count).toBe(3);
+    expect(response.body.count).toBe(4);
     expect(response.body.additive_count).toBe(2);
-    expect(response.body.non_additive_count).toBe(1);
+    expect(response.body.non_additive_count).toBe(2);
     expect(response.body.total_cents).toBe(3_000_000);
     expect(response.body.total_by_measure_type).toEqual([
       { measure_type: 'budget', count: 2, total_cents: 3_000_000 },
@@ -86,6 +96,16 @@ describe('non-additive agency detail', () => {
     expect(response.body.agency_detail.measures[0].delivery_entity).toBe(
       'Department of Treasury and Finance',
     );
+    expect(response.body.non_additive).toHaveLength(2);
+    const policy = response.body.non_additive.find(
+      (block: { aggregation_role?: string }) => block.aggregation_role === 'policy_measure',
+    );
+    expect(policy).toMatchObject({
+      label: 'Policy measures — not additive',
+      count: 1,
+      total_cents: 700_000,
+    });
+    expect(policy.description).toMatch(/overlap the BP3 capital program/);
   });
 
   it('excludes agency_detail from /api/spending summary totals but returns the row', async () => {
@@ -93,10 +113,10 @@ describe('non-additive agency detail', () => {
       '/api/spending?jurisdiction_level=state&fiscal_year=2026-27&measure_type=budget&page_size=10',
     );
     expect(response.status).toBe(200);
-    expect(response.body.data).toHaveLength(3);
-    expect(response.body.summary.count).toBe(3);
+    expect(response.body.data).toHaveLength(4);
+    expect(response.body.summary.count).toBe(4);
     expect(response.body.summary.additive_count).toBe(2);
-    expect(response.body.summary.non_additive_count).toBe(1);
+    expect(response.body.summary.non_additive_count).toBe(2);
     expect(response.body.summary.total_cents).toBe(3_000_000);
     expect(response.body.summary.total_by_measure_type).toEqual([
       { measure_type: 'budget', count: 2, total_cents: 3_000_000 },
@@ -108,5 +128,9 @@ describe('non-additive agency detail', () => {
       amount_cents: 500_000,
       delivery_entity: 'Department of Treasury and Finance',
     });
+    const policy = response.body.data.find(
+      (row: { aggregation_role?: string }) => row.aggregation_role === 'policy_measure',
+    );
+    expect(policy).toMatchObject({ amount_cents: 700_000, delivery_entity: 'Queensland Treasury' });
   });
 });
