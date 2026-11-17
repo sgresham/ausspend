@@ -48,8 +48,17 @@ const JURISDICTION_LEVELS: JurisdictionLevel[] = [
   'state',
   'territory',
   'local',
+  'charity',
   'other',
 ];
+const EXPENSE_CATEGORIES = [
+  ['total', 'Total expenses'],
+  ['employee_expenses', 'Employee expenses'],
+  ['interest_expenses', 'Interest expenses'],
+  ['grants_and_donations_australia', 'Grants and donations made for use in Australia'],
+  ['grants_and_donations_overseas', 'Grants and donations made for use outside Australia'],
+  ['all_other_expenses', 'All other expenses'],
+] as const;
 const PAGE_SIZES = [10, 20, 50, 100];
 
 function positiveInt(raw: string | null, fallback: number): number {
@@ -91,6 +100,9 @@ export function SearchPage() {
   const measureType = isMeasureType(rawMeasureType) ? rawMeasureType : '';
   const rawJurisdiction = searchParams.get('jurisdiction_level');
   const jurisdictionLevel = isJurisdictionLevel(rawJurisdiction) ? rawJurisdiction : '';
+  const locationState = searchParams.get('state') ?? '';
+  const postcode = searchParams.get('postcode') ?? '';
+  const expenseCategory = searchParams.get('expense_category') ?? '';
   const minAmount = dollarValue(searchParams.get('min_amount'));
   const maxAmount = dollarValue(searchParams.get('max_amount'));
   const rawSort = searchParams.get('sort');
@@ -106,6 +118,9 @@ export function SearchPage() {
     fiscal_year: fiscalYear || undefined,
     measure_type: measureType || undefined,
     jurisdiction_level: jurisdictionLevel || undefined,
+    state: locationState || undefined,
+    postcode: postcode || undefined,
+    expense_category: expenseCategory || undefined,
     min_amount: minAmount !== null ? Math.round(minAmount * 100) : undefined,
     max_amount: maxAmount !== null ? Math.round(maxAmount * 100) : undefined,
     sort,
@@ -223,6 +238,15 @@ export function SearchPage() {
   if (fiscalYear) applied.push(`Fiscal year: ${fiscalYear}`);
   if (measureType) applied.push(`Measure type: ${titleCase(measureType)}`);
   if (jurisdictionLevel) applied.push(`Jurisdiction: ${titleCase(jurisdictionLevel)}`);
+  if (locationState) applied.push(`State: ${locationState}`);
+  if (postcode) applied.push(`Postcode: ${postcode}`);
+  if (expenseCategory) {
+    applied.push(
+      `Expense category: ${
+        EXPENSE_CATEGORIES.find(([value]) => value === expenseCategory)?.[1] ?? expenseCategory
+      }`,
+    );
+  }
   if (minAmount !== null) applied.push(`Min amount: $${minAmount.toLocaleString('en-AU')}`);
   if (maxAmount !== null) applied.push(`Max amount: $${maxAmount.toLocaleString('en-AU')}`);
 
@@ -238,6 +262,9 @@ export function SearchPage() {
     pageSources.some(
       (source) => source.source_id === 'nsw-budget' || source.source_id === 'data-nsw-ckan',
     );
+  const showCharityNote =
+    jurisdictionLevel === 'charity' ||
+    pageSources.some((source) => source.source_id === 'acnc-charity');
 
   return (
     <Box>
@@ -300,7 +327,31 @@ export function SearchPage() {
         >
           Show NSW state budget (Budgeted)
         </Button>
+        <Button
+          variant="outlined"
+          onClick={() =>
+            update({
+              jurisdiction_level: 'charity',
+              expense_category: 'total',
+              sort: 'amount_desc',
+            })
+          }
+        >
+          Show charity total expenses (ACNC)
+        </Button>
       </Stack>
+
+      {showCharityNote ? (
+        <Alert severity="info" data-testid="acnc-charity-note" sx={{ mb: 3 }}>
+          <strong>ACNC charity expenses are not government spending.</strong> These are actual
+          expenses reported by ACNC-registered charities. They have no COFOG function and are never
+          merged with federal/state/local spending. The source publishes a total-expenses row and
+          five explicit component categories; ausspend never adds a total and its components
+          together. Filter <code>expense_category=total</code> for a headline figure, or pick one
+          component to read it on its own. State/postcode comes only from AIS program operating
+          locations, is single-state only and is flagged approximate.
+        </Alert>
+      ) : null}
 
       {showNswNote ? (
         <Alert severity="info" data-testid="nsw-budgeted-note" sx={{ mb: 3 }}>
@@ -426,6 +477,39 @@ export function SearchPage() {
               {JURISDICTION_LEVELS.map((level) => (
                 <MenuItem key={level} value={level}>
                   {titleCase(level)}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              size="small"
+              label="State"
+              value={locationState}
+              onChange={(event) => update({ state: event.target.value.toUpperCase() })}
+              placeholder="e.g. NSW"
+            />
+
+            <TextField
+              size="small"
+              label="Postcode"
+              value={postcode}
+              onChange={(event) =>
+                update({ postcode: event.target.value.replace(/\D/g, '').slice(0, 4) })
+              }
+              placeholder="e.g. 2000"
+            />
+
+            <TextField
+              select
+              size="small"
+              label="Expense category"
+              value={expenseCategory}
+              onChange={(event) => update({ expense_category: event.target.value })}
+            >
+              <MenuItem value="">All expense categories</MenuItem>
+              {EXPENSE_CATEGORIES.map(([value, label]) => (
+                <MenuItem key={value} value={value}>
+                  {label}
                 </MenuItem>
               ))}
             </TextField>

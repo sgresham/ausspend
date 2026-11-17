@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
-import { regionSlug, type PerMeasureTypeTotal } from '@ausspend/shared';
+import {
+  EXPENSE_CATEGORY_LABELS,
+  regionSlug,
+  type ExpenseCategoryTotal,
+  type PerMeasureTypeTotal,
+} from '@ausspend/shared';
 import {
   MeasureModel,
   RegionModel,
@@ -24,16 +29,18 @@ export interface MeasureRow {
   natural_key?: string;
   project_name?: string;
   description?: string;
-  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'other';
+  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'other';
   jurisdiction?: string;
   delivery_entity?: string;
   funding_source?: string;
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
-  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure';
+  aggregation_role?:
+    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component';
   extraction_confidence?: 'low' | 'medium' | 'high';
-  location?: { state?: string; lga_name?: string };
+  location?: { state?: string; postcode?: string; lga_name?: string };
+  expense_category?: string;
   unspsc?: string;
 }
 
@@ -130,19 +137,71 @@ export function isAgencyDetail(measure: {
 }
 
 export function isNonAdditiveMeasure(measure: {
-  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure' | null;
+  aggregation_role?:
+    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
 }): boolean {
   return (
     measure.aggregation_role !== undefined &&
     measure.aggregation_role !== null &&
-    measure.aggregation_role !== 'additive'
+    measure.aggregation_role !== 'additive' &&
+    // A charity total row is the only safe charity headline input. Its
+    // components are additive among themselves but must never be added to the
+    // total, so they are excluded from every generic total.
+    measure.aggregation_role !== 'expense_total'
   );
 }
 
 export function isAdditiveMeasure(measure: {
-  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure' | null;
+  aggregation_role?:
+    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
 }): boolean {
   return !isNonAdditiveMeasure(measure);
+}
+
+export function isExpenseTotalMeasure(measure: {
+  aggregation_role?:
+    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
+}): boolean {
+  return measure.aggregation_role === 'expense_total';
+}
+
+export function isExpenseComponentMeasure(measure: {
+  aggregation_role?:
+    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component' | null;
+}): boolean {
+  return measure.aggregation_role === 'expense_component';
+}
+
+/**
+ * Per-expense-category totals over charity rows. The `total` entry is the
+ * published total-expenses category; every other entry is a component. They
+ * are returned side by side and never added together.
+ */
+export function expenseCategoryTotals(
+  measures: readonly (Pick<LeanMeasure, 'amount_cents' | 'expense_category'> & {
+    aggregation_role?: LeanMeasure['aggregation_role'];
+  })[],
+): ExpenseCategoryTotal[] {
+  const byCategory = new Map<string, { count: number; amounts: number[] }>();
+  for (const measure of measures) {
+    if (!measure.expense_category) continue;
+    const entry = byCategory.get(measure.expense_category) ?? { count: 0, amounts: [] };
+    entry.count += 1;
+    entry.amounts.push(measure.amount_cents);
+    byCategory.set(measure.expense_category, entry);
+  }
+  return [...byCategory.entries()]
+    .map(([category, entry]) => ({
+      expense_category: category,
+      label: EXPENSE_CATEGORY_LABELS[category as keyof typeof EXPENSE_CATEGORY_LABELS] ?? category,
+      count: entry.count,
+      total_cents: sumCents(entry.amounts),
+      additive: category === 'total',
+    }))
+    .sort((a, b) => {
+      if (a.additive !== b.additive) return a.additive ? -1 : 1;
+      return a.expense_category.localeCompare(b.expense_category);
+    });
 }
 
 /**
@@ -250,7 +309,7 @@ export async function summarizeMeasureQuery(
     }
     count += groupCount;
     allTypes.add(measure_type);
-    if (role === 'additive') {
+    if (role === 'additive' || role === 'expense_total') {
       additiveCount += groupCount;
       const entry = additiveByType.get(measure_type) ?? { count: 0, cents: 0 };
       entry.count += groupCount;

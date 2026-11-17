@@ -62,6 +62,19 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                         {row.description}
                       </Typography>
                     ) : null}
+                    {row.expense_category ? (
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        color={row.aggregation_role === 'expense_total' ? 'primary' : 'default'}
+                        label={
+                          row.aggregation_role === 'expense_total'
+                            ? 'Charity total expenses'
+                            : `Charity component — ${row.expense_category.replaceAll('_', ' ')}`
+                        }
+                        sx={{ mt: 0.5 }}
+                      />
+                    ) : null}
                     {row.funding_source || row.delivery_entity ? (
                       <Typography variant="caption" color="text.secondary" component="div">
                         {row.funding_source ? <>Buyer: {row.funding_source}. </> : null}
@@ -85,9 +98,10 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                       <Link component={RouterLink} to={regionHref(row)}>
                         {row.region_code} — {row.region_name}
                       </Link>
-                    ) : row.location?.state ? (
+                    ) : row.location?.state || row.location?.postcode ? (
                       <Typography variant="body2">
-                        {row.location.state}
+                        {row.location.state ?? 'State not supplied'}
+                        {row.location.postcode ? ` ${row.location.postcode}` : ''}
                         {row.data_quality_flag ? (
                           <Typography variant="caption" color="text.secondary" component="div">
                             {row.data_quality_flag}

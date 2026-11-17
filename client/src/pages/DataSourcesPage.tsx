@@ -56,8 +56,10 @@ export function DataSourcesPage() {
         every local row is provisional and unverified. No other council is covered. GrantConnect is
         a manual, SHA-256-archived DownloadResult XLSX import (chunked and cap-safe): it is not an
         API and no scraper is built, and wide exports above the 50,000-result cap are rejected, so
-        its coverage is reported as partial until complete date-range chunks cover the period.
-        VIC/QLD/WA remain stubs. No grant row is estimated or zero-filled.
+        its coverage is reported as partial until complete date-range chunks cover the period. VIC
+        and QLD are live as of Phase 4, and the ACNC Annual Information Statement adds
+        charity-expense rows (expenses only, never government spending). WA remains a stub. No grant
+        row is estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>
@@ -199,6 +201,20 @@ export function DataSourcesPage() {
                     <Typography variant="body2" sx={{ mt: 1.5 }}>
                       <Link component={RouterLink} to="/states/QLD">
                         Open the QLD Budget 2026-27 state page (BP3/BP4 budget rows) →
+                      </Link>
+                    </Typography>
+                  ) : null}
+                  {source.source_id === 'acnc-charity' ? (
+                    <Typography variant="body2" sx={{ mt: 1.5 }}>
+                      <Link
+                        component={RouterLink}
+                        to="/search?jurisdiction_level=charity&expense_category=total"
+                      >
+                        Browse ACNC charity total expenses with provenance →
+                      </Link>
+                      {' · '}
+                      <Link component={RouterLink} to="/search?jurisdiction_level=charity">
+                        Browse all charity total + component rows →
                       </Link>
                     </Typography>
                   ) : null}

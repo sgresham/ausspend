@@ -3,6 +3,11 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import mongoose from 'mongoose';
 import {
+  ACNC_DATASET,
+  ACNC_ID,
+  ACNC_LICENSE,
+  ACNC_SOURCE_URL,
+  ACNC_UNIT,
   QGIP_ATTRIBUTION,
   QGIP_DATASET,
   QGIP_FISCAL_YEAR,
@@ -38,6 +43,10 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *     data dictionary. Only Grant (grant_award) and Frontline service
  *     procurement (contract) rows are ingested; they are separate measure types
  *     and are never summed together.
+ *   - acnc-charity: the latest ACNC Annual Information Statement CSV, its
+ *     programs CSV and explanatory notes. Only positive total-expenses rows
+ *     produce a record; every record carries an explicit expense_category.
+ *     Total and component rows are never summed together.
  *
  * The runner upserts on natural_key, so re-running is idempotent and never
  * deletes federal, NSW, GrantConnect, QLD BP3/BP4 or any other source's rows.
@@ -46,7 +55,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * a metadata-only manifest is written under docs/source-archive/. Bytes stay
  * outside the repo.
  */
-export const PHASE4_SOURCE_IDS = [VIC_ID, QGIP_ID] as const;
+export const PHASE4_SOURCE_IDS = [VIC_ID, QGIP_ID, ACNC_ID] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
   for (let index = 0; index < argv.length; index += 1) {
@@ -119,6 +128,36 @@ async function writeQgipManifest(): Promise<void> {
   );
 }
 
+async function writeAcncManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: ACNC_ID });
+  const manifestPath = path.resolve(
+    process.env.ACNC_MANIFEST ?? 'docs/source-archive/acnc-ais-2024.json',
+  );
+  const manifest = {
+    dataset: ACNC_DATASET,
+    edition: 2024,
+    source_url: ACNC_SOURCE_URL,
+    license: ACNC_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${ACNC_UNIT} (x100 cents), confirmed by the explanatory notes`,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      'Latest ACNC Annual Information Statement CSV plus the programs CSV and explanatory notes. Every measure is jurisdiction_level=charity, jurisdiction=Australia, funding_source="ACNC-registered charity", measure_type=actual. The total expenses row is aggregation_role=expense_total and the five component categories are expense_component; they are never summed together. No COFOG function. State/postcode comes only from program operating locations, single-state only, flagged location_approximate. Bytes are archived outside the repo.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:phase4] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -131,8 +170,10 @@ async function main(): Promise<void> {
         `unknown Phase 4 source "${id}"; expected one of ${PHASE4_SOURCE_IDS.join(', ')}`,
       );
     }
-    if (connector.jurisdiction_level !== 'state') {
-      throw new Error(`${id} is not a state source (${connector.jurisdiction_level})`);
+    if (!['state', 'charity'].includes(connector.jurisdiction_level)) {
+      throw new Error(
+        `${id} is neither a state nor a charity source (${connector.jurisdiction_level})`,
+      );
     }
     if (connector.status !== 'active') throw new Error(`${id} connector is ${connector.status}`);
     return connector;
@@ -159,6 +200,7 @@ async function main(): Promise<void> {
     }
     if (sourceIds.includes(VIC_ID)) await writeManifest();
     if (sourceIds.includes(QGIP_ID)) await writeQgipManifest();
+    if (sourceIds.includes(ACNC_ID)) await writeAcncManifest();
 
     if (sourceIds.includes(VIC_ID)) {
       const archived = await listArchivedRecords({ source_id: VIC_ID });
@@ -221,6 +263,63 @@ async function main(): Promise<void> {
       }
       for (const group of byQuality) {
         console.log(`[ingest:phase4] qld-qgip quality=${group._id} rows=${group.rows}`);
+      }
+    }
+
+    if (sourceIds.includes(ACNC_ID)) {
+      const archived = await listArchivedRecords({ source_id: ACNC_ID });
+      const total = await MeasureModel.countDocuments({ source_id: ACNC_ID });
+      const byRole = await MeasureModel.aggregate([
+        { $match: { source_id: ACNC_ID } },
+        {
+          $group: { _id: '$aggregation_role', rows: { $sum: 1 }, cents: { $sum: '$amount_cents' } },
+        },
+        { $sort: { _id: 1 } },
+      ]);
+      const byCategory = await MeasureModel.aggregate([
+        { $match: { source_id: ACNC_ID } },
+        {
+          $group: {
+            _id: { role: '$aggregation_role', category: '$expense_category' },
+            rows: { $sum: 1 },
+            cents: { $sum: '$amount_cents' },
+          },
+        },
+        { $sort: { '_id.role': 1, '_id.category': 1 } },
+      ]);
+      const withState = await MeasureModel.countDocuments({
+        source_id: ACNC_ID,
+        'location.state': { $exists: true, $ne: null },
+      });
+      const withPostcode = await MeasureModel.countDocuments({
+        source_id: ACNC_ID,
+        'location.postcode': { $exists: true, $ne: null },
+      });
+      const totalRows = await MeasureModel.find({
+        source_id: ACNC_ID,
+        aggregation_role: 'expense_total',
+      })
+        .sort({ amount_cents: -1 })
+        .limit(5)
+        .select({ abn: 1, delivery_entity: 1, amount_cents: 1, expense_category: 1, location: 1 })
+        .lean();
+      console.log(
+        `[ingest:phase4] acnc-charity rows=${total} source_documents=${archived.length} with_state=${withState} with_postcode=${withPostcode} (total + components kept separate)`,
+      );
+      for (const group of byRole) {
+        console.log(
+          `[ingest:phase4] acnc-charity role=${group._id ?? '(none)'} rows=${group.rows} cents=${group.cents}`,
+        );
+      }
+      for (const group of byCategory) {
+        console.log(
+          `[ingest:phase4] acnc-charity role=${group._id.role} category=${group._id.category} rows=${group.rows} cents=${group.cents}`,
+        );
+      }
+      for (const row of totalRows) {
+        console.log(
+          `[ingest:phase4] acnc-charity top_total abn=${row.abn} charity=${row.delivery_entity} cents=${row.amount_cents} state=${row.location?.state ?? '(none)'} postcode=${row.location?.postcode ?? '(none)'}`,
+        );
       }
     }
 

@@ -156,7 +156,8 @@ describe('GET /api/meta/coverage', () => {
     expect(response.status).toBe(200);
     expect(response.headers['cache-control']).toBe('no-store');
     expect(response.body).toMatchObject({
-      phase: 'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live)',
+      phase:
+        'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live) + ACNC charity',
       synthetic: true,
       live_ingestion: true,
       counts: { data_sources: 1, regions: 3, functions: 4, measures: 8 },
@@ -174,7 +175,7 @@ describe('GET /api/meta/coverage', () => {
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
-    expect(response.body.connectors).toHaveLength(14);
+    expect(response.body.connectors).toHaveLength(15);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'aus-tender' ||
@@ -185,7 +186,8 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'dubbo-council' ||
           connector.id === 'vic-budget' ||
           connector.id === 'qld-budget' ||
-          connector.id === 'qld-qgip'
+          connector.id === 'qld-qgip' ||
+          connector.id === 'acnc-charity'
           ? 'active'
           : 'stub',
       );
@@ -342,6 +344,9 @@ describe('GET /api/spending', () => {
       fiscal_year: null,
       measure_type: null,
       jurisdiction_level: null,
+      state: null,
+      postcode: null,
+      expense_category: null,
       function: null,
       region: null,
       area: null,
@@ -417,6 +422,9 @@ describe('GET /api/spending', () => {
       fiscal_year: '2024-25',
       measure_type: 'actual',
       jurisdiction_level: null,
+      state: null,
+      postcode: null,
+      expense_category: null,
       function: null,
       region: null,
       area: null,

@@ -11,7 +11,7 @@ test('spending explorer shows mixed warning and per-type totals, never a headlin
   await page.goto('/search');
 
   await expect(page.getByRole('heading', { level: 1, name: 'Spending explorer' })).toBeVisible();
-  await expect(page.getByTestId('mixed-warning')).toContainText('Measure types are mixed');
+  await expect(page.getByTestId('mixed-warning')).toContainText('Mixed populations');
   await expect(page.getByTestId('mixed-warning')).toContainText('no headline total');
   await expect(page.getByTestId('headline-total')).toHaveCount(0);
   await expect(page.getByTestId('spending-per-type-totals')).toContainText('Actual');

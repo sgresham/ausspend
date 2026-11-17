@@ -370,12 +370,16 @@ fleet-vehicle XLSX); PDF/DOCX resources are recorded as deferred, not ingested.
 a human downloads public `DownloadResult` XLSX exports, the importer archives each with SHA-256,
 rejects any file carrying the >50,000-result cap warning, combines complete date-range chunks,
 de-duplicates on `GA ID` and reports partial coverage honestly. It is not an API and not a
-scraper. **VIC Budget (`vic-budget`), QLD Budget (`qld-budget`) and QLD QGIP
-(`qld-qgip`) are live as of Phase 4**. `qld-qgip` streams the latest annual consolidated QGIP
-expenditure CSV (2024-25, cp1252) and archives its data dictionary; only Grant (`grant_award`) and
-Frontline service procurement (`contract`) rows are ingested, and the two measure types are never
-summed. The other five connectors are stubs (`status: "stub"`; `fetch()` rejects with
-"not implemented" and `transform()` returns no records); WA remains a stub.
+scraper. **VIC Budget (`vic-budget`), QLD Budget (`qld-budget`), QLD QGIP
+(`qld-qgip`) and ACNC charity expenses (`acnc-charity`) are live as of Phase 4**. `qld-qgip`
+streams the latest annual consolidated QGIP expenditure CSV (2024-25, cp1252) and archives its
+data dictionary; only Grant (`grant_award`) and Frontline service procurement (`contract`) rows are
+ingested, and the two measure types are never summed. `acnc-charity` streams the latest ACNC Annual
+Information Statement CSV (2024), archives the programs CSV and explanatory notes, and stores one
+`expense_total` row per charity plus reconciled `expense_component` rows with an explicit
+`expense_category`; charity expenses are not government spending, have no COFOG function, and total
+and components are never summed together. The remaining connectors are stubs (`status: "stub"`;
+`fetch()` rejects with "not implemented" and `transform()` returns no records); WA remains a stub.
 
 `npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
 selected connectors sequentially, writes an `ingestion_logs` row per source, upserts on
@@ -436,7 +440,7 @@ NSW financial statements are in `$m`, historical fiscal indicators in `$b` and c
 `$'000`; all are converted to integer cents with explicit, tested multipliers. Budgeted rows are
 labelled **Budgeted**, never actual/spent, and measure types are never summed. Full mapping,
 COFOG decisions and limitations are in [NSW_LOCAL_INGESTION.md](./NSW_LOCAL_INGESTION.md). S2 stops
-before Dubbo (S3), VIC/QLD/WA, SOC/charity and any live PDF/DOCX ingestion; CKAN PDF/DOCX
+before Dubbo (S3), VIC/QLD/WA, SOC/ACNC charity and any live PDF/DOCX ingestion; CKAN PDF/DOCX
 resources are listed as deferred on `data-nsw-ckan`.
 
 ### Source archive and PDF foundation

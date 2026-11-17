@@ -1,13 +1,15 @@
 # Phase 4 — VIC Budget 2026-27 and QLD QGIP expenditure ingestion (CKAN)
 
 **Status: live and ingested into `ausspend_dev` on 2026-11-17. Sources: VIC Budget 2026-27
-(DataVic CKAN) and the Queensland Government Investment Portal (QGIP) 2024-25 consolidated
-expenditure CSV (data.qld CKAN). No WA, SA, TAS, ACT, NT, ACNC or ABS GFS source was started,
-fetched or written by this work. QLD BP3/BP4 (`qld-budget`) remains a separate source and is
-preserved unchanged.**
+(DataVic CKAN), the Queensland Government Investment Portal (QGIP) 2024-25 consolidated
+expenditure CSV (data.qld CKAN), and the ACNC 2024 Annual Information Statement (data.gov.au
+CKAN). No WA, SA, TAS, ACT, ABS GFS or other state source was started, fetched or written by this
+work. QLD BP3/BP4 (`qld-budget`) remains a separate source and is preserved unchanged.**
 **VIC: 28 rows — 20 additive COFOG rows and 8 explicitly non-additive DTF agency-detail rows.**
 **QGIP: 34,000 rows — 27,658 `grant_award` and 6,342 `contract`, never summed together.**
-The QGIP section is at the end of this document.
+**ACNC: charity expenses only — one `expense_total` row per charity plus reconciled
+`expense_component` rows; total and components are never summed together.**
+The QGIP and ACNC sections are at the end of this document.
 
 This document records exactly what was ingested, how the files are structured, the units, the
 COFOG/measure mapping, the source archive hashes, and the limitations. It is the reference for
@@ -372,3 +374,136 @@ GET /api/states/QLD?fiscal_year=2024-25&source_id=qld-qgip
 - 1,031 out-of-scope assistance types and 21 zero-dollar in-scope rows are intentionally excluded.
 - Nothing is human-verified: every row is `verified: false`.
 - No cross-measure-type summing is performed or implied.
+
+---
+
+# ACNC Annual Information Statement (AIS) — charity expenses
+
+**Source id:** `acnc-charity`. **Edition:** ACNC 2024 Annual Information Statement (the latest AIS
+package published on data.gov.au CKAN at ingestion time). **Scope:** ACNC only. No ABS GFS, WA,
+SA, TAS, ACT, SOC or other state source was started.
+
+## Discovery and archived source
+
+Keyless data.gov.au CKAN:
+
+- `package_search?q=ACNC Annual Information Statement&rows=100` → the latest edition is selected by
+  the year in the package name/title.
+- `package_show?id=acnc-2024-annual-information-statement-ais-data`.
+
+| File                            | Resource id                            | Role                                                   | SHA-256 (bytes outside the repo)                                                |
+| ------------------------------- | -------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `datadotgov_ais24.csv`          | `710630ea-1202-4bbb-95f7-3973a972ddf8` | AIS spreadsheet, one row per charity                   | recorded in `docs/source-archive/acnc-ais-2024.json` and every record's `notes` |
+| `datadotgov_ais24_programs.csv` | `09f5fc83-8648-413e-ba5b-793a9d6b305f` | program operating locations (location enrichment only) | as above                                                                        |
+| `explanatory-notes.pdf`         | `014d919b-aa79-4da4-8aab-438141391f99` | official field definitions/units                       | as above                                                                        |
+
+The exact bytes are downloaded by the shared `archiveSourceDocument` helper to
+`AUSSPEND_SOURCE_ARCHIVE` (default `~/ausspend-source-archive`, outside the repo). The repo holds
+only metadata: `docs/source-archive/acnc-ais-2024.json`, `source_documents`, and the hash in each
+measure's `notes`.
+
+## Units, period and expense structure (evidence from the explanatory notes)
+
+- **Units:** whole Australian dollars. The explanatory notes state: “Charities were asked to
+  provide all amounts in Australian dollars, and not to enter any symbols, commas or decimal
+  points.” Conversion is `1 AUD = 100 cents`, with `Number.isSafeInteger` checks. Units were not
+  inferred from magnitude.
+- **Period:** the AIS `fin report from` / `fin report to` columns carry each charity's own reporting
+  period (default 1 July–30 June, alternate periods allowed). `fiscal_year` is derived from the
+  report-to date: July–December → `YYYY-YY`; January–June → `(YYYY-1)-YY`. This preserves the source's
+  alternate periods instead of relabelling everything to the AIS edition. The 74 positive-expense
+  rows with no period fall back to `2023-24` and carry `fiscal_year_approximate`.
+- **Expense categories (explicit, never encoded in `measure_type`):**
+
+| Source column                                         | `expense_category`               | Role                |
+| ----------------------------------------------------- | -------------------------------- | ------------------- |
+| `total expenses`                                      | `total`                          | `expense_total`     |
+| `employee expenses`                                   | `employee_expenses`              | `expense_component` |
+| `interest expenses`                                   | `interest_expenses`              | `expense_component` |
+| `grants and donations made for use in Australia`      | `grants_and_donations_australia` | `expense_component` |
+| `grants and donations made for use outside Australia` | `grants_and_donations_overseas`  | `expense_component` |
+| `all other expenses`                                  | `all_other_expenses`             | `expense_component` |
+
+The total is defined by the notes as the sum of the five components. 106 of 54,233 AIS rows differ
+by $1 due to source rounding; for those the component rows are omitted and only the total is
+stored, flagged `expense_components_unreconciled`. Components are emitted only when they reconcile
+exactly, so the dataset can never imply a component series that disagrees with the total.
+
+## No-sum invariant (critical)
+
+- One total row per charity/financial-year: `aggregation_role: "expense_total"`,
+  `expense_category: "total"`.
+- Optional component rows: `aggregation_role: "expense_component"` with their explicit
+  `expense_category`.
+- `measure_type` is `actual` for every row; it is never overloaded to mean total vs component.
+- The API excludes `expense_component` from every generic total and per-measure-type total. A
+  charity-only summary uses **only** `expense_total` rows for its headline and exposes the
+  components separately in `summary.expense_categories`.
+- When charity and government rows are mixed in one query, the summary is `mixed: true` with
+  `total_cents: null` and no combined `total_by_measure_type`; charity expenses are never merged
+  with government spending.
+- Tests: `server/test/acnc-charity.test.ts` (mapping, units, natural key, idempotency, no-sum) and
+  `server/test/acnc-api.test.ts` (API cannot return 200,000 for a 100,000 total + 60,000 + 40,000
+  components, and a mixed query has no combined total).
+
+## Mapping
+
+| Measure field                          | Value                                                                                        |
+| -------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `jurisdiction_level`                   | `charity`                                                                                    |
+| `jurisdiction`                         | `Australia`                                                                                  |
+| `delivery_entity`                      | AIS charity name                                                                             |
+| `funding_source`                       | `ACNC-registered charity` (never an invented government funder)                              |
+| `project_name`                         | `Charity expenses — <charity name>`                                                          |
+| `measure_type`                         | `actual`                                                                                     |
+| `fiscal_year`                          | derived from the AIS report-to date (see above)                                              |
+| `amount_cents`                         | integer cents (whole AUD × 100)                                                              |
+| `location.state` / `location.postcode` | only from AIS program operating locations, single-state only; flagged `location_approximate` |
+| `function_code`                        | absent — ACNC has no COFOG                                                                   |
+| `source_dataset`                       | `ACNC Annual Information Statement (AIS)`                                                    |
+| `source_url`                           | the AIS CSV resource URL                                                                     |
+| `natural_key`                          | `acnc-charity:hash(abn + financial_year + expense_category)`                                 |
+| `verified`                             | `false`                                                                                      |
+| `expense_category`                     | explicit category (see table above)                                                          |
+| `aggregation_role`                     | `expense_total` or `expense_component`                                                       |
+
+## Geography caveat
+
+The AIS spreadsheet has **no address column**. The accompanying AIS programs spreadsheet publishes
+up to ten program operating locations per program. A charity gets `location.state`/`postcode` only
+when all of its program locations resolve to exactly one state (and one valid postcode). Multi-state
+charities get no state rather than an invented one. Postcodes are only accepted in postcode-like
+positions (after a state or comma, or a standalone value), so a street number such as `1635 Forest
+Road` is not mistaken for postcode 1635. Every populated location carries
+`data_quality_flag: "...; location_approximate"` because a program operating location is not the charity's registered address, headquarters (HQ)
+or an expense-incurred location. The connector never infers an HQ. No coordinate is parsed or averaged.
+
+## Ingestion and idempotency
+
+```
+MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:phase4 -- --source=acnc-charity
+```
+
+The runner upserts on `natural_key`, so re-running updates the same documents and creates none. It
+never deletes and never touches federal, NSW, VIC, QLD BP3/BP4, QGIP, Dubbo or synthetic rows. The
+ingest output prints total vs component row counts separately and **no combined charity+government
+total**.
+
+## API / UI
+
+- `GET /api/v1/spending?jurisdiction_level=charity` works and returns total + component rows with
+  `expense_category`; the summary headline uses total-expenses rows only.
+- `expense_category`, `state` and `postcode` filters are additive.
+- `GET /api/v1/meta/coverage` reports `charity_ingestion` (live source, last ingested, record
+  count) and the limitation that charity expenses are not government spending and have no COFOG.
+- `/data-sources` links to charity total and all-category search views. The search page labels
+  charity total vs component rows distinctly.
+
+## Limitations
+
+- ACNC charity expenses are **not government spending** and are not comparable to the federal/state
+  local series.
+- No COFOG function is defensible; `function_code` is absent.
+- Every row is `provisional` and `verified: false`.
+- State/postcode coverage is partial and approximate; it is not a full address register.
+- Zero and negative total-expenses rows are skipped, never zero-filled.

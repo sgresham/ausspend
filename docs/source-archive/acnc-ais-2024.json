@@ -1,0 +1,35 @@
+{
+  "dataset": "ACNC Annual Information Statement (AIS)",
+  "edition": 2024,
+  "source_url": "https://data.gov.au/data/dataset/acnc-2024-annual-information-statement-ais-data",
+  "license": "Creative Commons Attribution 3.0 Australia",
+  "retrieved_at": "2026-11-17T02:46:44.389Z",
+  "unit": "AUD dollars (x100 cents), confirmed by the explanatory notes",
+  "files": [
+    {
+      "title": "ACNC AIS 2024 CSV",
+      "filename": "datadotgov_ais24.csv",
+      "url": "https://data.gov.au/data/dataset/276ec1bc-4971-461c-88bc-be9f3c99a0f8/resource/710630ea-1202-4bbb-95f7-3973a972ddf8/download/datadotgov_ais24.csv",
+      "sha256": "01638d73a8be09ff0a1d14402707e009a72b92dff41f879cb799ef06f168f962",
+      "bytes": 38131648,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ACNC 2024 AIS explanatory notes",
+      "filename": "explanatory-notes.pdf",
+      "url": "https://data.gov.au/data/dataset/276ec1bc-4971-461c-88bc-be9f3c99a0f8/resource/014d919b-aa79-4da4-8aab-438141391f99/download/explanatory-notes.pdf",
+      "sha256": "50abd772a34e929a064ed3db247c2b287e78703af3a30c5a60353c8a172737d6",
+      "bytes": 431558,
+      "archived_from": "direct"
+    },
+    {
+      "title": "ACNC AIS 2024 programs CSV",
+      "filename": "datadotgov_ais24_programs.csv",
+      "url": "https://data.gov.au/data/dataset/276ec1bc-4971-461c-88bc-be9f3c99a0f8/resource/09f5fc83-8648-413e-ba5b-793a9d6b305f/download/datadotgov_ais24_programs.csv",
+      "sha256": "ddce504964029fabd8db50fb773c32b28a9a4bed8fd66bd51ac3138506852c3c",
+      "bytes": 29813947,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest ACNC Annual Information Statement CSV plus the programs CSV and explanatory notes. Every measure is jurisdiction_level=charity, jurisdiction=Australia, funding_source=\"ACNC-registered charity\", measure_type=actual. The total expenses row is aggregation_role=expense_total and the five component categories are expense_component; they are never summed together. No COFOG function. State/postcode comes only from program operating locations, single-state only, flagged location_approximate. Bytes are archived outside the repo."
+}

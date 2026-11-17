@@ -47,6 +47,12 @@ export const COVERAGE_GAPS = [
       'Exactly one council, Dubbo Regional Council. No other local council is covered and no LGA/SA2/coordinate is invented.',
   },
   {
+    dimension: 'charity expenses (ACNC)',
+    status: 'partial',
+    detail:
+      'ACNC AIS charity expenses are actual reported expenses of ACNC-registered charities, not government spending. They have no COFOG function, are not comparable to government actual/budget measures, and the total-expenses row is never summed with its component expense categories.',
+  },
+  {
     dimension: 'federal contracts (AusTender) with COFOG and region',
     status: 'partial',
     detail:
@@ -81,6 +87,7 @@ function coverageLimitations(
     pbsLive
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
+    'ACNC charity expenses are reported by registered charities, not government. They are jurisdiction_level "charity", have no COFOG function, and are never merged with federal/state/local spending. Every charity row has an explicit expense_category; total-expenses rows (aggregation_role expense_total) and component rows (expense_component) are never summed together. State/postcode comes only from AIS program operating locations, is single-state only and is flagged location_approximate.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory plus one S3 sub-state region (Dubbo, level "region", parent NSW). No other local council or other state has a connector. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
     'NSW Budget 2025-26 rows come from the 12 official XLSX workbooks in the 14 November 2025 Wayback snapshot plus the ArcGIS Treasury_Project_Data_20260609_gdb layer. Financial/HFI values are $m/$b statement line items; capital projects are $000 Budgeted amounts. Negative net/deficit lines are skipped, not sign-flipped, and missing LGAs are left absent (statewide_only), never inferred.',
@@ -193,18 +200,24 @@ export function createCoverageHandler(
     );
     const dubbo = dataSourceById.get('dubbo-council');
     const localLive = localConnectors.some((connector) => connector.status === 'active');
+    const charityConnectors = connectors.filter(
+      (connector) => connector.jurisdiction_level === 'charity',
+    );
+    const acnc = dataSourceById.get('acnc-charity');
+    const charityLive = charityConnectors.some((connector) => connector.status === 'active');
+    const phaseBase = liveIngestion
+      ? pbsLive
+        ? stateLive
+          ? localLive
+            ? 'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live)'
+            : 'Phase 1 + F2/F3 + S1/S2 + Phase 4 (AusTender + PBS + NSW/VIC/QLD live)'
+          : 'Phase 1 + F2/F3 (AusTender + PBS live)'
+        : 'Phase 1 + F2 (AusTender live)'
+      : 'Phase 1';
 
     res.set('Cache-Control', 'no-store');
     res.json({
-      phase: liveIngestion
-        ? pbsLive
-          ? stateLive
-            ? localLive
-              ? 'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live)'
-              : 'Phase 1 + F2/F3 + S1/S2 + Phase 4 (AusTender + PBS + NSW/VIC/QLD live)'
-            : 'Phase 1 + F2/F3 (AusTender + PBS live)'
-          : 'Phase 1 + F2 (AusTender live)'
-        : 'Phase 1',
+      phase: charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
       // Derived from the live measures collection, not a hard-coded flag: after
       // `clean:synthetic` this becomes false automatically.
       synthetic: syntheticMeasures > 0,
@@ -281,6 +294,22 @@ export function createCoverageHandler(
         qld_qgip_records: qldQgip?.records_ingested ?? 0,
         deferred_resources: nswCkan?.deferred_resources ?? [],
         note: "NSW Budget 2025-26 Open Data (official Wayback XLSX copy + ArcGIS capital projects), targeted data.nsw.gov.au CKAN datasets, VIC Budget 2026-27 DataVic CKAN workbooks, QLD Budget 2026-27 BP3/BP4 CSVs and the QLD QGIP 2024-25 consolidated expenditure CSV are live. Downloads are archived with SHA-256; PDF/DOCX resources are deferred and listed here, not ingested. Western Australia remains a stub. NSW, VIC and QLD budget rows are Budgeted/estimate/actual statement line items or budget measures, never spent amounts; VIC is budget-column only with non-additive DTF detail and unconfirmed Transport 045; QLD BP3/BP4 is $'000 BP3 additive capital plus non-additive BP4 policy measures with no COFOG; QGIP is actual whole-dollar grant awards and procured frontline services, with funding_source the QLD agency and no COFOG, and grants and contracts are separate measure types that are never summed. Measure types are never summed.",
+      },
+      charity_ingestion: {
+        live: charityConnectors
+          .filter((connector) => connector.status === 'active')
+          .map((connector) => connector.id),
+        degraded: charityConnectors
+          .filter((connector) => connector.status === 'degraded')
+          .map((connector) => connector.id),
+        stubs: charityConnectors
+          .filter((connector) => connector.status === 'stub')
+          .map((connector) => connector.id),
+        acnc_last_ingested_at: acnc?.last_ingested_at
+          ? new Date(acnc.last_ingested_at).toISOString()
+          : null,
+        acnc_records: acnc?.records_ingested ?? 0,
+        note: 'ACNC Annual Information Statement charity expenses are expenses only: jurisdiction_level "charity", no COFOG function, and never merged with government spending. Every row has an explicit expense_category; total and component rows are never summed together. The AIS spreadsheet has no address, so state/postcode comes only from AIS program operating locations, single-state only, flagged location_approximate. Source files are SHA-256 archived outside the repo.',
       },
       local_ingestion: {
         live: localConnectors

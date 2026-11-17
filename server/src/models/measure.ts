@@ -4,6 +4,7 @@ export type MeasureType = 'actual' | 'budget' | 'estimate' | 'contract' | 'grant
 
 export interface SpendingLocationDocument {
   state?: string;
+  postcode?: string;
   lga_name?: string;
   sa4_name?: string;
 }
@@ -27,22 +28,26 @@ export interface MeasureDocument {
   natural_key?: string;
   project_name?: string;
   description?: string;
-  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'other';
+  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'other';
   jurisdiction?: string;
   delivery_entity?: string;
   funding_source?: string;
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
-  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure';
+  aggregation_role?:
+    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: SpendingLocationDocument;
+  /** Explicit ACNC expense category; never overloads measure_type. */
+  expense_category?: string;
   unspsc?: string;
 }
 
 const LocationSchema = new Schema<SpendingLocationDocument>(
   {
     state: { type: String },
+    postcode: { type: String },
     lga_name: { type: String },
     sa4_name: { type: String },
   },
@@ -95,11 +100,12 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     // for provenance but excluded from every additive total by the API.
     aggregation_role: {
       type: String,
-      enum: ['additive', 'agency_detail', 'policy_measure'],
+      enum: ['additive', 'agency_detail', 'policy_measure', 'expense_total', 'expense_component'],
       index: true,
     },
     extraction_confidence: { type: String, enum: ['low', 'medium', 'high'] },
     location: { type: LocationSchema },
+    expense_category: { type: String, index: true },
     unspsc: { type: String, index: true },
   },
   { collection: 'measures', versionKey: false },

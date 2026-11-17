@@ -29,6 +29,7 @@ const KNOWN_SOURCE_IDS = [
   'vic-budget',
   'qld-budget',
   'qld-qgip',
+  'acnc-charity',
 ];
 
 const results = [];
@@ -357,7 +358,7 @@ async function uiChecks(page, regionId) {
     await page.goto(`${WEB_URL}/search`, { waitUntil: 'domcontentloaded' });
     await page.getByTestId('mixed-warning').waitFor({ state: 'visible', timeout: 20_000 });
     const warning = await page.getByTestId('mixed-warning').innerText();
-    assert(/Measure types are mixed/.test(warning), 'mixed warning title missing');
+    assert(/Mixed populations/.test(warning), 'mixed warning title missing');
     assert(/no headline total/i.test(warning), 'mixed warning does not withhold the total');
     assert((await page.getByTestId('headline-total').count()) === 0, 'headline total is visible');
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
@@ -366,9 +367,12 @@ async function uiChecks(page, regionId) {
 
   await check('/search single measure type shows a headline total', async () => {
     pageErrors.length = 0;
-    await page.goto(`${WEB_URL}/search?measure_type=actual&fiscal_year=2024-25`, {
-      waitUntil: 'domcontentloaded',
-    });
+    await page.goto(
+      `${WEB_URL}/search?measure_type=actual&fiscal_year=2024-25&jurisdiction_level=state`,
+      {
+        waitUntil: 'domcontentloaded',
+      },
+    );
     await page.getByTestId('headline-total').waitFor({ state: 'visible', timeout: 20_000 });
     const amount = (await page.getByTestId('headline-total-amount').innerText()).trim();
     assert(amount.length > 0, 'headline total amount is empty');
@@ -400,6 +404,58 @@ async function uiChecks(page, regionId) {
     return 'PBS provenance and caveat visible';
   });
 
+  await check(
+    'charity expenses are labelled and never combined with government totals',
+    async () => {
+      pageErrors.length = 0;
+      await page.goto(`${WEB_URL}/search?jurisdiction_level=charity&expense_category=total`, {
+        waitUntil: 'domcontentloaded',
+      });
+      const categories = page.getByTestId('charity-expense-categories');
+      await categories.waitFor({ state: 'visible', timeout: 20_000 });
+      const text = await categories.innerText();
+      assert(/not government spending/i.test(text), 'charity caveat is missing');
+      assert(/never added together/i.test(text), 'charity no-sum label is missing');
+      assert(/Headline total/.test(text), 'charity total label is missing');
+      assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
+
+      const all = await getJson('/api/spending?jurisdiction_level=charity');
+      const summary = all.body.summary;
+      const totalCategory = summary.expense_categories.find(
+        (entry) => entry.expense_category === 'total',
+      );
+      assert(totalCategory, 'charity total category is missing');
+      assert(
+        summary.total_cents === totalCategory.total_cents,
+        'charity headline does not equal the total category',
+      );
+      assert(
+        summary.total_by_measure_type.length === 1 &&
+          summary.total_by_measure_type[0].total_cents === totalCategory.total_cents,
+        'charity per-type total does not equal the total category',
+      );
+      const componentTotal = summary.expense_categories
+        .filter((entry) => entry.expense_category !== 'total')
+        .reduce((sum, entry) => sum + entry.total_cents, 0);
+      assert(
+        summary.total_cents !== totalCategory.total_cents + componentTotal,
+        'charity total was double counted with its components',
+      );
+
+      const mixed = await getJson('/api/spending?measure_type=actual&fiscal_year=2024-25');
+      assert(mixed.body.summary.mixed === true, 'charity + government actual is not marked mixed');
+      assert(
+        mixed.body.summary.total_cents === null,
+        'charity + government query has a combined total',
+      );
+      assert(
+        mixed.body.summary.total_by_measure_type.length === 0,
+        'charity + government query has a combined per-type total',
+      );
+      return `${summary.count} charity rows; total != total + components; mixed total withheld`;
+    },
+  );
+
   await check('/functions/07 default is mixed: warning, no headline total', async () => {
     pageErrors.length = 0;
     await page.goto(`${WEB_URL}/functions/07`, { waitUntil: 'domcontentloaded' });
@@ -426,9 +482,12 @@ async function uiChecks(page, regionId) {
   });
 
   await check('/search rows and summary footers carry provenance', async () => {
-    await page.goto(`${WEB_URL}/search?measure_type=actual&fiscal_year=2024-25`, {
-      waitUntil: 'domcontentloaded',
-    });
+    await page.goto(
+      `${WEB_URL}/search?measure_type=actual&fiscal_year=2024-25&jurisdiction_level=state`,
+      {
+        waitUntil: 'domcontentloaded',
+      },
+    );
     await page.getByTestId('spending-rows').waitFor({ state: 'visible', timeout: 20_000 });
     const rows = await assertRowProvenance(
       page.locator('[data-testid="spending-rows"] tbody tr'),
@@ -437,7 +496,7 @@ async function uiChecks(page, regionId) {
     const perType = await page.getByTestId('spending-per-type-totals').innerText();
     assert(/Provenance:/.test(perType), 'per-type totals have no provenance footer');
     assert(
-      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council|vic-budget|grantconnect/.test(
+      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council|vic-budget|grantconnect|acnc-charity/.test(
         perType,
       ),
       'per-type totals footer has no known source id',
@@ -445,7 +504,7 @@ async function uiChecks(page, regionId) {
     const headline = await page.getByTestId('headline-total').innerText();
     assert(/Provenance:/.test(headline), 'headline total has no provenance footer');
     assert(
-      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council|vic-budget|grantconnect/.test(
+      /synthetic-seed|aus-tender|data-gov-au-pbs|nsw-budget|data-nsw-ckan|dubbo-council|vic-budget|grantconnect|acnc-charity/.test(
         headline,
       ),
       'headline total footer has no known source id',

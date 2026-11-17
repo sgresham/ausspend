@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { FunctionLevelSchema } from './cofog.js';
 import { MeasureTypeSchema } from './measure.js';
 import {
+  AggregationRoleSchema,
   ExtractionConfidenceSchema,
   JurisdictionLevelSchema,
   SpendingLocationSchema,
@@ -47,6 +48,15 @@ export const SpendingQuerySchema = z
       .optional(),
     measure_type: MeasureTypeSchema.optional(),
     jurisdiction_level: JurisdictionLevelSchema.optional(),
+    /** Exact `location.state` (for example NSW/QLD). */
+    state: z.string().trim().min(1).max(20).optional(),
+    /** Exact `location.postcode`, four digits. */
+    postcode: z
+      .string()
+      .regex(/^\d{4}$/, 'postcode must be four digits')
+      .optional(),
+    /** Explicit ACNC expense category (total or a component). */
+    expense_category: z.string().trim().min(1).max(100).optional(),
     function: SpendingFunctionCodeSchema.optional(),
     // A 24-character region _id (exact filter) or a case-insensitive slug/name.
     region: z.string().trim().min(1).max(100).optional(),
@@ -119,9 +129,10 @@ export const SpendingMeasureRowSchema = z.object({
   source_dataset: z.string().min(1).optional(),
   source_date: z.string().min(1).optional(),
   data_quality_flag: z.string().min(1).optional(),
-  aggregation_role: z.enum(['additive', 'agency_detail', 'policy_measure']).optional(),
+  aggregation_role: AggregationRoleSchema.optional(),
   extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
+  expense_category: z.string().min(1).optional(),
   unspsc: z.string().min(1).optional(),
   function_name: z.string().min(1).nullable(),
   function_level: FunctionLevelSchema.nullable(),
@@ -179,6 +190,21 @@ export const SpendingByRegionSchema = BreakdownBaseSchema.extend({
 
 export type SpendingByRegion = z.infer<typeof SpendingByRegionSchema>;
 
+/**
+ * One explicit expense category over the whole filtered charity set. `total` is
+ * the source's total-expenses row; every other entry is a component of that
+ * total. Components are never added to the total.
+ */
+export const ExpenseCategoryTotalSchema = z.object({
+  expense_category: z.string().min(1),
+  label: z.string().min(1),
+  count: z.number().int().nonnegative(),
+  total_cents: z.number().int().nonnegative(),
+  additive: z.boolean(),
+});
+
+export type ExpenseCategoryTotal = z.infer<typeof ExpenseCategoryTotalSchema>;
+
 export const SpendingSummarySchema = z.object({
   count: z.number().int().nonnegative(),
   currency: z.literal('AUD'),
@@ -187,6 +213,13 @@ export const SpendingSummarySchema = z.object({
   total_by_measure_type: z.array(PerMeasureTypeTotalSchema),
   measure_types: z.array(MeasureTypeSchema),
   mixed: z.boolean(),
+  /**
+   * ACNC charity expenses only. Present when the match set contains charity
+   * rows; the array keeps the total and every component distinct.
+   */
+  expense_categories: z.array(ExpenseCategoryTotalSchema).optional(),
+  /** Sum of `expense_category: "total"` rows only, never total + components. */
+  charity_expense_total_cents: z.number().int().nonnegative().nullable().optional(),
   breakdown_by_function: z.array(SpendingByFunctionSchema),
   breakdown_by_region: z.array(SpendingByRegionSchema),
 });
@@ -207,6 +240,9 @@ export const SpendingAppliedFiltersSchema = z.object({
   fiscal_year: z.string().nullable(),
   measure_type: MeasureTypeSchema.nullable(),
   jurisdiction_level: JurisdictionLevelSchema.nullable(),
+  state: z.string().nullable().optional(),
+  postcode: z.string().nullable().optional(),
+  expense_category: z.string().nullable().optional(),
   function: z.string().nullable(),
   region: z.string().nullable(),
   area: z.string().nullable().optional(),
