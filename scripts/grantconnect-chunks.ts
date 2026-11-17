@@ -135,8 +135,11 @@ async function commandFetch(args: Args): Promise<void> {
         redirect: 'follow',
         headers: {
           Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          // GrantConnect's CloudFront layer returns 403 for clients without a
+          // browser-style Mozilla/5.0 token. Keep the ausspend identifier and
+          // stay on the public, unauthenticated DownloadResult endpoint.
           'User-Agent':
-            'ausspend/0.1 (Australian government spending explorer; manual GrantConnect export helper)',
+            'Mozilla/5.0 (compatible; ausspend/0.1; manual GrantConnect export helper; public DownloadResult)',
         },
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

@@ -25,6 +25,7 @@ const KNOWN_SOURCE_IDS = [
   'nsw-budget',
   'data-nsw-ckan',
   'dubbo-council',
+  'grantconnect',
 ];
 
 const results = [];

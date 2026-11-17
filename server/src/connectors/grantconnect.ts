@@ -500,6 +500,7 @@ function baseNotes(state: GrantConnectConnectorState, target: DayRange): string 
       ? `Coverage ${formatCoverage(coverage)}.`
       : `Coverage unknown for ${formatRange(target)}.`,
     `Files: ${state.files.length} scanned, ${accepted.length} accepted, ${rejected.length} rejected/superseded.`,
+    `Accepted rows: ${accepted.reduce((sum, file) => sum + file.data_rows, 0)}.`,
   ];
   if (rejected.length > 0) {
     parts.push(
