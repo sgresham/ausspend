@@ -29,11 +29,12 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - canterbury-bankstown-gpfs  GPFS expansion: Canterbury-Bankstown Council's audited FY2024-25 GPFS
  *   - sutherland-shire-gpfs  GPFS expansion: Sutherland Shire Council's audited FY2024-25 GPFS
  *   - wollongong-gpfs      GPFS expansion: Wollongong City Council's audited FY2024-25 GPFS
+ *   - newcastle-gpfs       GPFS expansion: Newcastle City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
  * Northern Beaches Council, Canterbury-Bankstown Council, Sutherland Shire
- * Council and Wollongong City Council. No other councils,
+ * Council, Wollongong City Council and Newcastle City Council. No other councils,
  * states/territories, SOC/charity or live state connectors are touched. The
  * runner upserts on natural_key, so re-running is idempotent and never deletes
  * existing federal/synthetic rows.
@@ -50,6 +51,7 @@ export const NSW_SOURCE_IDS = [
   'canterbury-bankstown-gpfs',
   'sutherland-shire-gpfs',
   'wollongong-gpfs',
+  'newcastle-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
