@@ -38,6 +38,7 @@ const KNOWN_SOURCE_IDS = [
   'essential-energy',
   'forestry-corporation',
   'landcom',
+  'port-authority-nsw',
 ];
 
 const results = [];
@@ -350,8 +351,8 @@ async function apiChecks() {
     );
     assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
     assert(
-      Array.isArray(soc.body?.series) && soc.body.series.length === 82,
-      `expected 82 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7 + Landcom 6), got ${soc.body?.series?.length}`,
+      Array.isArray(soc.body?.series) && soc.body.series.length === 87,
+      `expected 87 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7 + Landcom 6 + Port Authority of NSW 5), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -372,8 +373,9 @@ async function apiChecks() {
         soc.body.entities.includes('Hunter Water') &&
         soc.body.entities.includes('Essential Energy') &&
         soc.body.entities.includes('Forestry Corporation of NSW') &&
-        soc.body.entities.includes('Landcom'),
-      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom) are not returned',
+        soc.body.entities.includes('Landcom') &&
+        soc.body.entities.includes('Port Authority of NSW'),
+      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW) are not returned',
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
@@ -388,12 +390,17 @@ async function apiChecks() {
       'Forestry Corporation source count is not 7 rows',
     );
     assert(sources.get('landcom')?.records === 6, 'Landcom source count is not 6 rows');
+    assert(
+      sources.get('port-authority-nsw')?.records === 5,
+      'Port Authority of NSW source count is not 5 rows',
+    );
     for (const entity of [
       'sydney-water',
       'waternsw',
       'hunter-water',
       'forestry-corporation',
       'landcom',
+      'port-authority-nsw',
     ]) {
       assert(
         sources.get(entity)?.unit === 'AUD_thousands',
@@ -725,6 +732,58 @@ async function apiChecks() {
       'Landcom net result is not the printed $44,233 thousand profit',
     );
 
+    const portAuthority = await getJson(
+      '/api/soc?fiscal_year=2024-25&entity=Port%20Authority%20of%20NSW',
+    );
+    assert(
+      portAuthority.status === 200,
+      `Port Authority of NSW SOC expected 200, got ${portAuthority.status}`,
+    );
+    assert(
+      portAuthority.body?.series?.length === 5,
+      `expected 5 Port Authority of NSW SOC rows, got ${portAuthority.body?.series?.length}`,
+    );
+    assert(
+      portAuthority.body?.source?.source_id === 'port-authority-nsw',
+      'Port Authority SOC source is not port-authority-nsw',
+    );
+    assert(
+      portAuthority.body.series.every((row) => row.delivery_entity === 'Port Authority of NSW'),
+      'Port Authority SOC response contains another entity',
+    );
+    assert(!('total_cents' in portAuthority.body), 'Port Authority SOC response has a total_cents');
+    const paByLine = new Map(portAuthority.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      paByLine.get('total_expenses')?.amount_cents === 19095300000,
+      'Port Authority total expenses is not $190,953 thousand in cents',
+    );
+    assert(
+      paByLine.get('total_revenue')?.amount_cents === 23825400000,
+      'Port Authority total revenue is not $238,254 thousand in cents',
+    );
+    assert(
+      paByLine.get('employee_expenses')?.amount_cents === 9606100000,
+      'Port Authority employee expenses is not $96,061 thousand in cents',
+    );
+    assert(
+      paByLine.get('depreciation_amortisation')?.amount_cents === 2165000000,
+      'Port Authority depreciation/amortisation is not $21,650 thousand in cents',
+    );
+    assert(
+      paByLine.get('net_result')?.amount_cents === 3629500000 &&
+        paByLine.get('net_result')?.soc_printed_sign === 'positive',
+      'Port Authority net result is not the printed $36,295 thousand profit',
+    );
+    assert(
+      paByLine.get('total_expenses')?.potential_double_count === false &&
+        paByLine.get('net_result')?.potential_double_count === false,
+      'Port Authority own-source rows are incorrectly flagged as potential double counts',
+    );
+    assert(
+      paByLine.get('government_grants') === undefined,
+      'Port Authority emitted a grant row although no grant is separately disclosed',
+    );
+
     const generic = await getJson('/api/spending?limit=5');
     assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
     const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
@@ -737,7 +796,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '82 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7, Landcom 6), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7, 384,532 and 213,995, no total, excluded from generic spending';
+    return '87 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7, Landcom 6, Port Authority of NSW 5), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7, 384,532, 213,995 and 190,953, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {

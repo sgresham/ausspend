@@ -13,6 +13,7 @@ import { createEssentialEnergyConnector } from './soc/nsw/essential-energy.js';
 import { createForestryCorporationConnector } from './soc/nsw/forestry-corporation.js';
 import { createHunterWaterConnector } from './soc/nsw/hunter-water.js';
 import { createLandcomConnector } from './soc/nsw/landcom.js';
+import { createPortAuthorityConnector } from './soc/nsw/port-authority.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
@@ -168,6 +169,11 @@ export const CONNECTORS: readonly Connector[] = [
   // lines. Never added to government program spending, the PNFC benchmark, or
   // any other SOC. Other SOCs are not implemented.
   createLandcomConnector(),
+  // SOC Phase 8: seventh NSW state-owned corporation — Port Authority of NSW.
+  // Latest annual report discovered, SHA-256 archived and parsed as entity-level
+  // statement lines. Never added to government program spending, the PNFC
+  // benchmark, or any other SOC. Other SOCs are not implemented.
+  createPortAuthorityConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

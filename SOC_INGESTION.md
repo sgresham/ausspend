@@ -1,16 +1,18 @@
-# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW)
+# SOC ingestion — PNFC benchmark + NSW SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW)
 
 **Status:** the ABS GFS Public Non-Financial Corporations (PNFC) sector
-benchmark is implemented, and five NSW per-entity State Owned Corporation (SOC)
+benchmark is implemented, and seven NSW per-entity State Owned Corporation (SOC)
 adapters are implemented: **Sydney Water Corporation**, **WaterNSW (Water NSW)**,
-**Hunter Water Corporation**, **Essential Energy** and **Forestry Corporation of
-NSW**. Per-entity NSW SOC extraction for any other entity, BP1 Chapter 9, VIC/QLD
-SOC and any synthetic SOC rows are out of scope and are not implemented. The five
-SOC entities are separate sources and are never summed with each other.
+**Hunter Water Corporation**, **Essential Energy**, **Forestry Corporation of
+NSW**, **Landcom** and **Port Authority of NSW**. Per-entity NSW SOC extraction
+for any other entity, BP1 Chapter 9, VIC/QLD SOC and any synthetic SOC rows are
+out of scope and are not implemented. The seven SOC entities are separate
+sources and are never summed with each other.
 
 `npm run ingest:soc` runs **PNFC first, then Sydney Water, then WaterNSW, then
-Hunter Water, then Essential Energy, then Forestry Corporation of NSW**, logging
-each source's success/failure and continuing after a source error.
+Hunter Water, then Essential Energy, then Forestry Corporation of NSW, then
+Landcom, then Port Authority of NSW**, logging each source's success/failure and
+continuing after a source error.
 
 ## 1. Source: ABS GFS PNFC (Annual 2024-25 data cubes)
 
@@ -930,6 +932,87 @@ spending.
 Both rows carry `human_spot_check: required` in their notes. No Landcom row is
 marked verified in this phase.
 
+## 2F. Source: Port Authority of NSW (seventh NSW SOC entity)
+
+Port Authority of NSW is an NSW State Owned Corporation (Newcastle Port
+Corporation trading as Port Authority of NSW). Source id:
+`port-authority-nsw`. Name: `Port Authority of NSW — Annual Report`. Publisher:
+Port Authority of NSW. Canonical `delivery_entity`: `Port Authority of NSW`.
+
+The connector starts at the official annual-reports page
+(`https://www.portauthoritynsw.com.au/corporate/corporate-governance/port-authority-nsw-annual-reports/`)
+and selects the latest annual-report PDF. No PDF URL is hard-coded.
+
+- Document: `Annual Report 2024–25`
+- Official PDF: `https://www.portauthoritynsw.com.au/sites/default/files/2025-12/Port%20Authority%20of%20NSW%20Annual%20Report%202024-25.pdf`
+- Bytes: `14,911,040` (SHA-256
+  `5311425dbdaec28dc4155dc486c77eb49f7707cc05aba039856f0bf3c2a1794d`)
+- Printed unit: **`$000`** (thousands), stated on the face statement.
+  `AUD_thousands`; `amount_cents = $'000 × 100,000`. A table read as dollars or
+  millions is rejected and the document is deferred.
+- Statement: _Statement of comprehensive income_ for the year ended 30 June 2025
+  (PDF page 47).
+
+### Exact reconciliation (zero tolerance, printed 2025 column, $'000)
+
+| Printed line                                      | 2025 ($'000) |
+| ------------------------------------------------- | -----------: |
+| Revenue from port management                      |      176,929 |
+| Investment revenue                                |       41,353 |
+| Other revenue                                     |       19,972 |
+| **Total revenue**                                 |  **238,254** |
+| Employee related expenses                         |     (96,061) |
+| Depreciation and amortisation expenses            |     (21,650) |
+| Other expenses                                    |     (65,562) |
+| Finance costs                                     |      (7,680) |
+| **Total expenses**                                |  **190,953** |
+| Net gain on sale of property, plant and equipment |           82 |
+| Other gains                                       |          577 |
+| **Profit before income tax equivalent expense**   |   **47,960** |
+| Income tax equivalent expense                     |     (11,665) |
+| **Net profit after tax for the year**             |   **36,295** |
+
+The statement prints explicit Total revenue and Total expenses subtotals. Both
+are accepted only when every printed bridge reconciles:
+
+1. Total revenue: `176,929 + 41,353 + 19,972 = 238,254`.
+2. Total expenses: `96,061 + 21,650 + 65,562 + 7,680 = 190,953`.
+3. Profit before tax: `238,254 − 190,953 + 82 + 577 = 47,960`.
+4. Net result: `47,960 − 11,665 = 36,295`.
+5. Note 3 Revenue prints `Total revenue` = `238,254`, equal to the face statement.
+6. Note 4 Expenses prints `Total expenses` = `190,953`, equal to the face statement.
+
+Any one-thousand-dollar mismatch defers the whole document; no partial rows are
+ingested. Port Authority of NSW does **not** separately disclose government
+grants/contributions in this statement or its notes, so no grants row is
+emitted; a grant is never estimated or zero-filled.
+
+### Ingested line items (5 rows)
+
+| `soc_line_item`             | Printed source                                  | 2025 ($'000) | `funding_source`      | `potential_double_count` |
+| --------------------------- | ----------------------------------------------- | -----------: | --------------------- | ------------------------ |
+| `total_revenue`             | Printed statement Total revenue                 |      238,254 | Port Authority of NSW | false                    |
+| `total_expenses`            | Printed statement Total expenses                |  **190,953** | Port Authority of NSW | false                    |
+| `employee_expenses`         | Statement Employee related expenses             |       96,061 | Port Authority of NSW | false                    |
+| `depreciation_amortisation` | Statement Depreciation and amortisation expense |       21,650 | Port Authority of NSW | false                    |
+| `net_result`                | Statement Net profit after tax for the year     |   **36,295** | Port Authority of NSW | false                    |
+
+`total_revenue` includes all three printed revenue lines; `total_expenses`
+includes employee, depreciation/amortisation, other expenses and finance costs;
+`net_result` is a result. None of the five rows may be added to another SOC row,
+the PNFC benchmark or government program spending.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (190,953 $'000)** — the printed Total expenses subtotal.
+   Confirm that the four printed expense lines are the intended total-expenses
+   definition.
+2. **`net_result` (36,295 $'000)** — confirm the printed net profit after tax is
+   the intended net result.
+
+Both rows carry `human_spot_check: required` in their notes. No Port Authority of
+NSW row is marked verified in this phase.
+
 ## 3. Mapping (PNFC and SOC)
 
 | Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             | Hunter Water SOC                                         |
@@ -951,6 +1034,8 @@ marked verified in this phase.
 
 Landcom follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`/`location` NSW, `amount_cents = $'000 × 100,000`, `measure_type` `actual`, `aggregation_role` `agency_detail`, `verified` `false`, `data_quality_flag` `provisional`, `soc_unit` `AUD_thousands`, and `natural_key` prefix `landcom:`. Its one grant-income row is `potential_double_count: true`.
 
+Port Authority of NSW follows the same SOC mapping with `natural_key` prefix `port-authority-nsw:`. It has no grant row because none is separately disclosed.
+
 Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`/`location` NSW, `amount_cents = $’000 × 100,000`, `measure_type` `actual`, `aggregation_role` `agency_detail`, `verified` `false`, `data_quality_flag` `provisional`, `soc_unit` `AUD_thousands`, and `natural_key` prefix `forestry-corporation:`. Both grant rows are `potential_double_count: true`.
 
 ## 4. No-sum and double-count invariants (critical)
@@ -966,10 +1051,11 @@ Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `
   includes employee, depreciation/amortisation and transfer lines; `net_result`
   is a result, not an expense. Summing any of them is invalid.
 - Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry
-  Corporation of NSW and Landcom are **separate sources and separate entities**. The API returns a `sources` array and an
-  `entities` filter; the UI shows an entity column and an entity selector.
-  WaterNSW, Hunter Water, Essential Energy, Forestry Corporation and Landcom
-  rows are never added to Sydney Water's rows or to each other.
+  Corporation of NSW, Landcom and Port Authority of NSW are **separate sources
+  and separate entities**. The API returns a `sources` array and an `entities`
+  filter; the UI shows an entity column and an entity selector. WaterNSW, Hunter
+  Water, Essential Energy, Forestry Corporation, Landcom and Port Authority of
+  NSW rows are never added to Sydney Water's rows or to each other.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
@@ -998,7 +1084,7 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW and Landcom, in order.
+1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom and Port Authority of NSW, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
@@ -1008,9 +1094,10 @@ The runner:
    `docs/source-archive/waternsw-annual-report.json`,
    `docs/source-archive/hunter-water-annual-report.json`,
    `docs/source-archive/essential-energy-annual-report.json` and
-   `docs/source-archive/forestry-corporation-annual-report.json` and
-   `docs/source-archive/landcom-annual-report.json`. The exact bytes stay outside
-   the repo.
+   `docs/source-archive/forestry-corporation-annual-report.json`,
+   `docs/source-archive/landcom-annual-report.json` and
+   `docs/source-archive/port-authority-annual-report.json`. The exact bytes stay
+   outside the repo.
 6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
 
 For the Cloudflare-blocked WaterNSW host, the live ingest can supply the exact
@@ -1043,7 +1130,8 @@ archive record the exact bytes and SHA-256 outside the repo.
 ## 7. How the remaining SOCs will plug in later
 
 `scripts/ingest-soc.ts` exposes `SOC_SOURCE_IDS` (PNFC, then Sydney Water,
-WaterNSW, Hunter Water, Essential Energy, then Forestry Corporation of NSW) and
+WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom,
+then Port Authority of NSW) and
 an intentionally empty
 `FUTURE_SOC_SOURCE_IDS`. A later phase
 should:

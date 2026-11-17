@@ -105,6 +105,13 @@ rows**; `landcom` contributes 6 rows (total revenue 277,187, total expenses 213,
 per-source count above is unchanged (no deletes). The original 515,420 measures are all preserved;
 Landcom adds six provisional, unverified rows.
 
+After SOC phase 8 (Port Authority of NSW, 5 new rows) the current baseline is **515,431** measures
+and **87 SOC rows**; `port-authority-nsw` contributes 5 rows (total revenue 238,254, total expenses
+190,953, employee 96,061, depreciation/amortisation 21,650 and net result 36,295 $’000) and every
+per-source count above is unchanged (no deletes). The 515,426 measures before this phase are all
+preserved; Port Authority of NSW adds five provisional, unverified rows. It separately discloses no
+government grants/contributions, so no grant row is emitted (never estimated or zero-filled).
+
 ## Method and snapshot evidence
 
 Read-only commands used (no write operations):
