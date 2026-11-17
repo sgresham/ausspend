@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Twenty-six council GPFS sources have landed as
+**Status:** the inventory and plan below are unchanged. Twenty-seven council GPFS sources have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -36,7 +36,8 @@ rows (**515,819** → **515,836**). North Sydney Council FY2024-25 GPFS (**§7.2
 **18** `north-sydney-gpfs` rows (**515,836** → **515,854**). The City of Canada Bay Council
 FY2024-25 GPFS (**§7.25**) then added exactly **17** `canada-bay-gpfs` rows (**515,854** →
 **515,871**). Cumberland City Council FY2024-25 GPFS (**§7.26**) then added exactly **17**
-`cumberland-gpfs` rows (**515,871** → **515,888**).
+`cumberland-gpfs` rows (**515,871** → **515,888**). Georges River Council FY2024-25 GPFS
+(**§7.27**) then added exactly **16** `georges-river-gpfs` rows (**515,888** → **515,904**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -85,6 +86,9 @@ AusTender/GrantConnect/ACNC rows whose `delivery_entity` merely mentions Canada 
 pre-existing GrantConnect rows whose `delivery_entity` is case-insensitively exactly "Cumberland
 Council" (1 uppercase and 5 exact-case grants) and the 33 other
 AusTender/GrantConnect/ACNC/data.nsw rows whose `delivery_entity` merely mentions Cumberland,
+the 1 pre-existing uppercase AusTender contract whose string is exactly "GEORGES RIVER COUNCIL"
+(the only case-insensitive exact row before this ingest) and the 21 other
+AusTender/GrantConnect/ACNC/data.nsw rows whose `delivery_entity` merely mentions Georges River,
 and every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 18 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
@@ -169,7 +173,7 @@ category is the 128.
 | Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                   In DB now |
 | --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------------------: |
 | OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                           0 |
-| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **405** (24 council GPFS sources, FY2024-25; separate non-additive sources) |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **421** (27 council GPFS sources, FY2024-25; separate non-additive sources) |
 | LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                           0 |
 | data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                          3,472 rows, none council financial |
 | Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                           0 |
@@ -280,7 +284,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 405 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 421 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -299,7 +303,8 @@ FY2024-25 (`willoughby-gpfs`, §7.19), 18 for Inner West Council FY2024-25 (`inn
 Council FY2024-25 (`randwick-gpfs`, §7.22) and 17 for the Council of the City of Ryde FY2024-25
 (`ryde-gpfs`, §7.23) and 18 for North Sydney Council FY2024-25 (`north-sydney-gpfs`, §7.24) and 17
 for the City of Canada Bay Council FY2024-25 (`canada-bay-gpfs`, §7.25) and 17 for Cumberland City
-Council FY2024-25 (`cumberland-gpfs`, §7.26) — all separate source ids. The
+Council FY2024-25 (`cumberland-gpfs`, §7.26) and 16 for Georges River Council FY2024-25
+(`georges-river-gpfs`, §7.27) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows.
@@ -2544,6 +2549,113 @@ total unchanged (idempotent). No deletes or updates to any other source.
 
 ---
 
+### 7.27 Twenty-seventh council — Georges River Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from Georges River Council's official Other Corporate Documents page
+<https://www.georgesriver.nsw.gov.au/Council/Publications/Other-Corporate-Documents> (reached from
+the Publications page). The page links a dedicated **"Audited Financial Statement and Auditors Report
+for 1 July 2024 - 30 June 2025"** PDF at
+<https://www.georgesriver.nsw.gov.au/StGeorge/media/Documents/Council/Publications/Audited-Financial-Statements-and-Auditors-Report-2024-2025.PDF>
+(the Annual Reports page also links the separate Annual Report 2024-2025, which the connector
+deliberately does not select). The 91-page PDF contains the signed General Purpose Financial
+Statements — Income Statement PDF p5 / printed p4; Statement of Comprehensive Income PDF p6 /
+printed p5; B1-1 "Total functions and activities" PDF p14 / printed p13; note B3-3 depreciation PDF
+p26 / printed p25 — and the independent auditor's reports on the financial statements, including the
+Report on the Conduct of the Audit (PDF p76-77). The statements were signed in accordance with a
+Council resolution made on 29 October 2025; the Auditor-General's delegate signed the opinion on
+31 October 2025.
+
+The official page and PDF link are reachable with plain HTTP (page and PDF both HTTP 200); no WAF
+challenge was encountered, so the connector uses the direct `fetch` path. It parses the FY2024-25
+"Audited Financial Statement" anchor from the official page HTML (no hard-coded PDF URL), downloads
+the exact bytes, and re-verifies them. Exact bytes archived outside the repo at
+`~/ausspend-source-archive/georges-river-gpfs/georges-river-council-audited-financial-statements-2024-25.pdf`:
+**2,589,670 bytes**, SHA-256
+`97a46898f9fe5a0e2e8ea6e15817562217cfa6568bbdf7825f8d72a4da856a9f` (`hash_verified: true`). The
+printed unit is explicit `$ '000` (thousands) on the Income Statement, Statement of Comprehensive
+Income, B1-1 and depreciation note; a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The PDF text stream places the Original unaudited budget amount before each
+Income Statement line label and the FY2024-25 actual immediately after it (followed by the restated
+FY2023-24), so each emitted value is the first amount after the printed label. The expense subtotal
+contains the phrase "depreciation, amortisation and impairment of non-financial assets", so the
+actual depreciation line is read from the last occurrence. The printed borrowing-costs line is a nil
+dash for FY2024-25, so it is not emitted and contributes zero to the bridge. The connector emits
+nothing unless all of these agree:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                           |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                   |                          `$204,366` thousand | = `$204,366,000`                                 |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$204,366` thousand | = printed total                                  |
+| Expense-by-nature components sum (employee + materials + other + net loss on disposal; printed borrowing costs nil)          |                          `$154,656` thousand | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$30,773`)                           | `$154,656` + `$30,773` = `$185,429` thousand | = printed B1-1 total expenses                    |
+| B1-1 Total functions and activities — income                                                                                 |                          `$204,366` thousand | = face statement                                 |
+| B1-1 Total functions and activities — expenses                                                                               |                          `$185,429` thousand | = `$185,429,000` (printed total)                 |
+| B1-1 Total functions and activities — operating result                                                                       |                           `$18,937` thousand | = face net result                                |
+| B1-1 grants and contributions                                                                                                |                           `$21,135` thousand | = operating `$7,653` + capital `$13,482`         |
+| Operating result / net operating result                                                                                      | `$204,366` − `$185,429` = `$18,937` thousand | = printed operating result                       |
+| Net operating result before capital grants                                                                                   |    `$18,937` − `$13,482` = `$5,455` thousand | = printed before-capital surplus (evidence only) |
+| Statement of Comprehensive Income net result                                                                                 |                           `$18,937` thousand | = Income Statement net result                    |
+| Statement of Comprehensive Income total (`$18,937` + `$60,495` other comprehensive income)                                   |                           `$79,432` thousand | = printed total comprehensive income             |
+| Note B3-3 total depreciation, amortisation and impairment for non-financial assets                                           |                           `$30,773` thousand | = face depreciation/amortisation/impairment line |
+| Independent auditor's Report on the Conduct of the Audit — narrative total expenses                                          |                             `$185.5` million | ≠ `$185.429` million GPFS/B1-1; see below        |
+
+Total expenses is the printed B1-1 "Total functions and activities" expense total (`$185,429`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$154,656` thousand) plus printed
+depreciation/amortisation/impairment (`$30,773` thousand), and equals printed total income
+(`$204,366` thousand) less the printed operating result (`$18,937` thousand). The B1-1 income,
+expenses, operating result and grants all reconcile exactly to the face statement — there is **no
+face-vs-B1-1 discrepancy**. The printed before-capital result is a surplus of `$5,455` thousand; it is
+kept in the reconciliation evidence only and is not emitted as a row.
+
+**Internal printed discrepancy (retained, not silently reconciled).** The independent auditor's
+Report on the Conduct of the Audit in the same audited PDF prints total expenses of **`$185.5`
+million** in its narrative, versus the GPFS face statement and B1-1 **`$185,429` thousand
+(`$185.429` million)** — a printed difference of about `$71` thousand. The connector records both
+figures in the reconciliation evidence and adds `human_spot_check: required` to the `total_expenses`
+and `net_result` notes, naming the `$185.5` million vs `$185,429` thousand printed narrative
+difference. It does not force the narrative into agreement with the statements.
+
+**Rows.** 16 rows, source id `georges-river-gpfs`, `source_dataset` "Georges River Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Georges River Council"` (the exact published entity name in
+the audited statements), `data_quality_flag: "provisional/local_government"`, `verified: false`. The
+minimum lines are total revenue `$204,366,000`, total expenses `$185,429,000`, employee expenses
+`$70,638,000`, depreciation/amortisation/impairment `$30,773,000`, operating government grants
+`$7,653,000`, capital government grants `$13,482,000`, net loss on disposal of assets `$2,141,000` and
+net result `$18,937,000`; the printed face-statement revenue and expense components are included for
+provenance. The printed nil borrowing-costs line is not emitted. The `total_expenses` and `net_result`
+rows carry `human_spot_check: required` in their notes, naming the printed `$185.5` million
+conduct-report narrative versus the `$185,429` thousand GPFS/B1-1 total.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing
+same-entity rows are preserved untouched and never summed: before this ingest there were **no rows**
+whose `delivery_entity` was exactly "Georges River Council"; **1 uppercase AusTender contract** whose
+string is exactly "GEORGES RIVER COUNCIL" (the only case-insensitive exact row) and **21 other rows**
+whose `delivery_entity` merely mentions Georges River under other strings (8 GrantConnect, 8 ACNC,
+5 data.nsw) keep their per-source counts identical before and after. All twenty-six other council
+GPFS sources are unchanged (Dubbo 18, City of Sydney 18, Blacktown 17, Parramatta 17, Northern
+Beaches 18, Canterbury-Bankstown 17, Sutherland Shire 17, Wollongong 17, Newcastle 17, Lake
+Macquarie 17, Maitland 7, Coffs Harbour 17, MidCoast 17, Port Macquarie-Hastings 17, Tweed Shire 17,
+Shoalhaven 17, Shellharbour 17, Waverley 17, Willoughby 18, Inner West 18, Bayside 18, Randwick 17,
+Ryde 17, North Sydney 18, Canada Bay 17, Cumberland 17). Government grant rows carry
+`potential_double_count: true` because they may overlap government program data; they are not added
+to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,888 → **515,904** (exactly +16);
+`georges-river-gpfs` **16**; all twenty-six other GPFS sources unchanged (Cumberland still 17, Canada
+Bay still 17, North Sydney still 18, Maitland still 7); `data-nsw-ckan` still **3,472**;
+`dubbo-council` still **245**; exact-case "Georges River Council" rows 0 → **16** and
+case-insensitive exact rows 1 → **17**; rows whose `delivery_entity` mentions Georges River 22 →
+**38**; `data_sources` 52 → **53**. A second ingest run upserted the same 16 natural keys and left
+the DB total unchanged (idempotent). No deletes or updates to any other source.
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -2586,6 +2698,8 @@ total unchanged (idempotent). No deletes or updates to any other source.
    non-additive rows (§7.24). **Twenty-fifth expansion landed 2026-11-18:** City of Canada Bay
    Council FY2024-25 GPFS, 17 non-additive rows (§7.25). **Twenty-sixth expansion landed
    2026-11-18:** Cumberland City Council FY2024-25 GPFS, 17 non-additive rows (§7.26).
+   **Twenty-seventh expansion landed 2026-11-18:** Georges River Council FY2024-25 GPFS, 16
+   non-additive rows (§7.27).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
