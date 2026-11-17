@@ -46,6 +46,16 @@ export interface MeasureRow {
     | 'benchmark';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: { state?: string; postcode?: string; lga_name?: string };
+  project_id?: string;
+  agency?: string;
+  sector?: string;
+  cluster?: string;
+  electorate?: string;
+  region?: string;
+  lga?: string;
+  status?: string;
+  category?: string;
+  budget_year?: string;
   expense_category?: string;
   unspsc?: string;
 }
@@ -116,6 +126,16 @@ export function serializeMeasure(measure: LeanMeasure): MeasureRow {
       ? { extraction_confidence: measure.extraction_confidence }
       : {}),
     ...(measure.location ? { location: measure.location } : {}),
+    ...(measure.project_id ? { project_id: measure.project_id } : {}),
+    ...(measure.agency ? { agency: measure.agency } : {}),
+    ...(measure.sector ? { sector: measure.sector } : {}),
+    ...(measure.cluster ? { cluster: measure.cluster } : {}),
+    ...(measure.electorate ? { electorate: measure.electorate } : {}),
+    ...(measure.region ? { region: measure.region } : {}),
+    ...(measure.lga ? { lga: measure.lga } : {}),
+    ...(measure.status ? { status: measure.status } : {}),
+    ...(measure.category ? { category: measure.category } : {}),
+    ...(measure.budget_year ? { budget_year: measure.budget_year } : {}),
     ...(measure.unspsc ? { unspsc: measure.unspsc } : {}),
   };
 }

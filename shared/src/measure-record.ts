@@ -128,6 +128,28 @@ export const MeasureRecordSchema = z.object({
   aggregation_role: AggregationRoleSchema.optional(),
   extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
+  /**
+   * NSW Budget ArcGIS capital-project metadata. Only the ArcGIS capital rows
+   * carry these; statement rows leave them absent rather than guessing a
+   * project, agency or location. Values are copied verbatim from the published
+   * layer (`Treasury_Project_Data_20260609_gdb`); a published `n.a.`/blank is
+   * stored as absent, never replaced with an invented value. They are
+   * dimensions only: no field here changes `amount_cents` and sectors/agencies
+   * are not additive.
+   */
+  project_id: z.string().min(1).optional(),
+  agency: z.string().min(1).optional(),
+  sector: z.string().min(1).optional(),
+  cluster: z.string().min(1).optional(),
+  electorate: z.string().min(1).optional(),
+  /** Published ArcGIS region name, distinct from the curated `region_id`. */
+  region: z.string().min(1).optional(),
+  /** Published ArcGIS LGA name; `location.lga_name` still mirrors it. */
+  lga: z.string().min(1).optional(),
+  status: z.string().min(1).optional(),
+  category: z.string().min(1).optional(),
+  /** Published budget year for the project amount, e.g. `2025-26`. */
+  budget_year: z.string().min(1).optional(),
   /** Explicit ACNC expense component (ACNC). Never used as a measure type. */
   expense_category: z.string().min(1).optional(),
   /** ABS GFS operating-statement flow: revenue or expense. */

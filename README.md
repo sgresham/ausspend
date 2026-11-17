@@ -380,7 +380,11 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 `4f025f38-0c70-45e2-8106-4c29a5e48637`: `package_show` selects the "2025-26 PBS Program Expenses
 Line Items" CSV, which is streamed (Windows-1252, chunked, `csv-parse`) rather than loaded whole.
 **NSW Budget (`nsw-budget`) is live as of S1** from the official 2025-26 open-data XLSX
-snapshot plus the ArcGIS `Treasury_Project_Data_20260609_gdb` capital-projects layer.
+snapshot plus the ArcGIS `Treasury_Project_Data_20260609_gdb` capital-projects layer. Each of the
+803 priced project rows carries structured `project_id`, `agency`, `sector`, `cluster`,
+`electorate`, `region`, `lga`, `status`, `category` and `budget_year`; the 312 statement rows carry
+none of those fields, and the 171 features whose 2025-26 budget is published as `n.a.` stay
+unallocated (metadata-only, never zero-filled).
 **data.nsw.gov.au CKAN (`data-nsw-ckan`) is live as of S2**: nine targeted `package_search`
 queries feed a small selected dataset set (RAM school funding CSV, Budget Paper 2 DataStore,
 fleet-vehicle XLSX); PDF/DOCX resources are recorded as deferred, not ingested.

@@ -45,6 +45,20 @@ export interface MeasureDocument {
     | 'benchmark';
   extraction_confidence?: 'low' | 'medium' | 'high';
   location?: SpendingLocationDocument;
+  /**
+   * NSW Budget ArcGIS capital-project dimensions. Absent on statement rows and
+   * on every other source; never invented from a missing published value.
+   */
+  project_id?: string;
+  agency?: string;
+  sector?: string;
+  cluster?: string;
+  electorate?: string;
+  region?: string;
+  lga?: string;
+  status?: string;
+  category?: string;
+  budget_year?: string;
   /** Explicit ACNC expense category; never overloads measure_type. */
   expense_category?: string;
   /** ABS GFS operating-statement flow: revenue or expense. */
@@ -142,6 +156,18 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     },
     extraction_confidence: { type: String, enum: ['low', 'medium', 'high'] },
     location: { type: LocationSchema },
+    // NSW Budget ArcGIS capital-project dimensions. Sparse/absent on statement
+    // rows and all other sources; they never participate in totals.
+    project_id: { type: String, index: true, sparse: true },
+    agency: { type: String },
+    sector: { type: String },
+    cluster: { type: String },
+    electorate: { type: String },
+    region: { type: String },
+    lga: { type: String },
+    status: { type: String },
+    category: { type: String },
+    budget_year: { type: String },
     expense_category: { type: String, index: true },
     gfs_flow: { type: String, enum: ['revenue', 'expense'], index: true },
     gfs_line_item: { type: String },
