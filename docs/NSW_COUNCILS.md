@@ -1,12 +1,14 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Two council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Three council GPFS extractions have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
-(**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**). The
-existing 245 `dubbo-council` budget/estimate rows, the 2 pre-existing AusTender federal contract
-rows whose `delivery_entity` happens to be "City of Sydney", and every other source are preserved
-untouched and are never summed with the GPFS rows.
+(**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
+Blacktown City Council FY2024-25 GPFS (**§7.3**) then added exactly **17** `blacktown-gpfs` rows
+(**515,485** → **515,502**). The existing 245 `dubbo-council` budget/estimate rows, the 2
+pre-existing AusTender federal contract rows whose `delivery_entity` happens to be "City of
+Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity` happens to be "Blacktown City
+Council", and every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 17 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -201,9 +203,11 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 18 GPFS rows** for Dubbo FY2024-25 under the separate
-source id `dubbo-council-gpfs`; see §7.1. The existing `dubbo-council` 245 rows are 2026/27
-budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the GPFS rows.
+comparatives inside each report). **In DB: 53 GPFS rows** — 18 for Dubbo FY2024-25
+(`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2) and
+17 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3) — all separate source ids. The
+existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS actuals, and
+are not touched or summed with the GPFS rows.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
 
@@ -533,6 +537,68 @@ because they may overlap government program data; they are not added to expendit
 `data_sources` 27 → **28**. A second ingest run upserted the same 18 natural keys and left the DB
 total unchanged (idempotent). No deletes or updates to any other source.
 
+### 7.3 Third council — Blacktown City Council FY2024-25 GPFS (landed 2026-11-17)
+
+**Source.** Discovered from the official annual/audit/financial-report page
+<https://www.blacktown.nsw.gov.au/About-Council/Plans-policies-and-reports/Annual-audit-and-financial-reports>
+(no hard-coded document URL). The page's Financial Reports section links the anchor text **"latest
+financial statements"** with `title="2024 to 2025 Financial Statements.pdf"` to
+<https://www.blacktown.nsw.gov.au/files/assets/public/v/1/finance/2024-to-2025-financial-statements.pdf.pdf>
+(HTTP 200, 3,873,391 bytes). Exact bytes archived outside the repo at
+`~/ausspend-source-archive/blacktown-gpfs/2024-to-2025-financial-statements.pdf.pdf`, SHA-256
+`74d7c880b4e795ea1cc9d17bb786eb9c1878cf9a1127c4d3f5b4d01f94e11b31`. The printed unit is explicit
+`$ '000` (thousands) on the Consolidated Income Statement (printed p6), the Consolidated Statement of
+Comprehensive Income (p7) and note B1-1 (p15); a missing or conflicting unit rejects the whole
+extraction.
+
+**Exact reconciliation.** The Blacktown income statement prints a three-column layout (Original
+unaudited budget before the line label; Actual 2025 and Actual 2024 after it). The connector takes
+the first amount after each printed label, i.e. the FY2024-25 actual, and emits nothing unless all
+of these agree exactly:
+
+| Check                                                                                                                                               |                             Printed / derived | Result                                     |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------: | ------------------------------------------ |
+| Total income from continuing operations (Consolidated Income Statement p6)                                                                          |                           `$762,437` thousand | = `$762,437,000`                           |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income + net gain on disposal) |                           `$762,437` thousand | = printed total                            |
+| B1-1 Total functions and activities — income                                                                                                        |                           `$762,437` thousand | = face statement                           |
+| Total expenses excluding depreciation (printed p6)                                                                                                  |                           `$401,065` thousand | = expense components sum                   |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$114,905`)                                                 | `$401,065` + `$114,905` = `$515,970` thousand | = B1-1 expense total                       |
+| B1-1 Total functions and activities — expenses                                                                                                      |                           `$515,970` thousand | printed total (not component-summed)       |
+| B1-1 operating result / Income Statement net operating result                                                                                       |                           `$246,467` thousand | = `$762,437 − $515,970`                    |
+| Statement of Comprehensive Income net result                                                                                                        |                           `$246,467` thousand | = Income Statement net result              |
+| B1-1 grants and contributions                                                                                                                       |                           `$289,851` thousand | = operating `$28,952` + capital `$260,899` |
+| Net operating result before capital grants                                                                                                          |                          `($14,432)` thousand | = `$246,467 − $260,899`                    |
+
+The Blacktown connector does **not** use OLG all-rights data as an anchor: the reconciliation is
+internal to the audited document (face statement, B1-1 and the Statement of Comprehensive Income).
+
+**Rows.** **17 rows**, source id `blacktown-gpfs`, `source_dataset` "Blacktown City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Blacktown City Council"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$762,437,000`, total expenses `$515,970,000`, employee expenses `$195,736,000`,
+depreciation/amortisation/impairment `$114,905,000`, operating government grants `$28,952,000`,
+capital government grants `$260,899,000`, net gain on disposal of assets `$3,995,000` and net result
+`$246,467,000`; the printed face-statement revenue and expense components are included for
+provenance. The printed nil "Net loss from the disposal of assets" expense line is not emitted (nil
+is not zero), and the printed negative before-capital result `($14,432,000)` is kept in the
+reconciliation evidence only, because the measure model stores non-negative integer cents.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and area panels therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into any other council or state rows. The 3 pre-existing rows whose `delivery_entity` is "Blacktown
+City Council" are **2 AusTender federal contracts and 1 GrantConnect grant** (not council financial
+rows); they are preserved exactly and never summed with the GPFS rows. Government grant rows carry
+`potential_double_count: true` because they may overlap government program data; they are not added
+to expenditure.
+
+**Database evidence (2026-11-17).** `measures` 515,485 → **515,502** (exactly +17); `blacktown-gpfs`
+**17**; `city-of-sydney-gpfs` still **18**; `dubbo-council` still **245**; `dubbo-council-gpfs`
+still **18**; `data-nsw-ckan` still **3,472**; `data_sources` 28 → **29**. A second ingest run
+upserted the same 17 natural keys and left the DB total unchanged (idempotent). No deletes or
+updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -548,7 +614,8 @@ total unchanged (idempotent). No deletes or updates to any other source.
    workbook, after permission) and take the top 20 first; within that, prefer councils with
    machine-readable GPFS. Then regional cities, then rural. One adapter/mapping per council; never a
    blind 128-PDF batch. **First expansion landed 2026-11-17:** City of Sydney FY2024-25 GPFS, 18
-   non-additive rows (§7.2).
+   non-additive rows (§7.2). **Second expansion landed 2026-11-17:** Blacktown City Council
+   FY2024-25 GPFS, 17 non-additive rows (§7.3).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -578,6 +645,10 @@ differ); always show the source, year, measure type and fund/basis.
 - Dubbo reporting page — <https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting>
 - Dubbo FY2024-25 GPFS PDF — URL above (1,807,768 bytes; SHA-256
   `d9213cea468547a318548dfd72d7faa0d9fd2da81bcf6835138d10b58914a43f`)
+- Blacktown annual/audit/financial-report page —
+  <https://www.blacktown.nsw.gov.au/About-Council/Plans-policies-and-reports/Annual-audit-and-financial-reports>
+- Blacktown FY2024-25 GPFS PDF — URL above (3,873,391 bytes; SHA-256
+  `74d7c880b4e795ea1cc9d17bb786eb9c1878cf9a1127c4d3f5b4d01f94e11b31`)
 - Audit Office reports — <https://www.audit.nsw.gov.au/our-work/reports>
 - data.nsw CKAN API — `package_search` queries for "local government council", "local government
   financial", "time series council", "council expenditure", "financial data return", "grants
@@ -596,6 +667,22 @@ differ); always show the source, year, measure type and fund/basis.
 - `dubbo-council-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - DB: measures 515,449 → 515,467 (+18 only); `dubbo-council` still 245; a second run upserted the
   same 18 natural keys with no count change.
+
+**GPFS third-council checks (2026-11-17):**
+
+- Blacktown official page fetched (HTTP 200); the FY2024-25 statements link was discovered from the
+  anchor text/title, not a hard-coded document URL.
+- GPFS PDF fetched (HTTP 200, 3,873,391 bytes) and SHA-256 archived outside the repo; SHA-256
+  `74d7c880b4e795ea1cc9d17bb786eb9c1878cf9a1127c4d3f5b4d01f94e11b31`.
+- Printed `$ '000` unit detected on the income statement, comprehensive-income statement and B1-1;
+  the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$762,437,000`, expenses `$515,970,000`, net result `$246,467,000`.
+- `blacktown-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA; total
+  expenses is the printed B1-1 value, not a component sum.
+- DB: measures 515,485 → 515,502 (+17 only); `city-of-sydney-gpfs` still 18; `dubbo-council` still
+  245; the 3 pre-existing Blacktown-delivery-entity AusTender/GrantConnect rows unchanged; a second
+  run upserted the same 17 natural keys with no count change.
 
 **Workbook checks run (read-only, local):**
 

@@ -15,12 +15,13 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - dubbo-council   S3: one local council (Dubbo Regional Council) budget PDF
  *   - dubbo-council-gpfs  GPFS pilot: the same council's audited FY2024-25 GPFS
  *   - city-of-sydney-gpfs  GPFS expansion: the City of Sydney's audited FY2024-25 GPFS
+ *   - blacktown-gpfs      GPFS expansion: Blacktown City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
- * adds only the City of Sydney. No other councils, states/territories,
- * SOC/charity or live state connectors are touched. The runner upserts on
- * natural_key, so re-running is idempotent and never deletes existing
- * federal/synthetic rows.
+ * adds only the City of Sydney and Blacktown City Council. No other councils,
+ * states/territories, SOC/charity or live state connectors are touched. The
+ * runner upserts on natural_key, so re-running is idempotent and never deletes
+ * existing federal/synthetic rows.
  */
 export const NSW_SOURCE_IDS = [
   'nsw-budget',
@@ -28,6 +29,7 @@ export const NSW_SOURCE_IDS = [
   'dubbo-council',
   'dubbo-council-gpfs',
   'city-of-sydney-gpfs',
+  'blacktown-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
