@@ -825,7 +825,12 @@ npm run ingest:vic-vlgc
 # [ingest:vic-vlgc] db source_rows=5401 distinct_councils=79 totals_entities=0 all_measures=521356
 ```
 
-Checks: `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test`,
-`npm run build`, plus `npx vitest run server/test/vic-vlgc-vgc1.test.ts` (79 entities, Totals
-suppression, unit conversion, Bendigo reconciliation, no-cross-total, idempotency, natural keys and
-licence metadata).
+Checks run on 18 November 2026: `npm run typecheck` (shared + server + client), `npm run lint`,
+`npm test` (72 files, 803 passed, 2 skipped), `npm run build`, `npx vitest run
+server/test/vic-vlgc-vgc1.test.ts` (79 entities, Totals suppression, unit conversion, Bendigo
+reconciliation, no-cross-total, idempotency, natural keys and licence metadata), mocked
+`npm run test:e2e` on alt ports 3103/5176 (51 passed) and the live `npm run audit` against alt
+ports 3103/5176 (38/38 checks passed, 0 failed). Every changed file passes Prettier; the repo-wide
+`npm run format:check` still reports five pre-existing, untouched files (`deploy/README.md`,
+`.tmp-audit/persist-ingest.ts`, `docs/NSW_COUNCIL_DATA_NSW_SWEEP.md`, `docs/SOC_MULTI_STATE.md`,
+`e2e/search.spec.ts`) that already failed at the branch base.
