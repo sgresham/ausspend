@@ -56,6 +56,7 @@ import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
 import { createFagConnector } from './vic-vlgc-fag.js';
 import { createLgprfConnector } from './vic-lgprf.js';
+import { createSaGfsConnector } from './sa-budget-gfs.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -497,6 +498,11 @@ export const CONNECTORS: readonly Connector[] = [
   // councils, indicators or years; never mixed with VGC1/ABS, FAG, vic-budget,
   // ABS GFS, waste or NSW council data.
   createLgprfConnector(),
+  // Phase 6.4: SA state general government GFS expenses by GPC function and
+  // economic type from data.sa CKAN. Statewide only; explicit GPC -> COFOG
+  // mapping, $'000 unit detection and reconciliation to the printed TOTAL row.
+  // Every row is one function x economic-type component; no cross-source sum.
+  createSaGfsConnector(),
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),

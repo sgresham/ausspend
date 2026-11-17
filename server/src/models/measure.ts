@@ -163,6 +163,17 @@ export interface MeasureDocument {
   aihw_table?: string;
   /** AIHW release (2024-25). */
   aihw_release?: string;
+  /** SA GFS GPC function code and description. */
+  sa_gpc_code?: string;
+  sa_gpc_description?: string;
+  /** SA GFS economic-type code and description. */
+  sa_economic_type_code?: string;
+  sa_economic_type_description?: string;
+  /** SA GFS published unit ($'000) and printed sign. */
+  sa_unit?: string;
+  sa_printed_sign?: 'positive' | 'negative';
+  /** SA GFS year basis (annual actual/outcome). */
+  sa_year_basis?: string;
   /** VIC LGPRF performance value (non-monetary; may be negative or fractional). */
   performance_value?: number;
   /** Published textual result when the source result is not numeric. */
@@ -328,6 +339,13 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     aihw_price_basis: { type: String, index: true },
     aihw_table: { type: String },
     aihw_release: { type: String },
+    sa_gpc_code: { type: String, index: true },
+    sa_gpc_description: { type: String },
+    sa_economic_type_code: { type: String, index: true },
+    sa_economic_type_description: { type: String },
+    sa_unit: { type: String },
+    sa_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    sa_year_basis: { type: String },
     performance_value: { type: Number, required: false },
     performance_value_text: { type: String },
     performance_unit: { type: String, index: true },

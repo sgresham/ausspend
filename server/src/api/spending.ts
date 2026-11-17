@@ -205,6 +205,17 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.aihw_price_basis ? { aihw_price_basis: measure.aihw_price_basis } : {}),
     ...(measure.aihw_table ? { aihw_table: measure.aihw_table } : {}),
     ...(measure.aihw_release ? { aihw_release: measure.aihw_release } : {}),
+    ...(measure.sa_gpc_code ? { sa_gpc_code: measure.sa_gpc_code } : {}),
+    ...(measure.sa_gpc_description ? { sa_gpc_description: measure.sa_gpc_description } : {}),
+    ...(measure.sa_economic_type_code
+      ? { sa_economic_type_code: measure.sa_economic_type_code }
+      : {}),
+    ...(measure.sa_economic_type_description
+      ? { sa_economic_type_description: measure.sa_economic_type_description }
+      : {}),
+    ...(measure.sa_unit ? { sa_unit: measure.sa_unit } : {}),
+    ...(measure.sa_printed_sign ? { sa_printed_sign: measure.sa_printed_sign } : {}),
+    ...(measure.sa_year_basis ? { sa_year_basis: measure.sa_year_basis } : {}),
     ...(measure.performance_value !== undefined
       ? { performance_value: measure.performance_value }
       : {}),
