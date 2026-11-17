@@ -78,7 +78,7 @@ function coverageLimitations(
       ? liveFederal
         ? 'Mixed data: live AusTender contract rows and PBS budget line items sit alongside the synthetic development seed. The seed values remain deterministic placeholders, not published Australian government spending.'
         : 'Synthetic development seed only: every value is a deterministic placeholder, not published Australian government spending.'
-      : 'No synthetic seed rows are present. Real feeds are live for AusTender contracts, PBS budget line items, NSW Budget/selected data.nsw.gov.au CKAN rows and Dubbo council, but they do not cover national/state actual or estimate expenditure with COFOG and region; those dimensions now correctly show "no real data for this dimension yet" rather than a placeholder or zero.';
+      : 'No synthetic seed rows are present. Real feeds are live for AusTender contracts, PBS budget line items, NSW Budget/selected data.nsw.gov.au CKAN rows, VIC/QLD Budget rows, QLD QGIP, Dubbo council, GrantConnect awards, ACNC charity expenses and the ABS GFS COFOG-A benchmark, but they do not cover national/state actual or estimate expenditure with COFOG and region at project level; those dimensions correctly show "no real data for this dimension yet" rather than a placeholder or zero.';
 
   return [
     syntheticLine,
@@ -103,7 +103,7 @@ function coverageLimitations(
 }
 
 const NOTE =
-  'Coverage metadata is generated from the connector registry and the live ingestion records. AusTender contract rows and PBS budget line items are real published records and remain unverified; synthetic seed rows are placeholders. Never sum across measure types, and never present a PBS line-item total as the federal total.';
+  'Coverage metadata is generated from the connector registry and the live ingestion records. Real AusTender/PBS/state/charity rows are published records and remain unverified; legacy synthetic seed rows, when present, are placeholders. Never sum across measure types, and never present a PBS line-item total as the federal total.';
 
 /**
  * Coverage banner payload. Reads counts from the live database, connector

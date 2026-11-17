@@ -48,7 +48,7 @@ afterAll(async () => {
 
 describe('seed restart safety', () => {
   it('reproduces the old bug: the destructive reset loses a live contract', async () => {
-    await seedSyntheticData();
+    await seedSyntheticData({ mode: 'synthetic' });
     expect(await syntheticCount()).toBe(SYNTHETIC_MEASURE_COUNT);
 
     await MeasureModel.create(FAKE_CONTRACT);
@@ -62,7 +62,7 @@ describe('seed restart safety', () => {
   });
 
   it('a safe seed preserves the contract, other sources and ingestion logs', async () => {
-    await seedSyntheticData();
+    await seedSyntheticData({ mode: 'synthetic' });
     await MeasureModel.create(FAKE_CONTRACT);
     await DataSourceModel.create({
       source_id: 'aus-tender',
@@ -85,7 +85,7 @@ describe('seed restart safety', () => {
       errors: [],
     });
 
-    const summary = await seedSyntheticData();
+    const summary = await seedSyntheticData({ mode: 'synthetic' });
 
     expect(summary.nonSyntheticMeasures).toBe(1);
     expect(await contractCount()).toBe(1);
@@ -107,8 +107,8 @@ describe('seed restart safety', () => {
       total: await MeasureModel.countDocuments({}),
     };
 
-    await seedSyntheticData();
-    await seedSyntheticData();
+    await seedSyntheticData({ mode: 'synthetic' });
+    await seedSyntheticData({ mode: 'synthetic' });
 
     expect(await syntheticCount()).toBe(SYNTHETIC_MEASURE_COUNT);
     expect(await syntheticCount()).toBe(before.synthetic);
@@ -127,7 +127,7 @@ describe('seed restart safety', () => {
 
   it('wiring: an explicit reset is the only destructive path', async () => {
     expect(await contractCount()).toBe(1);
-    const summary = await seedSyntheticData({ reset: true });
+    const summary = await seedSyntheticData({ reset: true, mode: 'synthetic' });
     expect(summary.reset).toBe(true);
     expect(await contractCount()).toBe(0);
     expect(await syntheticCount()).toBe(SYNTHETIC_MEASURE_COUNT);
@@ -153,7 +153,7 @@ describe('seed restart safety', () => {
 
   it('real-only mode never deletes existing synthetic or live rows', async () => {
     await mongoose.connection.dropDatabase();
-    await seedSyntheticData();
+    await seedSyntheticData({ mode: 'synthetic' });
     await MeasureModel.create(FAKE_CONTRACT);
 
     const summary = await seedSyntheticData({ mode: 'real' });
@@ -164,5 +164,32 @@ describe('seed restart safety', () => {
     expect(await syntheticCount()).toBe(SYNTHETIC_MEASURE_COUNT);
     expect(await contractCount()).toBe(1);
     expect(await MeasureModel.countDocuments({})).toBe(SYNTHETIC_MEASURE_COUNT + 1);
+  });
+
+  it('the default seed is real-only: it neither recreates nor deletes rows', async () => {
+    await mongoose.connection.dropDatabase();
+    await seedSyntheticData({ mode: 'synthetic' });
+    await MeasureModel.create(FAKE_CONTRACT);
+
+    const summary = await seedSyntheticData();
+
+    expect(summary.mode).toBe('real');
+    expect(summary.syntheticMeasuresWritten).toBe(0);
+    expect(summary.syntheticMeasures).toBe(SYNTHETIC_MEASURE_COUNT);
+    expect(summary.nonSyntheticMeasures).toBe(1);
+    expect(await syntheticCount()).toBe(SYNTHETIC_MEASURE_COUNT);
+    expect(await contractCount()).toBe(1);
+    expect(await MeasureModel.countDocuments({})).toBe(SYNTHETIC_MEASURE_COUNT + 1);
+  });
+
+  it('the default seed on an empty database writes no synthetic rows', async () => {
+    await mongoose.connection.dropDatabase();
+
+    const summary = await seedSyntheticData();
+
+    expect(summary.mode).toBe('real');
+    expect(summary.syntheticMeasuresWritten).toBe(0);
+    expect(await syntheticCount()).toBe(0);
+    expect(await DataSourceModel.countDocuments({ source_id: SYNTHETIC_SOURCE.source_id })).toBe(0);
   });
 });

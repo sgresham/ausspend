@@ -4,8 +4,8 @@ import { useCoverage } from '../coverage';
 
 /**
  * Persistent coverage notice shown on every page. It is driven by
- * `/api/meta/coverage`; if that request fails the same static synthetic-data
- * warning is rendered so the Phase 1 limitation can never disappear.
+ * `/api/meta/coverage`; if that request fails a neutral unverified-data warning
+ * is rendered so the limitation can never disappear.
  */
 export function CoverageBanner() {
   const { data, error } = useCoverage();
@@ -13,8 +13,9 @@ export function CoverageBanner() {
   if (!data) {
     return (
       <Alert severity="warning" sx={{ mb: 3 }} data-testid="coverage-banner">
-        <strong>Coverage status unavailable.</strong> Some rows may come from the synthetic
-        development seed and some may be live AusTender or PBS records; no figure is verified.{' '}
+        <strong>Coverage status unavailable.</strong> Some rows may come from real published feeds
+        and may be unverified; no figure is verified and no source is claimed while coverage
+        metadata cannot be loaded.{' '}
         {error ? <>Coverage metadata could not be loaded ({error.message}). </> : null}
         <Link component={RouterLink} to="/data-sources">
           Source register

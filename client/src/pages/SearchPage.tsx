@@ -272,14 +272,15 @@ export function SearchPage() {
         Spending explorer
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Query every measure through <code>/api/spending</code>: synthetic budget seed rows, live
-        AusTender federal contract records, NSW Budget 2025-26 state rows, and selected
-        data.nsw.gov.au CKAN state datasets (CSV/XLSX downloads and DataStore pages), plus
-        GrantConnect grant awards from an archived manual export. Measure types are never added
-        together, and NSW budget figures are labelled <strong>Budgeted</strong>; some CKAN rows are{' '}
-        <strong>provisional</strong> where the source does not state a unit. Filters, sort and
-        pagination live in the URL, so reload and browser back/forward restore the same view.
-        Amounts are entered in dollars and sent to the API as integer cents.
+        Query every measure through <code>/api/spending</code>: live AusTender federal contract
+        records, PBS budget line items, NSW/VIC/QLD Budget rows, selected data.nsw.gov.au CKAN state
+        datasets (CSV/XLSX downloads and DataStore pages), Dubbo council rows, GrantConnect grant
+        awards from an archived manual export, ACNC charity expenses and the ABS GFS benchmark
+        (benchmark rows are shown separately and never summed with project data). Measure types are
+        never added together, and NSW budget figures are labelled <strong>Budgeted</strong>; some
+        CKAN rows are <strong>provisional</strong> where the source does not state a unit. Filters,
+        sort and pagination live in the URL, so reload and browser back/forward restore the same
+        view. Amounts are entered in dollars and sent to the API as integer cents.
       </Typography>
 
       <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>

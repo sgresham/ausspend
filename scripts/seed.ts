@@ -6,22 +6,31 @@ import { seedSyntheticData, type SeedMode } from '../server/src/seed/synthetic.j
 /**
  * Guarded seed.
  *
- *   npm run seed                       # safe: replaces only synthetic-seed rows
- *   npm run seed -- --no-synthetic     # real-only: taxonomy + real sources, 0 synthetic rows
- *   SEED_MODE=real npm run seed        # same as --no-synthetic
+ *   npm run seed                       # real-only (default): taxonomy + real sources, 0 synthetic rows
+ *   npm run seed -- --synthetic        # legacy dev seed: writes 810 synthetic-seed rows
+ *   SEED_MODE=synthetic npm run seed   # same as --synthetic
  *   npm run seed -- --reset            # destructive: wipes measures/functions/regions/sources
  *
- * The safe path preserves live ingestion rows (for example AusTender contracts),
- * other data sources and all ingestion logs, so the compose seed service can run
- * on every `docker compose up` without destroying a previous ingest. Real-only
- * mode never writes or deletes synthetic rows; retiring existing seed rows is a
- * separate, backed-up operation (`npm run clean:synthetic`).
+ * The default and the safe path preserve live ingestion rows (for example
+ * AusTender contracts), other data sources and all ingestion logs, so the
+ * compose seed service can run on every `docker compose up` without destroying a
+ * previous ingest. The synthetic development seed is opt-in only; retiring
+ * existing synthetic rows is a separate, backed-up operation
+ * (`npm run clean:synthetic`).
  */
 function parseMode(argv: readonly string[]): SeedMode {
-  const flagReal =
-    argv.includes('--no-synthetic') || argv.includes('--real-only') || argv.includes('--mode=real');
-  const envReal = (process.env.SEED_MODE ?? '').toLowerCase() === 'real';
-  return flagReal || envReal ? 'real' : 'synthetic';
+  const flagSynthetic =
+    argv.includes('--synthetic') ||
+    argv.includes('--with-synthetic') ||
+    argv.includes('--mode=synthetic');
+  const envMode = (process.env.SEED_MODE ?? '').toLowerCase();
+  if (envMode && envMode !== 'real' && envMode !== 'synthetic') {
+    throw new Error(`SEED_MODE must be "real" or "synthetic", got "${process.env.SEED_MODE}"`);
+  }
+  const envSynthetic = envMode === 'synthetic';
+  // Real-only is the default when neither an explicit synthetic flag nor
+  // SEED_MODE=synthetic is present.
+  return flagSynthetic || envSynthetic ? 'synthetic' : 'real';
 }
 
 async function main(): Promise<void> {

@@ -72,8 +72,10 @@ The audit defaults to <http://localhost:5173> and <http://localhost:3001>; overr
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run seed
 npm run seed
-# both: [seed] mode=synthetic ... regions=9 functions=53 synthetic=810 synthetic_written=810
+# both: [seed] mode=real ... regions=9 functions=53 synthetic=0 synthetic_written=0
 #       [seed] verified measures: 0 (must be 0)
+
+npm run seed:synthetic          # explicit legacy opt-in only: synthetic_written=810
 
 MONGO_URL=mongodb://10.10.10.30:27017/not_ausspend_dev npm run seed
 # exits nonzero: Refusing to seed database "not_ausspend_dev" ...
@@ -81,10 +83,13 @@ MONGO_URL=mongodb://10.10.10.30:27017/not_ausspend_dev npm run seed
 
 The guard runs before any delete or connect, so a refused target is never touched.
 
-## Synthetic-seed removal readiness (dry run only)
+## Synthetic-seed removal (executed) and real-only default
 
-Read [SYNTHETIC_REMOVAL_READINESS.md](SYNTHETIC_REMOVAL_READINESS.md) first. Deletion is gated and
-is **not** part of this checklist.
+Read [SYNTHETIC_REMOVAL_READINESS.md](SYNTHETIC_REMOVAL_READINESS.md) first. The 810
+`source_id: synthetic-seed` rows were removed on 2026-11-17 after a verified backup at
+`/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z`. The database now has **348,939 measures,
+0 synthetic**, and the default seed is real-only. The commands below are still the safe way to
+re-check the state and the backup gate.
 
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
@@ -92,7 +97,7 @@ export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 # DRY RUN: counts by type/year/region/function; no writes.
 npm run clean:synthetic
 # [clean:synthetic] mode=DRY RUN (no writes)
-# [clean:synthetic] before measures=810 ... non_synthetic=…
+# [clean:synthetic] before measures=0 data_sources=0 total=348939 non_synthetic=348939
 # [clean:synthetic] DRY RUN complete: 0 rows deleted.
 
 # Real-only bootstrap on a scratch DB (never the live DB): 0 synthetic rows.
@@ -102,10 +107,10 @@ MONGO_URL=mongodb://10.10.10.30:27017/ausspend_test_manual_realonly \
 # [seed] mode=real ... synthetic=0 synthetic_written=0
 ```
 
-Expected: the dry run prints the same before/after inventory and deletes nothing; the live DB still
-has 810 synthetic rows and 124,767 measures. The scratch real-only run has 0 synthetic rows while
-regions/functions and the real source register are created. `--execute` is only allowed after the
-seven-point gate in the readiness document and requires `--backup <verified backup dir>`.
+Expected: the dry run prints the same before/after inventory and deletes nothing; the live DB has
+0 synthetic rows and 348,939 real measures. The scratch real-only run has 0 synthetic rows while
+regions/functions and the real source register are created. `--execute` requires
+`--backup <verified backup dir>` and refuses a stale, missing or incomplete backup.
 
 ## Alt-port e2e and audit
 
@@ -137,10 +142,11 @@ The full list is in `scripts/audit.mjs`. In brief:
    one measure type shows a headline total.
 3. Row tables (search, function, region/state) and summary/headline footers show the source
    id/link and Unverified status.
-4. `/data-sources#synthetic-seed` shows the synthetic source Unverified, the live
+4. `/data-sources` omits the synthetic source in the current real-only database (the audit
+   asserts the card is present only when coverage says synthetic rows exist), shows the live
    `aus-tender`/`data-gov-au-pbs`/`nsw-budget`/`data-nsw-ckan`/`dubbo-council` sources active,
-   GrantConnect degraded/partial with its manual-export caveat, and the seven remaining
-   connectors marked **stub — not wired**.
+   GrantConnect degraded/partial with its manual-export caveat, and the remaining connectors
+   marked **stub — not wired**.
 5. API invariants: `function=07` mixed/null/per-type; `measure_type=actual` numeric total;
    `region=NSW` 400; unknown measure id 404; `/api/meta/coverage` reports seven stubs,
    `pending: []`, a GrantConnect manual-export caveat and nonzero counts;
