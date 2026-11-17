@@ -38,6 +38,7 @@
     "ingest:vic-vlgc": "npm run build -w shared && tsx scripts/ingest-vic-vlgc.ts",
     "ingest:vic-vlgc-abs": "npm run build -w shared && tsx scripts/ingest-vic-vlgc-abs.ts",
     "ingest:vic-vlgc-history": "npm run build -w shared && tsx scripts/ingest-vic-vlgc-history.ts",
+    "ingest:vic-vlgc-fag": "npm run build -w shared && tsx scripts/ingest-vic-vlgc-fag.ts",
     "grantconnect:chunks": "npm run build -w shared && tsx scripts/grantconnect-chunks.ts",
     "archive:nsw": "npm run build -w shared && tsx scripts/nsw-source-archive.ts",
     "archive": "npm run build -w shared && tsx scripts/source-archive.ts",

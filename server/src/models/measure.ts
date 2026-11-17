@@ -120,6 +120,8 @@ export interface MeasureDocument {
   vlgc_unit?: string;
   /** Printed sign when a negative amount is stored as a non-negative magnitude. */
   vlgc_printed_sign?: 'positive' | 'negative';
+  /** VLGGC FAG allocation vintage: forward estimate or final/actual adjustment. */
+  vlgc_allocation_status?: 'estimated' | 'final';
   /** VLGGC ABS1/ABS2-3 asset class where the printed line is an asset class. */
   asset_class?: string;
   /** VLGGC ABS1/ABS2-3 printed sub-table (assets, liabilities, receipts, ...). */
@@ -255,6 +257,7 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     vlgc_council_label: { type: String },
     vlgc_unit: { type: String },
     vlgc_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    vlgc_allocation_status: { type: String, enum: ['estimated', 'final'], index: true },
     asset_class: { type: String, index: true },
     statement_section: { type: String, index: true },
     statement_line: { type: String },

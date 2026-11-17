@@ -238,6 +238,14 @@ export const MeasureRecordSchema = z.object({
   vlgc_unit: z.string().min(1).optional(),
   vlgc_printed_sign: z.enum(['positive', 'negative']).optional(),
   /**
+   * VLGGC Financial Assistance Grant allocation vintage. FAG rows are one
+   * printed total per council per year; `estimated` is the annual allocation
+   * report's forward allocation, `final` is the later final/actual adjustment.
+   * FAG is grant income and overlaps council grant revenue, so every row is
+   * non-additive agency detail and carries potential_double_count=true.
+   */
+  vlgc_allocation_status: z.enum(['estimated', 'final']).optional(),
+  /**
    * VLGGC ABS1/ABS2-3 council questionnaire provenance. `statement` is one of
    * capital, balance, cash_flow or income; `statement_section` names the printed
    * sub-table (for example assets, liabilities, operating_receipts,
