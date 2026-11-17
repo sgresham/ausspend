@@ -17,7 +17,7 @@ import {
   type FunctionDocument,
 } from '../models/index.js';
 import { badRequest, notFound } from './errors.js';
-import { sumCents } from './filters.js';
+import { AIHW_SOURCE_ID, sumCents } from './filters.js';
 import {
   expenseCategoryTotals,
   isAdditiveMeasure,
@@ -186,6 +186,14 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.vlgc_council_label ? { vlgc_council_label: measure.vlgc_council_label } : {}),
     ...(measure.vlgc_unit ? { vlgc_unit: measure.vlgc_unit } : {}),
     ...(measure.vlgc_printed_sign ? { vlgc_printed_sign: measure.vlgc_printed_sign } : {}),
+    ...(measure.aihw_broad_source_of_funding
+      ? { aihw_broad_source_of_funding: measure.aihw_broad_source_of_funding }
+      : {}),
+    ...(measure.aihw_area_of_expenditure
+      ? { aihw_area_of_expenditure: measure.aihw_area_of_expenditure }
+      : {}),
+    ...(measure.aihw_printed_sign ? { aihw_printed_sign: measure.aihw_printed_sign } : {}),
+    ...(measure.aihw_unit ? { aihw_unit: measure.aihw_unit } : {}),
     ...(measure.performance_value !== undefined
       ? { performance_value: measure.performance_value }
       : {}),
@@ -436,6 +444,14 @@ export const listSpending: RequestHandler = async (req, res) => {
   if (query.postcode) mongoQuery['location.postcode'] = query.postcode;
   if (query.expense_category) mongoQuery.expense_category = query.expense_category;
   if (query.function) mongoQuery.function_code = query.function;
+  if (query.source_id) {
+    mongoQuery.source_id = query.source_id;
+  } else {
+    // AIHW is a historical, non-additive state x area x funding matrix. Keep
+    // 1997-98 rows out of the default function/search pages; an explicit
+    // ?source_id=aihw-health-expenditure still reads them.
+    mongoQuery.source_id = { $ne: AIHW_SOURCE_ID };
+  }
   if (regionId) mongoQuery.region_id = regionId;
   if (areaRegion)
     Object.assign(mongoQuery, areaQueries(areaRegion, areaRegion.parent_code ?? 'NSW').combined);

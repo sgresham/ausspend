@@ -1,5 +1,28 @@
 export { CONNECTORS, CONNECTOR_IDS, getConnector } from './registry.js';
 export {
+  AIHW_CAVEAT,
+  AIHW_DATASET,
+  AIHW_DETAILED_SOURCES,
+  AIHW_FUNCTION_CODE,
+  AIHW_ID,
+  AIHW_LICENSE,
+  AIHW_NAME,
+  AIHW_PUBLISHER,
+  AIHW_RESOURCE_URL,
+  AIHW_SOURCE_URL,
+  AIHW_STATES,
+  AIHW_UNIT,
+  AIHW_UNIT_LABEL,
+  AIHW_UNIT_TO_CENTS,
+  aihwMillionsToCents,
+  aihwNaturalKey,
+  createAihwHealthExpenditureConnector,
+  parseAihwCsv,
+  type AihwCsvRow,
+  type AihwSkip,
+  type AihwTransformResult,
+} from './aihw-health-expenditure.js';
+export {
   ABS_GFS_ATTRIBUTION,
   ABS_GFS_BENCHMARK_CAVEAT,
   ABS_GFS_DATASET,

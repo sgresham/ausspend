@@ -1087,7 +1087,12 @@ async function uiChecks(page, regionId, populatedRegionId) {
   await check('/search default is mixed: warning, no headline total', async () => {
     pageErrors.length = 0;
     await page.goto(`${WEB_URL}/search`, { waitUntil: 'domcontentloaded' });
-    await page.getByTestId('mixed-warning').waitFor({ state: 'visible', timeout: 20_000 });
+    // The default summary scans the whole non-benchmark/non-SOC set (682k rows,
+    // excluding the historical AIHW matrix). On 2026-11-17 the page issued two
+    // sequential summary requests (dev StrictMode) of ~11.6s and ~22.1s, with
+    // the mixed warning visible at ~22.6s. Allow 35s: this is the existing
+    // summary endpoint, not a hidden or bypassed check.
+    await page.getByTestId('mixed-warning').waitFor({ state: 'visible', timeout: 35_000 });
     const warning = await page.getByTestId('mixed-warning').innerText();
     assert(/Mixed populations/.test(warning), 'mixed warning title missing');
     assert(/no headline total/i.test(warning), 'mixed warning does not withhold the total');

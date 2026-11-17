@@ -59,6 +59,12 @@ export const SpendingQuerySchema = z
     expense_category: z.string().trim().min(1).max(100).optional(),
     function: SpendingFunctionCodeSchema.optional(),
     /**
+     * Exact source id. Used to read a source that is intentionally excluded
+     * from the default generic view (for example the historical AIHW health
+     * expenditure matrix).
+     */
+    source_id: z.string().trim().min(1).max(100).optional(),
+    /**
      * Case-insensitive text match over project_name, description and
      * delivery_entity. Trimmed and bounded; an empty value means no filter. It
      * is a literal substring match (regex metacharacters escaped), not a fuzzy

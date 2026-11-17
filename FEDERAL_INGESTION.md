@@ -378,6 +378,104 @@ planning, complete/partial coverage, cap-warning rejection, header/unit detectio
 natural keys, multi-file de-duplication and idempotent re-runs, archive SHA-256 registration, and
 the missing-directory error path (existing rows preserved).
 
+## AIHW Health Expenditure (Phase 6.2)
+
+Source id: `aihw-health-expenditure`. Publisher: Australian Institute of Health
+and Welfare. Dataset: **AIHW Health Expenditure Database**.
+
+### Premise test: METEOR is metadata-only
+
+The Phase 6.2 brief asked for the AIHW METEOR API first. METEOR is the AIHW
+**Metadata Online Registry**, not a data API: its homepage says
+
+> “METEOR does not contain any data, reports or statistical information.”
+
+It serves data-element, data-set-specification and indicator _metadata_, so it
+cannot expose the required financial-year × state × area × funding-source
+expenditure matrix. The approved fallback is the official AIHW CSV published on
+data.gov.au CKAN under the AIHW organisation:
+
+- Dataset page: `https://data.gov.au/data/dataset/health-expenditure-in-australia`
+- Exact resource CSV:
+  `https://data.gov.au/data/dataset/f84b9baf-c1c1-437c-8c1e-654b2829848c/resource/88399d53-d55c-466c-8f4a-6cb965d24d6d/download/healthexpenditurebyareaandsource.csv`
+- SHA-256: `9eac6d733d96c2d81d684e6c2832ba3138999e304ec61b1e2b76106a1218016a`
+- Bytes: `469,727`
+- Licence: CC BY 3.0 Australia
+- Coverage: 1997-98 through 2011-12, eight states/territories, 15 areas of
+  expenditure, five detailed funding sources. The CKAN package description
+  explicitly says the data has been **superseded** by later AIHW releases; the
+  source note and row notes record that so no later year is inferred. The live
+  ingest therefore backfills a complete, audited historical matrix, not a fake
+  current-year figure.
+
+The CSV is fetched live, SHA-256 archived outside the repo and hash-verified
+before parsing. `fetch_strategy` is `direct`.
+
+### Mapping (6,778 rows)
+
+One row per financial year × state × area × broad source × detailed source:
+
+| CSV column                   | Stored as                                                             |
+| ---------------------------- | --------------------------------------------------------------------- |
+| `financial_year`             | `fiscal_year`                                                         |
+| `state`                      | `location.state` (state-wide only; no LGA/postcode is invented)       |
+| `area_of_expenditure`        | `aihw_area_of_expenditure` and `description`                          |
+| `broad_source_of_funding`    | `aihw_broad_source_of_funding` (`Government`/`Non-government`)        |
+| `detailed_source_of_funding` | `funding_source`                                                      |
+| `real_expenditure_millions`  | `amount_cents` at 1 $m = 100,000,000 cents (`aihw_unit` AUD_millions) |
+
+- `measure_type = actual`, `function_code = '07'` (COFOG Health),
+  `source_dataset = "AIHW Health Expenditure Database"`, `verified = true`,
+  `data_quality_flag = "verified"`.
+- **Government and Non-government are separate series.** Australian Government
+  rows are `jurisdiction_level=federal`, `jurisdiction="Australia"`. State and
+  local rows are `jurisdiction_level=state`, `jurisdiction=<state code>`.
+  Non-government rows are `jurisdiction_level=other`, `jurisdiction=<state
+code>` and never enter government spending.
+- Every row is `aggregation_role=agency_detail` and therefore non-additive.
+  Government rows also carry `potential_double_count=true` because the same
+  services can be funded through both levels and state totals include
+  Commonwealth transfers. The API must never sum federal + state funding or
+  present total health expenditure as government spending.
+- The 122 negative constant-price values (mostly the medical-expense tax
+  rebate) are stored as non-negative magnitudes with
+  `aihw_printed_sign="negative"`; they are never dropped, flipped or zeroed.
+  Published zeros are kept as zero cents (a real published value, not a fill).
+
+### Spot-check against AIHW published tables
+
+The CSV's 2011-12 state totals (sum of all funding rows) match the AIHW
+_Health expenditure Australia 2011–12_ report within published rounding:
+
+| State | CSV total ($m) | AIHW table | AIHW total ($m) | Difference |
+| ----- | -------------: | ---------- | --------------: | ---------: |
+| NSW   |         43,310 | Table B3   |          43,308 |         +2 |
+| VIC   |         34,035 | Table B6   |          34,033 |         +2 |
+| QLD   |         29,019 | Table B9   |          29,019 |          0 |
+
+National constant-price 2011-12 total: CSV 140,248 $m vs report Table A6
+140,241 $m (+7, rounding). The ±2 $m state differences are the published
+medical-expense-tax-rebate rounding; no value is adjusted to force a match.
+
+### Verify
+
+```bash
+# source status and row count
+mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+  db.data_sources.findOne({source_id:"aihw-health-expenditure"});
+  db.measures.countDocuments({source_id:"aihw-health-expenditure"});
+'
+# government/non-government and jurisdiction split
+mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+  db.measures.aggregate([{$match:{source_id:"aihw-health-expenditure"}},
+    {$group:{_id:{broad:"$aihw_broad_source_of_funding",level:"$jurisdiction_level"},n:{$sum:1}}}]).toArray()
+'
+```
+
+Tests: `server/test/aihw-health-expenditure.test.ts` covers unit conversion,
+source/jurisdiction separation, no-sum, negative signs, COFOG 07, natural keys,
+idempotency, malformed-row reporting and no deletes.
+
 ## Narrow live run
 
 The acceptance run ingests **one recent full week** into

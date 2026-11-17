@@ -236,12 +236,12 @@ describe('F1 extended measure shape and API', () => {
     // ABS GFS, ABS GFS PNFC, AusTender, PBS, GrantConnect (manual export), NSW
     // Budget, CKAN, Dubbo, Dubbo GPFS, City of Sydney GPFS, Blacktown GPFS, Parramatta GPFS, Northern Beaches GPFS, Canterbury-Bankstown GPFS, Sutherland Shire GPFS, Wollongong GPFS, Newcastle GPFS, Lake Macquarie GPFS, Maitland GPFS, Coffs Harbour GPFS, MidCoast GPFS, Port Macquarie-Hastings GPFS, Tweed Shire GPFS, Shoalhaven GPFS, Shellharbour GPFS, Waverley GPFS, Willoughby City GPFS, Inner West GPFS, Bayside GPFS, Randwick GPFS, Ryde GPFS, North Sydney GPFS, Cumberland GPFS, Georges River GPFS, Fairfield GPFS, Liverpool GPFS, Ku-ring-gai GPFS, VIC Budget, QLD Budget, QLD QGIP, ACNC charity and
     // VIC VLGGC VGC1, VIC VLGGC ABS1/ABS2-3, Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation, Landcom,
-    // Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink SOC are wired; the remaining four are stubs.
+    // Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink SOC and AIHW health expenditure are wired; the remaining three are stubs.
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(56);
-    expect(coverage.body.connector_status_counts.stub).toBe(4);
+    ).toBe(57);
+    expect(coverage.body.connector_status_counts.stub).toBe(3);
     expect([
       ...coverage.body.federal_ingestion.live,
       ...coverage.body.federal_ingestion.degraded,
