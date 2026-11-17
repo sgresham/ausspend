@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Six council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Seven council GPFS extractions have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -9,14 +9,18 @@ Blacktown City Council FY2024-25 GPFS (**§7.3**) then added exactly **17** `bla
 **17** `parramatta-gpfs` rows (**515,502** → **515,519**); Northern Beaches Council FY2024-25 GPFS
 (**§7.5**) then added exactly **18** `northern-beaches-gpfs` rows (**515,519** → **515,537**);
 Canterbury-Bankstown Council FY2024-25 GPFS (**§7.6**) then added exactly **17**
-`canterbury-bankstown-gpfs` rows (**515,537** → **515,554**). The existing 245 `dubbo-council`
+`canterbury-bankstown-gpfs` rows (**515,537** → **515,554**); Sutherland Shire Council FY2024-25
+GPFS (**§7.7**) then added exactly **17** `sutherland-shire-gpfs` rows (**515,554** → **515,571**).
+The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
 happens to be "Blacktown City Council", the 215 AusTender/data.nsw/GrantConnect/QGIP/ACNC rows whose
 `delivery_entity` mentions "Parramatta", the 179
 AusTender/data.nsw/GrantConnect/QGIP/ACNC rows whose `delivery_entity` mentions "Northern Beaches",
 the 6 AusTender/GrantConnect rows whose `delivery_entity` is exactly "Canterbury-Bankstown Council",
-and every other source are preserved untouched and are never summed with the GPFS rows.
+the 4 AusTender/GrantConnect rows whose `delivery_entity` mentions "Sutherland Shire Council" (3
+exact-case GrantConnect rows and 1 uppercase AusTender row), and every other source are preserved
+untouched and are never summed with the GPFS rows.
 
 **As at:** 17 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -211,12 +215,12 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 105 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 122 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
-§7.5) and 17 for Canterbury-Bankstown Council FY2024-25 (`canterbury-bankstown-gpfs`, §7.6) — all
-separate source ids. The
+§7.5), 17 for Canterbury-Bankstown Council FY2024-25 (`canterbury-bankstown-gpfs`, §7.6) and 17 for
+Sutherland Shire Council FY2024-25 (`sutherland-shire-gpfs`, §7.7) — all separate source ids. The
 existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS actuals, and
 are not touched or summed with the GPFS rows.
 
@@ -810,6 +814,73 @@ they may overlap government program data; they are not added to expenditure.
 **32**. A second ingest run upserted the same 17 natural keys and left the DB total unchanged
 (idempotent). No deletes or updates to any other source.
 
+### 7.7 Seventh council — Sutherland Shire Council FY2024-25 GPFS (landed 2026-11-17)
+
+**Source.** Discovered from the official annual and financial reports page
+<https://www.sutherlandshire.nsw.gov.au/your-council/our-vision-for-the-future/annual-and-financial-reports>
+(fetched with a real browser because the site enforces a Cloudflare managed challenge; HTTP 200; no
+hard-coded document URL). The page's stand-alone "Financial Statements 2024-2025 - PDF - 5336 KB"
+link resolves to
+<https://www.sutherlandshire.nsw.gov.au/__data/assets/pdf_file/0019/109144/2024-2025-Sutherland-Shire-Council-Financial-Statements.pdf>
+(HTTP 200, 5,464,555 bytes). The separate "Appendix D - Financial Statements" annual-report appendix
+is deliberately not selected. Exact bytes are archived outside the repo at
+`/home/steve/ausspend-source-archive/sutherland-shire-gpfs/2024-2025-Sutherland-Shire-Council-Financial-Statements.pdf`,
+SHA-256 `a97e7719e485a0fb6f49468c0eb7672a5b120c0aa6077ccfdb0349d56dd2b743`. The printed unit is
+explicit `$ '000` (thousands) on the Income Statement (printed p4 / PDF p5), the Statement of
+Comprehensive Income (printed p5 / PDF p6) and note B1-1 (printed p13 / PDF p14); a missing or
+conflicting unit rejects the whole extraction. Because the site blocks non-browser fetches, the CLI
+ingest supplies the browser-cleared bytes through the connector's documented `pdfBytes` override; the
+connector still SHA-256 verifies and re-archives them.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before the
+line label, with Actual 2025 and Actual 2024 after it. The connector takes the first amount after
+each printed label (the FY2024-25 actual) and emits nothing unless all of these agree exactly:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ------------------------------------------------------------------------------------------ |
+| Total income from continuing operations (Income Statement p4)                                                                |                          `$325,542` thousand | = `$325,542,000`                                                                           |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$325,542` thousand | = printed total                                                                            |
+| Total expenses excluding depreciation (printed p4)                                                                           |                          `$258,272` thousand | = expense components sum (employee + materials + borrowing + other + net loss on disposal) |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$53,206`)                           | `$258,272` + `$53,206` = `$311,478` thousand | = total expenses documented bridge (no "Total expenses" line is printed)                   |
+| B1-1 Total functions and activities — income / expenses / operating result                                                   | `$325,542` / `$311,478` / `$14,064` thousand | income and expenses equal the face bridge; operating result = Income Statement net result  |
+| B1-1 grants and contributions                                                                                                |                           `$35,703` thousand | = operating `$19,436` + capital `$16,267`                                                  |
+| Net operating result before capital grants                                                                                   |                          `$(2,203)` thousand | = `$14,064 − $16,267` (negative; reconciliation evidence only)                             |
+| Statement of Comprehensive Income net result                                                                                 |                           `$14,064` thousand | = Income Statement net result                                                              |
+
+Total expenses is the documented bridge of two printed lines (`$258,272 + $53,206 = $311,478`),
+**not** a sum of the nature components on its own and **not** the separate printed
+expenses-excluding-depreciation line. The printed B1-1 expense total equals the face bridge exactly,
+so there is no disposal gross-up. The connector does **not** use OLG all-rights data: the
+reconciliation is internal to the audited document.
+
+**Rows.** **17 rows**, source id `sutherland-shire-gpfs`, `source_dataset` "Sutherland Shire Council
+GPFS 2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Sutherland Shire Council"` (the exact published entity
+name), `data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are
+total revenue `$325,542,000`, total expenses `$311,478,000`, employee expenses `$130,034,000`,
+depreciation/amortisation/impairment `$53,206,000`, operating government grants `$19,436,000`,
+capital government grants `$16,267,000`, net loss on disposal of assets `$3,651,000` and net result
+`$14,064,000`; the printed face-statement revenue and expense components are included for
+provenance. Because the printed before-capital result is negative (`$(2,203,000)`) and `amount_cents`
+is non-negative, it is kept in the reconciliation evidence only and not emitted as a row.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and area panels therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into any other council or state rows. The 4 pre-existing rows whose `delivery_entity` mentions
+"Sutherland Shire Council" are **3 exact-case GrantConnect grants and 1 uppercase "SUTHERLAND SHIRE
+COUNCIL" AusTender contract** (not council financial rows); their per-source counts are identical
+before and after the ingest, and they are never summed with the GPFS rows. Government grant rows carry
+`potential_double_count: true` because they may overlap government program data; they are not added
+to expenditure.
+
+**Database evidence (2026-11-17).** `measures` 515,554 → **515,571** (exactly +17);
+`sutherland-shire-gpfs` **17**; `canterbury-bankstown-gpfs` still **17**; `northern-beaches-gpfs`
+still **18**; `parramatta-gpfs` still **17**; `blacktown-gpfs` still **17**; `city-of-sydney-gpfs`
+still **18**; `dubbo-council` still **245**; `dubbo-council-gpfs` still **18**; `data-nsw-ckan` still
+**3,472**; `data_sources` 32 → **33**. A second ingest run upserted the same 17 natural keys and left
+the DB total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -829,7 +900,9 @@ they may overlap government program data; they are not added to expenditure.
    FY2024-25 GPFS, 17 non-additive rows (§7.3). **Third expansion landed 2026-11-17:** City of
    Parramatta FY2024-25 GPFS, 17 non-additive rows (§7.4). **Fourth expansion landed 2026-11-17:**
    Northern Beaches Council FY2024-25 GPFS, 18 non-additive rows (§7.5). **Fifth expansion landed
-   2026-11-17:** Canterbury-Bankstown Council FY2024-25 GPFS, 17 non-additive rows (§7.6).
+   2026-11-17:** Canterbury-Bankstown Council FY2024-25 GPFS, 17 non-additive rows (§7.6). **Sixth
+   expansion landed 2026-11-17:** Sutherland Shire Council FY2024-25 GPFS, 17 non-additive rows
+   (§7.7).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -875,6 +948,10 @@ differ); always show the source, year, measure type and fund/basis.
   <https://haveyoursay.cbcity.nsw.gov.au/annual-financial-statements-2024-25>
 - Canterbury-Bankstown Council FY2024-25 GPFS PDF — URL above (3,526,499 bytes; SHA-256
   `d195790e10452808497fdc0eb95589e751ae6a64a50fc8d076ce467ac0ce8650`)
+- Sutherland Shire Council annual and financial reports page —
+  <https://www.sutherlandshire.nsw.gov.au/your-council/our-vision-for-the-future/annual-and-financial-reports>
+- Sutherland Shire Council FY2024-25 GPFS PDF — URL above (5,464,555 bytes; SHA-256
+  `a97e7719e485a0fb6f49468c0eb7672a5b120c0aa6077ccfdb0349d56dd2b743`)
 - Audit Office reports — <https://www.audit.nsw.gov.au/our-work/reports>
 - data.nsw CKAN API — `package_search` queries for "local government council", "local government
   financial", "time series council", "council expenditure", "financial data return", "grants
@@ -967,6 +1044,28 @@ differ); always show the source, year, measure type and fund/basis.
   still 17; `blacktown-gpfs` still 17; `city-of-sydney-gpfs` still 18; `dubbo-council` still 245;
   the 6 pre-existing Canterbury-Bankstown-delivery-entity rows unchanged; a second run upserted the
   same 17 natural keys with no count change.
+
+**GPFS seventh-council checks (2026-11-17):**
+
+- Sutherland Shire Council official annual and financial reports page fetched via a real browser
+  (the site enforces a Cloudflare managed challenge); the stand-alone "Financial Statements
+  2024-2025" PDF was selected and the Annual Report "Appendix D - Financial Statements" appendix was
+  ignored; no document URL is hard-coded.
+- GPFS PDF fetched (HTTP 200, 5,464,555 bytes) and SHA-256 archived outside the repo; SHA-256
+  `a97e7719e485a0fb6f49468c0eb7672a5b120c0aa6077ccfdb0349d56dd2b743`.
+- Printed `$ '000` unit detected on the income statement, comprehensive-income statement and B1-1;
+  the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$325,542,000`, expenses `$311,478,000` (documented bridge of printed expenses excluding
+  depreciation `$258,272,000` plus depreciation `$53,206,000`), net result `$14,064,000`; B1-1
+  income `$325,542,000`, expenses `$311,478,000`, operating result `$14,064,000` and grants
+  `$35,703,000`; before-capital result `$(2,203,000)` (reconciliation evidence only).
+- `sutherland-shire-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: measures 515,554 → 515,571 (+17 only); `canterbury-bankstown-gpfs` still 17;
+  `northern-beaches-gpfs` still 18; `parramatta-gpfs` still 17; `blacktown-gpfs` still 17;
+  `city-of-sydney-gpfs` still 18; `dubbo-council` still 245; the 4 pre-existing
+  Sutherland-delivery-entity rows unchanged; a second run upserted the same 17 natural keys with no
+  count change.
 
 **Workbook checks run (read-only, local):**
 

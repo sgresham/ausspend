@@ -22,6 +22,7 @@ const LIVE_IDS = [
   'parramatta-gpfs',
   'northern-beaches-gpfs',
   'canterbury-bankstown-gpfs',
+  'sutherland-shire-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -40,9 +41,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships thirty-two connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(32);
-    expect(new Set(CONNECTOR_IDS).size).toBe(32);
+  it('ships thirty-three connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(33);
+    expect(new Set(CONNECTOR_IDS).size).toBe(33);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -144,6 +145,12 @@ describe('federal connector registry', () => {
     expect(getConnector('canterbury-bankstown-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('canterbury-bankstown-gpfs')?.source_url).toContain('cbcity.nsw.gov.au');
     expect(getConnector('canterbury-bankstown-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('sutherland-shire-gpfs')?.status).toBe('active');
+    expect(getConnector('sutherland-shire-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('sutherland-shire-gpfs')?.source_url).toContain(
+      'sutherlandshire.nsw.gov.au',
+    );
+    expect(getConnector('sutherland-shire-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
