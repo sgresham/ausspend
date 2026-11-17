@@ -45,6 +45,17 @@ import {
   HUNTER_WATER_UNIT,
   HUNTER_WATER_UNIT_LABEL,
   HUNTER_WATER_UNIT_TO_CENTS,
+  LANDCOM_CAVEAT,
+  LANDCOM_ENTITY,
+  LANDCOM_ID,
+  LANDCOM_JURISDICTION,
+  LANDCOM_LICENSE,
+  LANDCOM_NAME,
+  LANDCOM_PUBLISHER,
+  LANDCOM_SOURCE_URL,
+  LANDCOM_UNIT,
+  LANDCOM_UNIT_LABEL,
+  LANDCOM_UNIT_TO_CENTS,
   SYDNEY_WATER_CAVEAT,
   SYDNEY_WATER_ENTITY,
   SYDNEY_WATER_ID,
@@ -104,8 +115,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
- * then Forestry Corporation of NSW). No other SOC adapter is implemented, and
- * the five entity adapters are never summed together.
+ * Forestry Corporation of NSW, then Landcom). No other SOC adapter is
+ * implemented, and the six entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
@@ -114,6 +125,7 @@ export const SOC_SOURCE_IDS = [
   HUNTER_WATER_ID,
   ESSENTIAL_ENERGY_ID,
   FORESTRY_CORPORATION_ID,
+  LANDCOM_ID,
 ] as const;
 
 /**
@@ -328,6 +340,39 @@ async function writeForestryCorporationManifest(): Promise<void> {
   );
 }
 
+async function writeLandcomManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: LANDCOM_ID });
+  const manifestPath = path.resolve(
+    process.env.LANDCOM_MANIFEST ?? 'docs/source-archive/landcom-annual-report.json',
+  );
+  const manifest = {
+    entity: LANDCOM_ENTITY,
+    jurisdiction: LANDCOM_JURISDICTION,
+    dataset: LANDCOM_NAME,
+    publisher: LANDCOM_PUBLISHER,
+    discovery_page: LANDCOM_SOURCE_URL,
+    license: LANDCOM_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${LANDCOM_UNIT_LABEL} (${LANDCOM_UNIT}; x${LANDCOM_UNIT_TO_CENTS} cents per unit)`,
+    caveat: LANDCOM_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "Latest Landcom annual report discovered from the official corporate-publications page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $'000 unit but no single Total revenue or Total expenses subtotal. Total revenue is the exact signed sum of the printed revenue lines (revenue from contracts with customers + other income + finance income) and total expenses is the exact signed sum of the printed expense lines (cost of sales + employee related expenses + other expenses + depreciation and amortisation + net fair value loss on investment properties + finance costs); both are accepted only when the gross-profit, profit-before-tax, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Landcom rows to government program spending, the PNFC benchmark, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -370,6 +415,7 @@ async function main(): Promise<void> {
     await writeHunterWaterManifest();
     await writeEssentialEnergyManifest();
     await writeForestryCorporationManifest();
+    await writeLandcomManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -540,6 +586,31 @@ async function main(): Promise<void> {
       console.log(
         `[ingest:soc] ${FORESTRY_CORPORATION_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
+    }
+    const lcRows = await MeasureModel.countDocuments({ source_id: LANDCOM_ID });
+    const lcVerified = await MeasureModel.countDocuments({
+      source_id: LANDCOM_ID,
+      verified: true,
+    });
+    const lcDoubleCount = await MeasureModel.countDocuments({
+      source_id: LANDCOM_ID,
+      potential_double_count: true,
+    });
+    const lcByLine = await MeasureModel.aggregate([
+      { $match: { source_id: LANDCOM_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const lcDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: LANDCOM_ID,
+      status: 'deferred',
+    });
+    const lcArchived = await listArchivedRecords({ source_id: LANDCOM_ID });
+    console.log(
+      `[ingest:soc] ${LANDCOM_ID} rows=${lcRows} source_documents=${lcArchived.length} verified=${lcVerified} potential_double_count=${lcDoubleCount} deferred_documents=${lcDeferred} (entity-level SOC statement lines; no combined total is printed or computed)`,
+    );
+    for (const group of lcByLine) {
+      console.log(`[ingest:soc] ${LANDCOM_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW SOC adapters intentionally not implemented)`,

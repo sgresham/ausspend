@@ -37,6 +37,7 @@ const KNOWN_SOURCE_IDS = [
   'hunter-water',
   'essential-energy',
   'forestry-corporation',
+  'landcom',
 ];
 
 const results = [];
@@ -349,8 +350,8 @@ async function apiChecks() {
     );
     assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
     assert(
-      Array.isArray(soc.body?.series) && soc.body.series.length === 76,
-      `expected 76 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7), got ${soc.body?.series?.length}`,
+      Array.isArray(soc.body?.series) && soc.body.series.length === 82,
+      `expected 82 SOC rows (Sydney Water 10 + WaterNSW 47 + Hunter Water 6 + Essential Energy 6 + Forestry Corporation 7 + Landcom 6), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -370,8 +371,9 @@ async function apiChecks() {
         soc.body.entities.includes('WaterNSW') &&
         soc.body.entities.includes('Hunter Water') &&
         soc.body.entities.includes('Essential Energy') &&
-        soc.body.entities.includes('Forestry Corporation of NSW'),
-      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW) are not returned',
+        soc.body.entities.includes('Forestry Corporation of NSW') &&
+        soc.body.entities.includes('Landcom'),
+      'SOC entities (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom) are not returned',
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
@@ -385,7 +387,14 @@ async function apiChecks() {
       sources.get('forestry-corporation')?.records === 7,
       'Forestry Corporation source count is not 7 rows',
     );
-    for (const entity of ['sydney-water', 'waternsw', 'hunter-water', 'forestry-corporation']) {
+    assert(sources.get('landcom')?.records === 6, 'Landcom source count is not 6 rows');
+    for (const entity of [
+      'sydney-water',
+      'waternsw',
+      'hunter-water',
+      'forestry-corporation',
+      'landcom',
+    ]) {
       assert(
         sources.get(entity)?.unit === 'AUD_thousands',
         `${entity} SOC unit is not AUD_thousands`,
@@ -677,6 +686,45 @@ async function apiChecks() {
       'Forestry Corporation government grant rows are not flagged as potential double counts',
     );
 
+    const landcom = await getJson('/api/soc?fiscal_year=2024-25&entity=Landcom');
+    assert(landcom.status === 200, `Landcom SOC expected 200, got ${landcom.status}`);
+    assert(
+      landcom.body?.series?.length === 6,
+      `expected 6 Landcom SOC rows, got ${landcom.body?.series?.length}`,
+    );
+    assert(landcom.body?.source?.source_id === 'landcom', 'Landcom SOC source is not landcom');
+    assert(
+      landcom.body.series.every((row) => row.delivery_entity === 'Landcom'),
+      'Landcom SOC response contains another entity',
+    );
+    const lcByLine = new Map(landcom.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      lcByLine.get('total_expenses')?.amount_cents === 21399500000,
+      'Landcom total expenses is not $213,995 thousand in cents',
+    );
+    assert(
+      lcByLine.get('total_revenue')?.amount_cents === 27718700000,
+      'Landcom total revenue is not $277,187 thousand in cents',
+    );
+    assert(
+      lcByLine.get('employee_expenses')?.amount_cents === 2973700000,
+      'Landcom employee expenses is not $29,737 thousand in cents',
+    );
+    assert(
+      lcByLine.get('depreciation_amortisation')?.amount_cents === 304000000,
+      'Landcom depreciation/amortisation is not $3,040 thousand in cents',
+    );
+    assert(
+      lcByLine.get('government_grants')?.amount_cents === 228500000 &&
+        lcByLine.get('government_grants')?.potential_double_count === true,
+      'Landcom grant income is not $2,285 thousand flagged as a potential double count',
+    );
+    assert(
+      lcByLine.get('net_result')?.amount_cents === 4423300000 &&
+        lcByLine.get('net_result')?.soc_printed_sign === 'positive',
+      'Landcom net result is not the printed $44,233 thousand profit',
+    );
+
     const generic = await getJson('/api/spending?limit=5');
     assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
     const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
@@ -689,7 +737,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '76 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7 and 384,532, no total, excluded from generic spending';
+    return '82 entity rows (Sydney Water 10, WaterNSW 47 incl. 39 note/capex rows, Hunter Water 6, Essential Energy 6, Forestry Corporation 7, Landcom 6), $’000/$M, exact total expenses 2,949,540, 472,831, 418,326, 2,042.7, 384,532 and 213,995, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {

@@ -12,6 +12,7 @@ import { createQgipConnector } from './qld-qgip.js';
 import { createEssentialEnergyConnector } from './soc/nsw/essential-energy.js';
 import { createForestryCorporationConnector } from './soc/nsw/forestry-corporation.js';
 import { createHunterWaterConnector } from './soc/nsw/hunter-water.js';
+import { createLandcomConnector } from './soc/nsw/landcom.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
@@ -162,6 +163,11 @@ export const CONNECTORS: readonly Connector[] = [
   // entity-level statement lines. Never added to government program spending,
   // the PNFC benchmark, or any other SOC. Other SOCs are not implemented.
   createForestryCorporationConnector(),
+  // SOC Phase 7: sixth NSW state-owned corporation — Landcom. Latest annual
+  // report discovered, SHA-256 archived and parsed as entity-level statement
+  // lines. Never added to government program spending, the PNFC benchmark, or
+  // any other SOC. Other SOCs are not implemented.
+  createLandcomConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',
