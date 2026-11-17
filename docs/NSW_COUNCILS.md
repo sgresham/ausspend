@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Fourteen council GPFS sources have landed as
+**Status:** the inventory and plan below are unchanged. Fifteen council GPFS sources have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -22,6 +22,8 @@ Maitland City Council FY2024-25 GPFS (**§7.11**) then added exactly **7** `mait
 Macquarie-Hastings Council FY2024-25 GPFS (**§7.14**) then added exactly **17**
 `port-macquarie-hastings-gpfs` rows (**515,663** → **515,680**). The Tweed Shire Council FY2024-25
 GPFS (**§7.15**) then added exactly **17** `tweed-shire-gpfs` rows (**515,680** → **515,697**).
+Shoalhaven City Council FY2024-25 GPFS (**§7.16**) then added exactly **17** `shoalhaven-gpfs` rows
+(**515,697** → **515,714**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -40,8 +42,10 @@ uppercase GrantConnect grants), the 1 GrantConnect row whose `delivery_entity` e
 `delivery_entity` merely mentions Maitland, the NSW Budget rows whose `project_name` mentions
 Maitland, the 2 AusTender federal contract rows whose `delivery_entity` is the different string
 "CITY OF COFFS HARBOUR", the 199 other AusTender/data.nsw/GrantConnect/NSW Budget/ACNC rows whose
-`delivery_entity` mentions Coffs Harbour under other delivery_entity strings, and every other
-source are preserved untouched and are never summed with the GPFS rows.
+`delivery_entity` mentions Coffs Harbour under other delivery_entity strings, the 1 GrantConnect row
+whose `delivery_entity` is exactly "Shoalhaven City Council" and the 135 other
+AusTender/GrantConnect/ACNC/data.nsw rows whose `delivery_entity` merely mentions Shoalhaven, and
+every other source are preserved untouched and are never summed with the GPFS rows.
 
 **As at:** 18 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -1510,6 +1514,82 @@ total unchanged (idempotent). No deletes or updates to any other source.
 
 ---
 
+### 7.16 Sixteenth council — Shoalhaven City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from the official "Financial statements" page
+<https://www.shoalhaven.nsw.gov.au/Council/Reports/Financial-statements> (no hard-coded document URL).
+That page presents the latest FY2025-26 statements and links to **"Financial Statements - Previous
+Years"** <https://www.shoalhaven.nsw.gov.au/Council/Publicly-available-information/Finance/Financial-Statements-Previous-Years>.
+The previous-years page embeds a Granicus/CM2Web React grid in an iframe
+(`https://cm2web.shoalhaven.nsw.gov.au/CM2WebShare/Grid?id=b7ded5f0-513e-4675-b7fc-1268a5419269`);
+its public `GridResults` endpoint lists **"Annual Financial Statements 2024-2025"** as record uri
+`10102076`. The connector selects that record by its printed title (never by a hard-coded PDF URL)
+and fetches the bytes from the official record endpoint
+<https://doc.shoalhaven.nsw.gov.au/LinkGeneratorAPI/record/10102076/preview_latest_final_version_pdf>.
+The page and grid are served over plain HTTP (no edge challenge); no headless browser was required.
+Exact bytes archived outside the repo at
+`~/ausspend-source-archive/shoalhaven-gpfs/shoalhaven-city-council-financial-statements-2024-25.pdf`:
+**5,881,682 bytes**, SHA-256
+`74076e6f5b966575deb498e3805c9f5ff66aaa71ace5b001972f7d33313add20` (`hash_verified: true`). The
+printed unit is explicit `$ '000` (thousands) on the income statement, B1-1 and the depreciation
+note; a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Income Statement prints the Original unaudited budget column before
+each line label, so each emitted value is the first amount after the printed label (the FY2024-25
+actual). The phrase "depreciation, amortisation and impairment of non-financial assets" appears in
+the expense subtotal and in the excluding-depreciation result before the actual depreciation line,
+so the connector reads that line from the last printed occurrence. The connector emits nothing
+unless all of these agree exactly:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                    |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ----------------------------------------- |
+| Total income from continuing operations (Income Statement)                                                                   |                          `$418,722` thousand | = `$418,722,000`                          |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$418,722` thousand | = printed total                           |
+| B1-1 Total functions and activities — income                                                                                 |                          `$418,722` thousand | = face statement                          |
+| Expense-by-nature components sum (employee + materials + borrowing + other + net loss on disposal)                           |                          `$247,116` thousand | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$97,315`)                           | `$247,116` + `$97,315` = `$344,431` thousand | = B1-1 expense total                      |
+| B1-1 Total functions and activities — expenses                                                                               |                          `$344,431` thousand | = `$344,431,000` (printed total)          |
+| Operating result / net operating result                                                                                      | `$418,722` − `$344,431` = `$74,291` thousand | = printed operating result                |
+| Net operating result for the year attributable to Council                                                                    |                           `$74,291` thousand | = operating result                        |
+| Net operating result before capital grants                                                                                   |  `$74,291` − `$75,533` = `$(1,242)` thousand | = printed before-capital result           |
+| B1-1 grants and contributions                                                                                                |                           `$96,658` thousand | = operating `$21,125` + capital `$75,533` |
+| Statement of Comprehensive Income net result                                                                                 |                           `$74,291` thousand | = Income Statement net result             |
+| Note B3-4 total depreciation and amortisation costs                                                                          |                           `$97,315` thousand | = face depreciation line                  |
+
+The printed "Net gain from the disposal of assets" line is a dash (zero) and is not emitted; the
+seven revenue components still sum exactly to the printed total, which proves it is zero.
+
+**Rows.** 17 rows, source id `shoalhaven-gpfs`, `source_dataset` "Shoalhaven City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Shoalhaven City Council"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$418,722,000`, total expenses `$344,431,000`, employee expenses `$114,992,000`,
+depreciation/amortisation/impairment `$97,315,000`, operating government grants `$21,125,000`,
+capital government grants `$75,533,000` and net result `$74,291,000`; the face-statement revenue and
+expense components are included for provenance.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into the existing `dubbo-council` budget/estimate rows or any other council. The pre-existing
+same-entity rows are preserved untouched and never summed: **1 GrantConnect row** whose
+`delivery_entity` is exactly "Shoalhaven City Council", plus **135 other rows** whose
+`delivery_entity` merely mentions Shoalhaven under other strings (96 ACNC, 19 AusTender, 18
+GrantConnect and 2 data.nsw rows); their per-source counts are identical before and after the
+ingest. All fifteen other council GPFS sources are unchanged (Dubbo 18, City of Sydney 18, Blacktown
+17, Parramatta 17, Northern Beaches 18, Canterbury-Bankstown 17, Sutherland Shire 17, Wollongong 17,
+Newcastle 17, Lake Macquarie 17, Maitland 7, Coffs Harbour 17, MidCoast 17, Port Macquarie-Hastings
+17, Tweed Shire 17). Government grant rows carry `potential_double_count: true` because they may
+overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** `measures` 515,697 → **515,714** (exactly +17);
+`shoalhaven-gpfs` **17**; `data-nsw-ckan` still **3,472**; `dubbo-council` still **245**; exact
+"Shoalhaven City Council" rows 1 → **18** (the new 17 plus the pre-existing GrantConnect row);
+`data_sources` 41 → **42**. A second ingest run upserted the same 17 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -1538,7 +1618,9 @@ total unchanged (idempotent). No deletes or updates to any other source.
    (§7.12). **Twelfth expansion landed 2026-11-18:** MidCoast Council FY2024-25 GPFS, 17
    non-additive rows (§7.13). **Thirteenth expansion landed 2026-11-18:** Port Macquarie-Hastings
    Council FY2024-25 GPFS, 17 non-additive rows (§7.14). **Fourteenth expansion landed
-   2026-11-18:** Tweed Shire Council FY2024-25 GPFS, 17 non-additive rows (§7.15).
+   2026-11-18:** Tweed Shire Council FY2024-25 GPFS, 17 non-additive rows (§7.15). **Fifteenth
+   expansion landed 2026-11-18:** Shoalhaven City Council FY2024-25 GPFS, 17 non-additive rows
+   (§7.16).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -1592,6 +1674,12 @@ differ); always show the source, year, measure type and fund/basis.
   <https://www.coffsharbour.nsw.gov.au/Your-Council/Our-responsibilities/Corporate-planning-and-reporting/Annual-Report>
 - Coffs Harbour City Council FY2024-25 GPFS PDF — URL above (4,006,409 bytes; SHA-256
   `026fd09fed7099b1276beb2775c62193d00e60ed13c7f71c72a202c7f25ebf5e`)
+- Shoalhaven City Council financial statements page —
+  <https://www.shoalhaven.nsw.gov.au/Council/Reports/Financial-statements>
+- Shoalhaven City Council Financial Statements - Previous Years page —
+  <https://www.shoalhaven.nsw.gov.au/Council/Publicly-available-information/Finance/Financial-Statements-Previous-Years>
+- Shoalhaven City Council FY2024-25 GPFS PDF — official record endpoint above (5,881,682 bytes; SHA-256
+  `74076e6f5b966575deb498e3805c9f5ff66aaa71ace5b001972f7d33313add20`)
 - Audit Office reports — <https://www.audit.nsw.gov.au/our-work/reports>
 - data.nsw CKAN API — `package_search` queries for "local government council", "local government
   financial", "time series council", "council expenditure", "financial data return", "grants
