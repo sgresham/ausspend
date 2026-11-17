@@ -1,14 +1,17 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Three council GPFS extractions have landed as
+**Status:** the inventory and plan below are unchanged. Four council GPFS extractions have landed as
 separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
 Blacktown City Council FY2024-25 GPFS (**§7.3**) then added exactly **17** `blacktown-gpfs` rows
-(**515,485** → **515,502**). The existing 245 `dubbo-council` budget/estimate rows, the 2
-pre-existing AusTender federal contract rows whose `delivery_entity` happens to be "City of
-Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity` happens to be "Blacktown City
-Council", and every other source are preserved untouched and are never summed with the GPFS rows.
+(**515,485** → **515,502**); the City of Parramatta FY2024-25 GPFS (**§7.4**) then added exactly
+**17** `parramatta-gpfs` rows (**515,502** → **515,519**). The existing 245 `dubbo-council`
+budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
+happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
+happens to be "Blacktown City Council", the 215 AusTender/data.nsw/GrantConnect/QGIP/ACNC rows whose
+`delivery_entity` mentions "Parramatta", and every other source are preserved untouched and are
+never summed with the GPFS rows.
 
 **As at:** 17 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -203,9 +206,10 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 53 GPFS rows** — 18 for Dubbo FY2024-25
-(`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2) and
-17 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3) — all separate source ids. The
+comparatives inside each report). **In DB: 70 GPFS rows** — 18 for Dubbo FY2024-25
+(`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
+for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3) and 17 for City of Parramatta FY2024-25
+(`parramatta-gpfs`, §7.4) — all separate source ids. The
 existing `dubbo-council` 245 rows are 2026/27 budget/forward-estimate lines, not GPFS actuals, and
 are not touched or summed with the GPFS rows.
 
@@ -599,6 +603,69 @@ still **18**; `data-nsw-ckan` still **3,472**; `data_sources` 28 → **29**. A s
 upserted the same 17 natural keys and left the DB total unchanged (idempotent). No deletes or
 updates to any other source.
 
+### 7.4 Fourth council — City of Parramatta FY2024-25 GPFS (landed 2026-11-17)
+
+**Source.** Discovered from the official financial-statements page
+<https://www.cityofparramatta.nsw.gov.au/council/performance-and-reporting/financial-statements>
+(no hard-coded document URL). That page links a dedicated FY2024-25 page,
+<https://www.cityofparramatta.nsw.gov.au/council/performance-and-reporting/financial-statements/2024-2025-annual-financial-statements>,
+whose "Download the 2024-2025 Annual Financial Statements" link
+(`title="City of Parramatta Annual Financial Statements 2024-2025.pdf"`) resolves to
+<https://www.cityofparramatta.nsw.gov.au/files/assets/public/v/3/council/financial-statements/city-of-parramatta-annual-financial-statements-2024-2025.pdf>
+(HTTP 200, 4,098,410 bytes). Exact bytes archived outside the repo at
+`~/ausspend-source-archive/parramatta-gpfs/city-of-parramatta-annual-financial-statements-2024-2025.pdf`,
+SHA-256 `9dad166100cdf224a2c34d210b12673450b8b134fe2a7e257dec350e65c1be59`. The printed unit is
+explicit `$ '000` (thousands) on the Income Statement (printed p4), the Statement of Comprehensive
+Income (p5) and note B1-1 (p14); a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The Parramatta income statement prints a three-column layout (Original
+unaudited budget before the line label; Actual 2025 and Restated Actual 2024 after it). The connector
+takes the first amount after each printed label, i.e. the FY2024-25 actual, and emits nothing unless
+all of these agree exactly:
+
+| Check                                                                                                                        |                            Printed / derived | Result                                                                                     |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------: | ------------------------------------------------------------------------------------------ |
+| Total income from continuing operations (Income Statement p4)                                                                |                          `$439,204` thousand | = `$439,204,000`                                                                           |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) |                          `$439,204` thousand | = printed total                                                                            |
+| Total expenses excluding depreciation (printed p4)                                                                           |                          `$313,493` thousand | = expense components sum (employee + materials + borrowing + other + net loss on disposal) |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$70,059`)                           | `$313,493` + `$70,059` = `$383,552` thousand | = B1-1 expense total                                                                       |
+| B1-1 Total functions and activities — income / expenses / operating result                                                   | `$439,204` / `$383,552` / `$55,652` thousand | = face statement                                                                           |
+| B1-1 grants and contributions                                                                                                |                           `$87,047` thousand | = operating `$17,849` + capital `$69,198`                                                  |
+| Net operating result before capital grants                                                                                   |                         `($13,546)` thousand | = `$55,652 − $69,198`                                                                      |
+| Statement of Comprehensive Income net result                                                                                 |                           `$55,652` thousand | = Income Statement net result                                                              |
+
+Unlike Blacktown, Parramatta's printed "Net loss from the disposal of assets" is a non-zero
+**expense** component (`$7,307` thousand) and participates in the expense bridge; there is no
+disposal-gain revenue line. The connector does **not** use OLG all-rights data as an anchor: the
+reconciliation is internal to the audited document.
+
+**Rows.** **17 rows**, source id `parramatta-gpfs`, `source_dataset` "City of Parramatta GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "City of Parramatta"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$439,204,000`, total expenses `$383,552,000`, employee expenses `$164,786,000`,
+depreciation/amortisation/impairment `$70,059,000`, operating government grants `$17,849,000`,
+capital government grants `$69,198,000`, net loss on disposal of assets `$7,307,000` and net result
+`$55,652,000`; the printed face-statement revenue and expense components are included for
+provenance. The printed negative before-capital result `($13,546,000)` is kept in the reconciliation
+evidence only, because the measure model stores non-negative integer cents.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and area panels therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into any other council or state rows. The 215 pre-existing rows whose `delivery_entity` contains
+"Parramatta" are **7 AusTender contracts, 5 data.nsw rows, 94 GrantConnect grants, 5 QGIP rows and
+104 ACNC charity rows** (not council financial rows); their per-source counts are identical before
+and after the ingest, and they are never summed with the GPFS rows. Government grant rows carry
+`potential_double_count: true` because they may overlap government program data; they are not added
+to expenditure.
+
+**Database evidence (2026-11-17).** `measures` 515,502 → **515,519** (exactly +17); `parramatta-gpfs`
+**17**; `blacktown-gpfs` still **17**; `city-of-sydney-gpfs` still **18**; `dubbo-council` still
+**245**; `dubbo-council-gpfs` still **18**; `data-nsw-ckan` still **3,472**; `data_sources` 29 →
+**30**. A second ingest run upserted the same 17 natural keys and left the DB total unchanged
+(idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -615,7 +682,8 @@ updates to any other source.
    machine-readable GPFS. Then regional cities, then rural. One adapter/mapping per council; never a
    blind 128-PDF batch. **First expansion landed 2026-11-17:** City of Sydney FY2024-25 GPFS, 18
    non-additive rows (§7.2). **Second expansion landed 2026-11-17:** Blacktown City Council
-   FY2024-25 GPFS, 17 non-additive rows (§7.3).
+   FY2024-25 GPFS, 17 non-additive rows (§7.3). **Third expansion landed 2026-11-17:** City of
+   Parramatta FY2024-25 GPFS, 17 non-additive rows (§7.4).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -649,6 +717,10 @@ differ); always show the source, year, measure type and fund/basis.
   <https://www.blacktown.nsw.gov.au/About-Council/Plans-policies-and-reports/Annual-audit-and-financial-reports>
 - Blacktown FY2024-25 GPFS PDF — URL above (3,873,391 bytes; SHA-256
   `74d7c880b4e795ea1cc9d17bb786eb9c1878cf9a1127c4d3f5b4d01f94e11b31`)
+- City of Parramatta financial-statements page —
+  <https://www.cityofparramatta.nsw.gov.au/council/performance-and-reporting/financial-statements>
+- City of Parramatta FY2024-25 GPFS PDF — URL above (4,098,410 bytes; SHA-256
+  `9dad166100cdf224a2c34d210b12673450b8b134fe2a7e257dec350e65c1be59`)
 - Audit Office reports — <https://www.audit.nsw.gov.au/our-work/reports>
 - data.nsw CKAN API — `package_search` queries for "local government council", "local government
   financial", "time series council", "council expenditure", "financial data return", "grants
@@ -683,6 +755,22 @@ differ); always show the source, year, measure type and fund/basis.
 - DB: measures 515,485 → 515,502 (+17 only); `city-of-sydney-gpfs` still 18; `dubbo-council` still
   245; the 3 pre-existing Blacktown-delivery-entity AusTender/GrantConnect rows unchanged; a second
   run upserted the same 17 natural keys with no count change.
+
+**GPFS fourth-council checks (2026-11-17):**
+
+- City of Parramatta official financial-statements page fetched (HTTP 200); the FY2024-25 page and
+  the statements PDF were discovered from the page links, not a hard-coded document URL.
+- GPFS PDF fetched (HTTP 200, 4,098,410 bytes) and SHA-256 archived outside the repo; SHA-256
+  `9dad166100cdf224a2c34d210b12673450b8b134fe2a7e257dec350e65c1be59`.
+- Printed `$ '000` unit detected on the income statement, comprehensive-income statement and B1-1;
+  the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$439,204,000`, expenses `$383,552,000`, net result `$55,652,000`.
+- `parramatta-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA; total
+  expenses is the printed B1-1 value, not a component sum.
+- DB: measures 515,502 → 515,519 (+17 only); `blacktown-gpfs` still 17; `city-of-sydney-gpfs` still
+  18; `dubbo-council` still 245; the 215 pre-existing Parramatta-delivery-entity rows unchanged; a
+  second run upserted the same 17 natural keys with no count change.
 
 **Workbook checks run (read-only, local):**
 

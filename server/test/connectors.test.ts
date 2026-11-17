@@ -19,6 +19,7 @@ const LIVE_IDS = [
   'dubbo-council-gpfs',
   'city-of-sydney-gpfs',
   'blacktown-gpfs',
+  'parramatta-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -37,9 +38,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships twenty-nine connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(29);
-    expect(new Set(CONNECTOR_IDS).size).toBe(29);
+  it('ships thirty connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(30);
+    expect(new Set(CONNECTOR_IDS).size).toBe(30);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -127,6 +128,10 @@ describe('federal connector registry', () => {
     expect(getConnector('blacktown-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('blacktown-gpfs')?.source_url).toContain('blacktown.nsw.gov.au');
     expect(getConnector('blacktown-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('parramatta-gpfs')?.status).toBe('active');
+    expect(getConnector('parramatta-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('parramatta-gpfs')?.source_url).toContain('cityofparramatta.nsw.gov.au');
+    expect(getConnector('parramatta-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
