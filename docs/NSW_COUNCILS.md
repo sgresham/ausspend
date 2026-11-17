@@ -940,10 +940,10 @@ and net result `$10,238,000` (printed negative, stored with `gpfs_printed_sign:
 **No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
 `gpfs_line_item`/`gpfs_component_of`; the generic additive API and area panels therefore exclude
 them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
-into any other council or state rows. The 5 pre-existing exact-entity rows are **4 exact-case
-"Wollongong City Council" GrantConnect grants and 1 uppercase "WOLLONGONG CITY COUNCIL" AusTender
-contract** (not council financial rows); the 114 ACNC rows and 3 data.nsw school rows that merely
-mention Wollongong use different `delivery_entity` values. Their per-source counts are identical
+into any other council or state rows. The 7 pre-existing rows that exactly name the council are **4 exact-case "Wollongong City Council"
+GrantConnect grants, 1 mixed-case "Wollongong City Council" AusTender contract and 2 uppercase
+"WOLLONGONG CITY COUNCIL" AusTender variants** (not council financial rows); the 114 ACNC rows and 3
+data.nsw school rows that merely mention Wollongong use different `delivery_entity` values. Their per-source counts are identical
 before and after the ingest, and they are never summed with the GPFS rows. Government grant rows
 carry `potential_double_count: true` because they may overlap government program data; they are not
 added to expenditure.
@@ -1161,8 +1161,8 @@ differ); always show the source, year, measure type and fund/basis.
 - `wollongong-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - DB: measures 515,571 → 515,588 (+17 only); `sutherland-shire-gpfs` still 17;
   `canterbury-bankstown-gpfs` still 17; `northern-beaches-gpfs` still 18; `parramatta-gpfs` still
-  17; `blacktown-gpfs` still 17; `city-of-sydney-gpfs` still 18; `dubbo-council` still 245; the 5
-  pre-existing exact Wollongong-delivery-entity rows unchanged; a second run upserted the same 17
+  17; `blacktown-gpfs` still 17; `city-of-sydney-gpfs` still 18; `dubbo-council` still 245; the 7 rows that exactly name the council
+  unchanged; a second run upserted the same 17
   natural keys with no count change.
 
 **Workbook checks run (read-only, local):**

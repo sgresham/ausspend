@@ -27,11 +27,11 @@ import type { Connector, RawRecord } from './types.js';
  * a Wollongong City Council-specific layout adapter. It is a separate source id
  * (`wollongong-gpfs`) from every other source. Every row is non-additive
  * `agency_detail` with no region/LGA allocation, so it can never be summed with
- * the 245 Dubbo budget rows, any existing council GPFS source, the 5
- * pre-existing exact-entity rows (4 exact-case "Wollongong City Council"
- * GrantConnect rows and 1 uppercase "WOLLONGONG CITY COUNCIL" AusTender row), the
- * 114 ACNC charity rows or 3 data.nsw school rows that merely mention
- * Wollongong, or any other council.
+ * the 245 Dubbo budget rows, any existing council GPFS source, the 7
+ * pre-existing rows that exactly name the council (4 exact-case "Wollongong City
+ * Council" GrantConnect rows, 1 mixed-case AusTender row and 2 uppercase
+ * "WOLLONGONG CITY COUNCIL" AusTender variants), the 114 ACNC charity rows or 3
+ * data.nsw school rows that merely mention Wollongong, or any other council.
  *
  * The PDF URL is discovered from the council's official FY2024-25 financial
  * report page (never a hard-coded document URL). The site enforces a Cloudflare
