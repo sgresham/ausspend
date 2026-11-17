@@ -26,6 +26,7 @@ import { createWilloughbyGpfsConnector } from './willoughby-gpfs.js';
 import { createInnerWestGpfsConnector } from './inner-west-gpfs.js';
 import { createBaysideGpfsConnector } from './bayside-gpfs.js';
 import { createRandwickGpfsConnector } from './randwick-gpfs.js';
+import { createRydeGpfsConnector } from './ryde-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -344,6 +345,20 @@ export const CONNECTORS: readonly Connector[] = [
   // SHA-256 archived outside the repo. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
   createRandwickGpfsConnector(),
+  // GPFS expansion: twenty-third council only (the Council of the City of
+  // Ryde). Its audited FY2024-25 General Purpose Financial Statements are the
+  // standalone official "Financial Statements (General and Special Purpose)"
+  // PDF for the year ended 30 June 2025 linked from the Financial Reports and
+  // Statements page, and a separate source id: every row is non-additive
+  // agency_detail, has no region/LGA allocation, and reconciles to the printed
+  // Income Statement, B1-1 "Total functions and activities" and
+  // comprehensive-income totals (the printed B1-1 $15 thousand
+  // function-allocation discrepancy is recorded as evidence). ryde.nsw.gov.au
+  // serves plain HTTP, so the PDF is discovered from the official page with
+  // Node's fetch; the exact bytes are SHA-256 archived outside the repo. Never
+  // summed with any other council, the Dubbo budget rows, the existing council
+  // GPFS rows or State rows.
+  createRydeGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
