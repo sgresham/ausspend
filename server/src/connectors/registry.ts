@@ -24,6 +24,7 @@ import { createShellharbourGpfsConnector } from './shellharbour-gpfs.js';
 import { createWaverleyGpfsConnector } from './waverley-gpfs.js';
 import { createWilloughbyGpfsConnector } from './willoughby-gpfs.js';
 import { createInnerWestGpfsConnector } from './inner-west-gpfs.js';
+import { createBaysideGpfsConnector } from './bayside-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -318,6 +319,18 @@ export const CONNECTORS: readonly Connector[] = [
   // archived outside the repo. Never summed with any other council, the Dubbo
   // budget rows, the existing council GPFS rows or State rows.
   createInnerWestGpfsConnector(),
+  // GPFS expansion: twenty-first council only (Bayside Council). Its audited
+  // FY2024-25 General Purpose Financial Statements are the standalone official
+  // "General Purpose Financial Statements & Special Schedules for the year
+  // ended 30 June 2025" PDF linked from the Corporate planning and reporting
+  // page, and a separate source id: every row is non-additive agency_detail,
+  // has no region/LGA allocation, and reconciles exactly to the printed Income
+  // Statement, B1-1 "Total functions and activities" and comprehensive-income
+  // totals. bayside.nsw.gov.au serves plain HTTP, so the PDF is discovered from
+  // the official page with Node's fetch; the exact bytes are SHA-256 archived
+  // outside the repo. Never summed with any other council, the Dubbo budget
+  // rows, the existing council GPFS rows or State rows.
+  createBaysideGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),
