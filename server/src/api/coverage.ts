@@ -8,6 +8,12 @@ import {
   CONNECTORS,
   GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
   PBS_CAVEAT,
+  SYDNEY_WATER_CAVEAT,
+  SYDNEY_WATER_ENTITY,
+  SYDNEY_WATER_ID,
+  SYDNEY_WATER_JURISDICTION,
+  SYDNEY_WATER_UNIT,
+  SYDNEY_WATER_UNIT_LABEL,
   connectorSummary,
 } from '../connectors/index.js';
 import { pingDatabase, type DbStatus } from '../db.js';
@@ -93,6 +99,7 @@ function coverageLimitations(
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
     'ABS GFS Annual 2024-25 is a COFOG-A expense benchmark from the official XLSX (Key Tables 9/10). The ABS SDMX API has no GFS/COFOG dataflow, so no SDMX query is used. Every GFS row is a published official aggregate (verified: true, aggregation_role "benchmark") at federal/state/local level; it is never project-level and is never summed with project data, across levels or across measure types. The benchmark is exposed separately at /api/benchmark and excluded from the generic spending/search queries.',
     'ABS GFS Public Non-Financial Corporations (PNFC) is a separate sector benchmark from nine official Annual 2024-25 XLSX data cubes (Australia all levels plus the eight states/territories). The ABS SDMX API has no PNFC/GFS dataflow, so no SDMX query is used. Only the published Total GFS revenue and Total GFS expenses rows are ingested, as separate flows, with jurisdiction_level "pnfc", verified: true and aggregation_role "benchmark". It is a sector aggregate, exposed only at /api/benchmark/pnfc and excluded from generic spending/search: never add it to SOC/entity, government, charity or project data, and never sum across jurisdictions or revenue/expense flows.',
+    'NSW SOC (phase 2) covers one state-owned corporation only: Sydney Water Corporation. Its latest annual report is discovered from Sydney Water\'s annual-report page (no hard-coded PDF URL), SHA-256 archived outside the repo, and read as an entity-level statement (jurisdiction_level "soc", aggregation_role "agency_detail"). The printed unit is explicit $’000; total expenses is the exact sum of the two printed expense totals (finance costs + other expenses) and is accepted only when the statement profit-before-tax bridge and both Note 2 subtotals reconcile exactly. Every row is provisional and unverified. SOC rows are exposed only at /api/soc and are never added to government program spending, to the PNFC benchmark, or to each other; rows whose funding_source names a government agency/contribution are flagged potential_double_count. No other SOC, no VIC/QLD SOC, no BP1 Chapter 9 and no project/LGA/coordinate is covered.',
     'ACNC charity expenses are reported by registered charities, not government. They are jurisdiction_level "charity", have no COFOG function, and are never merged with federal/state/local spending. Every charity row has an explicit expense_category; total-expenses rows (aggregation_role expense_total) and component rows (expense_component) are never summed together. State/postcode comes only from AIS program operating locations, is single-state only and is flagged location_approximate.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory plus one S3 sub-state region (Dubbo, level "region", parent NSW). No other local council or other state has a connector. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
@@ -215,6 +222,8 @@ export function createCoverageHandler(
     const benchmarkLive = absGfs?.status === 'active' || absGfs?.status === 'degraded';
     const absGfsPnfc = dataSourceById.get(ABS_GFS_PNFC_ID);
     const pnfcBenchmarkLive = absGfsPnfc?.status === 'active' || absGfsPnfc?.status === 'degraded';
+    const sydneyWater = dataSourceById.get(SYDNEY_WATER_ID);
+    const socLive = sydneyWater?.status === 'active' || sydneyWater?.status === 'degraded';
     const phaseBase = liveIngestion
       ? pbsLive
         ? stateLive
@@ -231,6 +240,7 @@ export function createCoverageHandler(
         charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
         benchmarkLive ? '+ ABS GFS benchmark' : null,
         pnfcBenchmarkLive ? '+ ABS GFS PNFC benchmark' : null,
+        socLive ? '+ NSW SOC (Sydney Water)' : null,
       ]
         .filter(Boolean)
         .join(' '),
@@ -345,6 +355,21 @@ export function createCoverageHandler(
         caveat: ABS_GFS_PNFC_BENCHMARK_CAVEAT,
         label: 'Sector aggregate — never add to project/entity data',
         note: 'ABS GFS Public Non-Financial Corporations operating statements from nine official Annual 2024-25 XLSX data cubes (Australia all levels plus the eight states/territories). The ABS SDMX API has no PNFC/GFS dataflow; this is the approved XLSX fallback. Only the published Total GFS revenue and Total GFS expenses rows are ingested, as separate flows. Every row is jurisdiction_level "pnfc", verified true, aggregation_role benchmark, and is exposed only through /api/benchmark/pnfc. It is a sector aggregate, never added to SOC/entity, government, charity or project data, and never summed across jurisdictions or flows.',
+      },
+      soc_ingestion: {
+        live: socLive && sydneyWater ? [SYDNEY_WATER_ID] : [],
+        degraded: sydneyWater?.status === 'degraded' ? [SYDNEY_WATER_ID] : [],
+        last_ingested_at: sydneyWater?.last_ingested_at
+          ? new Date(sydneyWater.last_ingested_at).toISOString()
+          : null,
+        records: sydneyWater?.records_ingested ?? 0,
+        entity: SYDNEY_WATER_ENTITY,
+        jurisdiction: SYDNEY_WATER_JURISDICTION,
+        unit: SYDNEY_WATER_UNIT,
+        unit_label: SYDNEY_WATER_UNIT_LABEL,
+        caveat: SYDNEY_WATER_CAVEAT,
+        label: 'SOC entity statement — never add to government program spending',
+        note: 'Entity-level NSW State Owned Corporation statement lines from Sydney Water\'s latest annual report. The PDF is discovered from the official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed $’000 unit is explicit and total expenses reconciles exactly to the printed profit-before-tax bridge. Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other. Government-named funding rows carry potential_double_count.',
       },
       local_ingestion: {
         live: localConnectors

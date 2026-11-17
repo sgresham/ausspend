@@ -17,6 +17,11 @@ export const JURISDICTION_LEVELS = [
   // sector benchmark, not a level of government and not an entity-level SOC
   // row, so it must never be merged with federal/state/local/charity data.
   'pnfc',
+  // State-owned corporation (SOC) entity-level financial statements, e.g. a
+  // Sydney Water annual report. This is an entity statement, not a level of
+  // government, not project spending and not the PNFC sector benchmark. SOC
+  // rows are never added to government program spending or to PNFC data.
+  'soc',
   'other',
 ] as const;
 
@@ -132,6 +137,22 @@ export const MeasureRecordSchema = z.object({
   /** Published ABS GFS line label. */
   gfs_line_label: z.string().min(1).optional(),
   unspsc: z.string().min(1).optional(),
+  /**
+   * SOC entity statement provenance. `soc_line_item` is the stable line key,
+   * `soc_line_label` the exact printed label and `soc_unit` the printed unit
+   * (for Sydney Water: AUD_thousands, printed "$’000"). SOC rows are always
+   * provisional entity statements unless a human marks them verified.
+   */
+  soc_line_item: z.string().min(1).optional(),
+  soc_line_label: z.string().min(1).optional(),
+  soc_unit: z.string().min(1).optional(),
+  /**
+   * True when the row's funding source names a government agency or a
+   * separately disclosed government contribution/transfer. Such a row may
+   * overlap government program spending, so the UI warns and the row is never
+   * added to an additive total.
+   */
+  potential_double_count: z.boolean().optional(),
 });
 
 export type MeasureRecord = z.infer<typeof MeasureRecordSchema>;

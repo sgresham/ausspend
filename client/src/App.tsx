@@ -8,6 +8,7 @@ import { FunctionsPage } from './pages/FunctionsPage';
 import { HomePage } from './pages/HomePage';
 import { RegionsPage } from './pages/RegionsPage';
 import { SearchPage } from './pages/SearchPage';
+import { SocPage } from './pages/SocPage';
 import { StatesPage } from './pages/StatesPage';
 
 export function App() {
@@ -27,6 +28,7 @@ export function App() {
           <Route path="/states" element={<StatesPage />} />
           <Route path="/states/:code" element={<StatesPage />} />
           <Route path="/benchmark" element={<BenchmarkPage />} />
+          <Route path="/soc" element={<SocPage />} />
           <Route path="/data-sources" element={<DataSourcesPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Route>

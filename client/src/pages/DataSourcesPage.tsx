@@ -64,8 +64,15 @@ export function DataSourcesPage() {
         never summed with project data. ABS GFS Public Non-Financial Corporations (PNFC) adds a
         separate sector benchmark from nine official annual XLSX data cubes (Australia all levels
         plus the eight states/territories); it is a sector aggregate — never add it to
-        project/entity data, and revenue and expense are separate flows. WA remains a stub. No grant
-        row is estimated or zero-filled.
+        project/entity data, and revenue and expense are separate flows. NSW SOC phase 2 adds one
+        entity only: Sydney Water Corporation. Its latest annual report is discovered from Sydney
+        Water&apos;s annual-report page (no hard-coded PDF URL), SHA-256 archived outside the repo,
+        and parsed as entity-level statement lines (<code>jurisdiction_level: soc</code>,{' '}
+        <code>aggregation_role: agency_detail</code>) with the printed $’000 unit. Rows are
+        provisional and unverified; government-named funding rows carry a potential-double-count
+        warning. SOC rows are never added to government program spending, the PNFC benchmark or each
+        other, and are exposed only at <code>/api/soc</code>. WA remains a stub. No grant row is
+        estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>

@@ -28,7 +28,8 @@ export interface MeasureDocument {
   natural_key?: string;
   project_name?: string;
   description?: string;
-  jurisdiction_level?: 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'other';
+  jurisdiction_level?:
+    'federal' | 'state' | 'territory' | 'local' | 'charity' | 'pnfc' | 'soc' | 'other';
   jurisdiction?: string;
   delivery_entity?: string;
   funding_source?: string;
@@ -53,6 +54,14 @@ export interface MeasureDocument {
   /** Published ABS GFS line label. */
   gfs_line_label?: string;
   unspsc?: string;
+  /** SOC entity statement stable line key (e.g. total_expenses). */
+  soc_line_item?: string;
+  /** SOC entity statement exact printed line label. */
+  soc_line_label?: string;
+  /** SOC printed unit, e.g. AUD_thousands for "$’000". */
+  soc_unit?: string;
+  /** Government-named funding row that may overlap government program data. */
+  potential_double_count?: boolean;
 }
 
 const LocationSchema = new Schema<SpendingLocationDocument>(
@@ -128,6 +137,10 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     gfs_line_item: { type: String },
     gfs_line_label: { type: String },
     unspsc: { type: String, index: true },
+    soc_line_item: { type: String, index: true },
+    soc_line_label: { type: String },
+    soc_unit: { type: String },
+    potential_double_count: { type: Boolean, index: true },
   },
   { collection: 'measures', versionKey: false },
 );

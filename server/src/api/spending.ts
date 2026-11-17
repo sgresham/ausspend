@@ -340,11 +340,19 @@ export const listSpending: RequestHandler = async (req, res) => {
     }
   }
 
+  if (query.jurisdiction_level === 'soc') {
+    throw badRequest(
+      'SOC entity statements are exposed at /api/soc only, never in generic spending',
+    );
+  }
   const mongoQuery: Record<string, unknown> = {
     // ABS GFS benchmark rows are top-down statistical aggregates, never project
     // data. Keep them out of the generic spending query and every total; the
     // dedicated /api/benchmark endpoint reads them explicitly.
     aggregation_role: { $ne: 'benchmark' },
+    // SOC entity statements are a separate layer and are never added to
+    // government program spending or generic totals; /api/soc reads them.
+    jurisdiction_level: { $ne: 'soc' },
   };
   if (query.fiscal_year) mongoQuery.fiscal_year = query.fiscal_year;
   if (query.measure_type) mongoQuery.measure_type = query.measure_type;
