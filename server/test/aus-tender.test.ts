@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AUS_TENDER_LICENSE,
   ausTenderFeedUrl,
   australianFinancialYear,
   createAusTenderConnector,
@@ -320,6 +321,13 @@ describe('AusTender pagination and rate limiting', () => {
       sleep: async () => {},
     });
     await expect(connector.fetch()).rejects.toThrow(/releases/);
+  });
+});
+
+describe('AusTender licence gate', () => {
+  it('publishes the resolved CC BY 3.0 AU licence on the connector', () => {
+    expect(AUS_TENDER_LICENSE).toBe('CC BY 3.0 AU');
+    expect(createAusTenderConnector().license).toBe('CC BY 3.0 AU');
   });
 });
 

@@ -138,6 +138,7 @@ export {
   AUS_TENDER_DATASET,
   AUS_TENDER_ID,
   AUS_TENDER_NAME,
+  AUS_TENDER_LICENSE,
   AUS_TENDER_SOURCE_URL,
   ausTenderFeedUrl,
   ausTenderSourceUrl,

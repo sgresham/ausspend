@@ -24,6 +24,15 @@ export const AUS_TENDER_ID = 'aus-tender';
 export const AUS_TENDER_NAME = 'AusTender — Australian Government contracts';
 export const AUS_TENDER_PUBLISHER = 'Australian Government Department of Finance';
 export const AUS_TENDER_SOURCE_URL = 'https://www.tenders.gov.au/';
+/**
+ * Licence resolved 2026-11-17 from the AusTender site footer: "With the
+ * exception of the Commonwealth Coat of Arms, Approach to Market (ATM) material
+ * and where otherwise noted, all materials on AusTender are licensed under a
+ * Creative Commons Attribution 3.0 Australia licence (CC BY 3.0 AU)." Contract
+ * notices are not ATM material, so this connector's rows are CC BY 3.0 AU with
+ * attribution to the Commonwealth of Australia (Department of Finance).
+ */
+export const AUS_TENDER_LICENSE = 'CC BY 3.0 AU';
 export const AUS_TENDER_DATASET = 'AusTender OCDS API';
 export const AUS_TENDER_API_BASE = 'https://api.tenders.gov.au/ocds';
 export const AUS_TENDER_DEFAULT_PAGE_LIMIT = 25;
@@ -474,6 +483,7 @@ export function createAusTenderConnector(options: AusTenderConnectorOptions = {}
     name: AUS_TENDER_NAME,
     publisher: AUS_TENDER_PUBLISHER,
     source_url: AUS_TENDER_SOURCE_URL,
+    license: AUS_TENDER_LICENSE,
     // The implementation is live; per-run status (active/degraded) comes from
     // the ingestion runner and data_sources.
     status: 'active',
