@@ -183,9 +183,9 @@ nonzero before it changes anything.
 
 The live baseline after the QGIP earlier-years, Essential Energy, Forestry Corporation of NSW,
 Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink ingests plus the Dubbo GPFS
-pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai GPFS expansion, plus VIC council pilots B and C (VLGGC historical), is **602,062 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
+pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai GPFS expansion, plus VIC council pilots B, C and D (VLGGC historical), is **659,086 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
 AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115,
-QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401 + 27,099 historical, VIC VLGGC ABS1/ABS2-3 9,059 + 44,548 historical, ABS GFS PNFC
+QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401 + 48,815 historical, VIC VLGGC ABS1/ABS2-3 9,059 + 82,857 historical, ABS GFS PNFC
 18, Sydney Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5,
 Sydney Trains 6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
 The pre-removal
@@ -555,8 +555,13 @@ series FY2019-20 to FY2023-24 under the same two source ids: 27,099 VGC1 and 44,
 rows (71,647 total) across all 79 councils, each with a per-year `fiscal_year` and natural key, every
 source Totals row suppressed, no cross-council or cross-year total, and VLGGC attribution/permission
 (not CC BY). Council totals reconcile to each workbook Totals row within 1 cent; Bendigo FY2023-24
-income-statement totals match its audited GPFS within $2,475.92 and the deltas are documented. FY2015-16
-to FY2018-19 are explicitly deferred, not sampled. The 79 individual GPFS PDFs and other states remain a
+income-statement totals match its audited GPFS within $2,475.92 and the deltas are documented.
+**VIC council pilot D** adds the remaining FY2015-16 to FY2018-19 years: 21,715 VGC1 and 35,309 ABS
+non-additive rows (57,024 total) across all 79 councils, so all nine historical years are landed and
+none is deferred. The older VGC1 header prints `Family & Community Service` (singular) and the older
+ABS2 balance sheet has 144 columns (no lease-liability line); the connector selects an explicit legacy
+layout, suppresses all Totals rows, keys each row by fiscal year, and reconciles each year to its
+workbook Totals row within 1 cent. The 79 individual GPFS PDFs and other states remain a
 later item. Council spending is never state spending.
 
 **PBS caveat.** The CSV is built from individual entity program-expense tables; its line items do

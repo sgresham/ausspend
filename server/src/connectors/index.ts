@@ -1559,6 +1559,8 @@ export {
   type Vgc1WorkbookRows,
 } from './vic-vlgc-vgc1.js';
 export {
+  ABS23_LAYOUT_CURRENT,
+  ABS23_LAYOUT_LEGACY_2015_18,
   BENDIGO_ABS_COUNCIL_NAME,
   BENDIGO_ABS_GPFS,
   VLGGC_ABS1_EXPECTED_BYTES,
@@ -1595,6 +1597,7 @@ export {
   vlgcAbsAmountToCents,
   vlgcAbsManifestFromLoaded,
   vlgcAbsNaturalKey,
+  type Abs23Layout,
   type VlgcAbsArchiveManifest,
   type VlgcAbsConnectorOptions,
   type VlgcAbsLoadedSource,

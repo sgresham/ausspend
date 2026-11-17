@@ -6,10 +6,13 @@ pass. **VIC council pilot A is implemented** as source `vic-vlgc-vgc1`: 5,401 no
 `vic-vlgc-abs`: 9,059 non-additive ABS1/ABS2-3 2024-25 rows across the same 79 councils (see §12).
 **VIC council pilot C is implemented** as historical VGC1 and ABS1/ABS2-3 rows for FY2019-20 to
 FY2023-24 under the same two source ids: **27,099 VGC1 + 44,548 ABS = 71,647 historical rows**
-(see §13). FY2015-16 to FY2018-19 are explicitly **deferred**, not sampled. The planning pass
-touched docs only; pilots A–C are separate ingestion items. The database was **515,449 measures**
+(see §13). **VIC council pilot D is implemented** as the remaining four years FY2015-16 to
+FY2018-19 under the same ids: **21,715 VGC1 + 35,309 ABS = 57,024 rows** (see §14). All nine
+historical years are now landed; **no year is deferred**. The planning pass
+touched docs only; pilots A–D are separate ingestion items. The database was **515,449 measures**
 at planning time, **515,955** on the eve of pilot A, **521,356** after it (exact delta +5,401),
-**530,415** after pilot B (exact delta +9,059), and **602,062** after pilot C (exact delta +71,647).
+**530,415** after pilot B (exact delta +9,059), **602,062** after pilot C (exact delta +71,647),
+and **659,086** after pilot D (exact delta +57,024).
 No council PDFs were queued.
 
 **As at:** 17 November 2026. **Scope:** Victorian local government — the 79 councils — not state
@@ -942,26 +945,33 @@ family**, no 2024-25 re-ingest, no NSW rows, no OLG data, no council PDFs.
 
 ### 13.1 Years landed and years deferred (no silent sampling)
 
-| Fiscal year | Status   |  VGC1 rows |   ABS rows | VGC1 natural-key scope                     |
-| ----------- | -------- | ---------: | ---------: | ------------------------------------------ |
-| 2019-20     | landed   |      5,426 |      8,903 | `fiscal_year: 2019-20`                     |
-| 2020-21     | landed   |      5,426 |      8,865 | `fiscal_year: 2020-21`                     |
-| 2021-22     | landed   |      5,427 |      8,868 | `fiscal_year: 2021-22`                     |
-| 2022-23     | landed   |      5,413 |      8,917 | `fiscal_year: 2022-23`                     |
-| 2023-24     | landed   |      5,407 |      8,995 | `fiscal_year: 2023-24`                     |
-| **Total**   |          | **27,099** | **44,548** |                                            |
-| 2015-16     | deferred |          — |          — | workbook exists, schema/mapping not proven |
-| 2016-17     | deferred |          — |          — | workbook exists, schema/mapping not proven |
-| 2017-18     | deferred |          — |          — | workbook exists, schema/mapping not proven |
-| 2018-19     | deferred |          — |          — | workbook exists, schema/mapping not proven |
+| Fiscal year | Status |  VGC1 rows |   ABS rows | VGC1 natural-key scope |
+| ----------- | ------ | ---------: | ---------: | ---------------------- |
+| 2015-16     | landed |      5,420 |      8,896 | `fiscal_year: 2015-16` |
+| 2016-17     | landed |      5,438 |      8,851 | `fiscal_year: 2016-17` |
+| 2017-18     | landed |      5,427 |      8,835 | `fiscal_year: 2017-18` |
+| 2018-19     | landed |      5,430 |      8,727 | `fiscal_year: 2018-19` |
+| 2019-20     | landed |      5,426 |      8,903 | `fiscal_year: 2019-20` |
+| 2020-21     | landed |      5,426 |      8,865 | `fiscal_year: 2020-21` |
+| 2021-22     | landed |      5,427 |      8,868 | `fiscal_year: 2021-22` |
+| 2022-23     | landed |      5,413 |      8,917 | `fiscal_year: 2022-23` |
+| 2023-24     | landed |      5,407 |      8,995 | `fiscal_year: 2023-24` |
+| **Total**   |        | **48,815** | **82,857** |                        |
 
-The five landed years use the 2019-20..2023-24 workbook generation. That generation prints each
-VGC1 `E-*` function tab as repeated sub-function blocks; **the first block of each tab is the
-printed `<function> Total`** (code 01199, 01299, …, 01996) and is mapped to the same
-function × 5-nature cut as pilot A. Later sub-function blocks are deliberately **not** summed into
-the function total. The 2015-16..2018-19 generation uses different sheet names (for example
-`2015-16-VGC-Questionnaire-...`) and has not been mapped; it is left for a later item rather than
-guessed.
+**No year is deferred.** Every year FY2015-16..FY2023-24 has a parseable mapping and every year has
+exactly 79 reporting entities. The two workbook generations differ and are mapped explicitly:
+
+- FY2019-20..FY2023-24 print each VGC1 `E-*` tab as repeated sub-function blocks; **the first block
+  of each tab is the printed `<function> Total`** (code 01199, 01299, …, 01996) and is mapped to the
+  same function × 5-nature cut as pilot A. Later sub-function blocks are deliberately **not** summed.
+- FY2015-16..FY2018-19 use the same VGC1/ABS1 layout but print `Family & Community Service`
+  (singular) in the total-sheet header and a **144-column ABS2 balance sheet** (one fewer liability
+  line, no lease-liability row; liabilities, equity, cash-flow, revenue and expense sections each
+  shift left and have fewer printed lines). The connector selects the legacy ABS2 layout explicitly
+  per year (`ABS23_LAYOUT_LEGACY_2015_18`) rather than assuming identical columns.
+- 2016-17's ABS2-3 file is named `…ABS2-3-Balance-Sheets-and-Other.xlsx`; 2017-18 and 2018-19 use
+  `…ABS2-Balance-Sheets-and-Other-Finances.xlsx`. All three carry the same `Balance Sheets` and
+  `Sources & Applications` sheets and are mapped identically within the older generation.
 
 ### 13.2 Workbooks, snapshots and hashes
 
@@ -1058,3 +1068,86 @@ Checks: `npm run typecheck`, `npm run lint`, `npm test` (including
 79-council parsing, 11-Totals suppression, fiscal-year natural keys, idempotency, non-additive
 flags and ABS year scoping), `npm run build`, mocked `npm run test:e2e` and live `npm run audit` on
 alternate ports. Do not run these against 3001/5173 or the production nginx.
+
+## 14. Pilot D implementation record (18 November 2026)
+
+**Scope delivered:** the remaining VLGGC historical years **FY2015-16 to FY2018-19** for all 79
+councils, under the existing source ids `vic-vlgc-vgc1` and `vic-vlgc-abs`. No new source family,
+no re-ingest of FY2019-20..FY2024-25, no NSW/OLG rows, no council PDFs.
+
+### 14.1 Years landed and deferred
+
+| Fiscal year | Status |  VGC1 rows |   ABS rows | ABS2 layout    |
+| ----------- | ------ | ---------: | ---------: | -------------- |
+| 2015-16     | landed |      5,420 |      8,896 | legacy 144-col |
+| 2016-17     | landed |      5,438 |      8,851 | legacy 144-col |
+| 2017-18     | landed |      5,427 |      8,835 | legacy 144-col |
+| 2018-19     | landed |      5,430 |      8,727 | legacy 144-col |
+| **Total**   |        | **21,715** | **35,309** |                |
+
+**No year is deferred.** Each year has exactly 79 reporting entities. The older generation maps
+explicitly rather than by assumption:
+
+- VGC1 `Total Exp`/`Total Rev` and the `E-*` function tabs use the same first-block
+  `<function> Total` nature mapping as pilot C, but print `Family & Community Service` (singular)
+  in the total-sheet header; the header matcher accepts the singular/plural stem.
+- The ABS2 `Balance Sheets` sheet has **144 columns, not 148**: FY2015-16..FY2018-19 have no
+  lease-liability line, so Total Liabilities is column 52 (not 53), Total Equity column 55 (not 56),
+  and the cash-flow/revenue/expense sections each shift left and have fewer printed lines. The
+  connector selects `ABS23_LAYOUT_LEGACY_2015_18` explicitly; it never assumes the 2024-25 columns.
+- Some older ABS2 workbooks print a literal `0` total equity for a handful of councils while Total
+  Liabilities & Equity still balances to liabilities. Zero cells are not emitted, matching pilot B;
+  the source value is preserved as absent, never back-filled or guessed.
+
+### 14.2 Workbooks, snapshots and hashes
+
+| Year    | Workbook | Wayback snapshot | SHA-256                           |   Bytes |
+| ------- | -------- | ---------------- | --------------------------------- | ------: |
+| 2015-16 | VGC1     | 20220309020324   | `e30382d5…3015d2fb75ea69`         | 825,660 |
+| 2015-16 | ABS1     | 20220309020400   | `debdb84b…067a76a80aa5f812`       | 484,933 |
+| 2015-16 | ABS2-3   | 20220309020410   | `ac3bbe97…5cf213a0655c7fc`        | 141,538 |
+| 2016-17 | VGC1     | 20190312124827   | `08d9f99e…f09fd24fb6e91a27`       | 830,482 |
+| 2016-17 | ABS1     | 20190312124932   | `7bc0e80c…f41f6a665602cb82`       | 478,883 |
+| 2016-17 | ABS2-3   | 20190312124950   | `677bf810…49d04150d9dc896`        | 142,695 |
+| 2017-18 | VGC1     | 20200229134217   | `e977cbb5…679671ce0ff14af`        | 844,966 |
+| 2017-18 | ABS1     | 20200229134242   | `84e35f02…9d85427727bae8b8`       | 485,627 |
+| 2017-18 | ABS2     | 20200229134258   | `62b97da8…aeeaf37c39c04d`         | 144,124 |
+| 2018-19 | VGC1     | 20210314151936   | `b209ecd1…9208be18d27b737c`       | 847,695 |
+| 2018-19 | ABS1     | 20210314152012   | `c8e6ccfb…9a74d846662143b66c`     | 482,725 |
+| 2018-19 | ABS2     | 20210314152032   | `2f59ab63…5ab344cdb7bcb69df4cdfa` | 143,220 |
+
+Per-year metadata-only manifests: `docs/source-archive/vic-vlgc-{vgc1,abs}-<year>.json`.
+Licence is the same VLGGC **attribution/permission, NOT CC BY**; derived rows only, workbooks not
+redistributed.
+
+### 14.3 Totals, keys and reconciliation
+
+- Every year suppresses all 11 VGC1 + 4 ABS Totals rows; DB `Totals` entities = 0.
+- Natural keys include the fiscal year; the full 10-year VGC1/ABS set has **0 duplicate
+  natural keys** and every row carries `aggregation_role: agency_detail`,
+  `data_quality_flag: provisional/local_government`, `verified: false`.
+- Each year reconciles to its workbook printed Totals row within 1 cent (VGC1 expense/revenue and
+  ABS capital outlays/total assets); all four older years pass.
+- No cross-council, cross-year or state-plus-local total is created; no row is mixed with
+  `vic-budget`, ABS GFS, LGPRF, waste or NSW data.
+
+### 14.4 DB delta and reproduce
+
+Before pilot D: **602,062** measures. After: **659,086** (+57,024; VGC1 source 54,215, ABS source
+88,916). 2024-25 and 2019-20..2023-24 rows are untouched (idempotent upsert on natural_key); no deletes.
+
+```bash
+export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export VIC_HISTORY_YEARS=2015-16,2016-17,2017-18,2018-19
+export VIC_HISTORY_DIR=/path/with/<year>-VGC1.xlsx-ABS1.xlsx-ABS23.xlsx
+npm run ingest:vic-vlgc-history
+# [ingest:vic-vlgc-history] vic-vlgc-vgc1: success fetched=21715 upserted=21715
+# [ingest:vic-vlgc-history] vic-vlgc-abs: success fetched=35309 upserted=35309
+# [ingest:vic-vlgc-history] db source_rows vgc1=54215 abs=88916 totals_entities=0 all_measures=659086
+```
+
+Checks: `npm run typecheck`, `npm run lint`, `npm test` (including
+`server/test/vic-vlgc-history.test.ts`: 9-year register, empty deferred list, singular VGC1 header,
+144-column legacy ABS2 layout, fiscal-year keys, idempotency, Totals suppression, licence metadata),
+`npm run build`, mocked `npm run test:e2e` and live `npm run audit` on alternate ports. Do not run
+against 3001/5173 or production nginx.

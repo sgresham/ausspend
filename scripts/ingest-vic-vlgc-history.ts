@@ -31,9 +31,9 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   VIC_HISTORY_YEARS=2019-20,2020-21,2021-22,2022-23,2023-24 \
  *   npm run ingest:vic-vlgc-history
  *
- * Defaults to the five years whose schemas are verified (2019-20..2023-24).
- * 2015-16..2018-19 are explicitly deferred: their workbooks exist but their
- * schemas/mappings have not been proven. Nothing is guessed or sampled.
+ * Defaults to all nine years whose schemas are verified (2015-16..2023-24).
+ * The older generation is mapped explicitly (singular Family & Community
+ * Service header; 144-column legacy ABS2 layout). Nothing is guessed or sampled.
  *
  * Every run is idempotent on natural_key (which includes fiscal_year), never
  * deletes, and never touches the 2024-25 pilot rows or any other source.

@@ -167,6 +167,49 @@ const BALANCE_SHEET_SECTIONS: readonly StatementSection[] = [
   { start: 148, end: 148, statement: 'income', section: 'comprehensive_result' },
 ];
 
+/**
+ * The FY2015-16..FY2018-19 ABS2 workbook has 144 columns, one fewer than the
+ * FY2019-20+ workbook: it has no lease-liability line, so everything from
+ * Total Liabilities onward shifts one column left. The revenue and expense
+ * sections also have fewer printed lines. The layout is explicit per
+ * generation rather than assumed identical.
+ */
+const BALANCE_SHEET_SECTIONS_LEGACY: readonly StatementSection[] = [
+  { start: 2, end: 33, statement: 'balance', section: 'assets' },
+  { start: 34, end: 52, statement: 'balance', section: 'liabilities' },
+  { start: 53, end: 56, statement: 'balance', section: 'equity' },
+  { start: 57, end: 65, statement: 'cash_flow', section: 'operating_receipts' },
+  { start: 66, end: 78, statement: 'cash_flow', section: 'operating_payments' },
+  { start: 79, end: 88, statement: 'cash_flow', section: 'investing' },
+  { start: 89, end: 99, statement: 'cash_flow', section: 'financing' },
+  { start: 100, end: 104, statement: 'cash_flow', section: 'reconciliation' },
+  { start: 105, end: 119, statement: 'income', section: 'revenue' },
+  { start: 120, end: 140, statement: 'income', section: 'expenses' },
+  { start: 141, end: 143, statement: 'income', section: 'other_comprehensive_income' },
+  { start: 144, end: 144, statement: 'income', section: 'comprehensive_result' },
+];
+
+export interface Abs23Layout {
+  sections: readonly StatementSection[];
+  totalAssetsColumn: number;
+  totalLiabilitiesColumn: number;
+  totalEquityColumn: number;
+}
+
+export const ABS23_LAYOUT_CURRENT: Abs23Layout = {
+  sections: BALANCE_SHEET_SECTIONS,
+  totalAssetsColumn: 33,
+  totalLiabilitiesColumn: 53,
+  totalEquityColumn: 56,
+};
+
+export const ABS23_LAYOUT_LEGACY_2015_18: Abs23Layout = {
+  sections: BALANCE_SHEET_SECTIONS_LEGACY,
+  totalAssetsColumn: 33,
+  totalLiabilitiesColumn: 52,
+  totalEquityColumn: 55,
+};
+
 export interface VlgcAbsWorkbookRows {
   sheets: Array<{
     name: string;
@@ -578,6 +621,7 @@ function balanceHeader(
 export function parseVlgcAbs23Workbook(
   workbook: VlgcAbsWorkbookRows,
   meta: VlgcAbsSourceMeta,
+  layout: Abs23Layout = ABS23_LAYOUT_CURRENT,
 ): VlgcAbsParseResult {
   const skipped: VlgcAbsSkip[] = [];
   const raw: VlgcAbsRaw[] = [];
@@ -594,18 +638,18 @@ export function parseVlgcAbs23Workbook(
     throw new Error('VLGGC ABS2-3 Balance Sheets and Sources & Applications council lists differ');
   }
 
-  if (text(cellValue(balance, 7, 33)) !== 'Total Assets') {
+  if (text(cellValue(balance, 7, layout.totalAssetsColumn)) !== 'Total Assets') {
     throw new Error('VLGGC ABS2 Balance Sheets header is missing Total Assets');
   }
-  if (text(cellValue(balance, 7, 53)) !== 'Total Liabilities') {
+  if (text(cellValue(balance, 7, layout.totalLiabilitiesColumn)) !== 'Total Liabilities') {
     throw new Error('VLGGC ABS2 Balance Sheets header is missing Total Liabilities');
   }
-  if (text(cellValue(balance, 7, 56)) !== 'Total Equity') {
+  if (text(cellValue(balance, 7, layout.totalEquityColumn)) !== 'Total Equity') {
     throw new Error('VLGGC ABS2 Balance Sheets header is missing Total Equity');
   }
 
   for (const council of balanceRows.councils) {
-    for (const section of BALANCE_SHEET_SECTIONS) {
+    for (const section of layout.sections) {
       for (let column = section.start; column <= section.end; column += 1) {
         const header = balanceHeader(balance, column);
         pushRaw(raw, balance, council, meta, {

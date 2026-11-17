@@ -22,12 +22,16 @@ import {
   type Vgc1SourceMeta,
 } from '../src/connectors/vic-vlgc-vgc1.js';
 import {
+  ABS23_LAYOUT_LEGACY_2015_18,
   VLGGC_ABS_ATTRIBUTION,
   VLGGC_ABS_CONDITIONS_OF_USE,
   VLGGC_ABS_ID,
   VLGGC_ABS_LICENSE,
+  parseVlgcAbs23Workbook,
+  readVlgcAbsWorkbook,
   transformVlgcAbsRaw,
   type VlgcAbsRaw,
+  type VlgcAbsSourceMeta,
 } from '../src/connectors/vic-vlgc-abs.js';
 
 const LABELS = Array.from(
@@ -67,15 +71,19 @@ function setCell(
   sheet.getRow(row).getCell(column).value = value;
 }
 
-async function buildHistoricalWorkbook(filePath: string): Promise<void> {
+async function buildHistoricalWorkbook(
+  filePath: string,
+  familyLabel: string = FUNCTION_NAMES[1]!,
+): Promise<void> {
   const workbook = new ExcelJS.Workbook();
   const totalExp = workbook.addWorksheet('Total Exp');
   const totalRev = workbook.addWorksheet('Total Rev');
   for (let index = 0; index < FUNCTION_NAMES.length; index += 1) {
     setCell(totalExp, 5, 2 + index, FUNCTION_CODES[index]!);
     setCell(totalRev, 5, 2 + index, FUNCTION_CODES[index]!);
-    setCell(totalExp, 6, 2 + index, FUNCTION_NAMES[index]!);
-    setCell(totalRev, 6, 2 + index, FUNCTION_NAMES[index]!);
+    const label = index === 1 ? familyLabel : FUNCTION_NAMES[index]!;
+    setCell(totalExp, 6, 2 + index, label);
+    setCell(totalRev, 6, 2 + index, label);
   }
   for (let index = 0; index < LABELS.length; index += 1) {
     const row = 10 + index;
@@ -179,16 +187,67 @@ function absRaw(fiscalYear: string, council = 'Council01 Shire Council'): VlgcAb
   };
 }
 
+async function buildLegacyAbs23Workbook(filePath: string): Promise<void> {
+  const workbook = new ExcelJS.Workbook();
+  const balance = workbook.addWorksheet('Balance Sheets');
+  setCell(balance, 5, 33, '32300');
+  setCell(balance, 5, 52, '32800');
+  setCell(balance, 5, 53, '32500');
+  setCell(balance, 5, 54, '32550');
+  setCell(balance, 5, 55, '32600');
+  setCell(balance, 5, 56, '32900');
+  setCell(balance, 7, 33, 'Total Assets');
+  setCell(balance, 7, 52, 'Total Liabilities');
+  setCell(balance, 7, 55, 'Total Equity');
+  for (let index = 0; index < LABELS.length; index += 1) {
+    const row = 10 + index;
+    setCell(balance, row, 1, LABELS[index]!);
+    setCell(balance, row, 33, 100);
+    setCell(balance, row, 52, 40);
+    setCell(balance, row, 55, 60);
+  }
+  setCell(balance, 90, 1, 'Totals');
+  setCell(balance, 90, 33, 7900);
+  const sources = workbook.addWorksheet('Sources & Applications');
+  for (let index = 0; index < LABELS.length; index += 1) {
+    setCell(sources, 10 + index, 1, LABELS[index]!);
+  }
+  setCell(sources, 90, 1, 'Totals');
+  await workbook.xlsx.writeFile(filePath);
+}
+
+function absMeta(fiscalYear: string): VlgcAbsSourceMeta {
+  return {
+    landing_url: 'https://example.test/vlgc',
+    resource_url: 'https://example.test/abs23.xlsx',
+    retrieval_url: 'https://example.test/wayback/abs23.xlsx',
+    source_url: 'https://example.test/vlgc',
+    source_sha256: 'def456',
+    source_date: '2026-08-18',
+    workbook: 'ABS2-3',
+    fiscal_year: fiscalYear,
+  };
+}
+
 describe('VLGGC historical source register and licence metadata', () => {
   it('covers exactly the five verified years and states the deferred years', () => {
     expect(VIC_HISTORY_FISCAL_YEARS).toEqual([
+      '2015-16',
+      '2016-17',
+      '2017-18',
+      '2018-19',
       '2019-20',
       '2020-21',
       '2021-22',
       '2022-23',
       '2023-24',
     ]);
-    expect(VIC_HISTORY_DEFERRED_YEARS).toEqual(['2015-16', '2016-17', '2017-18', '2018-19']);
+    expect(VIC_HISTORY_DEFERRED_YEARS).toEqual([]);
+    expect(findVicHistoryYear('2015-16').abs23_layout).toBe('legacy_2015_18');
+    expect(findVicHistoryYear('2016-17').abs23_layout).toBe('legacy_2015_18');
+    expect(findVicHistoryYear('2017-18').abs23_layout).toBe('legacy_2015_18');
+    expect(findVicHistoryYear('2018-19').abs23_layout).toBe('legacy_2015_18');
+    expect(findVicHistoryYear('2019-20').abs23_layout).toBeUndefined();
     for (const year of VIC_HISTORY_YEARS) {
       expect(year.vgc1.sha256).toMatch(/^[a-f0-9]{64}$/);
       expect(year.abs1.sha256).toMatch(/^[a-f0-9]{64}$/);
@@ -270,6 +329,38 @@ describe('VGC1 historical parsing and Totals suppression', () => {
       { ...vgc1Raw('2023-24'), reconciliation_status: 'reconciled_to_gpfs' },
     ]);
     expect(override.records[0]!.reconciliation_status).toBe('reconciled_to_gpfs');
+  });
+});
+
+describe('VLGGC FY2015-16..FY2018-19 layout differences', () => {
+  it('accepts the singular Family & Community Service header', async () => {
+    const filePath = path.join('/tmp', `ausspend-vgc1-history-singular-${Date.now()}.xlsx`);
+    await buildHistoricalWorkbook(filePath, 'Family & Community Service');
+    const workbook = await readVgc1Workbook(filePath);
+    const parsed = parseVgc1HistoryWorkbook(workbook, meta('2015-16'));
+    expect(parsed.summary.councilCount).toBe(79);
+    expect(parsed.raw.every((row) => row.fiscal_year === '2015-16')).toBe(true);
+  });
+
+  it('parses the 144-column legacy ABS2 balance-sheet layout', async () => {
+    const filePath = path.join('/tmp', `ausspend-abs23-legacy-${Date.now()}.xlsx`);
+    await buildLegacyAbs23Workbook(filePath);
+    const workbook = await readVlgcAbsWorkbook(filePath);
+    const parsed = parseVlgcAbs23Workbook(
+      workbook,
+      absMeta('2015-16'),
+      ABS23_LAYOUT_LEGACY_2015_18,
+    );
+    expect(parsed.summary.councilCount).toBe(79);
+    expect(parsed.summary.totalsSuppressed).toBe(2);
+    const assets = parsed.raw.filter((row) => row.line_code === '32300');
+    const liabilities = parsed.raw.filter((row) => row.line_code === '32800');
+    const equity = parsed.raw.filter((row) => row.line_code === '32600');
+    expect(assets).toHaveLength(79);
+    expect(liabilities).toHaveLength(79);
+    expect(equity).toHaveLength(79);
+    expect(assets[0]!.raw_value).toBe(100);
+    expect(assets[0]!.statement_section).toBe('assets');
   });
 });
 
