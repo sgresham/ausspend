@@ -13,13 +13,19 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - nsw-budget      S1: NSW Budget 2025-26 Open Data XLSX + ArcGIS capital
  *   - data-nsw-ckan   S2: targeted data.nsw.gov.au CKAN datasets
  *   - dubbo-council   S3: one local council (Dubbo Regional Council) budget PDF
+ *   - dubbo-council-gpfs  GPFS pilot: the same council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council: no other councils,
  * states/territories, SOC/charity or live state connectors. The runner upserts
  * on natural_key, so re-running is idempotent and never deletes existing
  * federal/synthetic rows.
  */
-export const NSW_SOURCE_IDS = ['nsw-budget', 'data-nsw-ckan', 'dubbo-council'] as const;
+export const NSW_SOURCE_IDS = [
+  'nsw-budget',
+  'data-nsw-ckan',
+  'dubbo-council',
+  'dubbo-council-gpfs',
+] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
   for (let index = 0; index < argv.length; index += 1) {
@@ -49,7 +55,7 @@ async function main(): Promise<void> {
 
   await mongoose.connect(mongoUrl as string, { serverSelectionTimeoutMS: 5_000 });
   try {
-    if (sourceIds.includes('dubbo-council')) {
+    if (sourceIds.some((id) => id === 'dubbo-council' || id === 'dubbo-council-gpfs')) {
       const regionId = await ensureDubboRegion();
       console.log(`[ingest:nsw] dubbo region ready ${regionId}`);
     }

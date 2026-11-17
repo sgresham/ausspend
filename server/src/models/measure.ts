@@ -84,6 +84,18 @@ export interface MeasureDocument {
   soc_breakdown?: string;
   /** Printed sign when amount_cents stores the non-negative magnitude. */
   soc_printed_sign?: 'positive' | 'negative';
+  /** Council GPFS stable line key, e.g. total_revenue. */
+  gpfs_line_item?: string;
+  /** Council GPFS exact printed line label. */
+  gpfs_line_label?: string;
+  /** Council GPFS printed unit, e.g. AUD_thousands for "$'000". */
+  gpfs_unit?: string;
+  /** Council GPFS statement section: revenue, expenses or result. */
+  gpfs_section?: 'revenue' | 'expenses' | 'result';
+  /** Council GPFS printed statement/note label. */
+  gpfs_statement?: string;
+  /** Printed subtotal this GPFS component belongs to. */
+  gpfs_component_of?: string;
   /** Government-named funding row that may overlap government program data. */
   potential_double_count?: boolean;
 }
@@ -185,6 +197,12 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     soc_component_of: { type: String, index: true },
     soc_breakdown: { type: String },
     soc_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    gpfs_line_item: { type: String, index: true },
+    gpfs_line_label: { type: String },
+    gpfs_unit: { type: String },
+    gpfs_section: { type: String, enum: ['revenue', 'expenses', 'result'], index: true },
+    gpfs_statement: { type: String },
+    gpfs_component_of: { type: String, index: true },
     potential_double_count: { type: Boolean, index: true },
   },
   { collection: 'measures', versionKey: false },

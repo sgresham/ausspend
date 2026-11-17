@@ -1,8 +1,10 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** planning and research only. This document starts no ingestion, creates no schema/API/DB
-rows and queues no council PDF jobs. The database baseline is **515,449 measures**, unchanged; this
-work touched docs only.
+**Status:** the inventory and plan below are unchanged. The Dubbo FY2024-25 GPFS pilot (§7.1) has
+now landed as a separate non-additive source: the database baseline was **515,449 measures**, and
+this pilot adds exactly **18** `dubbo-council-gpfs` rows (**515,467** total). The existing 245
+`dubbo-council` budget/estimate rows are preserved untouched and are never summed with the GPFS
+rows.
 
 **As at:** 17 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -16,7 +18,7 @@ granularity.
 
 **Verdict: false as stated.**
 
-- **What does exist:** the NSW Office of Local Government (OLG) *Your Council* time-series workbook
+- **What does exist:** the NSW Office of Local Government (OLG) _Your Council_ time-series workbook
   for 2024-25 contains **128 general purpose council rows** plus **8 county council rows**, with a
   wide council-level indicator matrix. It is derived from Financial Data Returns (FDRs) / financial
   statements, but it publishes **summary and service-category** figures, **not** General Purpose
@@ -43,19 +45,19 @@ rows 4–131), matching the OLG/Your Council statement that NSW has 128 general 
 (<https://www.yourcouncil.nsw.gov.au/>). The OLG grouping below is read from columns B (OLG group)
 and C (classification) of that workbook.
 
-| OLG group | Classification | # | Councils |
-| --- | --- | ---: | --- |
-| 1 | Metropolitan | 1 | Sydney |
-| 2 | Metropolitan | 6 | Burwood, Hunters Hill, Lane Cove, Mosman, Strathfield, Woollahra |
-| 3 | Metropolitan | 18 | Bayside, Blacktown, Canada Bay, Canterbury-Bankstown, Cumberland, Fairfield, Georges River, Inner West, Ku-ring-gai, Liverpool, North Sydney, Northern Beaches, Parramatta, Randwick, Ryde, Sutherland, Waverley, Willoughby |
-| 4 | Regional Town/City | 26 | Albury, Armidale Regional, Ballina, Bathurst Regional, Bega Valley, Broken Hill, Byron, Cessnock, Clarence Valley, Dubbo Regional, Eurobodalla, Goulburn Mulwaree, Griffith, Kempsey, Kiama, Lismore, Lithgow, Mid-Western Regional, Orange, Queanbeyan-Palerang Regional, Richmond Valley, Singleton, Snowy Monaro Regional, Tamworth Regional, Wagga Wagga, Wingecarribee |
-| 5 | Regional Town/City | 11 | Coffs Harbour, Lake Macquarie, Maitland, Mid-Coast, Newcastle, Port Macquarie-Hastings, Port Stephens, Shellharbour, Shoalhaven, Tweed, Wollongong |
-| 6 | Metropolitan Fringe | 2 | Hawkesbury, Wollondilly |
-| 7 | Metropolitan Fringe | 7 | Blue Mountains, Camden, Campbelltown, Central Coast, Hornsby, Penrith, The Hills |
-| 8 | Rural | 1 | Brewarrina |
-| 9 | Rural | 14 | Balranald, Bogan, Bourke, Carrathool, Central Darling, Coolamon, Coonamble, Gilgandra, Hay, Lockhart, Murrumbidgee, Walcha, Warren, Weddin |
-| 10 | Large Rural | 23 | Berrigan, Bland, Blayney, Cobar, Dungog, Edward River, Forbes, Glen Innes Severn, Gwydir, Junee, Kyogle, Lachlan, Liverpool Plains, Narrandera, Narromine, Oberon, Temora, Tenterfield, Upper Lachlan, Uralla, Walgett, Warrumbungle, Wentworth |
-| 11 | Large Rural | 19 | Bellingen, Cabonne, Cootamundra-Gundagai Regional, Cowra, Federation, Greater Hume, Gunnedah, Hilltops, Inverell, Leeton, Moree Plains, Murray River, Muswellbrook, Nambucca Valley, Narrabri, Parkes, Snowy Valleys, Upper Hunter, Yass Valley |
+| OLG group | Classification      |   # | Councils                                                                                                                                                                                                                                                                                                                                                                    |
+| --------- | ------------------- | --: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1         | Metropolitan        |   1 | Sydney                                                                                                                                                                                                                                                                                                                                                                      |
+| 2         | Metropolitan        |   6 | Burwood, Hunters Hill, Lane Cove, Mosman, Strathfield, Woollahra                                                                                                                                                                                                                                                                                                            |
+| 3         | Metropolitan        |  18 | Bayside, Blacktown, Canada Bay, Canterbury-Bankstown, Cumberland, Fairfield, Georges River, Inner West, Ku-ring-gai, Liverpool, North Sydney, Northern Beaches, Parramatta, Randwick, Ryde, Sutherland, Waverley, Willoughby                                                                                                                                                |
+| 4         | Regional Town/City  |  26 | Albury, Armidale Regional, Ballina, Bathurst Regional, Bega Valley, Broken Hill, Byron, Cessnock, Clarence Valley, Dubbo Regional, Eurobodalla, Goulburn Mulwaree, Griffith, Kempsey, Kiama, Lismore, Lithgow, Mid-Western Regional, Orange, Queanbeyan-Palerang Regional, Richmond Valley, Singleton, Snowy Monaro Regional, Tamworth Regional, Wagga Wagga, Wingecarribee |
+| 5         | Regional Town/City  |  11 | Coffs Harbour, Lake Macquarie, Maitland, Mid-Coast, Newcastle, Port Macquarie-Hastings, Port Stephens, Shellharbour, Shoalhaven, Tweed, Wollongong                                                                                                                                                                                                                          |
+| 6         | Metropolitan Fringe |   2 | Hawkesbury, Wollondilly                                                                                                                                                                                                                                                                                                                                                     |
+| 7         | Metropolitan Fringe |   7 | Blue Mountains, Camden, Campbelltown, Central Coast, Hornsby, Penrith, The Hills                                                                                                                                                                                                                                                                                            |
+| 8         | Rural               |   1 | Brewarrina                                                                                                                                                                                                                                                                                                                                                                  |
+| 9         | Rural               |  14 | Balranald, Bogan, Bourke, Carrathool, Central Darling, Coolamon, Coonamble, Gilgandra, Hay, Lockhart, Murrumbidgee, Walcha, Warren, Weddin                                                                                                                                                                                                                                  |
+| 10        | Large Rural         |  23 | Berrigan, Bland, Blayney, Cobar, Dungog, Edward River, Forbes, Glen Innes Severn, Gwydir, Junee, Kyogle, Lachlan, Liverpool Plains, Narrandera, Narromine, Oberon, Temora, Tenterfield, Upper Lachlan, Uralla, Walgett, Warrumbungle, Wentworth                                                                                                                             |
+| 11        | Large Rural         |  19 | Bellingen, Cabonne, Cootamundra-Gundagai Regional, Cowra, Federation, Greater Hume, Gunnedah, Hilltops, Inverell, Leeton, Moree Plains, Murray River, Muswellbrook, Nambucca Valley, Narrabri, Parkes, Snowy Valleys, Upper Hunter, Yass Valley                                                                                                                             |
 
 **Count:** 1 + 6 + 18 + 26 + 11 + 2 + 7 + 1 + 14 + 23 + 19 = **128**.
 
@@ -67,12 +69,12 @@ The OLG classification/group definitions are linked from the Your Council data p
 
 ## 2. Non-standard entities (not one of the 128)
 
-| Entity class | Count / evidence | Why it is not a general purpose council |
-| --- | --- | --- |
-| County councils | **8 rows** in the 2024-25 workbook, sheet 2: Castlereagh-Macquarie County, Central Tablelands County, Goldenfields Water County, Hawkesbury River County WSW, Riverina Water County, Rous Water, Upper Hunter County, Upper Macquarie County | Statutory water/sewer (and some other) county councils owned by member councils, not general purpose councils. Their costs can be recovered through member council charges, so adding them to the 128 double counts. The same sheet's chart also names **New England Tablelands County**, so re-check the live count each year. |
-| Joint Organisations (JOs) | **13** JOs covering **87 regional councils**: Canberra Region; Central NSW; Far North West; Far South West; Hunter; Illawarra Shoalhaven; Mid North Coast; Namoi; New England; Northern Rivers; Orana; Riverina and Murray; Riverina | Regional collaboration/planning bodies, not councils. Verified at <https://www.olg.nsw.gov.au/programs-and-initiatives/joint-organisations>. JO spending may be funded by member councils; do not add it to council totals. |
-| Other non-LGA / state entities | Lord Howe Island Board; Unincorporated Far West (no council); Sydney Olympic Park Authority; Aboriginal Land Councils | Known structural exclusions, **not re-verified in this pass**. Do not assume they are part of the 128. |
-| Local Government and Shires Associations / Regional Organisations of Councils | Listed as separate categories in the OLG Local Government directory | Peak/regional bodies, not councils. |
+| Entity class                                                                  | Count / evidence                                                                                                                                                                                                                             | Why it is not a general purpose council                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| County councils                                                               | **8 rows** in the 2024-25 workbook, sheet 2: Castlereagh-Macquarie County, Central Tablelands County, Goldenfields Water County, Hawkesbury River County WSW, Riverina Water County, Rous Water, Upper Hunter County, Upper Macquarie County | Statutory water/sewer (and some other) county councils owned by member councils, not general purpose councils. Their costs can be recovered through member council charges, so adding them to the 128 double counts. The same sheet's chart also names **New England Tablelands County**, so re-check the live count each year. |
+| Joint Organisations (JOs)                                                     | **13** JOs covering **87 regional councils**: Canberra Region; Central NSW; Far North West; Far South West; Hunter; Illawarra Shoalhaven; Mid North Coast; Namoi; New England; Northern Rivers; Orana; Riverina and Murray; Riverina         | Regional collaboration/planning bodies, not councils. Verified at <https://www.olg.nsw.gov.au/programs-and-initiatives/joint-organisations>. JO spending may be funded by member councils; do not add it to council totals.                                                                                                     |
+| Other non-LGA / state entities                                                | Lord Howe Island Board; Unincorporated Far West (no council); Sydney Olympic Park Authority; Aboriginal Land Councils                                                                                                                        | Known structural exclusions, **not re-verified in this pass**. Do not assume they are part of the 128.                                                                                                                                                                                                                          |
+| Local Government and Shires Associations / Regional Organisations of Councils | Listed as separate categories in the OLG Local Government directory                                                                                                                                                                          | Peak/regional bodies, not councils.                                                                                                                                                                                                                                                                                             |
 
 The OLG Local Government directory separately lists **Council**, **County Council**, **Joint
 Organisation**, **Local Government and Shires Associations** and **Regional Organisations of
@@ -83,21 +85,21 @@ category is the 128.
 
 ## 3. Source coverage at a glance
 
-| Source | All 128 councils? | Statement-line GPFS? | Service/program split? | Capital $? | Grants $? | Open licence? | In DB now |
-| --- | --- | --- | --- | --- | --- | --- | ---: |
-| OLG *Your Council* time-series (2024-25 XLSX) | **Yes** (128 + 8 county) | **No** | 9 service-expenditure categories | **No** (asset ratios only) | **No** (grants % of revenue only) | **No** (all rights reserved) | 0 |
-| Individual council GPFS / annual reports | Yes, one PDF per council | **Yes** | Yes (function and nature, notes, special schedules) | Yes | Yes (grant revenue and special schedules) | Per council; usually not open | 0 (Dubbo rows are budget lines, not GPFS) |
-| LGGC Financial Assistance Grants | Yes (general purpose councils) | No | No (grant allocation) | No | **Yes** (FAG entitlement) | No (OLG all rights reserved) | 0 |
-| data.nsw.gov.au CKAN | No | No | No | No | No | Per dataset (usually CC BY) | 3,472 rows, none council financial |
-| Audit Office of NSW local government reports | No (selected audits) | No | Narrative/aggregate | Occasionally | Occasionally | Audit Office terms | 0 |
-| ABS GFS (benchmark) | No (local government aggregate) | No | COFOG aggregate | No | No | CC BY | 169 rows, aggregate |
-| NSW Budget LGA-tagged projects | No (state projects) | No | Project-level state capital | Yes (state) | No | CC BY 3.0 AU | 1,115 rows, not council |
+| Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                         In DB now |
+| --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | ----------------------------------------------------------------: |
+| OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                 0 |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **18** (Dubbo FY2024-25 GPFS pilot; separate non-additive source) |
+| LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                 0 |
+| data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                3,472 rows, none council financial |
+| Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                 0 |
+| ABS GFS (benchmark)                           | No (local government aggregate) | No                   | COFOG aggregate                                     | No                         | No                                        | CC BY                         |                                               169 rows, aggregate |
+| NSW Budget LGA-tagged projects                | No (state projects)             | No                   | Project-level state capital                         | Yes (state)                | No                                        | CC BY 3.0 AU                  |                                           1,115 rows, not council |
 
 ---
 
 ## 4. Source detail
 
-### 4.1 OLG *Your Council* time-series — the only all-128 bulk source
+### 4.1 OLG _Your Council_ time-series — the only all-128 bulk source
 
 **Official pages**
 
@@ -112,8 +114,8 @@ category is the 128.
 **Current rows at source.** Sheet 1 has **128 council rows** (rows 4–131); sheet 2 has **8 county
 council rows**. The workbook also publishes 2015-16 through 2023-24 as separate XLSX/XLS files, a
 1994–2015 time series XLS, an 2011-12–2013-14 XLSX, and archived comparative reports from 2006-07
-to 2012-13. The 2024-25 sheet says (verbatim): *"The councils listed are those that continued
-operations and reported for the financial year 2024 to 2025"* (A3).
+to 2012-13. The 2024-25 sheet says (verbatim): _"The councils listed are those that continued
+operations and reported for the financial year 2024 to 2025"_ (A3).
 
 **Granularity.** Council-level indicator matrix, not GPFS. It contains:
 
@@ -121,7 +123,7 @@ operations and reported for the financial year 2024 to 2025"* (A3).
   language, SEIFA, unemployment, taxable income, household size, largest industry employer,
   businesses, development applications.
 - **Financial performance (FDR/financial statements):** `Total Expenses from Continuing Operations
-  ($)`, `Total Revenue from Continuing Operations ($)`, `Net Operating Result Before Capital ($)`,
+($)`, `Total Revenue from Continuing Operations ($)`, `Net Operating Result Before Capital ($)`,
   and eight ratios (most marked `#N/A` / "Not Collected 2025" in this edition).
 - **Rating revenue:** residential/farmland/business/mining rates, average rates, assessment counts,
   land value, pensioner concession.
@@ -150,13 +152,13 @@ financial reports to the Departmental Chief Executive by **31 October**; annual 
 audited financial statements by **30 November** (s.428, Local Government Act 1993), per
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (fetched, HTTP 200).
 
-**Licence.** **Not open.** OLG's copyright page says (verbatim): *"All rights reserved. No part of
+**Licence.** **Not open.** OLG's copyright page says (verbatim): _"All rights reserved. No part of
 this publication may be reproduced by any process, electronic or otherwise, in any material form or
 transmitted to any other person or stored electronically in any form, without the prior written
-permission of the State of New South Wales, except as permitted under the Copyright Act 1968."*
+permission of the State of New South Wales, except as permitted under the Copyright Act 1968."_
 (<https://www.olg.nsw.gov.au/copyright-and-disclaimer>, fetched, HTTP 200). The Your Council site
 footer also says "© 2026 | All Rights Reserved | Office of Local Government". The data page adds that
-OLG *"does not separately audit the data"* and relies on council returns. **Reuse for publication
+OLG _"does not separately audit the data"_ and relies on council returns. **Reuse for publication
 requires written permission or a separately licensed copy.** This is a first-order constraint, not
 a footnote.
 
@@ -184,21 +186,22 @@ blocked pending licence. The financial semantics are the real trap:
 
 **Dubbo reconciliation anchor (FY2024-25):** total expenses `$174,925,000`; total revenue
 `$234,927,000`; net operating result before capital `+$276,000`. For Dubbo the nine service
-categories *do* sum exactly to the total, which makes Dubbo one of the 66 reconciling rows — a good
+categories _do_ sum exactly to the total, which makes Dubbo one of the 66 reconciling rows — a good
 pilot property, but not a general guarantee.
 
 ### 4.2 Individual council GPFS / annual reports — the only statement-line source
 
 **What it is.** Each of the 128 councils publishes audited GPFS, usually as a standalone PDF or as
-part of its annual report. The standard form is set by OLG's *Local Government Code of Accounting
-Practice and Financial Reporting*: Section 1 (General Purpose Financial Statements), Section 3
+part of its annual report. The standard form is set by OLG's _Local Government Code of Accounting
+Practice and Financial Reporting_: Section 1 (General Purpose Financial Statements), Section 3
 (Special Purpose Financial Statements), Section 4 (Special Schedules) and Section 5 (Appendices).
 The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 0 GPFS rows.** The existing `dubbo-council` 245 rows are
-2026/27 budget/forward-estimate lines, not GPFS actuals.
+comparatives inside each report). **In DB: 18 GPFS rows** for Dubbo FY2024-25 under the separate
+source id `dubbo-council-gpfs`; see §7.1. The existing `dubbo-council` 245 rows are 2026/27
+budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the GPFS rows.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
 
@@ -221,8 +224,8 @@ adapter already rejects ambiguous units, which is the right pattern.
 
 **Licence.** Each council's own copyright. There is no standard open licence across the 128. Some
 councils publish topic datasets on data.nsw under CC BY, but the GPFS PDF itself is usually not
-explicitly licensed. The existing Dubbo basis is recorded as *"© Dubbo Regional Council. Published
-council documents used here for public-interest research; not an open-data licence grant."* Treat
+explicitly licensed. The existing Dubbo basis is recorded as _"© Dubbo Regional Council. Published
+council documents used here for public-interest research; not an open-data licence grant."_ Treat
 each council as a separate licence decision.
 
 **Reporting dates.** Audited GPFS by **31 October**; annual report by **30 November**; FY ending
@@ -276,12 +279,12 @@ consolidated NSW council GPFS dataset**. Council organisations on CKAN mostly pu
 (flood, waste, cycling, etc.). The platform's existing `data-nsw-ckan` source is 3,472 rows from
 three selected **state** datasets:
 
-| Dataset | Rows in DB | What it is |
-| --- | ---: | --- |
-| NSW public schools Resource Allocation Model (RAM) | 2,211 | School-level state funding allocation |
-| NSW Budget Paper 2 capital allocations | 1,251 | State capital budget allocations |
-| Fleet Vehicle expenditure FY18-19 | 10 | State fleet invoices |
-| **Total** | **3,472** | **No council financial rows** |
+| Dataset                                            | Rows in DB | What it is                            |
+| -------------------------------------------------- | ---------: | ------------------------------------- |
+| NSW public schools Resource Allocation Model (RAM) |      2,211 | School-level state funding allocation |
+| NSW Budget Paper 2 capital allocations             |      1,251 | State capital budget allocations      |
+| Fleet Vehicle expenditure FY18-19                  |         10 | State fleet invoices                  |
+| **Total**                                          |  **3,472** | **No council financial rows**         |
 
 **Granularity.** State agency/school/project/invoice, not council reporting. 855 rows carry an LGA
 tag, but an LGA tag is a **location**, not a reporting entity.
@@ -347,9 +350,11 @@ db.measures.countDocuments({source_id:"data-nsw-ckan"}) -> 3472
   actual total expenses for Dubbo are `$174.925m`; Dubbo's DB rows are FY2025-26 forward estimate and
   FY2026-27 budget. They must never be summed or presented as one series. A same-year comparison is
   only possible after the FY2024-25 GPFS is extracted.
-- **Overlap with the proposed GPFS pilot:** if Dubbo's FY2024-25 GPFS is ingested, the existing 245
-  budget/estimate rows remain a **different measure type and year**; no row-level duplicate, but a
-  UI "Dubbo spending" figure must choose one source/year and say which.
+- **Overlap with the GPFS pilot:** the pilot is now ingested as a **distinct source**
+  (`dubbo-council-gpfs`) with 18 non-additive `agency_detail` rows. The existing 245 budget/estimate
+  rows remain a different measure type year; no row-level duplicate. The GPFS rows carry no
+  `region_id`/LGA field, so the Dubbo area panel cannot sum them with the 245 summary rows; any UI
+  "Dubbo spending" figure must choose one source/year and say which.
 
 ### 5.2 data.nsw.gov.au CKAN (`data-nsw-ckan`, 3,472 rows)
 
@@ -367,26 +372,26 @@ db.measures.countDocuments({source_id:"data-nsw-ckan"}) -> 3472
 
 ## 6. Double-count map (the rules to carry into any future connector)
 
-| A | B | Relationship | Rule |
-| --- | --- | --- | --- |
-| OLG `Total Expenses` | Council GPFS total expenses | Same underlying FDR/GPFS population | Use **one** as the authority per council-year; never add. |
-| OLG service-category dollars | OLG `Total Expenses` | Not a clean partition (61/128 differ; up to +$169.979m) | Never add; label the service split on its own base. |
-| OLG service categories | Each other | Intended partition, but not guaranteed | Only sum if the council-year reconciles; otherwise show components separately. |
-| Dubbo Consolidated | Dubbo General/Water/Sewer | Consolidated includes components | Never sum; pick one basis. |
-| Dubbo income lines | Dubbo expense lines | Income is not spending | Filter income out of any spending view. |
-| Dubbo 2025-26 estimate / 2026-27 budget | OLG FY2024-25 actual | Different measure type and year | Never sum; show separately. |
-| data.nsw LGA-tagged state rows | Council rows | Different reporting entity | Never sum; LGA is a location. |
-| NSW Budget LGA-tagged projects | Council capital | State projects, not council | Never sum or attribute to a council budget. |
-| LGGC FAG | GPFS grant revenue | FAG is a component of council grant income | Do not add to expenditure; do not double count inside grants. |
-| County council water/sewer | Member council water/sewer | Cost recovery through member charges | Keep separate; adding both double counts. |
-| Joint Organisation spend | Member council spend | JO funded by members/state | Keep separate. |
-| ABS GFS local-government aggregate | Council rows | Aggregate vs entity | Never add; benchmark only. |
+| A                                       | B                           | Relationship                                            | Rule                                                                           |
+| --------------------------------------- | --------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| OLG `Total Expenses`                    | Council GPFS total expenses | Same underlying FDR/GPFS population                     | Use **one** as the authority per council-year; never add.                      |
+| OLG service-category dollars            | OLG `Total Expenses`        | Not a clean partition (61/128 differ; up to +$169.979m) | Never add; label the service split on its own base.                            |
+| OLG service categories                  | Each other                  | Intended partition, but not guaranteed                  | Only sum if the council-year reconciles; otherwise show components separately. |
+| Dubbo Consolidated                      | Dubbo General/Water/Sewer   | Consolidated includes components                        | Never sum; pick one basis.                                                     |
+| Dubbo income lines                      | Dubbo expense lines         | Income is not spending                                  | Filter income out of any spending view.                                        |
+| Dubbo 2025-26 estimate / 2026-27 budget | OLG FY2024-25 actual        | Different measure type and year                         | Never sum; show separately.                                                    |
+| data.nsw LGA-tagged state rows          | Council rows                | Different reporting entity                              | Never sum; LGA is a location.                                                  |
+| NSW Budget LGA-tagged projects          | Council capital             | State projects, not council                             | Never sum or attribute to a council budget.                                    |
+| LGGC FAG                                | GPFS grant revenue          | FAG is a component of council grant income              | Do not add to expenditure; do not double count inside grants.                  |
+| County council water/sewer              | Member council water/sewer  | Cost recovery through member charges                    | Keep separate; adding both double counts.                                      |
+| Joint Organisation spend                | Member council spend        | JO funded by members/state                              | Keep separate.                                                                 |
+| ABS GFS local-government aggregate      | Council rows                | Aggregate vs entity                                     | Never add; benchmark only.                                                     |
 
 ---
 
 ## 7. Pilot recommendation (one pilot)
 
-**Pilot: Dubbo Regional Council, audited GPFS for FY2024-25 — line-item extraction, no ingestion.**
+**Pilot: Dubbo Regional Council, audited GPFS for FY2024-25 — line-item extraction (landed; see §7.1).**
 
 **Why this pilot, and not a 128-council bulk job:**
 
@@ -400,7 +405,7 @@ db.measures.countDocuments({source_id:"data-nsw-ckan"}) -> 3472
    elimination, operating vs capital, grant revenue vs special schedules, `$'000` vs `$`.
 5. It avoids taking a publication decision on the all-rights-reserved OLG workbook in the first step.
 
-**Pilot scope (next item, not this one):**
+**Pilot scope (landed 2026-11-17; see §7.1):**
 
 - Parse the FY2024-25 income statement (revenue by source; expenses by function and by nature),
   the notes' grant/contribution disclosures and the special schedules.
@@ -415,11 +420,61 @@ db.measures.countDocuments({source_id:"data-nsw-ckan"}) -> 3472
 machine-readable GPFS (prefer one that publishes XLSX or a text-layer PDF), but keep the same
 reconciliation discipline.
 
+### 7.1 Pilot result — Dubbo FY2024-25 GPFS (landed 2026-11-17)
+
+**Source.** Discovered from the official reporting page
+<https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting> (no hard-coded PDF URL):
+the link text **"2024/2025 Dubbo Regional Council Financial Statements"** resolves to
+<https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/20242025%20-%20Annual%20Financial%20Statements%20-%20Final%20for%20website.PDF.aspx>.
+Exact bytes archived outside the repo at
+`~/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2024-25.pdf`: **1,807,768
+bytes**, SHA-256
+`d9213cea468547a318548dfd72d7faa0d9fd2da81bcf6835138d10b58914a43f`. The printed unit is explicit
+`$ '000` (thousands) on both the income statement (p4 of 79) and note B1-1 (p13 of 79); a missing or
+conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The PDF prints the income statement total revenue and a separate total
+expenses excluding depreciation; note B1-1 prints the full expense total. The connector accepts the
+rows only when all of these agree exactly:
+
+| Check                                                                                                                       |                               Printed / derived | Result                                    |
+| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------: | ----------------------------------------- |
+| Total income from continuing operations (Income Statement)                                                                  |                             `$234,927` thousand | = `$234,927,000`                          |
+| B1-1 Total functions and activities — income                                                                                |                             `$234,927` thousand | = face statement                          |
+| Revenue components sum (rates + user charges + other revenue + operating grants + capital grants + interest + other income) |                             `$234,927` thousand | = printed total                           |
+| Total expenses excluding depreciation (printed) + depreciation/amortisation/impairment (printed)                            |    `$117,066` + `$57,859` = `$174,925` thousand | = B1-1 expense total                      |
+| B1-1 Total functions and activities — expenses                                                                              |                             `$174,925` thousand | = `$174,925,000` (OLG)                    |
+| Operating result / net operating result                                                                                     |                              `$60,002` thousand | = income − expenses                       |
+| Net result before capital grants                                                                                            |                                 `$276` thousand | = `$60,002` − `$59,726` capital grants    |
+| B1-1 grants and contributions                                                                                               |                              `$79,787` thousand | = operating `$20,061` + capital `$59,726` |
+| OLG FY2024-25 anchors                                                                                                       | expenses `$174,925,000`; revenue `$234,927,000` | **exact match**                           |
+
+**Rows.** 18 rows, source id `dubbo-council-gpfs`, `source_dataset` "Dubbo Regional Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Dubbo Regional Council"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$234,927,000`, total expenses `$174,925,000`, employee expenses `$49,204,000`,
+depreciation/amortisation/impairment `$57,859,000`, operating government grants `$20,061,000`,
+capital government grants `$59,726,000` and net result `$60,002,000`; the face-statement revenue and
+expense components are included for provenance.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and the Dubbo area panel therefore
+exclude them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be
+summed into the existing 245 `dubbo-council` budget/estimate rows. The 245 rows are preserved exactly
+(count 245 before and after). A second ingest run upserted the same 18 natural keys and left the DB
+total unchanged (idempotent). Government grant rows carry `potential_double_count: true` because they
+may overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-17).** `measures` 515,449 → **515,467** (exactly +18); `dubbo-council`
+still **245**; `dubbo-council-gpfs` **18**; `data_sources` 26 → **27**. No deletes or updates to any
+other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
 
-1. **P0 — Dubbo FY2024-25 GPFS (pilot).** Prove statement-line extraction and reconciliation.
+1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
 2. **P1 — OLG FY2024-25 bulk summary for all 128 (conditional).** Only if written permission or an
    openly licensed copy exists. Ingest only the safe columns: total expenses, total revenue, net
    operating result before capital, plus the service split as a **separate non-additive table**.
@@ -463,6 +518,20 @@ differ); always show the source, year, measure type and fund/basis.
   financial", "time series council", "council expenditure", "financial data return", "grants
   commission council".
 
+**GPFS pilot checks (2026-11-17):**
+
+- Official reporting page fetched (HTTP 200); FY2024-25 statements link discovered from the anchor
+  text, not a hard-coded document URL.
+- GPFS PDF fetched (HTTP 200, 1,807,768 bytes) and SHA-256 archived outside the repo; SHA-256
+  `d9213cea468547a318548dfd72d7faa0d9fd2da81bcf6835138d10b58914a43f`.
+- Printed `$ '000` unit detected on the income statement and B1-1; the connector rejects a missing or
+  conflicting unit.
+- Income statement, B1-1 and OLG FY2024-25 totals reconcile exactly: revenue `$234,927,000`,
+  expenses `$174,925,000`, net result `$60,002,000`.
+- `dubbo-council-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: measures 515,449 → 515,467 (+18 only); `dubbo-council` still 245; a second run upserted the
+  same 18 natural keys with no count change.
+
 **Workbook checks run (read-only, local):**
 
 - Sheet 1 rows 4–131 = 128 council names; sheet 2 rows 4–11 = 8 county council names.
@@ -477,36 +546,38 @@ differ); always show the source, year, measure type and fund/basis.
 
 ```bash
 mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
-  'print(db.measures.countDocuments({})); print(db.measures.countDocuments({source_id:"dubbo-council"})); print(db.measures.countDocuments({source_id:"data-nsw-ckan"}));'
-# 515449
+  'print(db.measures.countDocuments({})); print(db.measures.countDocuments({source_id:"dubbo-council"})); print(db.measures.countDocuments({source_id:"dubbo-council-gpfs"})); print(db.measures.countDocuments({source_id:"data-nsw-ckan"}));'
+# 515467
 # 245
+# 18
 # 3472
 ```
 
-No write, update, delete, index or schema operation was performed. The worktree diff for this item
-is docs-only.
+The inventory sections made no write; the §7.1 pilot wrote only the 18 `dubbo-council-gpfs` rows, one
+`data_sources` record and its ingestion log. No deletes, updates to other sources, index or schema
+migration were performed.
 
 ---
 
 ## 10. Ambiguities / open questions (verbatim where possible)
 
-1. **OLG licence.** *"All rights reserved. No part of this publication may be reproduced by any
+1. **OLG licence.** _"All rights reserved. No part of this publication may be reproduced by any
    process, electronic or otherwise, in any material form or transmitted to any other person or
    stored electronically in any form, without the prior written permission of the State of New South
-   Wales..."* — Can the owner obtain written permission, or is there an openly licensed copy of the
+   Wales..."_ — Can the owner obtain written permission, or is there an openly licensed copy of the
    time-series? Without this, P1 cannot be published.
-2. **OLG data quality.** *"The accuracy of this website is largely dependent upon the accuracy and
+2. **OLG data quality.** _"The accuracy of this website is largely dependent upon the accuracy and
    completeness of data returns lodged by councils. The Office of Local Government (OLG) does not
-   separately audit the data, but we do conduct extensive testing for validity and reasonableness."*
+   separately audit the data, but we do conduct extensive testing for validity and reasonableness."_
    — FDR-derived totals are not audited by OLG; the GPFS is the audited source. Which is the
    authority for a published council total?
-3. **Service-category semantics.** The workbook labels them *"Your Council's Expenditure on
-   Services- FDR/financial statements"*, but the dollar columns do not reconcile to *"Total Expenses
-   from Continuing Operations"* for 61/128 councils (Hawkesbury Sewer `$169.979m` vs total
+3. **Service-category semantics.** The workbook labels them _"Your Council's Expenditure on
+   Services- FDR/financial statements"_, but the dollar columns do not reconcile to _"Total Expenses
+   from Continuing Operations"_ for 61/128 councils (Hawkesbury Sewer `$169.979m` vs total
    `$130.704m`). Are they operating, capital-inclusive, or gross water/sewer? The definitions PDF was
    not parsed this pass; this is unresolved.
-4. **Bland.** *"Not complete FDR: Bland"* (A133), *"* Includes Termination Payout"* (A134), *"Note:
-   Performance Ratios not collected due to reported COP"* (A135). Should Bland be excluded, carried
+4. **Bland.** _"Not complete FDR: Bland"_ (A133), _"_ Includes Termination Payout"* (A134), _"Note:
+   Performance Ratios not collected due to reported COP"_ (A135). Should Bland be excluded, carried
    forward, or shown as incomplete?
 5. **County councils.** The 2024-25 sheet has 8 rows, but the chart names New England Tablelands
    County as well. What is the current legal list, and should water county councils be modelled
@@ -514,8 +585,8 @@ is docs-only.
 6. **Dubbo fund separation.** The 245 existing rows include Consolidated, General, Water and Sewer,
    but the fund is only in `notes`/`description`, not a structured field. Should the platform add a
    fund field and select one basis before any council total?
-7. **Dubbo licence.** *"© Dubbo Regional Council. Published council documents used here for
-   public-interest research; not an open-data licence grant."* — the same question applies to the
+7. **Dubbo licence.** _"© Dubbo Regional Council. Published council documents used here for
+   public-interest research; not an open-data licence grant."_ — the same question applies to the
    other 127 councils; is per-council public-interest use acceptable, or is permission needed?
 8. **No cross-council totals.** The brief says no aggregate across councils. Does the platform need
    any sector-level view at all, and if so, can it be a clearly labelled OLG benchmark rather than a
@@ -528,9 +599,9 @@ is docs-only.
 
 ## 11. What this document deliberately does not do
 
-- It does not ingest, parse or queue any council PDF.
-- It does not add schema fields, API endpoints, DB rows, indexes or migrations.
-- It does not create a cross-council or state-plus-council total.
-- It does not assert a licence for the OLG or council documents beyond the quoted terms.
-- It does not claim the 128 list is frozen: boundary changes, amalgamations and administrators can
-  change the population, so re-read the OLG workbook each year.
+The inventory and planning sections §1–§8 remain research/plan (except the landed §7.1 pilot). They
+do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
+council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
+amalgamations and administrators can change the population, so re-read the OLG workbook each year.
+The only ingestion is the §7.1 GPFS pilot: one council, one audited year, 18 non-additive rows, with
+the existing 245 budget/estimate rows and the rest of the DB untouched.
