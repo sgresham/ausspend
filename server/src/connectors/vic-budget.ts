@@ -636,52 +636,6 @@ function cofogRecord(raw: VicCofogRaw): SpendingRecord | null {
   };
 }
 
-function departmentalRecord(raw: VicDepartmentalRaw): SpendingRecord | null {
-  const amountCents = amountToCents(raw.raw_value, raw.unit);
-  if (amountCents === null) return null;
-  const key = vicNaturalKey([
-    raw.package_id,
-    raw.resource_id,
-    raw.sheet,
-    raw.row,
-    raw.label,
-    raw.fiscal_year,
-    raw.measure_type,
-  ]);
-  const note = [
-    `Workbook: ${raw.filename}`,
-    `CKAN resource: ${raw.resource_name} (${raw.resource_id})`,
-    `Sheet: ${raw.sheet}`,
-    `Row: ${raw.row}, column ${raw.column_header}`,
-    `Unit: ${VIC_UNIT} (($ million) stated on the operating statement) converted at ${VIC_UNIT_TO_CENTS} cents per $m`,
-    'Comprehensive Operating statement — Expenses from transactions component line',
-    'Budget column only; actual/revised columns and the balance sheet/cash flow/administered items statements are not ingested',
-    'No COFOG function is defensibly available for this departmental line; function left blank and row flagged provisional',
-    'Budgeted figure, not an audited actual; unverified',
-    `Source copy SHA-256: ${raw.source_sha256}`,
-  ].join('; ');
-  return {
-    amount_cents: amountCents,
-    measure_type: 'budget',
-    fiscal_year: raw.fiscal_year,
-    source_id: VIC_ID,
-    source_url: raw.url,
-    verified: false,
-    natural_key: key,
-    jurisdiction_level: 'state',
-    jurisdiction: 'VIC',
-    source_dataset: VIC_DATASET,
-    source_date: raw.source_date,
-    data_quality_flag: 'provisional',
-    project_name: raw.label,
-    description: `Comprehensive Operating statement — ${raw.label}`,
-    delivery_entity: raw.department,
-    funding_source: raw.department,
-    location: { state: 'VIC' },
-    notes: note,
-  };
-}
-
 /** Pure transform: raw cells -> SpendingRecord[], de-duplicated on natural_key. */
 export function transformVicRaw(raw: readonly RawRecord[]): VicTransformResult {
   const records: SpendingRecord[] = [];
@@ -698,10 +652,17 @@ export function transformVicRaw(raw: readonly RawRecord[]): VicTransformResult {
       });
       continue;
     }
-    const record =
-      entry.kind === 'cofog'
-        ? cofogRecord(entry as VicCofogRaw)
-        : departmentalRecord(entry as VicDepartmentalRaw);
+    if (entry.kind === 'departmental') {
+      skipped.push({
+        filename: String(entry.filename ?? 'unknown'),
+        sheet: String(entry.sheet ?? ''),
+        row: typeof entry.row === 'number' ? entry.row : null,
+        reason:
+          'single-agency departmental statement is non-additive with consolidated COFOG; archived and documented only, no measure created',
+      });
+      continue;
+    }
+    const record = cofogRecord(entry as VicCofogRaw);
     if (!record) {
       skipped.push({
         filename: String(entry.filename ?? 'unknown'),
@@ -974,20 +935,29 @@ export async function loadVicWorkbooks(
     source_date: selection.departmental.metadata_modified,
   };
 
-  const raw: VicRaw[] = [
-    ...parseCofogWorkbook(cofogWorkbook, cofogMeta, skipped),
-    ...parseDepartmentalWorkbook(departmentalWorkbook, departmentalMeta, VIC_DEPARTMENT, skipped),
-  ];
+  const cofogRaw = parseCofogWorkbook(cofogWorkbook, cofogMeta, skipped);
+  // The single-agency departmental statement is archived, hashed and parsed to
+  // prove the workbook structure, but it is NOT converted to measures: it is
+  // agency detail that overlaps the consolidated COFOG series and would make
+  // the state budget total additive-wrong.
+  const departmentalRaw = parseDepartmentalWorkbook(
+    departmentalWorkbook,
+    departmentalMeta,
+    VIC_DEPARTMENT,
+    skipped,
+  );
+  const raw: VicRaw[] = cofogRaw;
 
-  const cofogRows = raw.filter((entry) => entry.kind === 'cofog').length;
-  const departmentalRows = raw.filter((entry) => entry.kind === 'departmental').length;
+  const cofogRows = cofogRaw.length;
+  const departmentalRows = departmentalRaw.length;
   if (cofogRows === 0) throw new Error('VIC COFOG workbook produced no budget expense rows');
   if (departmentalRows === 0) {
-    throw new Error('VIC departmental workbook produced no budget expense rows');
+    throw new Error('VIC departmental workbook produced no budget expense lines to validate');
   }
   warnings.push(
-    `COFOG rows=${cofogRows}, departmental rows=${departmentalRows}; ` +
-      'only 2025-26 and 2026-27 budget columns ingested',
+    `COFOG rows=${cofogRows} converted to measures; departmental workbook parsed ` +
+      `(${departmentalRows} expense lines) but not converted: single-agency series is ` +
+      'non-additive with consolidated COFOG. Budget columns only (2025-26, 2026-27).',
   );
   if (skipped.length > 0) {
     warnings.push(
@@ -1048,7 +1018,7 @@ export async function buildVicArchive(
       unit: '$ million (x100,000,000 cents)',
       files,
       notes:
-        'Only 2025-26 and 2026-27 budget columns are ingested. Transport is a VIC COFOG major group tagged 045; do not roll 045 into 04. Departmental rows are provisional and carry no COFOG function.',
+        'Only 2025-26 and 2026-27 budget columns are ingested. Transport is a VIC COFOG major group tagged 045; do not roll 045 into 04. The departmental workbook is archived and parsed for validation but creates no measures because a single-agency series is non-additive with consolidated COFOG.',
     },
     raw: loaded.raw,
     warnings: loaded.warnings,
@@ -1072,7 +1042,7 @@ export function createVicBudgetConnector(options: VicConnectorOptions = {}): Con
     status: 'active',
     jurisdiction_level: 'state',
     license: VIC_LICENSE,
-    notes: `${VIC_ATTRIBUTION} 2026-27 COFOG and one departmental statement XLSX from DataVic CKAN. Units are ($ million) stated by the workbooks. Budgeted figures only (2025-26 and 2026-27 budget columns); not audited actuals; unverified. Transport is tagged 045 and must not be rolled into Economic affairs 04.`,
+    notes: `${VIC_ATTRIBUTION} 2026-27 COFOG expenses XLSX from DataVic CKAN. Units are ($ million) stated by the workbook. Budgeted figures only (2025-26 and 2026-27 budget columns); not audited actuals; unverified. Transport is tagged 045 and must not be rolled into Economic affairs 04. The DTF departmental statement is archived and parsed for validation but is NOT converted to measures because a single-agency series is non-additive with consolidated COFOG.`,
     async fetch(): Promise<RawRecord[]> {
       metadata.errors = [];
       const loaded = await loadVicWorkbooks(options);

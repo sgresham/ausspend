@@ -189,7 +189,7 @@ describe('VIC departmental workbook parsing', () => {
 });
 
 describe('VIC record mapping and idempotency', () => {
-  it('builds state/VIC integer-cent records with stable natural keys', async () => {
+  it('builds COFOG state/VIC integer-cent records and refuses additive agency rows', async () => {
     const cofogPath = path.join(dir, 'cofog-map.xlsx');
     const deptPath = path.join(dir, 'dtf-map.xlsx');
     await buildCofogWorkbook(cofogPath);
@@ -208,7 +208,7 @@ describe('VIC record mapping and idempotency', () => {
     const raw = [...cofogRaw, ...deptRaw];
     const first = transformVicRaw(raw);
     const second = transformVicRaw(raw);
-    expect(first.records).toHaveLength(8);
+    expect(first.records).toHaveLength(4);
     expect(second.records.map((record) => record.natural_key)).toEqual(
       first.records.map((record) => record.natural_key),
     );
@@ -234,14 +234,12 @@ describe('VIC record mapping and idempotency', () => {
     expect(cofogRecords.every((record) => record.data_quality_flag === 'statewide_only')).toBe(
       true,
     );
-    const deptRecords = first.records.filter((record) => record.delivery_entity);
-    expect(deptRecords.every((record) => record.data_quality_flag === 'provisional')).toBe(true);
-    expect(deptRecords.every((record) => record.function_code === undefined)).toBe(true);
-    expect(
-      deptRecords.every(
-        (record) => record.delivery_entity === 'Department of Treasury and Finance',
-      ),
-    ).toBe(true);
+    expect(first.records.every((record) => record.delivery_entity === undefined)).toBe(true);
+    expect(first.skipped.filter((entry) => /non-additive/.test(entry.reason))).toHaveLength(4);
+    const departmentOnly = transformVicRaw(deptRaw);
+    expect(departmentOnly.records).toHaveLength(0);
+    expect(departmentOnly.skipped).toHaveLength(4);
+    expect(departmentOnly.skipped[0]?.reason).toMatch(/non-additive/);
   });
 
   it('deduplicates repeated raw rows on natural_key', async () => {

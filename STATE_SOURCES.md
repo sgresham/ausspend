@@ -63,9 +63,11 @@ Longitude`. Values use quoted thousands (`"1,805"`) and literal `N/A`; multiple 
 ### Victoria
 
 > **Phase 4 update (2026-11-17): ingested.** `vic-budget` is now live from DataVic CKAN: the
-> 2026-27 COFOG-A general government expenses workbook (2025-26 and 2026-27 budget columns) and the
-> Department of Treasury and Finance statement. Units are explicit `($ million)`; Transport is
-> tagged `045` and must not be rolled into `04`. See [PHASE4_INGESTION.md](PHASE4_INGESTION.md).
+> 2026-27 COFOG-A general government expenses workbook (2025-26 and 2026-27 budget columns; 20
+> additive rows). The Department of Treasury and Finance statement is archived and parsed for
+> validation but creates no measures (single-agency detail is non-additive with consolidated
+> COFOG). Units are explicit `($ million)`; Transport is tagged `045` and must not be rolled into
+> `04`. See [PHASE4_INGESTION.md](PHASE4_INGESTION.md).
 
 - **Budget:** <https://www.dtf.vic.gov.au/state-budget>; 2026-27 delivered 5 May 2026. Capital
   program page <https://www.dtf.vic.gov.au/2026-27-state-capital-program>.

@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import {
   VIC_ATTRIBUTION,
   VIC_DATASET,
+  VIC_DEPARTMENT,
   VIC_FISCAL_YEAR,
   VIC_ID,
   VIC_LICENSE,
@@ -25,8 +26,10 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
  *   AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo npm run ingest:phase4
  *
- * Runs exactly one connector: vic-budget (COFOG-A aggregate expenses XLSX plus
- * the Department of Treasury and Finance statement). The runner upserts on
+ * Runs exactly one connector: vic-budget (COFOG-A aggregate expenses XLSX).
+ * The Department of Treasury and Finance statement is archived and parsed for
+ * validation but is NOT converted to measures: single-agency detail is
+ * non-additive with the consolidated COFOG series. The runner upserts on
  * natural_key, so re-running is idempotent and never deletes federal, NSW,
  * GrantConnect or any other source's rows.
  *
@@ -109,6 +112,20 @@ async function main(): Promise<void> {
       );
     }
 
+    // Remove only legacy non-additive VIC departmental rows (and nothing else):
+    // the earlier design stored the DTF agency lines as measures, which made
+    // the state budget total add consolidated COFOG + agency detail.
+    const removed = await MeasureModel.deleteMany({
+      source_id: VIC_ID,
+      delivery_entity: VIC_DEPARTMENT,
+      function_code: { $exists: false },
+    });
+    if (removed.deletedCount > 0) {
+      console.log(
+        `[ingest:phase4] removed ${removed.deletedCount} legacy non-additive VIC departmental row(s)`,
+      );
+    }
+
     // Persist archive metadata (never bytes) and refresh the committed manifest.
     const archived = await listArchivedRecords({ source_id: VIC_ID });
     for (const record of archived) await persistArchivedRecord(record);
@@ -120,7 +137,23 @@ async function main(): Promise<void> {
       { $group: { _id: '$function_code', rows: { $sum: 1 }, cents: { $sum: '$amount_cents' } } },
       { $sort: { _id: 1 } },
     ]);
+    const byFiscalYear = await MeasureModel.aggregate([
+      { $match: { source_id: VIC_ID } },
+      {
+        $group: {
+          _id: '$fiscal_year',
+          rows: { $sum: 1 },
+          cents: { $sum: '$amount_cents' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
     console.log(`[ingest:phase4] vic-budget rows=${total} source_documents=${archived.length}`);
+    for (const group of byFiscalYear) {
+      console.log(
+        `[ingest:phase4] fiscal_year=${group._id} rows=${group.rows} cents=${group.cents}`,
+      );
+    }
     for (const group of byFunction) {
       console.log(
         `[ingest:phase4] function=${group._id ?? '(blank)'} rows=${group.rows} cents=${group.cents}`,
