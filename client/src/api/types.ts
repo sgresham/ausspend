@@ -287,6 +287,12 @@ export type AgencyDetailBlock = NonAdditiveBlock;
 export interface RegionDetail extends MeasureSummary {
   region: RegionRef;
   filters: RegionFilters;
+  /**
+   * The summary/count/totals cover the whole match set. `measures` is only the
+   * first `filters.limit` rows; `rows_truncated` is true when more rows exist.
+   */
+  rows_returned?: number;
+  rows_truncated?: boolean;
   by_function: FunctionGroup[];
   measures: MeasureRow[];
   non_additive?: NonAdditiveBlock[];

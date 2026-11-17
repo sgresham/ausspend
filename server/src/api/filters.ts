@@ -16,6 +16,12 @@ const MeasureFiltersSchema = z.object({
     .optional(),
   measure_type: MeasureTypeSchema.optional(),
   region: z.string().min(1, 'region must be a region _id').optional(),
+  /**
+   * Exact source id (for example `qld-qgip`). The state/region view is
+   * cross-source by default (state budget + location-tagged federal rows), so
+   * this filter isolates one source without changing that default.
+   */
+  source_id: z.string().min(1).optional(),
   limit: z.coerce.number().int().positive().max(MAX_LIMIT).default(DEFAULT_LIMIT),
 });
 
@@ -23,6 +29,7 @@ export interface MeasureFilters {
   fiscal_year?: string;
   measure_type?: z.infer<typeof MeasureTypeSchema>;
   region?: string;
+  source_id?: string;
   limit: number;
 }
 
@@ -51,6 +58,7 @@ export function measureQuery(filters: MeasureFilters): Record<string, unknown> {
   if (filters.fiscal_year) query.fiscal_year = filters.fiscal_year;
   if (filters.measure_type) query.measure_type = filters.measure_type;
   if (filters.region) query.region_id = new mongoose.Types.ObjectId(filters.region);
+  if (filters.source_id) query.source_id = filters.source_id;
   return query;
 }
 

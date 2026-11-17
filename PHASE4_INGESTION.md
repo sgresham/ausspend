@@ -332,6 +332,30 @@ ingest script prints per-`measure_type` rows and cents and **no combined QLD tot
 - A QLD jurisdiction summary with both types present is `mixed: true` with a null total and
   `total_by_measure_type`; grants and contracts are never added together.
 
+### State/region aggregates are never capped by the row page
+
+`GET /api/states/:code` and `GET /api/regions/:region` used to compute their headline totals from
+the 2,000-row display page, so a 34,000-row source produced a partial total. They now run the
+summary and the per-function totals over the whole match set in Mongo and apply `limit` only to the
+`measures` row page. The response carries `rows_returned` and `rows_truncated`; the UI shows a
+"showing the first N of M rows, totals cover all M" note instead of silently truncating.
+
+The state view is cross-source by design: it matches `region_id` **or** `location.state`. For
+`GET /api/states/QLD?fiscal_year=2024-25` the full match is 40,700 rows —
+34,000 QGIP (27,658 `grant_award` + 6,342 `contract`), 6,670 federal AusTender contracts tagged
+`location.state=QLD`, and 30 synthetic-seed QLD rows (10 each `actual`/`budget`/`estimate`).
+It returns `mixed: true`, `total_cents: null`, and separate per-type totals
+(`grant_award` 27,658; `contract` 13,012 = 6,342 QGIP + 6,670 AusTender).
+
+To isolate the QGIP source, use the additive `source_id` filter:
+
+```
+GET /api/states/QLD?fiscal_year=2024-25&source_id=qld-qgip
+→ count 34000, mixed true, total_cents null,
+  total_by_measure_type: grant_award {count 27658, total_cents 472271212105},
+                         contract   {count 6342,  total_cents 674606619574}
+```
+
 ## Limitations
 
 - QGIP expenditure is **actual** cash-accounting expenditure for 2024-25, not budget.

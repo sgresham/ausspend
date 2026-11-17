@@ -251,6 +251,15 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
 
           <FunctionBreakdownTable groups={detail.by_function} />
 
+          {detail.rows_truncated ? (
+            <Alert severity="info" sx={{ mb: 2 }} data-testid="rows-truncated-note">
+              Showing the first {detail.rows_returned ?? detail.measures.length} of{' '}
+              {detail.count.toLocaleString()} matching rows. All totals above cover the full{' '}
+              {detail.count.toLocaleString()} rows: the row page is paged separately from the
+              aggregates.
+            </Alert>
+          ) : null}
+
           <MeasureRowsTable
             rows={additiveRows}
             labelFor={labelFor}

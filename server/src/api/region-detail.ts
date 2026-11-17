@@ -8,7 +8,7 @@ import {
   perMeasureTypeTotals,
   serializeMeasure,
   serializeRegion,
-  summarizeMeasures,
+  summarizeMeasureQuery,
   type LeanMeasure,
   type LeanRegion,
   type MeasureRow,
@@ -17,57 +17,117 @@ import { MeasureModel } from '../models/index.js';
 import type { FunctionDocument } from '../models/index.js';
 import { areaQueries, buildAreaProfile, resolveRegion, type AreaProfile } from './area-profile.js';
 
-async function loadRegionMeasures(
+/**
+ * The full match set for a region/state page. Aggregates run over this query;
+ * the row page is a separate `.limit(filters.limit)` query over the same match.
+ */
+function regionBaseQuery(
   region: LeanRegion,
   filters: MeasureFilters,
   stateCode?: string,
-): Promise<LeanMeasure[]> {
+): Record<string, unknown> {
   const regionMatch = stateCode
     ? { $or: [{ region_id: region._id }, { 'location.state': stateCode }] }
     : { region_id: region._id };
-  return MeasureModel.find({ ...measureQuery(filters), ...regionMatch })
-    .sort({ fiscal_year: 1, function_code: 1, measure_type: 1 })
-    .limit(filters.limit)
-    .lean<LeanMeasure[]>();
+  return { ...measureQuery(filters), ...regionMatch };
 }
 
-async function groupByFunction(measures: readonly LeanMeasure[], mixed: boolean) {
-  const withFunction = measures.filter(
-    (measure): measure is LeanMeasure & { function_code: string } =>
-      Boolean(measure.function_code) && isAdditiveMeasure(measure),
-  );
-  const functions = await FunctionModel.find({
-    code: { $in: [...new Set(withFunction.map((measure) => measure.function_code))] },
-  }).lean<Array<FunctionDocument & { _id: mongoose.Types.ObjectId }>>();
+interface FunctionTypeTotal {
+  count: number;
+  cents: number;
+}
+
+/**
+ * Per-function, per-measure-type totals over the whole match set. Never derived
+ * from the capped row page, so a function's total cannot silently shrink when a
+ * source exceeds the 2,000-row page cap.
+ */
+async function functionTypeTotals(
+  baseQuery: Record<string, unknown>,
+): Promise<Map<string, Map<LeanMeasure['measure_type'], FunctionTypeTotal>>> {
+  const groups = await MeasureModel.aggregate<{
+    _id: { code: string; measure_type: LeanMeasure['measure_type'] };
+    count: number;
+    cents: number;
+  }>([
+    {
+      $match: {
+        ...baseQuery,
+        function_code: { $type: 'string' },
+        // Missing aggregation_role means additive; only explicit non-additive
+        // detail is excluded from function totals.
+        aggregation_role: { $nin: ['agency_detail', 'policy_measure'] },
+      },
+    },
+    {
+      $group: {
+        _id: { code: '$function_code', measure_type: '$measure_type' },
+        count: { $sum: 1 },
+        cents: { $sum: '$amount_cents' },
+      },
+    },
+  ]);
+
+  const byCode = new Map<string, Map<LeanMeasure['measure_type'], FunctionTypeTotal>>();
+  for (const group of groups) {
+    const entry =
+      byCode.get(group._id.code) ?? new Map<LeanMeasure['measure_type'], FunctionTypeTotal>();
+    entry.set(group._id.measure_type, {
+      count: group.count ?? 0,
+      cents: group.cents ?? 0,
+    });
+    byCode.set(group._id.code, entry);
+  }
+  return byCode;
+}
+
+async function groupByFunction(
+  totals: Map<string, Map<LeanMeasure['measure_type'], FunctionTypeTotal>>,
+  pageMeasures: readonly LeanMeasure[],
+  mixed: boolean,
+) {
+  const codes = [...totals.keys()].sort();
+  const functions = await FunctionModel.find({ code: { $in: codes } }).lean<
+    Array<FunctionDocument & { _id: mongoose.Types.ObjectId }>
+  >();
   const byCode = new Map(functions.map((fn) => [fn.code, fn]));
 
-  const groups = new Map<string, LeanMeasure[]>();
-  for (const measure of withFunction) {
-    const group = groups.get(measure.function_code) ?? [];
+  const pageByCode = new Map<string, LeanMeasure[]>();
+  for (const measure of pageMeasures) {
+    if (!measure.function_code || !isAdditiveMeasure(measure)) continue;
+    const group = pageByCode.get(measure.function_code) ?? [];
     group.push(measure);
-    groups.set(measure.function_code, group);
+    pageByCode.set(measure.function_code, group);
   }
 
-  return [...groups.entries()]
-    .map(([code, rows]) => {
-      const fn = byCode.get(code);
-      const measureTypes = [...new Set(rows.map((row) => row.measure_type))].sort();
-      const groupMixed = mixed || measureTypes.length > 1;
-      return {
-        function: {
-          code,
-          name: fn?.name ?? code,
-          level: fn?.level ?? 'division',
-          ...(fn?.parent_code ? { parent_code: fn.parent_code } : {}),
-        },
-        measure_types: measureTypes,
-        mixed: groupMixed,
-        total_cents: groupMixed ? null : sumCents(rows.map((row) => row.amount_cents)),
-        total_by_measure_type: perMeasureTypeTotals(rows),
-        measures: rows.map(serializeMeasure) satisfies MeasureRow[],
-      };
-    })
-    .sort((a, b) => a.function.code.localeCompare(b.function.code));
+  return codes.map((code) => {
+    const typeTotals =
+      totals.get(code) ?? new Map<LeanMeasure['measure_type'], FunctionTypeTotal>();
+    const fn = byCode.get(code);
+    const measureTypes = [...typeTotals.keys()].sort();
+    const groupMixed = mixed || measureTypes.length > 1;
+    const amounts = [...typeTotals.values()].map((entry) => entry.cents);
+    const totalByType = [...typeTotals.entries()]
+      .map(([measureType, entry]) => ({
+        measure_type: measureType,
+        count: entry.count,
+        total_cents: entry.cents,
+      }))
+      .sort((a, b) => a.measure_type.localeCompare(b.measure_type));
+    return {
+      function: {
+        code,
+        name: fn?.name ?? code,
+        level: fn?.level ?? 'division',
+        ...(fn?.parent_code ? { parent_code: fn.parent_code } : {}),
+      },
+      measure_types: measureTypes,
+      mixed: groupMixed,
+      total_cents: groupMixed ? null : sumCents(amounts),
+      total_by_measure_type: totalByType,
+      measures: (pageByCode.get(code) ?? []).map(serializeMeasure) satisfies MeasureRow[],
+    };
+  });
 }
 
 const NON_ADDITIVE_ROLES = ['agency_detail', 'policy_measure'] as const;
@@ -117,8 +177,17 @@ function nonAdditiveBlocks(measures: readonly LeanMeasure[]) {
 }
 
 async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCode?: string) {
-  const measures = await loadRegionMeasures(region, filters, stateCode);
-  const summary = summarizeMeasures(measures);
+  const baseQuery = regionBaseQuery(region, filters, stateCode);
+  // The summary and per-function totals cover the whole match set; only the
+  // displayed rows are capped at filters.limit (max 2,000).
+  const [measures, summary, functionTotals] = await Promise.all([
+    MeasureModel.find(baseQuery)
+      .sort({ fiscal_year: 1, function_code: 1, measure_type: 1 })
+      .limit(filters.limit)
+      .lean<LeanMeasure[]>(),
+    summarizeMeasureQuery(baseQuery),
+    functionTypeTotals(baseQuery),
+  ]);
   const additiveMeasures = measures.filter(isAdditiveMeasure);
 
   return {
@@ -126,10 +195,13 @@ async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCo
     filters: {
       fiscal_year: filters.fiscal_year ?? null,
       measure_type: filters.measure_type ?? null,
+      source_id: filters.source_id ?? null,
       limit: filters.limit,
     },
     ...summary,
-    by_function: await groupByFunction(additiveMeasures, summary.mixed),
+    rows_returned: measures.length,
+    rows_truncated: measures.length < summary.count,
+    by_function: await groupByFunction(functionTotals, additiveMeasures, summary.mixed),
     measures: measures.map(serializeMeasure),
     non_additive: nonAdditiveBlocks(measures),
     // Backwards-compatible single block for the VIC agency-detail UI.
