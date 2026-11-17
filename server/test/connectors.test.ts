@@ -18,6 +18,7 @@ const LIVE_IDS = [
   'dubbo-council',
   'dubbo-council-gpfs',
   'city-of-sydney-gpfs',
+  'blacktown-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -36,9 +37,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships twenty-eight connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(28);
-    expect(new Set(CONNECTOR_IDS).size).toBe(28);
+  it('ships twenty-nine connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(29);
+    expect(new Set(CONNECTOR_IDS).size).toBe(29);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
@@ -122,6 +123,10 @@ describe('federal connector registry', () => {
     expect(getConnector('dubbo-council-gpfs')?.jurisdiction_level).toBe('local');
     expect(getConnector('dubbo-council-gpfs')?.source_url).toContain('dubbo.nsw.gov.au');
     expect(getConnector('dubbo-council-gpfs')?.notes).toMatch(/non-additive/i);
+    expect(getConnector('blacktown-gpfs')?.status).toBe('active');
+    expect(getConnector('blacktown-gpfs')?.jurisdiction_level).toBe('local');
+    expect(getConnector('blacktown-gpfs')?.source_url).toContain('blacktown.nsw.gov.au');
+    expect(getConnector('blacktown-gpfs')?.notes).toMatch(/non-additive/i);
     expect(getConnector('vic-budget')?.status).toBe('active');
     expect(getConnector('vic-budget')?.jurisdiction_level).toBe('state');
     expect(getConnector('vic-budget')?.source_url).toContain('discover.data.vic.gov.au');
