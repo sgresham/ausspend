@@ -839,6 +839,97 @@ added to another SOC row, the PNFC benchmark or government program spending.
 Both rows carry `human_spot_check: required` in their notes. No Forestry
 Corporation row is marked verified in this phase.
 
+## 2E. Source: Landcom (sixth NSW SOC entity)
+
+Landcom is an NSW State Owned Corporation. Source id: `landcom`. Name:
+`Landcom — Annual Report`. Publisher: Landcom. Canonical `delivery_entity`:
+`Landcom`.
+
+The connector starts at the official corporate-publications page
+(`https://www.landcom.com.au/about-us/corporate-publications`) and selects the
+latest annual-report PDF. No PDF URL is hard-coded.
+
+- Document: `Annual Report 2024–25`
+- Official PDF: `https://www.landcom.com.au/assets/Uploads/Corporate-Publications/Annual-Reports/2025-Landcom-Annual-Report.pdf`
+- Bytes: `11,626,511` (SHA-256
+  `c6705af233418da1307afadf38d87fb170c6f9f9993434460b740480ea1042f2`)
+- Printed unit: **`$‘000`** (thousands), stated on the face statement.
+  `AUD_thousands`; `amount_cents = $'000 × 100,000`. A table read as dollars or
+  millions is rejected and the document is deferred.
+- Statement: _Statement of Comprehensive Income_ for the year ended 30 June 2025
+  (PDF page 86).
+
+### Exact reconciliation (zero tolerance, printed 2025 column, $‘000)
+
+| Printed line                                     | 2025 ($‘000) |
+| ------------------------------------------------ | -----------: |
+| Revenue from contracts with customers            |      263,423 |
+| Cost of sales                                    |    (143,085) |
+| **Gross profit**                                 |  **120,338** |
+| Other income (Note 2.2)                          |        2,663 |
+| Finance income (Note 2.3)                        |       11,101 |
+| Employee related expenses (Note 2.4)             |     (29,737) |
+| Other expenses (Note 2.5)                        |     (29,361) |
+| Depreciation and amortisation expense (Note 2.6) |      (3,040) |
+| Net fair value loss on investment properties     |      (8,120) |
+| Finance costs (Note 2.3)                         |        (652) |
+| **Profit before income tax**                     |   **63,192** |
+| Income tax equivalent expense                    |     (18,959) |
+| **Net profit for the year**                      |   **44,233** |
+
+The statement prints **no Total revenue and no Total expenses subtotal**
+(unlike Sydney Water/WaterNSW/Hunter Water/Forestry Corporation). Following the
+Essential Energy precedent, both are the exact signed sums of the printed
+statement lines, accepted only because every printed bridge reconciles:
+
+1. Gross profit: `263,423 − 143,085 = 120,338`.
+2. Derived total revenue: `263,423 + 2,663 + 11,101 = 277,187`.
+3. Derived total expenses: `143,085 + 29,737 + 29,361 + 3,040 + 8,120 + 652
+= 213,995`.
+4. Profit before tax: `277,187 − 213,995 = 63,192`.
+5. Net result: `63,192 − 18,959 = 44,233`.
+6. Note 2.2 Other income: `2,285 + 378 = 2,663`.
+7. Note 2.3 Finance income: `4,978 + 4,649 + 794 + 680 = 11,101`; finance costs
+   (lease interest) `652`.
+8. Note 2.4 Employee related expenses: `31,609 + 621 + 172 + 3,762 + 727 + 2,661
+   - 2,240 + 2,176 = 43,968`; less amounts capitalised `14,231 = 29,737`.
+9. Note 2.5 Other expenses: the eleven printed components net of the `(185)`
+   write-back sum to `38,908`; less transfer of capital costs to inventories
+   `9,547 = 29,361`.
+10. Note 2.6 Depreciation and amortisation: `1,727 + 194 + 421 + 681 + 17
+= 3,040`.
+
+Any one-thousand-dollar mismatch defers the whole document; no partial rows are
+ingested.
+
+### Ingested line items (6 rows)
+
+| `soc_line_item`             | Printed source                          | 2025 ($‘000) | `funding_source`                     | `potential_double_count` |
+| --------------------------- | --------------------------------------- | -----------: | ------------------------------------ | ------------------------ |
+| `total_revenue`             | Exact sum of printed revenue lines      |      277,187 | Landcom                              | false                    |
+| `total_expenses`            | Exact sum of printed expense lines      |  **213,995** | Landcom                              | false                    |
+| `employee_expenses`         | Statement Employee related expenses     |       29,737 | Landcom                              | false                    |
+| `depreciation_amortisation` | Statement Depreciation and amortisation |        3,040 | Landcom                              | false                    |
+| `government_grants`         | Note 2.2 Grant income                   |        2,285 | NSW Government (agency not itemised) | **true**                 |
+| `net_result`                | Statement Net profit for the year       |   **44,233** | Landcom                              | false                    |
+
+`total_revenue` includes the separately shown grant income; `total_expenses`
+includes employee and depreciation; `net_result` is a result. None of the six
+rows may be added to another SOC row, the PNFC benchmark or government program
+spending.
+
+### Two line items flagged for human spot-check (not verified)
+
+1. **`total_expenses` (213,995 $‘000)** — derived, because the statement has no
+   printed Total expenses subtotal. Confirm that the six printed expense lines
+   (including cost of sales and the net fair value loss on investment
+   properties) are the intended total-expenses definition.
+2. **`net_result` (44,233 $‘000)** — confirm the printed net profit for the year
+   is the intended net result.
+
+Both rows carry `human_spot_check: required` in their notes. No Landcom row is
+marked verified in this phase.
+
 ## 3. Mapping (PNFC and SOC)
 
 | Field                    | PNFC benchmark                                  | Sydney Water SOC                                         | WaterNSW SOC                                             | Hunter Water SOC                                         |
@@ -858,6 +949,8 @@ Corporation row is marked verified in this phase.
 | `potential_double_count` | absent                                          | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source | `true` for government-named rows, `false` for own-source |
 | `natural_key`            | `abs-gfs-pnfc:` + 40 hex                        | `sydney-water:` + 40 hex                                 | `waternsw:` + 40 hex                                     | `hunter-water:` + 40 hex                                 |
 
+Landcom follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`/`location` NSW, `amount_cents = $'000 × 100,000`, `measure_type` `actual`, `aggregation_role` `agency_detail`, `verified` `false`, `data_quality_flag` `provisional`, `soc_unit` `AUD_thousands`, and `natural_key` prefix `landcom:`. Its one grant-income row is `potential_double_count: true`.
+
 Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `soc`, `jurisdiction`/`location` NSW, `amount_cents = $’000 × 100,000`, `measure_type` `actual`, `aggregation_role` `agency_detail`, `verified` `false`, `data_quality_flag` `provisional`, `soc_unit` `AUD_thousands`, and `natural_key` prefix `forestry-corporation:`. Both grant rows are `potential_double_count: true`.
 
 ## 4. No-sum and double-count invariants (critical)
@@ -872,11 +965,11 @@ Forestry Corporation of NSW follows the same SOC mapping: `jurisdiction_level` `
   already includes the separately shown grants; `total_expenses` already
   includes employee, depreciation/amortisation and transfer lines; `net_result`
   is a result, not an expense. Summing any of them is invalid.
-- Sydney Water, WaterNSW, Hunter Water, Essential Energy and Forestry
-  Corporation of NSW are **separate sources and separate entities**. The API returns a `sources` array and an
+- Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry
+  Corporation of NSW and Landcom are **separate sources and separate entities**. The API returns a `sources` array and an
   `entities` filter; the UI shows an entity column and an entity selector.
-  WaterNSW, Hunter Water, Essential Energy and Forestry Corporation rows are
-  never added to Sydney Water's rows or to each other.
+  WaterNSW, Hunter Water, Essential Energy, Forestry Corporation and Landcom
+  rows are never added to Sydney Water's rows or to each other.
 - `GET /api/benchmark/pnfc` returns PNFC cells only and computes no total.
 - Rows with `potential_double_count: true` name a government agency or a
   government contribution/transfer. The API/UI warn explicitly. They are never
@@ -905,7 +998,7 @@ npm run ingest:soc
 
 The runner:
 
-1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy and Forestry Corporation of NSW, in order.
+1. Runs the PNFC connector first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW and Landcom, in order.
 2. Logs per-source `success`/`partial`/`error`, continuing after a source error.
 3. Upserts on `natural_key`, so re-running updates the same rows and creates
    none (idempotency test).
@@ -915,8 +1008,9 @@ The runner:
    `docs/source-archive/waternsw-annual-report.json`,
    `docs/source-archive/hunter-water-annual-report.json`,
    `docs/source-archive/essential-energy-annual-report.json` and
-   `docs/source-archive/forestry-corporation-annual-report.json`. The exact
-   bytes stay outside the repo.
+   `docs/source-archive/forestry-corporation-annual-report.json` and
+   `docs/source-archive/landcom-annual-report.json`. The exact bytes stay outside
+   the repo.
 6. Prints per-source counts only (never a combined SOC, entity or PNFC total).
 
 For the Cloudflare-blocked WaterNSW host, the live ingest can supply the exact

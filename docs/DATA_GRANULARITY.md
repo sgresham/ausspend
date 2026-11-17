@@ -95,9 +95,15 @@ Database counts read at the P2 check (all unchanged from the current baseline): 
 `waternsw` 47; `vic-budget` 28; `abs-gfs-pnfc` 18; `sydney-water` 10; `essential-energy` 6;
 `hunter-water` 6. Total **515,413**.
 
-After SOC phase 6 (Forestry Corporation of NSW, 7 new rows) the current baseline is **515,420**
-measures and **76 SOC rows**; `forestry-corporation` contributes 7 rows and every per-source count
-above is unchanged (no deletes).
+After SOC phase 6 (Forestry Corporation of NSW, 7 new rows) the baseline was **515,420**
+measures and **76 SOC rows**; `forestry-corporation` contributed 7 rows and every per-source count
+above was unchanged (no deletes).
+
+After SOC phase 7 (Landcom, 6 new rows) the current baseline is **515,426** measures and **82 SOC
+rows**; `landcom` contributes 6 rows (total revenue 277,187, total expenses 213,995, employee
+29,737, depreciation/amortisation 3,040, grant income 2,285 and net result 44,233 $’000) and every
+per-source count above is unchanged (no deletes). The original 515,420 measures are all preserved;
+Landcom adds six provisional, unverified rows.
 
 ## Method and snapshot evidence
 

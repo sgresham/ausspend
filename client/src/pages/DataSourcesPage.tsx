@@ -64,11 +64,11 @@ export function DataSourcesPage() {
         never summed with project data. ABS GFS Public Non-Financial Corporations (PNFC) adds a
         separate sector benchmark from nine official annual XLSX data cubes (Australia all levels
         plus the eight states/territories); it is a sector aggregate — never add it to
-        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–6 add five
+        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–7 add six
         separate entities: Sydney Water Corporation, WaterNSW (Water NSW), Hunter Water Corporation,
-        Essential Energy and Forestry Corporation of NSW. Each latest annual report is discovered
-        from the entity&apos;s official annual-report page (no hard-coded PDF URL), SHA-256 archived
-        outside the repo, and parsed as entity-level statement lines (
+        Essential Energy, Forestry Corporation of NSW and Landcom. Each latest annual report is
+        discovered from the entity&apos;s official annual-report page (no hard-coded PDF URL),
+        SHA-256 archived outside the repo, and parsed as entity-level statement lines (
         <code>jurisdiction_level: soc</code>, <code>aggregation_role: agency_detail</code>) with an
         explicit printed $’000 unit (Forestry Corporation) or the entity’s own explicit unit.
         WaterNSW&apos;s and Hunter Water&apos;s explicit printed Total expenses are accepted only
@@ -81,11 +81,15 @@ export function DataSourcesPage() {
         Corporation of NSW prints in $’000 with an explicit printed Total expenses, accepted only
         when its four expense lines, Note 5/8/9/10 subtotals and profit bridges reconcile exactly;
         its two government-grant lines are flagged potential double count and two lines are flagged
-        for human spot-check. Rows are provisional and unverified; government-named funding rows
-        carry a potential-double-count warning. SOC rows are never added to government program
-        spending, the PNFC benchmark, another SOC entity or each other, and are exposed only at{' '}
-        <code>/api/soc</code> with separate entity/source badges. WA remains a stub. No grant row is
-        estimated or zero-filled.
+        for human spot-check. Landcom prints in $’000 with no printed Total revenue or Total
+        expenses subtotal, so both are the exact signed sums of the printed statement lines,
+        accepted only when its gross-profit, profit-before-tax, net-result and Note
+        2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly; its grant-income line is flagged potential
+        double count and two lines are flagged for human spot-check. Rows are provisional and
+        unverified; government-named funding rows carry a potential-double-count warning. SOC rows
+        are never added to government program spending, the PNFC benchmark, another SOC entity or
+        each other, and are exposed only at <code>/api/soc</code> with separate entity/source
+        badges. WA remains a stub. No grant row is estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>

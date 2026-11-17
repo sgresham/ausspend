@@ -25,6 +25,12 @@ import {
   HUNTER_WATER_JURISDICTION,
   HUNTER_WATER_UNIT,
   HUNTER_WATER_UNIT_LABEL,
+  LANDCOM_CAVEAT,
+  LANDCOM_ENTITY,
+  LANDCOM_ID,
+  LANDCOM_JURISDICTION,
+  LANDCOM_UNIT,
+  LANDCOM_UNIT_LABEL,
   PBS_CAVEAT,
   SYDNEY_WATER_CAVEAT,
   SYDNEY_WATER_ENTITY,
@@ -116,14 +122,14 @@ function coverageLimitations(
     syntheticLine,
     'Synthetic and ingested project rows are unverified: seeded measures, AusTender contracts, PBS budget rows, state budget/project rows and charity rows carry verified: false. The only verified rows are the official ABS GFS COFOG-A aggregates (aggregation_role "benchmark"), which are top-down benchmarks and are never added to project data.',
     liveFederal
-      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. The eight other registered connectors are stubs and make no network call.'
+      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. The four other registered connectors are stubs and make no network call.'
       : 'No live ingestion has run yet: aus-tender, data-gov-au-pbs and grantconnect plus the eight other registered connectors are stubs; no request leaves the API until the runner runs.',
     pbsLive
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
       : 'PBS (data.gov.au) budget line items are not ingested yet; the API exposes no PBS budget rows.',
     'ABS GFS Annual 2024-25 is a COFOG-A expense benchmark from the official XLSX (Key Tables 9/10). The ABS SDMX API has no GFS/COFOG dataflow, so no SDMX query is used. Every GFS row is a published official aggregate (verified: true, aggregation_role "benchmark") at federal/state/local level; it is never project-level and is never summed with project data, across levels or across measure types. The benchmark is exposed separately at /api/benchmark and excluded from the generic spending/search queries.',
     'ABS GFS Public Non-Financial Corporations (PNFC) is a separate sector benchmark from nine official Annual 2024-25 XLSX data cubes (Australia all levels plus the eight states/territories). The ABS SDMX API has no PNFC/GFS dataflow, so no SDMX query is used. Only the published Total GFS revenue and Total GFS expenses rows are ingested, as separate flows, with jurisdiction_level "pnfc", verified: true and aggregation_role "benchmark". It is a sector aggregate, exposed only at /api/benchmark/pnfc and excluded from generic spending/search: never add it to SOC/entity, government, charity or project data, and never sum across jurisdictions or revenue/expense flows.',
-    'NSW SOC (phase 2) covers one state-owned corporation only: Sydney Water Corporation. Its latest annual report is discovered from Sydney Water\'s annual-report page (no hard-coded PDF URL), SHA-256 archived outside the repo, and read as an entity-level statement (jurisdiction_level "soc", aggregation_role "agency_detail"). The printed unit is explicit $’000; total expenses is the exact sum of the two printed expense totals (finance costs + other expenses) and is accepted only when the statement profit-before-tax bridge and both Note 2 subtotals reconcile exactly. Every row is provisional and unverified. SOC rows are exposed only at /api/soc and are never added to government program spending, to the PNFC benchmark, or to each other; rows whose funding_source names a government agency/contribution are flagged potential_double_count. NSW SOC phase 4 adds a third entity, Hunter Water Corporation: the same discovery/SHA-256/$’000 gate, an explicit printed Total expenses accepted only when its printed components, the Note 3 operational-expenses subtotal and the profit-before-tax bridge reconcile exactly, with a one-dollar printed tax/NPAT rounding retained only as the printed net result and flagged for human spot-check. NSW SOC phase 5 adds a fourth entity, Essential Energy: the same discovery/SHA-256 gate with an explicit $M unit, and a total-expenses figure that is the exact sum of the printed expense lines (the statement has no single Total expenses subtotal) accepted only when the revenue, EBITDA/EBIT, expense-component and profit-before-tax/net-result bridges reconcile exactly; the printed loss is retained with a negative printed sign and two lines are flagged for human spot-check. NSW SOC phase 6 adds a fifth entity, Forestry Corporation of NSW: the same discovery/SHA-256 gate with an explicit $\'000 unit, an explicit printed Total expenses accepted only when the four printed expense lines, Note 5 Other income, Note 8 Other operating expenses, Note 9 Employee benefits and Note 10 Finance costs sum to their printed subtotals and the profit-before-tax/net-result bridges reconcile exactly; two grant lines are flagged potential_double_count and two lines are flagged for human spot-check. No other SOC, no VIC/QLD SOC, no BP1 Chapter 9 and no project/LGA/coordinate is covered.',
+    'NSW SOC (phase 2) covers one state-owned corporation only: Sydney Water Corporation. Its latest annual report is discovered from Sydney Water\'s annual-report page (no hard-coded PDF URL), SHA-256 archived outside the repo, and read as an entity-level statement (jurisdiction_level "soc", aggregation_role "agency_detail"). The printed unit is explicit $’000; total expenses is the exact sum of the two printed expense totals (finance costs + other expenses) and is accepted only when the statement profit-before-tax bridge and both Note 2 subtotals reconcile exactly. Every row is provisional and unverified. SOC rows are exposed only at /api/soc and are never added to government program spending, to the PNFC benchmark, or to each other; rows whose funding_source names a government agency/contribution are flagged potential_double_count. NSW SOC phase 4 adds a third entity, Hunter Water Corporation: the same discovery/SHA-256/$’000 gate, an explicit printed Total expenses accepted only when its printed components, the Note 3 operational-expenses subtotal and the profit-before-tax bridge reconcile exactly, with a one-dollar printed tax/NPAT rounding retained only as the printed net result and flagged for human spot-check. NSW SOC phase 5 adds a fourth entity, Essential Energy: the same discovery/SHA-256 gate with an explicit $M unit, and a total-expenses figure that is the exact sum of the printed expense lines (the statement has no single Total expenses subtotal) accepted only when the revenue, EBITDA/EBIT, expense-component and profit-before-tax/net-result bridges reconcile exactly; the printed loss is retained with a negative printed sign and two lines are flagged for human spot-check. NSW SOC phase 6 adds a fifth entity, Forestry Corporation of NSW: the same discovery/SHA-256 gate with an explicit $\'000 unit, an explicit printed Total expenses accepted only when the four printed expense lines, Note 5 Other income, Note 8 Other operating expenses, Note 9 Employee benefits and Note 10 Finance costs sum to their printed subtotals and the profit-before-tax/net-result bridges reconcile exactly; two grant lines are flagged potential_double_count and two lines are flagged for human spot-check. NSW SOC phase 7 adds a sixth entity, Landcom: the same discovery/SHA-256 gate with an explicit $’000 unit; the statement prints no Total revenue or Total expenses subtotal, so both are the exact signed sums of the printed statement lines, accepted only when the gross-profit, profit-before-tax, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly; one grant-income line is flagged potential_double_count and two lines are flagged for human spot-check. No other SOC, no VIC/QLD SOC, no BP1 Chapter 9 and no project/LGA/coordinate is covered.',
     'ACNC charity expenses are reported by registered charities, not government. They are jurisdiction_level "charity", have no COFOG function, and are never merged with federal/state/local spending. Every charity row has an explicit expense_category; total-expenses rows (aggregation_role expense_total) and component rows (expense_component) are never summed together. State/postcode comes only from AIS program operating locations, is single-state only and is flagged location_approximate.',
     'COFOG function coverage is a curated subset (ten divisions with curated subdivisions), not exhaustive.',
     'Region granularity is national plus state/territory plus one S3 sub-state region (Dubbo, level "region", parent NSW). No other local council or other state has a connector. Federal contract rows may have no region or COFOG function; PBS rows are not geographically tagged (location.state is literally "Commonwealth"). Never an invented LGA/SA2/coordinate.',
@@ -251,12 +257,14 @@ export function createCoverageHandler(
     const hunterWater = dataSourceById.get(HUNTER_WATER_ID);
     const essentialEnergy = dataSourceById.get(ESSENTIAL_ENERGY_ID);
     const forestryCorporation = dataSourceById.get(FORESTRY_CORPORATION_ID);
+    const landcom = dataSourceById.get(LANDCOM_ID);
     const socLiveIds = [
       SYDNEY_WATER_ID,
       WATERNSW_ID,
       HUNTER_WATER_ID,
       ESSENTIAL_ENERGY_ID,
       FORESTRY_CORPORATION_ID,
+      LANDCOM_ID,
     ].filter((id) => {
       const source = dataSourceById.get(id);
       return source?.status === 'active' || source?.status === 'degraded';
@@ -268,6 +276,7 @@ export function createCoverageHandler(
       hunterWater?.last_ingested_at,
       essentialEnergy?.last_ingested_at,
       forestryCorporation?.last_ingested_at,
+      landcom?.last_ingested_at,
     ]
       .filter((value) => value !== null && value !== undefined)
       .sort((a, b) => new Date(b as Date).getTime() - new Date(a as Date).getTime())[0];
@@ -294,6 +303,7 @@ export function createCoverageHandler(
               socLiveIds.includes(HUNTER_WATER_ID) ? 'Hunter Water' : null,
               socLiveIds.includes(ESSENTIAL_ENERGY_ID) ? 'Essential Energy' : null,
               socLiveIds.includes(FORESTRY_CORPORATION_ID) ? 'Forestry Corporation of NSW' : null,
+              socLiveIds.includes(LANDCOM_ID) ? 'Landcom' : null,
             ]
               .filter(Boolean)
               .join(' + ')})`
@@ -421,6 +431,7 @@ export function createCoverageHandler(
           HUNTER_WATER_ID,
           ESSENTIAL_ENERGY_ID,
           FORESTRY_CORPORATION_ID,
+          LANDCOM_ID,
         ].filter((id) => dataSourceById.get(id)?.status === 'degraded'),
         last_ingested_at: socLastIngested ? new Date(socLastIngested).toISOString() : null,
         // Row counts only; entity amounts are never combined into a total.
@@ -429,13 +440,14 @@ export function createCoverageHandler(
           (waterNsw?.records_ingested ?? 0) +
           (hunterWater?.records_ingested ?? 0) +
           (essentialEnergy?.records_ingested ?? 0) +
-          (forestryCorporation?.records_ingested ?? 0),
+          (forestryCorporation?.records_ingested ?? 0) +
+          (landcom?.records_ingested ?? 0),
         // Kept for the single-source shape: the first SOC entity.
         entity: SYDNEY_WATER_ENTITY,
         jurisdiction: SYDNEY_WATER_JURISDICTION,
         unit: SYDNEY_WATER_UNIT,
         unit_label: SYDNEY_WATER_UNIT_LABEL,
-        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW, Hunter Water, Essential Energy and Forestry Corporation of NSW are separate SOC entities; their rows are never added to Sydney Water's or to any other total.`,
+        caveat: `${SYDNEY_WATER_CAVEAT} WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW and Landcom are separate SOC entities; their rows are never added to Sydney Water's or to any other total.`,
         label: 'SOC entity statement — never add to government program spending',
         entities: [
           {
@@ -498,8 +510,20 @@ export function createCoverageHandler(
               : null,
             caveat: FORESTRY_CORPORATION_CAVEAT,
           },
+          {
+            source_id: LANDCOM_ID,
+            entity: LANDCOM_ENTITY,
+            jurisdiction: LANDCOM_JURISDICTION,
+            unit: LANDCOM_UNIT,
+            unit_label: LANDCOM_UNIT_LABEL,
+            records: landcom?.records_ingested ?? 0,
+            last_ingested_at: landcom?.last_ingested_at
+              ? new Date(landcom.last_ingested_at).toISOString()
+              : null,
+            caveat: LANDCOM_CAVEAT,
+          },
         ],
-        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water, WaterNSW, Hunter Water, Essential Energy and Forestry Corporation of NSW. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges; Hunter Water: explicit printed Total expenses plus its component, Note 3 and profit-before-tax bridges; Essential Energy: exact sum of the printed expense lines because the statement has no single Total expenses subtotal, plus Note 2(c) and Note 3 bridge checks and the printed loss retained with a negative sign; Forestry Corporation: explicit printed Total expenses plus Note 5/8/9/10 subtotals and profit bridges, with two government-grant rows flagged potential double count). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the entities are never summed together. Government-named funding rows carry potential_double_count.',
+        note: 'Separate entity-level NSW State Owned Corporation statement lines for Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW and Landcom. Each annual report is discovered from the entity\'s official annual-report page (no hard-coded URL), SHA-256 archived outside the repo, and parsed only when the printed unit is explicit and the printed totals reconcile exactly (Sydney Water: derived finance costs + other expenses; WaterNSW: explicit printed Total expenses plus its component and profit bridges; Hunter Water: explicit printed Total expenses plus its component, Note 3 and profit-before-tax bridges; Essential Energy: exact sum of the printed expense lines because the statement has no single Total expenses subtotal, plus Note 2(c) and Note 3 bridge checks and the printed loss retained with a negative sign; Forestry Corporation: explicit printed Total expenses plus Note 5/8/9/10 subtotals and profit bridges, with two government-grant rows flagged potential double count; Landcom: no printed Total revenue or Total expenses, so both are the exact signed sums of the printed statement lines, accepted only when the gross-profit, PBT, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly, with one grant-income row flagged potential double count and two lines flagged for human spot-check). Rows are jurisdiction_level "soc", aggregation_role "agency_detail", provisional and unverified. SOC rows are exposed only at /api/soc; they are never added to government program spending, the PNFC benchmark, or each other, and the entities are never summed together. Government-named funding rows carry potential_double_count.',
       },
       local_ingestion: {
         live: localConnectors

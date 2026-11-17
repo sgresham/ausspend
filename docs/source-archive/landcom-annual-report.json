@@ -1,0 +1,22 @@
+{
+  "entity": "Landcom",
+  "jurisdiction": "NSW",
+  "dataset": "Landcom — Annual Report",
+  "publisher": "Landcom",
+  "discovery_page": "https://www.landcom.com.au/about-us/corporate-publications",
+  "license": "© Landcom. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T08:42:17.069Z",
+  "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for Landcom only. Never add to government program spending, to the PNFC sector benchmark, or to each other: the statement prints no Total revenue or Total expenses subtotal, so both are the exact signed sums of the printed statement lines; total revenue includes the separately shown grant income; the net result is a profit. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25",
+      "filename": "2025-Landcom-Annual-Report.pdf",
+      "url": "https://www.landcom.com.au/assets/Uploads/Corporate-Publications/Annual-Reports/2025-Landcom-Annual-Report.pdf",
+      "sha256": "c6705af233418da1307afadf38d87fb170c6f9f9993434460b740480ea1042f2",
+      "bytes": 11626511,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest Landcom annual report discovered from the official corporate-publications page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $'000 unit but no single Total revenue or Total expenses subtotal. Total revenue is the exact signed sum of the printed revenue lines (revenue from contracts with customers + other income + finance income) and total expenses is the exact signed sum of the printed expense lines (cost of sales + employee related expenses + other expenses + depreciation and amortisation + net fair value loss on investment properties + finance costs); both are accepted only when the gross-profit, profit-before-tax, net-result and Note 2.2/2.3/2.4/2.5/2.6 bridges reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Landcom rows to government program spending, the PNFC benchmark, or any other SOC."
+}
