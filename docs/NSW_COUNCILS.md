@@ -1,10 +1,12 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. The Dubbo FY2024-25 GPFS pilot (§7.1) has
-now landed as a separate non-additive source: the database baseline was **515,449 measures**, and
-this pilot adds exactly **18** `dubbo-council-gpfs` rows (**515,467** total). The existing 245
-`dubbo-council` budget/estimate rows are preserved untouched and are never summed with the GPFS
-rows.
+**Status:** the inventory and plan below are unchanged. Two council GPFS extractions have landed as
+separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
+`dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
+(**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**). The
+existing 245 `dubbo-council` budget/estimate rows, the 2 pre-existing AusTender federal contract
+rows whose `delivery_entity` happens to be "City of Sydney", and every other source are preserved
+untouched and are never summed with the GPFS rows.
 
 **As at:** 17 November 2026. **Scope:** NSW local government — the 128 general purpose councils —
 not state government, and not a cross-council spending total.
@@ -472,6 +474,65 @@ may overlap government program data; they are not added to expenditure.
 still **245**; `dubbo-council-gpfs` **18**; `data_sources` 26 → **27**. No deletes or updates to any
 other source.
 
+### 7.2 Second council — City of Sydney FY2024-25 GPFS (landed 2026-11-17)
+
+**Source.** Discovered from the official annual-report page
+<https://www.cityofsydney.nsw.gov.au/research-reports/annual-report> (no hard-coded document URL):
+the link text **"Financial statements 2024/25"** resolves to
+<https://www.cityofsydney.nsw.gov.au/-/media/corporate/files/publications/research-and-reports/annual-reports/city-of-sydney-financial-statements-2024-2025.pdf?download=true>
+(published 20 November 2025; statements authorised for issue by Council on 27 October 2025). Exact
+bytes archived outside the repo at
+`~/ausspend-source-archive/city-of-sydney-gpfs/city-of-sydney-financial-statements-2024-25.pdf`:
+**2,285,656 bytes**, SHA-256
+`b52e7a1ecdde5bea6937f2d3040e04ed340a6db8cceb959d51c73e84504f623b`. The printed unit is explicit
+`$ '000` (thousands) on the income statement (p6), the Statement of Comprehensive Income (p7) and
+note B1-1 (p16); a missing or conflicting unit rejects the whole extraction.
+
+**Exact reconciliation.** The PDF prints a three-column income statement (Budget 2025 before the
+line label; Actual 2025 and Actual 2024 after it). The connector takes the first amount after each
+printed label, i.e. the FY2024-25 actual, and emits nothing unless all of these agree exactly:
+
+| Check                                                                                                                       |                             Printed / derived | Result                                     |
+| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------: | ------------------------------------------ |
+| Total income from continuing operations (Income Statement p6)                                                               |                           `$909,748` thousand | = `$909,748,000`                           |
+| Revenue components sum (rates + user charges + other revenue + operating grants + capital grants + interest + other income) |                           `$909,748` thousand | = printed total                            |
+| B1-1 Total functions and activities — income                                                                                |                           `$909,748` thousand | = face statement                           |
+| Total expenses excluding depreciation (printed p6)                                                                          |                           `$646,072` thousand | = expense components sum                   |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$130,214`)                         | `$646,072` + `$130,214` = `$776,286` thousand | = B1-1 expense total                       |
+| B1-1 Total functions and activities — expenses                                                                              |                           `$776,286` thousand | printed total (not component-summed)       |
+| B1-1 operating result / Income Statement net operating result                                                               |                           `$133,462` thousand | = `$909,748 − $776,286`                    |
+| Statement of Comprehensive Income net result                                                                                |                           `$133,462` thousand | = Income Statement net result              |
+| B1-1 grants and contributions                                                                                               |                           `$126,983` thousand | = operating `$15,652` + capital `$111,331` |
+| Net operating result before capital grants                                                                                  |                            `$22,131` thousand | = `$133,462 − $111,331`                    |
+
+The City of Sydney connector does **not** use OLG all-rights data as an anchor: the reconciliation is
+internal to the audited document (face statement, B1-1 and the Statement of Comprehensive Income).
+
+**Rows.** 18 rows, source id `city-of-sydney-gpfs`, `source_dataset` "City of Sydney GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "City of Sydney"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$909,748,000`, total expenses `$776,286,000`, employee expenses `$306,623,000`,
+depreciation/amortisation/impairment `$130,214,000`, operating government grants `$15,652,000`,
+capital government grants `$111,331,000`, net result `$133,462,000` and net result before capital
+grants `$22,131,000`; the printed face-statement revenue and expense components are included for
+provenance. The B1-1 function/activity split is used only to source the printed total expenses, not
+emitted as rows (its three-column budget/actual layout has dash-valued cells that cannot be
+positioned reliably from text, so it is not summed).
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and area panels therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into any other council or state rows. The 2 pre-existing rows whose `delivery_entity` is "City of
+Sydney" are **AusTender federal contracts** (not council financial rows); they are preserved exactly
+and never summed with the GPFS rows. Government grant rows carry `potential_double_count: true`
+because they may overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-17).** `measures` 515,467 → **515,485** (exactly +18); `city-of-sydney-gpfs`
+**18**; `dubbo-council` still **245**; `dubbo-council-gpfs` **18**; `data-nsw-ckan` still **3,472**;
+`data_sources` 27 → **28**. A second ingest run upserted the same 18 natural keys and left the DB
+total unchanged (idempotent). No deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -486,7 +547,8 @@ other source.
 4. **P3 — GPFS expansion by materiality.** Rank the 128 by FY2024-25 `Total Expenses` (from the OLG
    workbook, after permission) and take the top 20 first; within that, prefer councils with
    machine-readable GPFS. Then regional cities, then rural. One adapter/mapping per council; never a
-   blind 128-PDF batch.
+   blind 128-PDF batch. **First expansion landed 2026-11-17:** City of Sydney FY2024-25 GPFS, 18
+   non-additive rows (§7.2).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).

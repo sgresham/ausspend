@@ -17,6 +17,7 @@ const LIVE_IDS = [
   'data-nsw-ckan',
   'dubbo-council',
   'dubbo-council-gpfs',
+  'city-of-sydney-gpfs',
   'vic-budget',
   'qld-budget',
   'qld-qgip',
@@ -35,9 +36,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships twenty-seven connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(27);
-    expect(new Set(CONNECTOR_IDS).size).toBe(27);
+  it('ships twenty-eight connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(28);
+    expect(new Set(CONNECTOR_IDS).size).toBe(28);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
