@@ -72,6 +72,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - canada-bay-gpfs  GPFS expansion: City of Canada Bay Council's audited FY2024-25 GPFS
  *   - cumberland-gpfs  GPFS expansion: Cumberland City Council's audited FY2024-25 GPFS
  *   - georges-river-gpfs  GPFS expansion: Georges River Council's audited FY2024-25 GPFS
+ *   - fairfield-gpfs  GPFS expansion: Fairfield City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -82,8 +83,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Council, Shellharbour City Council, Waverley Council, Willoughby City
  * Council, Inner West Council, Bayside Council, Randwick City Council, the
  * Council of the City of Ryde, North Sydney Council, the City of Canada Bay
- * Council, Cumberland City Council and Georges River Council. No other councils,
- * states/territories, SOC/charity or live state
+ * Council, Cumberland City Council, Georges River Council and Fairfield City
+ * Council. No other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -118,6 +119,7 @@ export const NSW_SOURCE_IDS = [
   'canada-bay-gpfs',
   'cumberland-gpfs',
   'georges-river-gpfs',
+  'fairfield-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
