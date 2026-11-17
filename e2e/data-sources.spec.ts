@@ -56,6 +56,17 @@ test('data sources lists live connectors, open stubs and coverage limitations', 
     'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live',
   );
   await expect(page.getByTestId('coverage-limitations')).toContainText('GrantConnect');
+
+  const qgipCaveat = page.getByTestId('qgip-coverage-caveat');
+  await expect(qgipCaveat).toBeVisible();
+  await expect(qgipCaveat).toContainText(
+    'QLD QGIP grant/contract payment-level rows cover 2018-19 through 2024-25',
+  );
+  await expect(qgipCaveat).toContainText(
+    '2019-20 is partial because the publisher left annual expenditure blank on most rows',
+  );
+  await expect(qgipCaveat).toContainText('QGIP grants and contracts are never summed');
+  await expect(qgipCaveat).toContainText('provisional and unverified');
 });
 
 test('data sources shows targeted CKAN provenance and deferred PDF/DOCX resources', async ({

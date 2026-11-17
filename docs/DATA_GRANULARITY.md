@@ -26,7 +26,8 @@ publish only summary tables, and some are inherently aggregate benchmarks.
    potentially extractable, and they are already components of Total expenses, never additional
    spending.
 2. **The best next detail is already row-level and just needs breadth.** QLD QGIP publishes
-   payment-level CSVs for 2013-14 through 2024-25 but only 2024-25 is ingested; AusTender publishes
+   payment-level CSVs for 2013-14 through 2024-25, but only 2024-25 was ingested at the audit
+   snapshot (now superseded by the P1 section below); AusTender publishes
    multiple contracts and item classifications but only `contracts[0]` is mapped; QLD BP3 publishes
    total estimated cost and expenditure to date but only the 2026-27 budget column is stored.
 3. **Budget statements are summary data.** NSW/VIC COFOG, PBS program line items and QLD BP4
