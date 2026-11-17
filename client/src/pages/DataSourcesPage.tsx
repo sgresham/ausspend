@@ -64,17 +64,20 @@ export function DataSourcesPage() {
         never summed with project data. ABS GFS Public Non-Financial Corporations (PNFC) adds a
         separate sector benchmark from nine official annual XLSX data cubes (Australia all levels
         plus the eight states/territories); it is a sector aggregate — never add it to
-        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–3 add two
-        separate entities: Sydney Water Corporation and WaterNSW (Water NSW). Each latest annual
-        report is discovered from the entity&apos;s official annual-report page (no hard-coded PDF
-        URL), SHA-256 archived outside the repo, and parsed as entity-level statement lines (
-        <code>jurisdiction_level: soc</code>, <code>aggregation_role: agency_detail</code>) with the
-        printed $’000 unit. WaterNSW&apos;s explicit printed Total expenses is accepted only when
-        its printed components and profit bridges reconcile exactly. Rows are provisional and
-        unverified; government-named funding rows carry a potential-double-count warning. SOC rows
-        are never added to government program spending, the PNFC benchmark, another SOC entity or
-        each other, and are exposed only at <code>/api/soc</code> with separate entity/source
-        badges. WA remains a stub. No grant row is estimated or zero-filled.
+        project/entity data, and revenue and expense are separate flows. NSW SOC phases 2–4 add
+        three separate entities: Sydney Water Corporation, WaterNSW (Water NSW) and Hunter Water
+        Corporation. Each latest annual report is discovered from the entity&apos;s official
+        annual-report page (no hard-coded PDF URL), SHA-256 archived outside the repo, and parsed as
+        entity-level statement lines (<code>jurisdiction_level: soc</code>,{' '}
+        <code>aggregation_role: agency_detail</code>) with the printed $’000 unit. WaterNSW&apos;s
+        and Hunter Water&apos;s explicit printed Total expenses are accepted only when their printed
+        components and profit bridges reconcile exactly; Hunter Water&apos;s one-dollar printed
+        tax/NPAT rounding is retained only as the printed net result and flagged for human
+        spot-check. Rows are provisional and unverified; government-named funding rows carry a
+        potential-double-count warning. SOC rows are never added to government program spending, the
+        PNFC benchmark, another SOC entity or each other, and are exposed only at{' '}
+        <code>/api/soc</code> with separate entity/source badges. WA remains a stub. No grant row is
+        estimated or zero-filled.
       </Typography>
 
       <Alert severity="warning" data-testid="pbs-caveat" sx={{ mb: 3 }}>

@@ -1,0 +1,22 @@
+{
+  "entity": "Hunter Water",
+  "jurisdiction": "NSW",
+  "dataset": "Hunter Water — Annual Report",
+  "publisher": "Hunter Water Corporation",
+  "discovery_page": "https://www.hunterwater.com.au/about/publications/reports-and-publications",
+  "license": "© Hunter Water Corporation. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
+  "retrieved_at": "2026-11-17T05:43:40.684Z",
+  "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
+  "caveat": "Entity-level SOC statement lines for Hunter Water only. Never add to government program spending, to the PNFC sector benchmark, or to each other: total revenue includes the separately shown government grants and rebates; total expenses includes operational, depreciation/amortisation, finance, superannuation, revaluation and other lines. Provisional and unverified.",
+  "files": [
+    {
+      "title": "Annual Report 2024–25",
+      "filename": "Annual-report-2024-25.pdf",
+      "url": "https://www.hunterwater.com.au/documents/assets/src/uploads/documents/Annual-Reports-Past-Reports/Annual-report-2024-25.pdf",
+      "sha256": "2040f377e551769e102fa6f792b215abe5efa2dda558caf0b2d4639f5668b23a",
+      "bytes": 13658943,
+      "archived_from": "direct"
+    }
+  ],
+  "notes": "Latest Hunter Water annual report discovered from the official reports-and-publications page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The audited Income Statement prints an explicit $’000 unit. Total expenses is an explicit printed total and is accepted only when the printed revenue and expense components, the Note 3 operational-expenses subtotal and the profit-before-tax bridge reconcile exactly. The audited statement prints a one-dollar tax/NPAT arithmetic rounding; the printed NPAT is retained as the net-result line, is not used in any reconciliation, and is flagged for human spot-check. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Hunter Water rows to government program spending, the PNFC benchmark, Sydney Water, WaterNSW, or each other."
+}

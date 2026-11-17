@@ -34,6 +34,7 @@ const KNOWN_SOURCE_IDS = [
   'abs-gfs-pnfc',
   'sydney-water',
   'waternsw',
+  'hunter-water',
 ];
 
 const results = [];
@@ -346,8 +347,8 @@ async function apiChecks() {
     );
     assert(!('total_cents' in soc.body), 'SOC response has a total_cents');
     assert(
-      Array.isArray(soc.body?.series) && soc.body.series.length === 18,
-      `expected 18 SOC rows (Sydney Water 10 + WaterNSW 8), got ${soc.body?.series?.length}`,
+      Array.isArray(soc.body?.series) && soc.body.series.length === 24,
+      `expected 24 SOC rows (Sydney Water 10 + WaterNSW 8 + Hunter Water 6), got ${soc.body?.series?.length}`,
     );
     assert(
       soc.body.series.every((row) => row.jurisdiction_level === 'soc'),
@@ -364,13 +365,15 @@ async function apiChecks() {
     assert(
       Array.isArray(soc.body.entities) &&
         soc.body.entities.includes('Sydney Water') &&
-        soc.body.entities.includes('WaterNSW'),
-      'both SOC entities (Sydney Water, WaterNSW) are not returned',
+        soc.body.entities.includes('WaterNSW') &&
+        soc.body.entities.includes('Hunter Water'),
+      'SOC entities (Sydney Water, WaterNSW, Hunter Water) are not returned',
     );
     const sources = new Map((soc.body.sources ?? []).map((source) => [source.source_id, source]));
     assert(sources.get('sydney-water')?.records === 10, 'Sydney Water source count is not 10 rows');
     assert(sources.get('waternsw')?.records === 8, 'WaterNSW source count is not 8 rows');
-    for (const entity of ['sydney-water', 'waternsw']) {
+    assert(sources.get('hunter-water')?.records === 6, 'Hunter Water source count is not 6 rows');
+    for (const entity of ['sydney-water', 'waternsw', 'hunter-water']) {
       assert(
         sources.get(entity)?.unit === 'AUD_thousands',
         `${entity} SOC unit is not AUD_thousands`,
@@ -438,6 +441,46 @@ async function apiChecks() {
       'WaterNSW NSW government contribution is not flagged as a potential double count',
     );
 
+    const hunterWater = await getJson('/api/soc?fiscal_year=2024-25&entity=Hunter%20Water');
+    assert(hunterWater.status === 200, `Hunter Water SOC expected 200, got ${hunterWater.status}`);
+    assert(
+      hunterWater.body?.series?.length === 6,
+      `expected 6 Hunter Water SOC rows, got ${hunterWater.body?.series?.length}`,
+    );
+    assert(
+      hunterWater.body?.source?.source_id === 'hunter-water',
+      'Hunter Water SOC source is not hunter-water',
+    );
+    assert(
+      hunterWater.body.series.every((row) => row.delivery_entity === 'Hunter Water'),
+      'Hunter Water SOC response contains another entity',
+    );
+    const hwByLine = new Map(hunterWater.body.series.map((row) => [row.soc_line_item, row]));
+    assert(
+      hwByLine.get('total_expenses')?.amount_cents === 41832600000,
+      'Hunter Water total expenses is not 418,326 $’000 in cents',
+    );
+    assert(
+      hwByLine.get('total_revenue')?.amount_cents === 44704900000,
+      'Hunter Water total revenue is not 447,049 $’000 in cents',
+    );
+    assert(
+      hwByLine.get('employee_expenses')?.amount_cents === 6961700000,
+      'Hunter Water employee expenses is not 69,617 $’000 in cents',
+    );
+    assert(
+      hwByLine.get('net_result')?.amount_cents === 1940600000,
+      'Hunter Water net result is not 19,406 $’000 in cents',
+    );
+    assert(
+      hwByLine.get('total_expenses')?.potential_double_count === false,
+      'Hunter Water own-source total expenses is flagged as double count',
+    );
+    assert(
+      hwByLine.get('government_grants_and_rebates')?.potential_double_count === true,
+      'Hunter Water government grants row is not flagged as a potential double count',
+    );
+
     const generic = await getJson('/api/spending?limit=5');
     assert(generic.status === 200, `generic spending expected 200, got ${generic.status}`);
     const genericRows = generic.body?.data ?? generic.body?.measures ?? [];
@@ -450,7 +493,7 @@ async function apiChecks() {
       explicit.status === 400,
       `explicit SOC generic query expected 400, got ${explicit.status}`,
     );
-    return '18 entity rows (Sydney Water 10, WaterNSW 8), $’000, exact total expenses 2,949,540 and 472,831, no total, excluded from generic spending';
+    return '24 entity rows (Sydney Water 10, WaterNSW 8, Hunter Water 6), $’000, exact total expenses 2,949,540, 472,831 and 418,326, no total, excluded from generic spending';
   });
 
   await check('ABS GFS benchmark is separate and never totalled', async () => {
@@ -829,6 +872,7 @@ async function uiChecks(page, regionId, populatedRegionId) {
       'dubbo-council',
       'grantconnect',
       'sydney-water',
+      'hunter-water',
     ]) {
       assert(activeIds.includes(id), `coverage does not list ${id} as active/degraded`);
     }

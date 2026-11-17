@@ -9,6 +9,7 @@ import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
 import { createQldBudgetConnector } from './qld-budget.js';
 import { createQgipConnector } from './qld-qgip.js';
+import { createHunterWaterConnector } from './soc/nsw/hunter-water.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
 import { createVicBudgetConnector } from './vic-budget.js';
@@ -144,6 +145,11 @@ export const CONNECTORS: readonly Connector[] = [
   // spending, the PNFC benchmark, or Sydney Water. Other SOCs are not
   // implemented.
   createWaterNswConnector(),
+  // SOC Phase 4: third NSW state-owned corporation — Hunter Water Corporation.
+  // Latest annual report discovered, SHA-256 archived and parsed as
+  // entity-level SOC statement lines. Never added to government program
+  // spending, the PNFC benchmark, Sydney Water, WaterNSW, or any other SOC.
+  createHunterWaterConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',
