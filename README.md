@@ -493,6 +493,14 @@ CKAN/Socrata/ArcGIS endpoints, local-government availability, licences, cadence,
 automation risks, with verified sample URLs and a recommended order (QLD first, then VIC). It is
 research only: no state connector is implemented and no state row is ingested.
 
+[docs/SOC_MULTI_STATE.md](./docs/SOC_MULTI_STATE.md) is the entity-level companion for the same seven
+jurisdictions: the legal class, regulator/act, official entity list, annual-report availability,
+financial-statement unit, licence, extraction feasibility and gaps for each state. It is planning
+only. It records that the states do **not** share one comparable "SOC" list — VIC GBEs and statutory
+water corporations, QLD GOCs, WA GTEs, SA public corporations, TAS GBEs, ACT territory-owned
+corporations and NT government-owned corporations are different legal populations and are never
+summed.
+
 [docs/DATA_GRANULARITY.md](./docs/DATA_GRANULARITY.md) is the read-only audit of what detail each
 active source actually publishes versus what the app stores, including which sources are
 transactional, summary-only or inherently aggregate, the unit/reconciliation rules, the licence
