@@ -203,6 +203,15 @@ _2017_18_budgeted_financing, …, total_budgeted_financing, _2017_18_re_profilin
 - **Local government:** _Local Government Areas_ (SHP/KML/GeoJSON/map viewer, CC BY, modified
   2024-07-16); _Local Council Names_ CSV. The dataset _API Statewide Local Government Datasets_
   points at **parse.com** (dead service, 2021) — mark ⛔ BLOCKED/stale; do not build on it.
+  **Phase 6.5 verified (2026-11-17):** the data.sa package and its data.gov.au mirror
+  `api-statewide-local-government-datasets` expose only three resources: (1) the dead
+  `https://parse.com` API, (2) a Parse API instruction PDF, (3) the 1,807-byte
+  _Local Council Names_ CSV. `https://api.parse.com` returns **HTTP 410 Gone**; `parse.com`
+  302s to parseplatform.org. The package describes only Elected Members, Events, Libraries,
+  Parks and Councils — **no expense rows**. There is no other LGA-SA organisation dataset or
+  expense mirror on data.sa or data.gov.au. The requirement (≥50 council-level expense rows
+  with `lga_name`) cannot be met without inventing data, so this source is **DEFERRED**; the
+  names-only CSV is deliberately not ingested.
 - **Licence/cadence:** Data.SA datasets CC BY; budget PDFs are asset-managed
   (`treasury.sa.gov.au/__data/assets/pdf_file/...`) and carry no open-data licence statement found
   on the pages — archive with attribution and treat redistribution as restricted until verified.
@@ -321,7 +330,10 @@ in [`docs/SOURCE_ARCHIVE_AND_PDF.md`](./SOURCE_ARCHIVE_AND_PDF.md).
   geometry but a dead local API, TAS has spatial layers only, ACT has no local tier, NT has no
   consolidated local dataset.
 - **SA** `API Statewide Local Government Datasets` → `https://parse.com` is dead/stale: ⛔ **BLOCKED**
-  as an automation source (do not guess a replacement endpoint).
+  as an automation source (do not guess a replacement endpoint). Phase 6.5 re-tested it: the
+  data.sa and data.gov.au mirrors expose only the dead API, a Parse instruction PDF and a
+  names-only council CSV; `api.parse.com` returns HTTP 410 and there are no expense rows.
+  **DEFERRED** — no SA local-government expense rows were ingested; the DB was left untouched.
 - **TAS** `data.tas.gov.au` does not resolve: ⛔ **BLOCKED** as a catalogue; use the LIST/data.gov.au
   mirror instead.
 - **NT** budget/treasury sites return 403 to non-browser clients: ⛔ **BLOCKED for plain HTTP
