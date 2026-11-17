@@ -7,7 +7,7 @@
 
 export type MeasureType = 'actual' | 'budget' | 'estimate' | 'contract' | 'grant_award';
 
-export type JurisdictionLevel = 'federal' | 'state' | 'territory' | 'local' | 'other';
+export type JurisdictionLevel = 'federal' | 'state' | 'territory' | 'local' | 'charity' | 'other';
 
 export type ExtractionConfidence = 'low' | 'medium' | 'high';
 
@@ -114,6 +114,14 @@ export interface CoverageResponse {
     deferred_resources?: DeferredResource[];
     note: string;
   };
+  charity_ingestion?: {
+    live: string[];
+    degraded: string[];
+    stubs: string[];
+    acnc_last_ingested_at?: string | null;
+    acnc_records?: number;
+    note: string;
+  };
   local_ingestion?: {
     live: string[];
     degraded: string[];
@@ -202,9 +210,11 @@ export interface MeasureRow {
   source_dataset?: string;
   source_date?: string;
   data_quality_flag?: string;
-  aggregation_role?: 'additive' | 'agency_detail' | 'policy_measure';
+  aggregation_role?:
+    'additive' | 'agency_detail' | 'policy_measure' | 'expense_total' | 'expense_component';
   extraction_confidence?: ExtractionConfidence;
-  location?: { state?: string; lga_name?: string; sa4_name?: string };
+  location?: { state?: string; postcode?: string; lga_name?: string; sa4_name?: string };
+  expense_category?: string;
   unspsc?: string;
 }
 
@@ -365,6 +375,14 @@ export interface SpendingByRegion extends SpendingBreakdownBase {
   region: RegionRef;
 }
 
+export interface ExpenseCategoryTotal {
+  expense_category: string;
+  label: string;
+  count: number;
+  total_cents: number;
+  additive: boolean;
+}
+
 export interface SpendingSummary {
   count: number;
   additive_count?: number;
@@ -375,6 +393,8 @@ export interface SpendingSummary {
   total_by_measure_type: PerMeasureTypeTotal[];
   measure_types: MeasureType[];
   mixed: boolean;
+  expense_categories?: ExpenseCategoryTotal[];
+  charity_expense_total_cents?: number | null;
   breakdown_by_function: SpendingByFunction[];
   breakdown_by_region: SpendingByRegion[];
 }
@@ -391,6 +411,9 @@ export interface SpendingAppliedFilters {
   fiscal_year: string | null;
   measure_type: MeasureType | null;
   jurisdiction_level: JurisdictionLevel | null;
+  state?: string | null;
+  postcode?: string | null;
+  expense_category?: string | null;
   function: string | null;
   region: string | null;
   area?: string | null;

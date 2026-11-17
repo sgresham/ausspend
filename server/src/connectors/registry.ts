@@ -1,3 +1,4 @@
+import { createAcncCharityConnector } from './acnc-charity.js';
 import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
 import { createDubboConnector } from './dubbo-council.js';
@@ -117,6 +118,11 @@ export const CONNECTORS: readonly Connector[] = [
   // services are actual expenditure, never budget measures, and the two measure
   // types are never summed together.
   createQgipConnector(),
+  // Phase 4: latest ACNC Annual Information Statement CSV from data.gov.au
+  // CKAN. Charity expenses are not government spending: every row is
+  // jurisdiction_level=charity and only total-expense rows feed a charity
+  // headline; component rows are never summed with the total.
+  createAcncCharityConnector(),
   stub({
     id: 'wa-budget',
     name: 'Western Australian Budget',

@@ -19,6 +19,7 @@ import {
 import { badRequest, notFound } from './errors.js';
 import { sumCents } from './filters.js';
 import {
+  expenseCategoryTotals,
   isAdditiveMeasure,
   perMeasureTypeTotals,
   type LeanMeasure,
@@ -38,7 +39,14 @@ type LeanFunction = FunctionDocument & { _id: mongoose.Types.ObjectId };
  */
 type SummaryMeasure = Pick<
   LeanMeasure,
-  '_id' | 'amount_cents' | 'measure_type' | 'function_code' | 'region_id' | 'aggregation_role'
+  | '_id'
+  | 'amount_cents'
+  | 'measure_type'
+  | 'function_code'
+  | 'region_id'
+  | 'aggregation_role'
+  | 'jurisdiction_level'
+  | 'expense_category'
 >;
 
 const SUMMARY_PROJECTION = {
@@ -47,6 +55,8 @@ const SUMMARY_PROJECTION = {
   function_code: 1,
   region_id: 1,
   aggregation_role: 1,
+  jurisdiction_level: 1,
+  expense_category: 1,
 } as const;
 
 const SORTS: Record<SpendingSort, Record<string, 1 | -1>> = {
@@ -122,6 +132,7 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
       ? { extraction_confidence: measure.extraction_confidence }
       : {}),
     ...(measure.location ? { location: measure.location } : {}),
+    ...(measure.expense_category ? { expense_category: measure.expense_category } : {}),
     ...(measure.unspsc ? { unspsc: measure.unspsc } : {}),
     function_name: fn?.name ?? null,
     function_level: fn?.level ?? null,
@@ -235,28 +246,46 @@ function buildSummary(
   total_by_measure_type: PerMeasureTypeTotal[];
   measure_types: LeanMeasure['measure_type'][];
   mixed: boolean;
+  expense_categories?: ReturnType<typeof expenseCategoryTotals>;
+  charity_expense_total_cents?: number | null;
   breakdown_by_function: SpendingByFunction[];
   breakdown_by_region: SpendingByRegion[];
 } {
   const measureTypes = sortedTypes(measures);
   const additive = measures.filter(isAdditiveMeasure);
   const additiveTypes = sortedTypes(additive);
-  const mixed = additiveTypes.length > 1;
+  const charityRows = measures.filter((measure) => measure.jurisdiction_level === 'charity');
+  const otherRows = measures.filter((measure) => measure.jurisdiction_level !== 'charity');
+  const mixesCharityAndOther = charityRows.length > 0 && otherRows.length > 0;
+  const mixed = additiveTypes.length > 1 || mixesCharityAndOther;
   const singleType = additiveTypes.length === 1 ? additiveTypes[0]! : null;
+  const expenseCategories = charityRows.length > 0 ? expenseCategoryTotals(charityRows) : undefined;
+  const charityExpenseTotalCents =
+    charityRows.length > 0
+      ? (expenseCategories?.find((entry) => entry.expense_category === 'total')?.total_cents ??
+        null)
+      : undefined;
 
   return {
     count: measures.length,
     additive_count: additive.length,
     non_additive_count: measures.length - additive.length,
     currency: 'AUD',
+    // A charity total and government spending are different populations and
+    // are never merged, so a mixed match set has no headline total and no
+    // combined per-type total.
     total_cents:
       additive.length === 0 || mixed
         ? null
         : sumCents(additive.map((measure) => measure.amount_cents)),
     total_measure_type: singleType,
-    total_by_measure_type: perMeasureTypeTotals(additive),
+    total_by_measure_type: mixesCharityAndOther ? [] : perMeasureTypeTotals(additive),
     measure_types: measureTypes,
     mixed,
+    ...(expenseCategories ? { expense_categories: expenseCategories } : {}),
+    ...(charityExpenseTotalCents !== undefined
+      ? { charity_expense_total_cents: charityExpenseTotalCents }
+      : {}),
     breakdown_by_function: breakdownByFunction(additive, mixed, lookups),
     breakdown_by_region: breakdownByRegion(additive, mixed, lookups),
   };
@@ -310,6 +339,9 @@ export const listSpending: RequestHandler = async (req, res) => {
   if (query.fiscal_year) mongoQuery.fiscal_year = query.fiscal_year;
   if (query.measure_type) mongoQuery.measure_type = query.measure_type;
   if (query.jurisdiction_level) mongoQuery.jurisdiction_level = query.jurisdiction_level;
+  if (query.state) mongoQuery['location.state'] = query.state.toUpperCase();
+  if (query.postcode) mongoQuery['location.postcode'] = query.postcode;
+  if (query.expense_category) mongoQuery.expense_category = query.expense_category;
   if (query.function) mongoQuery.function_code = query.function;
   if (regionId) mongoQuery.region_id = regionId;
   if (areaRegion)
@@ -380,6 +412,9 @@ export const listSpending: RequestHandler = async (req, res) => {
     fiscal_year: query.fiscal_year ?? null,
     measure_type: query.measure_type ?? null,
     jurisdiction_level: query.jurisdiction_level ?? null,
+    state: query.state ?? null,
+    postcode: query.postcode ?? null,
+    expense_category: query.expense_category ?? null,
     function: query.function ?? null,
     region: query.region ?? null,
     area: areaRegion ? regionSlug(areaRegion) : (query.area ?? null),

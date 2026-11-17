@@ -7,7 +7,14 @@ import { SourceUrlSchema } from './source.js';
  * The jurisdiction level of a source record. Federal contracts and grants use
  * `federal`; the synthetic budget seed has no jurisdiction level.
  */
-export const JURISDICTION_LEVELS = ['federal', 'state', 'territory', 'local', 'other'] as const;
+export const JURISDICTION_LEVELS = [
+  'federal',
+  'state',
+  'territory',
+  'local',
+  'charity',
+  'other',
+] as const;
 
 export const JurisdictionLevelSchema = z.enum(JURISDICTION_LEVELS);
 
@@ -19,7 +26,15 @@ export type JurisdictionLevel = z.infer<typeof JurisdictionLevelSchema>;
  * department's statement) are listed for provenance but must never be added to
  * a consolidated series.
  */
-export const AGGREGATION_ROLES = ['additive', 'agency_detail', 'policy_measure'] as const;
+export const AGGREGATION_ROLES = [
+  'additive',
+  'agency_detail',
+  'policy_measure',
+  // ACNC charity expenses: the total row and its components are never added
+  // together. Only `expense_total` participates in a charity headline total.
+  'expense_total',
+  'expense_component',
+] as const;
 
 export const AggregationRoleSchema = z.enum(AGGREGATION_ROLES);
 
@@ -33,10 +48,27 @@ export type ExtractionConfidence = z.infer<typeof ExtractionConfidenceSchema>;
 
 export const SpendingLocationSchema = z.object({
   state: z.string().min(1).optional(),
+  /** Australian postcode exactly as published/derived; never invented. */
+  postcode: z.string().min(3).max(10).optional(),
   lga_name: z.string().min(1).optional(),
   /** SA4 name(s) exactly as published; may be a comma-separated list. */
   sa4_name: z.string().min(1).optional(),
 });
+
+/**
+ * Labels for the explicit expense categories ACNC publishes. The source column
+ * is retained as the machine value; the label is what the API/UI render.
+ */
+export const EXPENSE_CATEGORY_LABELS = {
+  total: 'Total expenses',
+  employee_expenses: 'Employee expenses',
+  interest_expenses: 'Interest expenses',
+  grants_and_donations_australia: 'Grants and donations made for use in Australia',
+  grants_and_donations_overseas: 'Grants and donations made for use outside Australia',
+  all_other_expenses: 'All other expenses',
+} as const;
+
+export type ExpenseCategory = keyof typeof EXPENSE_CATEGORY_LABELS;
 
 export type SpendingLocation = z.infer<typeof SpendingLocationSchema>;
 
@@ -71,6 +103,8 @@ export const MeasureRecordSchema = z.object({
   aggregation_role: AggregationRoleSchema.optional(),
   extraction_confidence: ExtractionConfidenceSchema.optional(),
   location: SpendingLocationSchema.optional(),
+  /** Explicit expense component (ACNC). Never used as a measure type. */
+  expense_category: z.string().min(1).optional(),
   unspsc: z.string().min(1).optional(),
 });
 
