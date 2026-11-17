@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Accordion,
   AccordionDetails,
@@ -45,7 +46,14 @@ import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusVie
  */
 export function SocPage() {
   const [year, setYear] = useState<string>('');
-  const [entity, setEntity] = useState<string>('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const entity = searchParams.get('entity') ?? '';
+  const setEntity = (next: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (next) params.set('entity', next);
+    else params.delete('entity');
+    setSearchParams(params, { replace: true });
+  };
   const state = useApi(`soc:${entity || 'all'}:${year || 'latest'}`, () =>
     apiGet<SocResponse>(
       `/api/soc${buildQuery({

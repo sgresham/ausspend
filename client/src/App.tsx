@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import { CoverageProvider } from './coverage';
+import { DiscoveryProvider } from './search/DiscoveryProvider';
 import { Layout } from './components/Layout';
 import { AboutPage } from './pages/AboutPage';
 import { BenchmarkPage } from './pages/BenchmarkPage';
@@ -15,26 +16,28 @@ import { StatesPage } from './pages/StatesPage';
 export function App() {
   return (
     <CoverageProvider>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/functions" element={<FunctionsPage />} />
-          <Route path="/functions/:code" element={<FunctionsPage />} />
-          <Route path="/regions" element={<RegionsPage />} />
-          <Route path="/regions/:regionId" element={<RegionsPage />} />
-          {/* Contract C aliases: one shared area profile. */}
-          <Route path="/region/:regionId" element={<RegionsPage />} />
-          <Route path="/areas/:slug" element={<RegionsPage />} />
-          <Route path="/states" element={<StatesPage />} />
-          <Route path="/states/:code" element={<StatesPage />} />
-          <Route path="/benchmark" element={<BenchmarkPage />} />
-          <Route path="/soc" element={<SocPage />} />
-          <Route path="/data-sources" element={<DataSourcesPage />} />
-          <Route path="/legal" element={<LegalPage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Route>
-      </Routes>
+      <DiscoveryProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/functions" element={<FunctionsPage />} />
+            <Route path="/functions/:code" element={<FunctionsPage />} />
+            <Route path="/regions" element={<RegionsPage />} />
+            <Route path="/regions/:regionId" element={<RegionsPage />} />
+            {/* Contract C aliases: one shared area profile. */}
+            <Route path="/region/:regionId" element={<RegionsPage />} />
+            <Route path="/areas/:slug" element={<RegionsPage />} />
+            <Route path="/states" element={<StatesPage />} />
+            <Route path="/states/:code" element={<StatesPage />} />
+            <Route path="/benchmark" element={<BenchmarkPage />} />
+            <Route path="/soc" element={<SocPage />} />
+            <Route path="/data-sources" element={<DataSourcesPage />} />
+            <Route path="/legal" element={<LegalPage />} />
+            <Route path="/about" element={<AboutPage />} />
+          </Route>
+        </Routes>
+      </DiscoveryProvider>
     </CoverageProvider>
   );
 }

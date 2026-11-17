@@ -18,6 +18,7 @@ import DatasetIcon from '@mui/icons-material/Dataset';
 import InfoIcon from '@mui/icons-material/Info';
 import { CoverageBanner } from './CoverageBanner';
 import { Footer } from './Footer';
+import { QuickSearch } from './QuickSearch';
 import FunctionsIcon from '@mui/icons-material/Functions';
 import HomeIcon from '@mui/icons-material/Home';
 import MapIcon from '@mui/icons-material/Map';
@@ -113,10 +114,21 @@ export function Layout() {
             variant="h6"
             component={RouterLink}
             to="/"
-            sx={{ color: 'inherit', textDecoration: 'none' }}
+            sx={{ color: 'inherit', textDecoration: 'none', whiteSpace: 'nowrap' }}
           >
             Australian government spending
           </Typography>
+          <Box
+            sx={{
+              ml: 'auto',
+              pl: 2,
+              width: { sm: 280, md: 400 },
+              display: { xs: 'none', sm: 'block' },
+            }}
+            data-testid="header-search"
+          >
+            <QuickSearch label="Search" variant="header" testId="header-quick-search" />
+          </Box>
         </Toolbar>
       </AppBar>
 
