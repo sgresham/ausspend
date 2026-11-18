@@ -141,6 +141,30 @@ export function AboutPage() {
         </CardContent>
       </Card>
 
+      <Card variant="outlined" sx={{ mb: 3 }} data-testid="about-how-built">
+        <CardContent>
+          <Typography variant="h5" component="h2" gutterBottom>
+            How it was built
+          </Typography>
+          <Typography variant="body2">
+            ausspend was built through a human-directed, AI-executed workflow. Read about the
+            process, the public{' '}
+            <Link
+              href="https://github.com/sgresham/ausspend"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              source code
+            </Link>
+            , the MIT licence and the data publishers on the{' '}
+            <Link component={RouterLink} to="/how-it-was-built">
+              How it was built
+            </Link>{' '}
+            page.
+          </Typography>
+        </CardContent>
+      </Card>
+
       {coverage.data ? (
         <Card variant="outlined" sx={{ mb: 3 }}>
           <CardContent>

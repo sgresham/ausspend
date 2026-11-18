@@ -38,6 +38,9 @@ export function Footer() {
           <Link component={RouterLink} to="/about" variant="body2">
             About AusSpend
           </Link>
+          <Link component={RouterLink} to="/how-it-was-built" variant="body2">
+            How it was built
+          </Link>
         </Stack>
         <Typography variant="caption" color="text.secondary">
           Source data remains © the original publishers and is used under the terms they state — not
