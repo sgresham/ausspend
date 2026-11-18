@@ -1,0 +1,54 @@
+{
+  "schema": "ausspend.source-discovery.v1",
+  "source_id": "sa-lg-statewide",
+  "title": "API Statewide Local Government Datasets (SA)",
+  "generated_at": "2026-11-18T18:15:00Z",
+  "state": "non-financial; no connector, no spending rows",
+  "jurisdiction": "local",
+  "geography": "South Australia statewide; 67 council names in the package CSV",
+  "portal": "https://data.sa.gov.au/data/dataset/api-statewide-local-government-datasets",
+  "metadata_modified": "2021-07-15T00:21:03.915283",
+  "resources": [
+    {
+      "name": "Statewide Local Government datasets API",
+      "format": "API",
+      "url": "https://parse.com",
+      "status": "generic Parse entry, not a dataset"
+    },
+    {
+      "name": "Parse - API Instruction Document",
+      "format": "PDF",
+      "source_url": "https://data.sa.gov.au/data/dataset/b69f5a2f-c949-4dc8-9cf1-3f79a4271bf7/resource/726b2031-4acf-41bc-9703-ed9fe913955f/download/lga-parse-govhack.pdf",
+      "bytes_downloaded": 641914,
+      "ckan_bytes": 73986,
+      "sha256": "21450189c5c5b39c4c4907990edaa9fefa6b22ba5ba66ac467f2ef8142173114",
+      "pages": 9
+    },
+    {
+      "name": "Local Council Names",
+      "format": "CSV",
+      "source_url": "https://data.sa.gov.au/data/dataset/b69f5a2f-c949-4dc8-9cf1-3f79a4271bf7/resource/a5224cff-00be-456c-b838-f0c8de4e9acc/download/local-council-name.csv",
+      "bytes": 1807,
+      "council_names": 67,
+      "sha256": "2e5eecfdb4a55a3715a278165bfa5a26b065a1a54c02ecb95f1db90572fb1b2e"
+    }
+  ],
+  "parse_classes": [
+    "contact",
+    "contentItem",
+    "council",
+    "custom_event",
+    "custom_library",
+    "custom_park",
+    "custom_pointOfInterest"
+  ],
+  "financial_fields": [],
+  "access": {
+    "documented_server": "http://parse.lga.sa.gov.au:5338/parse/",
+    "dns_resolves": false,
+    "legacy_api_status": 410,
+    "reachable_financial_endpoint": false
+  },
+  "premise_falsifier": "FALSE: the statewide package contains governance/services/council-name data only, not council-level actual financial measures.",
+  "decision": "defer SA local financial spending; no sa-lg-statewide connector/stub; do not duplicate sa-budget-gfs"
+}
