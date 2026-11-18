@@ -5,7 +5,7 @@
   "publisher": "Landcom",
   "discovery_page": "https://www.landcom.com.au/about-us/corporate-publications",
   "license": "© Landcom. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
-  "retrieved_at": "2026-11-17T08:42:17.069Z",
+  "retrieved_at": "2026-11-18T23:54:43.822Z",
   "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
   "caveat": "Entity-level SOC statement lines for Landcom only. Never add to government program spending, to the PNFC sector benchmark, or to each other: the statement prints no Total revenue or Total expenses subtotal, so both are the exact signed sums of the printed statement lines; total revenue includes the separately shown grant income; the net result is a profit. Provisional and unverified.",
   "files": [
