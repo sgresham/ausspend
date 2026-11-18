@@ -1,5 +1,7 @@
 # ausspend
 
+[**ausspend.com.au**](https://ausspend.com.au) is the live site for the platform.
+
 An explorer for **published Australian government spending**, organised by COFOG function, region
 and state. This repository is the Phase 1 application: an npm-workspace monorepo with a React
 client, an Express API and shared TypeScript/Zod contracts.
