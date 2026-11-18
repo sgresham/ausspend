@@ -1,0 +1,153 @@
+{
+  "generated_at": "2026-11-18T22:15:00Z",
+  "note": "Research-only evidence. No PDFs, XLSX files or raw tables are committed. HTTP statuses were observed with curl and a desktop-browser User-Agent; no authentication was bypassed. PDF page counts and text come from pdfjs-dist 6.5.438 on Node v24.14.1.",
+  "pages": [
+    {
+      "at": "2026-11-18T22:11:00Z",
+      "url": "https://www.budget.nsw.gov.au/",
+      "http": 200,
+      "final_url": "https://www.nsw.gov.au/business-and-economy/nsw-budget",
+      "result": "redirects to the current NSW Budget landing page"
+    },
+    {
+      "at": "2026-11-18T22:11:30Z",
+      "url": "https://www.nsw.gov.au/business-and-economy/nsw-budget/2026-27-budget-papers",
+      "http": 200,
+      "bytes": 174056,
+      "result": "2026-27 Budget Papers landing page; links to BP1, BP2, BP3, BP4, BP5"
+    },
+    {
+      "at": "2026-11-18T22:11:40Z",
+      "url": "https://www.nsw.gov.au/business-and-economy/nsw-budget/2026-27-budget-papers/open-data",
+      "http": 200,
+      "bytes": 139143,
+      "result": "open-data page now exposes 12 .xlsx workbooks; no service-group workbook"
+    },
+    {
+      "at": "2026-11-18T22:12:00Z",
+      "url": "https://www.nsw.gov.au/business-and-economy/nsw-budget/2026-27-budget-papers/budget-paper-no01-budget-statement",
+      "http": 200,
+      "bytes": 138501,
+      "result": "BP1 HTML page"
+    },
+    {
+      "at": "2026-11-18T22:12:05Z",
+      "url": "https://www.nsw.gov.au/business-and-economy/nsw-budget/2026-27-budget-papers/budget-paper-no02-performance-and-wellbeing-statement",
+      "http": 200,
+      "bytes": 138453,
+      "result": "BP2 HTML page"
+    },
+    {
+      "at": "2026-11-18T22:12:10Z",
+      "url": "https://www.nsw.gov.au/business-and-economy/nsw-budget/2026-27-budget-papers/budget-paper-no03-infrastructure-statement",
+      "http": 200,
+      "bytes": 138923,
+      "result": "BP3 HTML page"
+    }
+  ],
+  "pdfs": [
+    {
+      "paper": "BP1 Budget Statement",
+      "retrieved_at": "2026-11-18T22:12:56Z",
+      "url": "https://www.nsw.gov.au/sites/default/files/noindex/2026-06/bp1-budget-statement-nsw-budget-2026-27.pdf",
+      "http": 200,
+      "content_type": "application/pdf",
+      "bytes": 5181566,
+      "pages": 179,
+      "sha256": "cb9ecdf041747f271acba0ad2c425c5f3ae901383430d40811c6ad6ca594432b",
+      "edge": "CloudFront, x-cache Hit"
+    },
+    {
+      "paper": "BP2 Performance and Wellbeing Statement",
+      "retrieved_at": "2026-11-18T22:13:09Z",
+      "url": "https://www.nsw.gov.au/sites/default/files/noindex/2026-06/bp2-performance-and-wellbeing-statement-nsw-budget-2026-27.pdf",
+      "http": 200,
+      "content_type": "application/pdf",
+      "bytes": 4104268,
+      "pages": 105,
+      "sha256": "5a6e1efccfa7aa70e8bbd33a5ac09dd3f3b78f47f7cf710495629ec742237212",
+      "edge": "CloudFront, x-cache Hit"
+    },
+    {
+      "paper": "BP3 Infrastructure Statement",
+      "retrieved_at": "2026-11-18T22:13:10Z",
+      "url": "https://www.nsw.gov.au/sites/default/files/noindex/2026-06/bp3-infrastructure-statement-nsw-budget-2026-27.pdf",
+      "http": 200,
+      "content_type": "application/pdf",
+      "bytes": 5001326,
+      "pages": 177,
+      "sha256": "776694702c18c41c5ee2febc89088ce07d02d6c732ea1f1c651b037a739dd298",
+      "edge": "CloudFront, x-cache Hit"
+    }
+  ],
+  "parliament_artifacts": [
+    {
+      "at": "2026-11-18T22:14:20Z",
+      "url": "https://www.parliament.nsw.gov.au/fileapi/parlfiles/getartifact?serverRelativeUrl=/tp/files/211353/2026-27%20Budget%20Paper%20No.01%20-%20Budget%20Statement.pdf",
+      "http": 403,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "cf-mitigated": "challenge",
+        "server": "cloudflare"
+      },
+      "result": "Cloudflare challenge. This is the URL shape used by the previous phase; it is not the official download link."
+    },
+    {
+      "at": "2026-11-18T22:14:21Z",
+      "url": "https://www.parliament.nsw.gov.au/fileapi/parlfiles/getartifact?serverRelativeUrl=/tp/files/211354/2026-27%20Budget%20Paper%20No.02%20-%20Performance%20and%20Wellbeing%20Statement.pdf",
+      "http": 403,
+      "headers": {
+        "content-type": "text/html; charset=UTF-8",
+        "cf-mitigated": "challenge",
+        "server": "cloudflare"
+      },
+      "result": "Cloudflare challenge. Official nsw.gov.au copy is reachable."
+    }
+  ],
+  "open_data_workbooks": [
+    {
+      "url": "https://www.nsw.gov.au/sites/default/files/noindex/2026-06/2026-27-budget-budgeted-financial-statements.xlsx",
+      "http": 200,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 90829,
+      "sheets": [
+        "Introduction",
+        "GG Operating Statement",
+        "GG Balance Sheet",
+        "GG Cashflow Statement",
+        "PNFC Operating Statement",
+        "PNFC Balance Sheet",
+        "PNFC Cashflow Statement",
+        "NFPS Operating Statement",
+        "NFPS Balance Sheet",
+        "NFPS Cashflow Statement"
+      ],
+      "result": "aggregate sector statements only; no agency, program or service-group dimension"
+    },
+    {
+      "url": "https://www.nsw.gov.au/sites/default/files/noindex/2026-06/01-open-data-performance-and-wellbeing-overall-nsw-budget-2026-27.xlsx",
+      "http": 200,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 10962,
+      "sheets": ["Chart 1.4"],
+      "result": "wellbeing indicator workbook; no expenditure dimension"
+    },
+    {
+      "url": "https://www.nsw.gov.au/sites/default/files/noindex/2026-06/nsw-budget-2026-27-open-data-historical-fiscal-indicators.xlsx",
+      "http": 200,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "bytes": 28608,
+      "sheets": ["Table D.1 - App E", "Table D.2 - App E", "Table D.3 - App E", "Table D.4 - App E"],
+      "result": "whole-of-government fiscal indicators; no agency, program or service-group dimension"
+    }
+  ],
+  "extraction_proof": {
+    "tool": "pdfjs-dist 6.5.438 (legacy build) on Node v24.14.1",
+    "source": "BP1 PDF, PDF page 100 (printed page A-12)",
+    "tables": ["A.7 General government sector expenses by function", "A.8 General government sector purchases of non-financial assets by function"],
+    "unit": "$m",
+    "columns": ["2024-25 Actual", "2025-26 Revised", "2026-27 Budget"],
+    "reconciliation": "sum of 10 published function rows vs Total Expenses: +1, -1, -1 (published rounding), all within $1 million",
+    "sample_file": "docs/source-discovery/nsw-budget-papers/extraction-proof.md"
+  }
+}
