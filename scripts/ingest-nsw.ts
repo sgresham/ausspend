@@ -140,6 +140,7 @@ export const NSW_SOURCE_IDS = [
   'hawkesbury-gpfs',
   'woollahra-gpfs',
   'blue-mountains-gpfs',
+  'campbelltown-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {

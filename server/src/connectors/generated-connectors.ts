@@ -2,40 +2,41 @@
 import { connectorModule as module0 } from './bayside-gpfs/index.js';
 import { connectorModule as module1 } from './blacktown-gpfs/index.js';
 import { connectorModule as module2 } from './blue-mountains-gpfs/index.js';
-import { connectorModule as module3 } from './canada-bay-gpfs/index.js';
-import { connectorModule as module4 } from './canterbury-bankstown-gpfs/index.js';
-import { connectorModule as module5 } from './city-of-sydney-gpfs/index.js';
-import { connectorModule as module6 } from './coffs-harbour-gpfs/index.js';
-import { connectorModule as module7 } from './cumberland-gpfs/index.js';
-import { connectorModule as module8 } from './dubbo-council-gpfs/index.js';
-import { connectorModule as module9 } from './fairfield-gpfs/index.js';
-import { connectorModule as module10 } from './georges-river-gpfs/index.js';
-import { connectorModule as module11 } from './hawkesbury-gpfs/index.js';
-import { connectorModule as module12 } from './hunters-hill-gpfs/index.js';
-import { connectorModule as module13 } from './inner-west-gpfs/index.js';
-import { connectorModule as module14 } from './ku-ring-gai-gpfs/index.js';
-import { connectorModule as module15 } from './lake-macquarie-gpfs/index.js';
-import { connectorModule as module16 } from './lane-cove-gpfs/index.js';
-import { connectorModule as module17 } from './liverpool-gpfs/index.js';
-import { connectorModule as module18 } from './maitland-gpfs/index.js';
-import { connectorModule as module19 } from './mid-coast-gpfs/index.js';
-import { connectorModule as module20 } from './mosman-gpfs/index.js';
-import { connectorModule as module21 } from './newcastle-gpfs/index.js';
-import { connectorModule as module22 } from './north-sydney-gpfs/index.js';
-import { connectorModule as module23 } from './northern-beaches-gpfs/index.js';
-import { connectorModule as module24 } from './parramatta-gpfs/index.js';
-import { connectorModule as module25 } from './port-macquarie-hastings-gpfs/index.js';
-import { connectorModule as module26 } from './randwick-gpfs/index.js';
-import { connectorModule as module27 } from './ryde-gpfs/index.js';
-import { connectorModule as module28 } from './shellharbour-gpfs/index.js';
-import { connectorModule as module29 } from './shoalhaven-gpfs/index.js';
-import { connectorModule as module30 } from './strathfield-gpfs/index.js';
-import { connectorModule as module31 } from './sutherland-shire-gpfs/index.js';
-import { connectorModule as module32 } from './tweed-shire-gpfs/index.js';
-import { connectorModule as module33 } from './waverley-gpfs/index.js';
-import { connectorModule as module34 } from './willoughby-gpfs/index.js';
-import { connectorModule as module35 } from './wollongong-gpfs/index.js';
-import { connectorModule as module36 } from './woollahra-gpfs/index.js';
+import { connectorModule as module3 } from './campbelltown-gpfs/index.js';
+import { connectorModule as module4 } from './canada-bay-gpfs/index.js';
+import { connectorModule as module5 } from './canterbury-bankstown-gpfs/index.js';
+import { connectorModule as module6 } from './city-of-sydney-gpfs/index.js';
+import { connectorModule as module7 } from './coffs-harbour-gpfs/index.js';
+import { connectorModule as module8 } from './cumberland-gpfs/index.js';
+import { connectorModule as module9 } from './dubbo-council-gpfs/index.js';
+import { connectorModule as module10 } from './fairfield-gpfs/index.js';
+import { connectorModule as module11 } from './georges-river-gpfs/index.js';
+import { connectorModule as module12 } from './hawkesbury-gpfs/index.js';
+import { connectorModule as module13 } from './hunters-hill-gpfs/index.js';
+import { connectorModule as module14 } from './inner-west-gpfs/index.js';
+import { connectorModule as module15 } from './ku-ring-gai-gpfs/index.js';
+import { connectorModule as module16 } from './lake-macquarie-gpfs/index.js';
+import { connectorModule as module17 } from './lane-cove-gpfs/index.js';
+import { connectorModule as module18 } from './liverpool-gpfs/index.js';
+import { connectorModule as module19 } from './maitland-gpfs/index.js';
+import { connectorModule as module20 } from './mid-coast-gpfs/index.js';
+import { connectorModule as module21 } from './mosman-gpfs/index.js';
+import { connectorModule as module22 } from './newcastle-gpfs/index.js';
+import { connectorModule as module23 } from './north-sydney-gpfs/index.js';
+import { connectorModule as module24 } from './northern-beaches-gpfs/index.js';
+import { connectorModule as module25 } from './parramatta-gpfs/index.js';
+import { connectorModule as module26 } from './port-macquarie-hastings-gpfs/index.js';
+import { connectorModule as module27 } from './randwick-gpfs/index.js';
+import { connectorModule as module28 } from './ryde-gpfs/index.js';
+import { connectorModule as module29 } from './shellharbour-gpfs/index.js';
+import { connectorModule as module30 } from './shoalhaven-gpfs/index.js';
+import { connectorModule as module31 } from './strathfield-gpfs/index.js';
+import { connectorModule as module32 } from './sutherland-shire-gpfs/index.js';
+import { connectorModule as module33 } from './tweed-shire-gpfs/index.js';
+import { connectorModule as module34 } from './waverley-gpfs/index.js';
+import { connectorModule as module35 } from './willoughby-gpfs/index.js';
+import { connectorModule as module36 } from './wollongong-gpfs/index.js';
+import { connectorModule as module37 } from './woollahra-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -75,6 +76,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module34,
   module35,
   module36,
+  module37,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);

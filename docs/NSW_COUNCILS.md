@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Thirty-five council GPFS sources have landed
+**Status:** the inventory and plan below are unchanged. Thirty-nine council GPFS sources have landed
 as separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -49,6 +49,7 @@ concurrent Lane Cove rows later took the live total to **693,148**. On the share
 concurrent rows reached **693,177**), Hawkesbury City Council FY2024-25 GPFS (**§7.34**) then added
 exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**). Woollahra Municipal Council FY2024-25 GPFS (**§7.35**) was ingested against the earlier shared-dev snapshot: it added exactly **29** `woollahra-gpfs` rows (**693,148** → **693,177**), and the concurrent Hawkesbury landing later took the live total to **693,196**.
 Blue Mountains City Council FY2024-25 GPFS (**§7.36**) also landed as a connector; its 23 rows are in the shared DB, and the live total **693,237** also includes the concurrent Wollondilly ingest (18 rows).
+Campbelltown City Council FY2024-25 GPFS (**§7.39**) then added exactly **22** `campbelltown-gpfs` rows on the shared dev DB (**693,237** → **693,259**); a fresh aggregate of `measure` rows whose `source_id` matches `/gpfs$/` gives **706 rows across 39 sources** after that ingest (pre-ingest **684 across 38**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -299,7 +300,10 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 606 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB (fresh aggregate, 2026-11-18): 706 GPFS rows across 39
+sources** — sum of `measure` rows whose `source_id` matches `/gpfs$/` (pre-ingest **684 across 38**).
+Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) contributes **22** of those. The
+previously documented per-source counts follow: 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -325,7 +329,8 @@ Council FY2024-25 (`ku-ring-gai-gpfs`, §7.30) and 17 for Strathfield Council FY
 (`strathfield-gpfs`, §7.31) and 17 for Lane Cove Council FY2024-25 (`lane-cove-gpfs`, §7.32) and 18
 for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Council FY2024-25
 (`hawkesbury-gpfs`, §7.34) and 29 for Woollahra Municipal Council FY2024-25 (`woollahra-gpfs`,
-§7.35) — all separate source ids. The
+§7.35) and 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) — all separate
+source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows.
@@ -3485,8 +3490,90 @@ which also includes the concurrent Wollondilly ingest (18 `wollondilly-gpfs` row
 per-source count is exactly 23 and no Blue Mountains rows were deleted. A second ingest run upserts the
 same 23 SHA-anchored natural keys (idempotent). Targeted connector tests passed (15/15).
 
----
+### 7.39 Thirty-ninth council — Campbelltown City Council FY2024-25 GPFS (landed 2026-11-18)
 
+Numbers **§7.37 (Wollondilly)** and **§7.38 (Camden)** remain reserved for the concurrent work; no
+prior section was renumbered.
+
+**Source.** Discovered from Campbelltown City Council's official page
+<https://www.campbelltown.nsw.gov.au/Council-and-Councillors/Financial-information>, which links the
+published audited statements PDF
+<https://www.campbelltown.nsw.gov.au/files/sharedassets/public/v/1/council-and-councillors/documents/2024-25-financial-statements_final.pdf>.
+The connector parses that page's own PDF link (no hard-coded document URL) and SHA-256 re-verifies the
+exact bytes. The page and PDF are served directly to a normal HTTP client (HTTP 200); no browser
+challenge was needed.
+
+The 100-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p8,
+Statement of Comprehensive Income p9, B1-1 "Functions or activities" p19 and note B3-3 depreciation
+p28 — plus the independent auditor's report on PDF p71–p73, signed 28 October 2025 by the Delegate of
+the Auditor-General for New South Wales. The cover page carries a leftover typesetting banner reading
+"DRAFT VERSION"; the body is the signed and audited final document named in the council's
+`...-final.pdf` link, so the banner is recorded here rather than treated as a different version. The
+printed unit is explicit `$'000` on the Income Statement, Statement of Comprehensive Income, B1-1 and
+note B3-3; a missing or conflicting unit rejects the whole extraction.
+
+Exact bytes archived outside the repo at
+`$AUSSPEND_SOURCE_ARCHIVE/campbelltown-gpfs/campbelltown-city-council-financial-statements-2024-25.pdf`:
+**26,061,429 bytes**, SHA-256
+`98bf395e8f6fba33ab9505c052eb0333350da739c1db54b4c80126917cb1dfdf` (`hash_verified: true`).
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                                                                                                | Printed / derived                                                                                        | Result                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                                                                                           | `$306,751` thousand                                                                                      | = `$306,751,000`                                 |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income)                                                                         | `$155,396` + `$18,050` + `$10,568` + `$30,952` + `$67,872` + `$13,237` + `$10,676` = `$306,751` thousand | = printed total                                  |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses + net loss on disposal)                                                                                    | `$101,228` + `$92,728` + `$280` + `$7,390` + `$2,748` = `$204,374` thousand                              | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$39,290`)                                                                                                   | `$204,374` + `$39,290` = `$243,664` thousand                                                             | = printed B1-1 total expenses                    |
+| B1-1 Total functions or activities — income                                                                                                                                                          | `$306,751` thousand                                                                                      | = face statement                                 |
+| B1-1 Total functions or activities — expenses                                                                                                                                                        | `$243,664` thousand                                                                                      | = `$243,664,000` (printed total)                 |
+| B1-1 Total functions or activities — operating result                                                                                                                                                | `$63,087` thousand                                                                                       | = face operating result                          |
+| B1-1 grants and contributions                                                                                                                                                                        | `$98,824` thousand                                                                                       | = operating `$30,952` + capital `$67,872`        |
+| B1-1 objective expense split (Community and belonging `$42,840` + Places for people `$92,333` + Enriched natural environment `$45,675` + Economic prosperity `$8,247` + Strong leadership `$54,569`) | `$243,664` thousand                                                                                      | = printed B1-1 total expenses                    |
+| Operating result from continuing operations                                                                                                                                                          | `$306,751` − `$243,664` = `$63,087` thousand                                                             | = printed operating result                       |
+| Net operating result for the year from Income Statement                                                                                                                                              | `$63,087` thousand                                                                                       | = printed net result (no discontinued operation) |
+| Statement of Comprehensive Income total (`$63,087` + `$263` other comprehensive income)                                                                                                              | `$63,350` thousand                                                                                       | = printed total comprehensive income             |
+| Note B3-3 "Total depreciation and amortisation costs"                                                                                                                                                | `$39,290` thousand                                                                                       | = face depreciation/amortisation/impairment line |
+
+Total expenses is the printed B1-1 "Total functions or activities" expense total (`$243,664`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$204,374` thousand) plus printed
+depreciation/amortisation/impairment (`$39,290` thousand), and equals printed total income
+(`$306,751` thousand) less the printed continuing operating result (`$63,087` thousand). B1-1 income,
+expenses, operating result and grants reconcile exactly to the face statement — there is **no
+face-vs-B1-1 discrepancy**. There is no discontinued operation, so the continuing operating result and
+the net result repeated at the top of the Statement of Comprehensive Income are the same printed
+figure.
+
+**Rows.** 22 rows, source id `campbelltown-gpfs`, `source_dataset` "Campbelltown City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Campbelltown City Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. The minimum lines are total revenue
+`$306,751,000`, total expenses `$243,664,000`, employee expenses `$101,228,000`,
+depreciation/amortisation/impairment `$39,290,000`, operating government grants `$30,952,000`,
+capital government grants `$67,872,000`, borrowing costs `$280,000`, net loss on disposal of assets
+`$2,748,000` and net result `$63,087,000`. The five printed B1-1 objective expenses (Community and
+belonging, Places for people, Enriched natural environment, Economic prosperity, Strong leadership)
+are emitted as a separate `b1_1_function_expenses_*` cut of the same printed total.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government program
+data; they are not added to expenditure. The five B1-1 objective rows are a second cut of the same
+total expenses and are never added to the nature-of-expense rows. The pre-existing same-entity rows are
+preserved untouched and never summed.
+
+**Database evidence (2026-11-18, shared dev DB).** Fresh aggregate at claim time: total measures
+**693,237**, of which **684** GPFS rows across **38** sources and **0** `campbelltown-gpfs` rows.
+After ingesting only this source: total **693,259** (+22), GPFS **706** across **39** sources
+(+22 and +1 source), `campbelltown-gpfs` **22**; the per-source diff changed **only**
+`campbelltown-gpfs` (0 → 22), no source count decreased and no rows were deleted. `data_sources`
+records the source `active` with `records_ingested: 22`. A second ingest run upserts the same 22
+SHA-anchored natural keys (idempotent). Targeted connector tests passed (15/15).
+
+---
 
 ## 8. Prioritised rollout (after the pilot)
 
@@ -3540,7 +3627,10 @@ same 23 SHA-anchored natural keys (idempotent). Targeted connector tests passed 
    rows (§7.32). **Thirty-third expansion landed 2026-11-18:** Mosman Council FY2024-25 GPFS, 18
    non-additive rows (§7.33). **Thirty-fourth expansion landed 2026-11-18:** Hawkesbury City Council
    FY2024-25 GPFS, 19 non-additive rows (§7.34). **Thirty-fifth expansion landed 2026-11-18:** Woollahra Municipal Council FY2024-25 GPFS, 29
-   non-additive rows (§7.35).
+   non-additive rows (§7.35). **Thirty-sixth expansion landed 2026-11-18:** Blue Mountains City
+   Council FY2024-25 GPFS, 23 non-additive rows (§7.36). **Thirty-ninth expansion landed
+   2026-11-18:** Campbelltown City Council FY2024-25 GPFS, 22 non-additive rows (§7.39); §7.37
+   (Wollondilly) and §7.38 (Camden) remain reserved.
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -3886,6 +3976,29 @@ migration were performed.
 - DB: claim-time and immediate pre-ingest 693,148 → 693,177 (+29 only); every other per-source count
   unchanged and no rows deleted; a second run upserted the same 29 natural keys with no count change.
 
+**GPFS thirty-ninth-council checks (Campbelltown), 2026-11-18:**
+
+- Campbelltown City Council's official financial-information page fetched HTTP 200; the FY2024-25
+  **"2024-25 financial statements"** PDF link was discovered from the page HTML (the earlier
+  2023-24 statement and the fees-and-charges PDF were skipped), not a hard-coded document URL.
+- GPFS PDF downloaded (26,061,429 bytes) and SHA-256 archived outside the repo; SHA-256
+  `98bf395e8f6fba33ab9505c052eb0333350da739c1db54b4c80126917cb1dfdf` (`hash_verified: true`).
+- The cover carries a leftover "DRAFT VERSION" typesetting banner, but the signed Statement by
+  Councillors and Management and the independent auditor's report (28 October 2025) are in the same
+  PDF; the file is the council's linked `...-final.pdf`.
+- Printed `$'000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1 and
+  note B3-3; the connector rejects a missing or conflicting unit.
+- Income statement, transposed B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$306,751,000`, expenses `$243,664,000` (printed B1-1 total, equal to expenses excluding
+  depreciation `$204,374,000` plus depreciation/amortisation/impairment `$39,290,000`), net result
+  `$63,087,000`; B1-1 grants `$98,824,000` = operating `$30,952,000` + capital `$67,872,000`; the
+  five printed objective expense rows sum to `$243,664,000`.
+- `campbelltown-gpfs` rows: 22, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: claim-time 693,237 total / 684 GPFS rows across 38 sources / 0 Campbelltown; after this ingest
+  693,259 / 706 across 39; per-source diff changed only `campbelltown-gpfs` (0 → 22), no source
+  count decreased and no rows deleted; `data_sources` active with `records_ingested: 22`; a second
+  run upserted the same 22 natural keys with no count change.
+
 ---
 
 ## 10. Ambiguities / open questions (verbatim where possible)
@@ -3932,6 +4045,7 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.34 GPFS sources: thirty-four councils, one audited year each,
-non-additive rows with no region/LGA allocation, and the existing budget/estimate and
-federal/state/charity rows left untouched. No cross-council total is created or implied.
+The only ingestions are the landed council GPFS sections in §7 (through §7.39): thirty-nine council
+GPFS sources, one audited year each, non-additive rows with no region/LGA allocation, and the
+existing budget/estimate and federal/state/charity rows left untouched. No cross-council total is
+created or implied.
