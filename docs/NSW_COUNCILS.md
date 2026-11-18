@@ -47,7 +47,10 @@ shared dev DB, Lane Cove Council FY2024-25 GPFS (**§7.32**) then added exactly 
 GPFS (**§7.33**) then added exactly **18** `mosman-gpfs` rows (**693,113** → **693,131**); the
 concurrent Lane Cove rows later took the live total to **693,148**. On the shared dev DB (after
 concurrent rows reached **693,177**), Hawkesbury City Council FY2024-25 GPFS (**§7.34**) then added
-exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**).
+exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**). Blue Mountains City Council
+FY2024-25 GPFS (**§7.37**, sections §7.35–§7.36 reserved for pending Woollahra/Wollondilly items) then
+added exactly **23** `blue-mountains-gpfs` rows on the scratch test DB (see §7.37; the shared/pool DB
+was not touched).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -323,7 +326,8 @@ Council FY2024-25 (`cumberland-gpfs`, §7.26) and 16 for Georges River Council F
 Council FY2024-25 (`ku-ring-gai-gpfs`, §7.30) and 17 for Strathfield Council FY2024-25
 (`strathfield-gpfs`, §7.31) and 17 for Lane Cove Council FY2024-25 (`lane-cove-gpfs`, §7.32) and 18
 for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33) and 19 for Hawkesbury City Council FY2024-25
-(`hawkesbury-gpfs`, §7.34) — all separate source ids. The
+(`hawkesbury-gpfs`, §7.34) and 23 for Blue Mountains City Council FY2024-25
+(`blue-mountains-gpfs`, §7.37) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows.
@@ -3364,6 +3368,87 @@ or decreased** and no rows were deleted; `data_sources` records the source `acti
 `records_ingested: 19`. A second ingest run upserted the same 19 SHA-anchored natural keys and left the
 DB total unchanged (idempotent).
 
+### 7.37 Thirty-fifth council — Blue Mountains City Council FY2024-25 GPFS (landed 2026-11-18)
+
+_Section number reserved as §7.37: §7.35 (Woollahra) and §7.36 (Wollondilly) are pending separate
+items. No section is renumbered._
+
+**Source.** Discovered from Blue Mountains City Council's official document page
+<https://www.bmcc.nsw.gov.au/documents/annual-financial-statements-2024-2025>, which links the
+published audited statements PDF
+<https://www.bmcc.nsw.gov.au/sites/default/files/docs/BMCC%20Annual%20Financial%20Statements%202024-2025.PDF>.
+The connector parses that page's own PDF link (no hard-coded document URL) and SHA-256 re-verifies the
+exact bytes. The page and PDF are served directly to a normal HTTP client (HTTP 200); no browser
+challenge was needed.
+
+The 94-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p6
+(printed p4), Statement of Comprehensive Income p7 (printed p5), B1-1 "Functions or activities" p15
+(printed p13) and note B3-4 depreciation p26 (printed p24) — plus the independent auditor's report.
+The printed unit is explicit `$ '000` on the Income Statement, Statement of Comprehensive Income, B1-1
+and note B3-4; a missing or conflicting unit rejects the whole extraction.
+
+Exact bytes archived outside the repo at
+`$AUSSPEND_SOURCE_ARCHIVE/blue-mountains-gpfs/blue-mountains-city-council-financial-statements-2024-25.pdf`:
+**4,655,953 bytes**, SHA-256
+`dacf018515b03b5807d18c9ced8009e287b8501bd16324998442d52677f04b2a` (`hash_verified: true`).
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                                                          | Printed / derived                                                                                    | Result                                           |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                                                     | `$185,382` thousand                                                                                  | = `$185,382,000`                                 |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income)                                   | `$99,124` + `$23,339` + `$4,904` + `$16,417` + `$36,045` + `$3,940` + `$1,613` = `$185,382` thousand | = printed total                                  |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses + net loss on disposal)                                              | `$78,134` + `$49,604` + `$1,341` + `$8,151` + `$1,496` = `$138,726` thousand                         | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$21,298`)                                                             | `$138,726` + `$21,298` = `$160,024` thousand                                                         | = printed B1-1 total expenses                    |
+| B1-1 Total functions and activities — income                                                                                                                   | `$185,382` thousand                                                                                  | = face statement                                 |
+| B1-1 Total functions and activities — expenses                                                                                                                 | `$160,024` thousand                                                                                  | = `$160,024,000` (printed total)                 |
+| B1-1 Total functions and activities — operating result                                                                                                         | `$25,358` thousand                                                                                   | = face operating result                          |
+| B1-1 grants and contributions                                                                                                                                  | `$52,462` thousand                                                                                   | = operating `$16,417` + capital `$36,045`        |
+| B1-1 function expense split (Lead `$43,744` + Protect `$14,021` + Care `$50,580` + Live `$7,527` + Move `$38,422` + Thrive `$5,730`; Non specific printed nil) | `$160,024` thousand                                                                                  | = printed B1-1 total expenses                    |
+| Operating result from continuing operations                                                                                                                    | `$185,382` − `$160,024` = `$25,358` thousand                                                         | = printed operating result                       |
+| Net operating result for the year attributable to Council                                                                                                      | `$25,358` thousand                                                                                   | = printed net result (no discontinued operation) |
+| Statement of Comprehensive Income net result                                                                                                                   | `$25,358` thousand                                                                                   | = Income Statement net result                    |
+| Statement of Comprehensive Income total (`$25,358` + `$20,904` other comprehensive income)                                                                     | `$46,262` thousand                                                                                   | = printed total comprehensive income             |
+| Note B3-4 "Total depreciation, amortisation and impairment for non-financial assets"                                                                           | `$21,298` thousand                                                                                   | = face depreciation/amortisation/impairment line |
+
+Total expenses is the printed B1-1 "Total functions and activities" expense total (`$160,024`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$138,726` thousand) plus printed
+depreciation/amortisation/impairment (`$21,298` thousand), and equals printed total income
+(`$185,382` thousand) less the printed operating result (`$25,358` thousand). B1-1 income, expenses,
+operating result and grants reconcile exactly to the face statement — there is **no face-vs-B1-1
+discrepancy**. There is no discontinued operation, so the operating result and net result are the same
+printed line.
+
+**Rows.** 23 rows, source id `blue-mountains-gpfs`, `source_dataset` "Blue Mountains City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Blue Mountains City Council"` (the exact published entity
+name), `data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are
+total revenue `$185,382,000`, total expenses `$160,024,000`, employee expenses `$78,134,000`,
+depreciation/amortisation/impairment `$21,298,000`, operating government grants `$16,417,000`, capital
+government grants `$36,045,000`, borrowing costs `$1,341,000`, net loss on disposal of assets
+`$1,496,000` and net result `$25,358,000`. The six non-nil printed B1-1 service expenses (Lead,
+Protect, Care, Live, Move, Thrive) are emitted as a separate `b1_1_function_expenses_*` cut of the
+same printed total; the "Non specific" expense is printed nil and is not emitted as a zero row.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government program
+data; they are not added to expenditure. The six B1-1 service rows are a second cut of the same total
+expenses and are never added to the nature-of-expense rows. The pre-existing same-entity rows are
+preserved untouched and never summed.
+
+**Database evidence (2026-11-18, scratch DB; the shared/pool DB was deliberately not touched).**
+`TEST_MONGO_URL` pointed at `mongodb://127.0.0.1:27018/ausspend_test_<pid>_bluemountainsgpfs`; the run
+started from **5** sentinel rows across `grantconnect`/`aus-tender`/`acnc-charity`/`ku-ring-gai-gpfs`/
+`nsw-budget`, reaching **28** after ingest (exactly **+23**); `blue-mountains-gpfs` **23**; the
+per-source counts of the five sentinels were unchanged and no rows were deleted; `data_sources`
+records the source `active` with `records_ingested: 23`. A second ingest run upserted the same 23
+SHA-anchored natural keys and left the DB total unchanged (idempotent). Targeted connector tests passed
+(15/15).
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -3417,7 +3502,8 @@ DB total unchanged (idempotent).
    **Thirty-second expansion landed 2026-11-18:** Lane Cove Council FY2024-25 GPFS, 17 non-additive
    rows (§7.32). **Thirty-third expansion landed 2026-11-18:** Mosman Council FY2024-25 GPFS, 18
    non-additive rows (§7.33). **Thirty-fourth expansion landed 2026-11-18:** Hawkesbury City Council
-   FY2024-25 GPFS, 19 non-additive rows (§7.34).
+   FY2024-25 GPFS, 19 non-additive rows (§7.34). **Thirty-fifth expansion landed 2026-11-18:** Blue
+   Mountains City Council FY2024-25 GPFS, 23 non-additive rows (§7.37; §7.35–§7.36 reserved).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -3791,6 +3877,7 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.34 GPFS sources: thirty-four councils, one audited year each,
+The only ingestions are the §7.1–§7.34 and §7.37 GPFS sources: thirty-five councils, one audited year each
+(§7.35 and §7.36 are reserved for pending Woollahra and Wollondilly items; no section was renumbered),
 non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.

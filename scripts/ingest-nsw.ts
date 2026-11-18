@@ -84,6 +84,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - strathfield-gpfs  GPFS expansion: Strathfield Council's audited FY2024-25 GPFS
  *   - lane-cove-gpfs  GPFS expansion: Lane Cove Council's audited FY2024-25 GPFS
  *   - mosman-gpfs  GPFS expansion: Mosman Council's audited FY2024-25 GPFS
+ *   - blue-mountains-gpfs  GPFS expansion: Blue Mountains City Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -138,6 +139,7 @@ export const NSW_SOURCE_IDS = [
   'lane-cove-gpfs',
   'mosman-gpfs',
   'hawkesbury-gpfs',
+  'blue-mountains-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {

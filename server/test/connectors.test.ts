@@ -53,6 +53,8 @@ const LIVE_IDS = [
   'ku-ring-gai-gpfs',
   'lane-cove-gpfs',
   'hawkesbury-gpfs',
+  'blue-mountains-gpfs',
+  'strathfield-gpfs',
   'mosman-gpfs',
   'vic-budget',
   'vic-vlgc-vgc1',

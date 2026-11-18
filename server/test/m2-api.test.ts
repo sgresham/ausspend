@@ -233,6 +233,8 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'ku-ring-gai-gpfs' ||
           connector.id === 'lane-cove-gpfs' ||
           connector.id === 'hawkesbury-gpfs' ||
+          connector.id === 'blue-mountains-gpfs' ||
+          connector.id === 'strathfield-gpfs' ||
           connector.id === 'mosman-gpfs' ||
           connector.id === 'vic-budget' ||
           connector.id === 'vic-vlgc-vgc1' ||
