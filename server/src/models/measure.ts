@@ -174,6 +174,15 @@ export interface MeasureDocument {
   sa_printed_sign?: 'positive' | 'negative';
   /** SA GFS year basis (annual actual/outcome). */
   sa_year_basis?: string;
+  /** ACT Socrata budget dataset id and project dimensions. */
+  act_dataset_id?: string;
+  act_project_classification?: string;
+  act_project_type?: string;
+  act_wellbeing_domain?: string;
+  act_region?: string;
+  /** ACT published unit ($'000) and printed sign. */
+  act_unit?: string;
+  act_printed_sign?: 'positive' | 'negative';
   /** VIC LGPRF performance value (non-monetary; may be negative or fractional). */
   performance_value?: number;
   /** Published textual result when the source result is not numeric. */
@@ -346,6 +355,13 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     sa_unit: { type: String },
     sa_printed_sign: { type: String, enum: ['positive', 'negative'] },
     sa_year_basis: { type: String },
+    act_dataset_id: { type: String, index: true },
+    act_project_classification: { type: String, index: true },
+    act_project_type: { type: String, index: true },
+    act_wellbeing_domain: { type: String },
+    act_region: { type: String },
+    act_unit: { type: String },
+    act_printed_sign: { type: String, enum: ['positive', 'negative'] },
     performance_value: { type: Number, required: false },
     performance_value_text: { type: String },
     performance_unit: { type: String, index: true },

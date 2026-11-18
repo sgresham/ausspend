@@ -195,7 +195,7 @@ covering eight states/territories × 16 leaf areas × seven detailed funding sou
 `agency_detail` and no total is computed. METEOR remains metadata-only; the current series comes
 from the report data tables, not METEOR. Only `aihw-health-expenditure` rows are replaced; every
 other source is unchanged. The live DB is the authority for the current count (it also contains the
-VIC LGPRF rows landed concurrently); the latest verified snapshot is 689,273 measures.
+VIC LGPRF rows landed concurrently); the latest verified snapshot is 691,393 measures.
 Phase 6.3 adds **855 WA Budget EFO rows** from catalogue.data.wa.gov.au CKAN: no machine-readable
 BP2 agency-expense dataset is published, so Chapter 5 major spending changes are provisional,
 non-additive policy measures and Chapter 6 Table 1 asset investment is reconciled to its printed
@@ -204,6 +204,11 @@ Phase 6.4 adds **4,359 SA Budget GFS rows** from data.sa.gov.au CKAN: general go
 expenses by GPC function and economic type for 2012-13..2015-16, all mapped to COFOG. The unit is
 $'000 and every year reconciles to its printed TOTAL row; GPC 3450 is a non-COFOG memorandum item
 and is excluded. Rows are statewide, agency-detail components, not cross-source totals.
+Phase 6.6 adds **2,120 ACT Budget rows** from the data.act.gov.au Socrata resource API
+(`8275-pg6z`, Budget 2021-2022 Infrastructure Investment Program), paged with `$limit`/`$offset`:
+424 projects × five budgeted-financing years (2021-22..2025-26), $'000, `measure_type=budget`,
+territory/ACT, with every project's year components reconciled to its printed total. The printed
+project total is never emitted.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future

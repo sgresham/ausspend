@@ -305,6 +305,14 @@ export const MeasureRecordSchema = z.object({
   sa_unit: z.string().min(1).optional(),
   sa_printed_sign: z.enum(['positive', 'negative']).optional(),
   sa_year_basis: z.string().min(1).optional(),
+  /** ACT Socrata budget provenance. */
+  act_dataset_id: z.string().min(1).optional(),
+  act_project_classification: z.string().min(1).optional(),
+  act_project_type: z.string().min(1).optional(),
+  act_wellbeing_domain: z.string().min(1).optional(),
+  act_region: z.string().min(1).optional(),
+  act_unit: z.string().min(1).optional(),
+  act_printed_sign: z.enum(['positive', 'negative']).optional(),
   /**
    * VIC council performance-indicator provenance (LGPRF). Performance values
    * are not money: a value may be a per-head amount, per-unit cost, percentage,

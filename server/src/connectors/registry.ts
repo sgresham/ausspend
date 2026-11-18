@@ -57,6 +57,7 @@ import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
 import { createFagConnector } from './vic-vlgc-fag.js';
 import { createLgprfConnector } from './vic-lgprf.js';
 import { createSaGfsConnector } from './sa-budget-gfs.js';
+import { createActBudgetConnector } from './act-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -503,6 +504,10 @@ export const CONNECTORS: readonly Connector[] = [
   // mapping, $'000 unit detection and reconciliation to the printed TOTAL row.
   // Every row is one function x economic-type component; no cross-source sum.
   createSaGfsConnector(),
+  // Phase 6.6: ACT Budget Socrata — paged infrastructure investment programme.
+  // Territory/ACT, budget measure type, $'000 project x fiscal-year components;
+  // printed project totals are reconciliation-only and never emitted.
+  createActBudgetConnector(),
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),
