@@ -22,7 +22,7 @@ reseeds its target database. It always rewrites the database name to an
 cleared.
 
 ```bash
-TEST_MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run test:merge-gate
+TEST_MONGO_URL=mongodb://<dev-db-host>:27017/ausspend_dev npm run test:merge-gate
 ```
 
 ## Worker areas

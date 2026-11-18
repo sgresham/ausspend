@@ -7,7 +7,7 @@ Status as at 2026-11-18 (the database host, origin `localhost`, public `<public-
 | Piece                                                    | State                                                                                                                                  |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | nginx on host `:80` / `:443`                             | **LIVE** — nginx 1.18.0, `deploy/nginx/ausspend.conf.template` installed and enabled                                                   |
-| Static client (`/srv/ausspend/client`)                   | **LIVE** — `index.html` references `assets/index-BqHi0MAj.js`; republished 2026-11-18 with `npm run deploy:client`                     |
+| Static client (`$AUSSPEND_DEPLOY_ROOT`)                  | **LIVE** — `index.html` references `assets/index-BqHi0MAj.js`; republished 2026-11-18 with `npm run deploy:client`                     |
 | API proxy `/api` → `127.0.0.1:3001`                      | **LIVE** — same-origin, GET/HEAD/OPTIONS only, rate-limited                                                                            |
 | TLS                                                      | **LIVE** — Cloudflare Origin CA cert, Full (strict)-capable; served from `${AUSSPEND_TLS_DIR}/` (root-only, never in git)              |
 | Cloudflare proxied DNS → origin                          | **LIVE and verified** — `curl --resolve …:<cloudflare-edge-ip>` returns 200 with `cf-ray`; CF edge IPs appear in the origin access log |
@@ -24,7 +24,7 @@ optional origin hardening — see "Remaining owner actions".
 ```
 Internet → Cloudflare (proxied, Full strict) → <public-origin-ip>:443 (RouterOS NAT)
         → localhost:443 nginx
-            ├─ /, /legal, /soc, /benchmark, deep links → /srv/ausspend/client (SPA)
+            ├─ /, /legal, /soc, /benchmark, deep links → $AUSSPEND_DEPLOY_ROOT (SPA)
             └─ /api/* → 127.0.0.1:3001 (Express; GET/HEAD/OPTIONS only)
 ```
 
@@ -35,7 +35,7 @@ port 80 again.
 ## Files
 
 - `scripts/deploy-client.sh` — build + validate + publish `client/dist/` to
-  `AUSSPEND_DEPLOY_ROOT` (default `/srv/ausspend/client`) without sudo.
+  `AUSSPEND_DEPLOY_ROOT` (the client static root) without sudo.
 - `deploy/verify-client.sh` — read-only live check of the deployed index, hashed
   asset, `/api/v1/health`, `/trade` and `/coverage-limitations`.
 - `deploy/nginx/ausspend.conf.template` — the complete edge config (both server blocks,
@@ -58,7 +58,7 @@ root.
 
 ```bash
 npm ci
-npm run deploy:client    # build shared+client, validate, publish to /srv/ausspend/client
+AUSSPEND_DEPLOY_ROOT="${AUSSPEND_DEPLOY_ROOT:?set to the deployed client root}" npm run deploy:client  # build, validate, publish
 npm run deploy:verify    # read-only live check (public hostname)
 ```
 
@@ -66,7 +66,7 @@ npm run deploy:verify    # read-only live check (public hostname)
 
 - builds `shared` and `client`;
 - parses `client/dist/index.html` and requires every referenced `/assets/*` file to exist;
-- copies with `rsync -a --delete` to `${AUSSPEND_DEPLOY_ROOT:-/srv/ausspend/client}`;
+- copies with `rsync -a --delete` to `${AUSSPEND_DEPLOY_ROOT:-$HOME/ausspend-client}`;
 - `cmp`-verifies the copied `index.html` and every referenced asset;
 - exits non-zero with the exact owner-only fallback if the build or root is not writable.
 
@@ -74,7 +74,7 @@ Useful variants:
 
 ```bash
 # Path selection / no writes:
-AUSSPEND_DEPLOY_ROOT=/srv/ausspend/client bash scripts/deploy-client.sh --dry-run
+AUSSPEND_DEPLOY_ROOT=/path/to/client bash scripts/deploy-client.sh --dry-run
 
 # Re-publish an existing client/dist without rebuilding:
 bash scripts/deploy-client.sh --skip-build
@@ -120,7 +120,7 @@ Render the edge config. **Note the two path conventions:** `deploy/render-nginx.
 directly.
 
 ```bash
-export AUSSPEND_DEPLOY_ROOT="/srv/ausspend"      # parent; render-nginx appends /client
+export AUSSPEND_DEPLOY_ROOT="/path/to/parent"      # parent; render-nginx appends /client
 export AUSSPEND_TLS_DIR="$HOME/.config/ausspend/tls"
 sudo ./deploy/render-nginx.sh | sudo tee /etc/nginx/sites-available/ausspend.conf >/dev/null
 sudo ln -sf /etc/nginx/sites-available/ausspend.conf /etc/nginx/sites-enabled/ausspend.conf
@@ -141,8 +141,8 @@ parent):
 npm ci
 npm run build -w shared
 npm run build -w client
-sudo install -d -m 755 /srv/ausspend/client
-sudo rsync -a --delete client/dist/ /srv/ausspend/client/
+sudo install -d -m 755 "$AUSSPEND_DEPLOY_ROOT/client"
+sudo rsync -a --delete client/dist/ "$AUSSPEND_DEPLOY_ROOT/client"/
 ```
 
 Then render/reload nginx as above and run the read-only `deploy:verify` checks.
@@ -264,7 +264,7 @@ The running app containers are untouched by this change; only the edge is new.
 
 ## Verified on 2026-11-18 (current)
 
-- `npm run deploy:client` built shared+client, published to `/srv/ausspend/client`,
+- `npm run deploy:client` built shared+client, published to `$AUSSPEND_DEPLOY_ROOT`,
   and cmp-verified `index.html` plus the single referenced asset
   `/assets/index-BqHi0MAj.js`.
 - `npm run deploy:verify` passed through the public hostname: index **200**,

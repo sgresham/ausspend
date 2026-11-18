@@ -4,8 +4,8 @@
 - jurisdiction: federal
 - generated: 2026-11-18
 - packet: [`disr-req.json`](disr-req.json)
-- archive root: `/home/steve/ausspend-source-archive/disr-req` (outside the repo)
-- checksums: `/home/steve/ausspend-source-archive/disr-req/SHA256SUMS` (6/6 re-hashed and matched)
+- archive root: `~/ausspend-source-archive/disr-req` (outside the repo)
+- checksums: `~/ausspend-source-archive/disr-req/SHA256SUMS` (6/6 re-hashed and matched)
 - status: **discovery only** — no connector, no database write, no `trade_records` rows.
 
 ## 1. Premise falsifier
@@ -252,8 +252,8 @@ Then build a **bounded connector** for historical Tables 17 and 19 only (compone
 
 ## 11. Archive and checks
 
-- archive root: `/home/steve/ausspend-source-archive/disr-req`
-- checksums: `/home/steve/ausspend-source-archive/disr-req/SHA256SUMS`
+- archive root: `~/ausspend-source-archive/disr-req`
+- checksums: `~/ausspend-source-archive/disr-req/SHA256SUMS`
 - **6/6** archived documents re-hashed and matched their SHA-256 records.
 - raw bytes: series landing HTML, September 2026 release HTML, June 2026 release HTML, PDF, forecast XLSX, historical XLSX.
 - no PDFs/XLSX are committed to the repo; only this packet and the JSON are committed.

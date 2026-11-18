@@ -5,8 +5,8 @@
 - jurisdiction: federal
 - generated: 2026-11-18
 - packet: [`abares.json`](abares.json)
-- archive root: `/home/steve/ausspend-source-archive/abares` (outside the repo)
-- checksums: `/home/steve/ausspend-source-archive/abares/SHA256SUMS` (9/9 downloaded files re-hashed)
+- archive root: `~/ausspend-source-archive/abares` (outside the repo)
+- checksums: `~/ausspend-source-archive/abares/SHA256SUMS` (9/9 downloaded files re-hashed)
 - status: **discovery only** — no connector, no database write, no `trade_records` rows.
 
 ## 1. Premise falsifier
@@ -148,7 +148,7 @@ Third-party material: charts, photographs, maps and some tables may carry separa
 
 ## 7. Archive
 
-All files were downloaded on 2026-11-18 to `/home/steve/ausspend-source-archive/abares` (outside the repo). Exact byte lengths and SHA-256:
+All files were downloaded on 2026-11-18 to `~/ausspend-source-archive/abares` (outside the repo). Exact byte lengths and SHA-256:
 
 | file                                                              |     bytes | SHA-256                                                            |
 | ----------------------------------------------------------------- | --------: | ------------------------------------------------------------------ |

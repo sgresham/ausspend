@@ -7,8 +7,8 @@
   "listing_url": "https://www.waternsw.com.au/about-us/our-business/corporate-governance/annual-reports",
   "listing_http_status": 403,
   "access_notes": "The official annual-reports page and the official PDF paths return HTTP 403 to ordinary curl (Cloudflare challenge). The NSW Parliament file service is reachable (HTTP 200) and served the FY2024-25 artifact byte-identically. Historical years were read from Wayback raw captures (HTTP 200); the archived bytes are pinned in SHA256SUMS. The FY2017-18 capture at 20190923004735 is truncated at 1,048,576 bytes (no %%EOF) and was rejected in favour of the full 20200126152225 capture.",
-  "archive_root": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive",
-  "archive_checksums_file": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/SHA256SUMS",
+  "archive_root": "~/.pool-worktrees/ausspend/waternsw-soc-archive",
+  "archive_checksums_file": "~/.pool-worktrees/ausspend/waternsw-soc-archive/SHA256SUMS",
   "premise": {
     "multi_source": true,
     "finding": "WaterNSW publishes full annual reports containing audited general-purpose financial statements with printed statement faces and printed $'000 totals for FY2014-15 and FY2016-17 through FY2024-25 (9 consecutive full years plus the formation-year report). The premise is true. The one gap is FY2015-16: published, but no retrievable own-year byte copy was found (official 403, data.nsw resource 404, Archive-It session challenge, no Wayback capture of the official PDF). FY2015-16 is deferred, not invented; its restated comparative appears in the FY2016-17 report and is not used as an own-year document."
@@ -29,7 +29,7 @@
       "pages": 110,
       "content_type": "application/pdf",
       "sha256": "be5f6eac8c169bf4496a926b79ce8f7344271103c46b3a10855ad39ac219640f",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2014-15/waternsw-annual-report-2014-15.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2014-15/waternsw-annual-report-2014-15.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000; Basis of preparation rounds to the nearest thousand dollars.",
       "audited": true,
@@ -86,7 +86,7 @@
       "pages": 126,
       "content_type": "application/pdf",
       "sha256": "0d87c644ad34f1d197c1bc020e24878e26848daded8772acb8eec9a33453b847",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2016-17/waternsw-annual-report-2016-17.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2016-17/waternsw-annual-report-2016-17.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -114,7 +114,7 @@
       "pages": 118,
       "content_type": "application/pdf",
       "sha256": "25f88f3ed8ec1071aecbb25f6e1d31018b3cd4c8417ebf83ad646783fa644e88",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2017-18/waternsw-annual-report-2017-18.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2017-18/waternsw-annual-report-2017-18.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -142,7 +142,7 @@
       "pages": 142,
       "content_type": "application/pdf",
       "sha256": "54687d91b79289b2cbc6d82c7221fd5ebca8d0a4bc54d071625d9d29a8ef238b",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2018-19/waternsw-annual-report-2018-19.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2018-19/waternsw-annual-report-2018-19.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -170,7 +170,7 @@
       "pages": 156,
       "content_type": "application/pdf",
       "sha256": "ff51949c6b0964f8dfacae0c278d785569b7468bd8b63132392947b39ffdcf49",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2019-20/waternsw-annual-report-2019-20.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2019-20/waternsw-annual-report-2019-20.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -198,7 +198,7 @@
       "pages": 176,
       "content_type": "application/pdf",
       "sha256": "9f2b8abf37790fae2bc0506f8396cfbbbc2f76096bacd62e4099587b7e1a24df",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2020-21/waternsw-annual-report-2020-21.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2020-21/waternsw-annual-report-2020-21.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -226,7 +226,7 @@
       "pages": 152,
       "content_type": "application/pdf",
       "sha256": "cbb1440f6de59acf18825e68d04cb1c274f11f6a003397de5f0b0739232143a2",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2021-22/waternsw-annual-report-2021-22.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2021-22/waternsw-annual-report-2021-22.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -254,7 +254,7 @@
       "pages": 169,
       "content_type": "application/pdf",
       "sha256": "aea8ec0ca790fd6e99e0f0bd421ff252922e027b6cc32bbab6f80e4aa55efa68",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2022-23/waternsw-annual-report-2022-23.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2022-23/waternsw-annual-report-2022-23.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -282,7 +282,7 @@
       "pages": 86,
       "content_type": "application/pdf",
       "sha256": "567bb2120a8b42fc38f770d3193739644a4a210f28bb215673531b5b23f05c80",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2023-24/waternsw-annual-report-2023-24.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2023-24/waternsw-annual-report-2023-24.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000.",
       "audited": true,
@@ -310,7 +310,7 @@
       "pages": 101,
       "content_type": "application/pdf",
       "sha256": "6240e733e2d2e5562553a15398b1dbe63c8ab454b6fe78a9d5000f354f338b09",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2024-25/waternsw-annual-report-2024-25.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2024-25/waternsw-annual-report-2024-25.pdf",
       "printed_unit": "$'000",
       "printed_unit_basis": "Every statement column header prints $'000; Basis of preparation rounds to the nearest thousand dollars.",
       "audited": true,
@@ -678,61 +678,61 @@
   "archive_manifest": [
     {
       "source_id": "wnsw-2014-15",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2014-15/waternsw-annual-report-2014-15.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2014-15/waternsw-annual-report-2014-15.pdf",
       "bytes": 5010529,
       "sha256": "be5f6eac8c169bf4496a926b79ce8f7344271103c46b3a10855ad39ac219640f"
     },
     {
       "source_id": "wnsw-2016-17",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2016-17/waternsw-annual-report-2016-17.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2016-17/waternsw-annual-report-2016-17.pdf",
       "bytes": 3113158,
       "sha256": "0d87c644ad34f1d197c1bc020e24878e26848daded8772acb8eec9a33453b847"
     },
     {
       "source_id": "wnsw-2017-18",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2017-18/waternsw-annual-report-2017-18.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2017-18/waternsw-annual-report-2017-18.pdf",
       "bytes": 6638773,
       "sha256": "25f88f3ed8ec1071aecbb25f6e1d31018b3cd4c8417ebf83ad646783fa644e88"
     },
     {
       "source_id": "wnsw-2018-19",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2018-19/waternsw-annual-report-2018-19.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2018-19/waternsw-annual-report-2018-19.pdf",
       "bytes": 3138284,
       "sha256": "54687d91b79289b2cbc6d82c7221fd5ebca8d0a4bc54d071625d9d29a8ef238b"
     },
     {
       "source_id": "wnsw-2019-20",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2019-20/waternsw-annual-report-2019-20.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2019-20/waternsw-annual-report-2019-20.pdf",
       "bytes": 2535047,
       "sha256": "ff51949c6b0964f8dfacae0c278d785569b7468bd8b63132392947b39ffdcf49"
     },
     {
       "source_id": "wnsw-2020-21",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2020-21/waternsw-annual-report-2020-21.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2020-21/waternsw-annual-report-2020-21.pdf",
       "bytes": 7719011,
       "sha256": "9f2b8abf37790fae2bc0506f8396cfbbbc2f76096bacd62e4099587b7e1a24df"
     },
     {
       "source_id": "wnsw-2021-22",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2021-22/waternsw-annual-report-2021-22.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2021-22/waternsw-annual-report-2021-22.pdf",
       "bytes": 6669517,
       "sha256": "cbb1440f6de59acf18825e68d04cb1c274f11f6a003397de5f0b0739232143a2"
     },
     {
       "source_id": "wnsw-2022-23",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2022-23/waternsw-annual-report-2022-23.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2022-23/waternsw-annual-report-2022-23.pdf",
       "bytes": 13981455,
       "sha256": "aea8ec0ca790fd6e99e0f0bd421ff252922e027b6cc32bbab6f80e4aa55efa68"
     },
     {
       "source_id": "wnsw-2023-24",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2023-24/waternsw-annual-report-2023-24.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2023-24/waternsw-annual-report-2023-24.pdf",
       "bytes": 8947163,
       "sha256": "567bb2120a8b42fc38f770d3193739644a4a210f28bb215673531b5b23f05c80"
     },
     {
       "source_id": "wnsw-2024-25",
-      "local_path": "/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/2024-25/waternsw-annual-report-2024-25.pdf",
+      "local_path": "~/.pool-worktrees/ausspend/waternsw-soc-archive/2024-25/waternsw-annual-report-2024-25.pdf",
       "bytes": 42917371,
       "sha256": "6240e733e2d2e5562553a15398b1dbe63c8ab454b6fe78a9d5000f354f338b09"
     }

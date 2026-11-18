@@ -6,6 +6,7 @@
  */
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { pathToFileURL } from 'node:url';
 
 const ALLOW = [
   {
@@ -27,6 +28,11 @@ const ALLOW = [
     ip: '1.1.1.1',
     file: 'scripts/check-env-leaks.mjs',
     reason: "The guard's own public-resolver allow-list example.",
+  },
+  {
+    ip: '131.0.0.0',
+    file: 'server/src/connectors/hornsby-gpfs/browser.ts',
+    reason: 'Chrome major-version token in a public User-Agent string, not a host.',
   },
 ];
 
@@ -69,59 +75,80 @@ function extensionSkip(file) {
   return /\.(?:png|jpe?g|gif|webp|pdf|xlsx?|zip|woff2?|ico|mp4|mov|bin)$/i.test(file);
 }
 
-const tracked = execFileSync('git', ['ls-files'], { encoding: 'utf8' }).split('\n').filter(Boolean);
-const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
-  encoding: 'utf8',
-})
-  .split('\n')
-  .filter(Boolean);
-const files = [...new Set([...tracked, ...untracked])].filter((file) => !extensionSkip(file));
+/**
+ * Check `{ file, text }` entries and return unique violations. Pure so the test
+ * fixture can prove a new absolute home path fails without touching the tree.
+ */
+export function findViolations(entries) {
+  const violations = [];
 
-const violations = [];
-
-function check(file, text) {
-  const lines = text.split('\n');
-  lines.forEach((line, index) => {
-    const add = (kind, value) => {
-      violations.push({ file, line: index + 1, kind, value, text: line.trim().slice(0, 180) });
-    };
-    for (const match of line.matchAll(PRIVATE_IPV4)) add('RFC1918 IPv4', match[0]);
-    for (const match of line.matchAll(KNOWN_PUBLIC)) add('known deployment/public IP', match[0]);
-    for (const match of line.matchAll(PUBLIC_IPV4)) {
-      const ip = match[0];
-      if (LIBRARY_ALLOW.has(ip) || isPrivate(ip)) continue;
-      if (allowed(ip, file)) continue;
-      add('public IPv4 presented as a host', ip);
-    }
-    for (const match of line.matchAll(HOME_PATH)) add('absolute home directory', match[0]);
-    for (const match of line.matchAll(HOST_Q)) add('placeholder host name', match[0]);
-    if (!file.endsWith('.template')) {
-      for (const match of line.matchAll(INTERNAL_PATHS)) add('internal absolute path', match[0]);
-    }
-  });
-}
-
-for (const file of files) {
-  let text;
-  try {
-    text = readFileSync(file, 'utf8');
-  } catch {
-    continue;
+  function check(file, text) {
+    const lines = text.split('\n');
+    lines.forEach((line, index) => {
+      const add = (kind, value) => {
+        violations.push({ file, line: index + 1, kind, value, text: line.trim().slice(0, 180) });
+      };
+      for (const match of line.matchAll(PRIVATE_IPV4)) add('RFC1918 IPv4', match[0]);
+      for (const match of line.matchAll(KNOWN_PUBLIC)) add('known deployment/public IP', match[0]);
+      for (const match of line.matchAll(PUBLIC_IPV4)) {
+        const ip = match[0];
+        if (LIBRARY_ALLOW.has(ip) || isPrivate(ip)) continue;
+        if (allowed(ip, file)) continue;
+        add('public IPv4 presented as a host', ip);
+      }
+      for (const match of line.matchAll(HOME_PATH)) add('absolute home directory', match[0]);
+      for (const match of line.matchAll(HOST_Q)) add('placeholder host name', match[0]);
+      if (!file.endsWith('.template')) {
+        for (const match of line.matchAll(INTERNAL_PATHS)) add('internal absolute path', match[0]);
+      }
+    });
   }
-  if (text.includes('\0')) continue;
-  check(file, text);
+
+  for (const { file, text } of entries) {
+    if (text.includes('\0')) continue;
+    check(file, text);
+  }
+
+  return [
+    ...new Map(violations.map((v) => [`${v.file}:${v.line}:${v.kind}:${v.value}`, v])).values(),
+  ];
 }
 
-const unique = [
-  ...new Map(violations.map((v) => [`${v.file}:${v.line}:${v.kind}:${v.value}`, v])).values(),
-];
-if (unique.length === 0) {
-  console.log(`[check-env-leaks] PASS (${files.length} tracked text files)`);
-  process.exit(0);
+function main() {
+  const tracked = execFileSync('git', ['ls-files'], { encoding: 'utf8' })
+    .split('\n')
+    .filter(Boolean);
+  const untracked = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
+    encoding: 'utf8',
+  })
+    .split('\n')
+    .filter(Boolean);
+  const files = [...new Set([...tracked, ...untracked])].filter((file) => !extensionSkip(file));
+
+  const entries = [];
+  for (const file of files) {
+    let text;
+    try {
+      text = readFileSync(file, 'utf8');
+    } catch {
+      continue;
+    }
+    entries.push({ file, text });
+  }
+
+  const unique = findViolations(entries);
+  if (unique.length === 0) {
+    console.log(`[check-env-leaks] PASS (${files.length} tracked text files)`);
+    process.exit(0);
+  }
+  console.error(`[check-env-leaks] FAIL (${unique.length} violation(s))`);
+  for (const v of unique.slice(0, 100)) {
+    console.error(`${v.file}:${v.line} ${v.kind} ${JSON.stringify(v.value)} :: ${v.text}`);
+  }
+  if (unique.length > 100) console.error(`... ${unique.length - 100} more`);
+  process.exit(1);
 }
-console.error(`[check-env-leaks] FAIL (${unique.length} violation(s))`);
-for (const v of unique.slice(0, 100)) {
-  console.error(`${v.file}:${v.line} ${v.kind} ${JSON.stringify(v.value)} :: ${v.text}`);
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
 }
-if (unique.length > 100) console.error(`... ${unique.length - 100} more`);
-process.exit(1);

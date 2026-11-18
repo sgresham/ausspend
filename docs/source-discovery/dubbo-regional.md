@@ -4,8 +4,8 @@
 - generated: 2026-11-18T03:18:52Z
 - reporting page: <https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting> (HTTP 200)
 - secondary page: <https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/Integrated-Planning-and-Reporting> (HTTP 200)
-- archive root: `/home/steve/ausspend-source-archive/dubbo-regional` (outside the repo)
-- checksums: `/home/steve/ausspend-source-archive/dubbo-regional/SHA256SUMS` (25/25 re-hashed and matched)
+- archive root: `~/ausspend-source-archive/dubbo-regional` (outside the repo)
+- checksums: `~/ausspend-source-archive/dubbo-regional/SHA256SUMS` (25/25 re-hashed and matched)
 - scope: source discovery only — no connector, DB or `measures` write, no total derived when the unit or printed total is absent.
 
 ## 1. Premise falsifier
@@ -330,7 +330,7 @@ Per-year printed reconciliation (components in `$'000`):
 
 ### 10.6 Historical archive re-verification
 
-All paths are outside the repository under `/home/steve/ausspend-source-archive/dubbo-regional/`. Each file was re-downloaded on 2026-11-18 and matched the manifest SHA-256 exactly; bytes are the archived byte counts.
+All paths are outside the repository under `~/ausspend-source-archive/dubbo-regional/`. Each file was re-downloaded on 2026-11-18 and matched the manifest SHA-256 exactly; bytes are the archived byte counts.
 
 | source_id                   | local path                                                                       |     bytes | sha256                                                             |
 | --------------------------- | -------------------------------------------------------------------------------- | --------: | ------------------------------------------------------------------ |

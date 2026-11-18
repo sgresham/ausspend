@@ -31,7 +31,7 @@ export const HORNSBY_GPFS_CONTEXT: HornsbyGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/hornsby-gpfs/hornsby-shire-council-annual-financial-statements-2025-26.pdf',
+      '~/ausspend-source-archive/hornsby-gpfs/hornsby-shire-council-annual-financial-statements-2025-26.pdf',
     sha256: HORNSBY_PDF_SHA256,
     bytes: HORNSBY_PDF_BYTES,
     fetched_at: '2026-11-18T00:00:00.000Z',

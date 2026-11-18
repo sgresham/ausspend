@@ -5,8 +5,8 @@
 - scope: **source discovery only** — no connector, DB/`measures` write, no schema/API change, no cross-year or cross-entity total
 - generated: 2026-11-18
 - official annual-reports page: <https://www.waternsw.com.au/about-us/our-business/corporate-governance/annual-reports> — **HTTP 403 to curl** on 2026-11-18 (Cloudflare challenge)
-- archive root (outside the repo): `/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive`
-- checksums: `/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/SHA256SUMS` (10/10 re-hashed and matched)
+- archive root (outside the repo): `~/.pool-worktrees/ausspend/waternsw-soc-archive`
+- checksums: `~/.pool-worktrees/ausspend/waternsw-soc-archive/SHA256SUMS` (10/10 re-hashed and matched)
 - existing source: `waternsw` is active with **47 rows, FY2024-25 only**; DB total 693,427 (cheap check supplied with the item)
 - prior packet: none (`docs/source-discovery/` had Dubbo/BITRE/DISR only before this packet)
 
@@ -319,7 +319,7 @@ Third-party/personal content: the annual reports contain photographs, commission
 
 ## 12. Archive manifest
 
-All paths are outside the repository under `/home/steve/.pool-worktrees/ausspend/waternsw-soc-archive/`. Each file was re-hashed from the archive on write; `SHA256SUMS` matches the table below (10/10).
+All paths are outside the repository under `~/.pool-worktrees/ausspend/waternsw-soc-archive/`. Each file was re-hashed from the archive on write; `SHA256SUMS` matches the table below (10/10).
 
 | source_id      | local path                                   |      bytes | sha256                                                             |
 | -------------- | -------------------------------------------- | ---------: | ------------------------------------------------------------------ |

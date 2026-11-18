@@ -911,7 +911,7 @@ year-scoped natural key. The 107 earlier rows are unchanged, so the source holds
 year-scoped rows; no row and no API total spans years.
 
 **Database evidence (2026-11-18, shared dev DB).** Ingesting only this source into
-`mongodb://10.10.10.30:27017/ausspend_dev` took `measures` **693,444 → 693,462** (exactly **+18**);
+`mongodb://<dev-db-host>:27017/ausspend_dev` took `measures` **693,444 → 693,462** (exactly **+18**);
 `dubbo-council-gpfs` **107 → 125** with FY2019-20 **18**, FY2020-21 **18**, FY2021-22 **18**,
 FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**, FY2025-26 **19**. A full per-source diff
 showed **only** `dubbo-council-gpfs` changed; no other source increased or decreased and no rows
@@ -972,7 +972,7 @@ result before capital grants. Each row has `fiscal_year: "2018-19"`,
 API total spans years.
 
 **Database evidence (2026-11-18, shared dev DB).** Ingesting only this source into
-`mongodb://10.10.10.30:27017/ausspend_dev` took `measures` **693,462 → 693,479** (exactly **+17**);
+`mongodb://<dev-db-host>:27017/ausspend_dev` took `measures` **693,462 → 693,479** (exactly **+17**);
 `dubbo-council-gpfs` **125 → 142** with FY2018-19 **17**, FY2019-20 **18**, FY2020-21 **18**,
 FY2021-22 **18**, FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**, FY2025-26 **19**. A full
 per-source diff showed **only** `dubbo-council-gpfs` changed; no other source increased or decreased
@@ -3958,7 +3958,7 @@ The printed unit is explicit `$ '000` on the Income Statement, Statement of Comp
 and note B3-4; a missing or conflicting unit rejects the whole extraction.
 
 Exact bytes archived outside the repo (durably, not in a disposable worktree) at
-`/home/steve/ausspend-source-archive/camden-gpfs/camden-council-financial-statements-2024-25.pdf`:
+`~/ausspend-source-archive/camden-gpfs/camden-council-financial-statements-2024-25.pdf`:
 **5,460,863 bytes**, SHA-256
 `8e7762e57c009cd47f6880e2edf825d1b8510b06791d2b7fe720ff0f29772e64` (`hash_verified: true`).
 
@@ -4009,7 +4009,7 @@ data; they are not added to expenditure. The six B1-1 service rows are a second 
 expenses and are never added to the nature-of-expense rows. The pre-existing same-entity rows are
 preserved untouched and never summed.
 
-**Database evidence (2026-11-18, shared dev DB `10.10.10.30:27017/ausspend_dev`).** Claim-time
+**Database evidence (2026-11-18, shared dev DB `<dev-db-host>:27017/ausspend_dev`).** Claim-time
 `measures` was **693,259** and `camden-gpfs` was 0; after ingest **693,282** (exactly **+23**). A fresh
 `source_id /gpfs$/` aggregate moved from **706 rows across 39 sources** to **729 rows across 40
 sources** (still exactly +23 GPFS rows and +1 source). The per-source diff over the ingest showed only
@@ -4125,7 +4125,7 @@ restated FY2023-24). The standalone depreciation line prints a bare footnote mar
 reference, so its actual is the second amount after the label.
 
 Exact bytes archived outside the repo at
-`/home/steve/ausspend-source-archive/central-coast-gpfs/central-coast-council-audited-financial-statements-2024-25.pdf`:
+`~/ausspend-source-archive/central-coast-gpfs/central-coast-council-audited-financial-statements-2024-25.pdf`:
 **8,242,386 bytes**, SHA-256
 `2a37c3eb83a536d2937d85e4a1dbc0df90535338ab3bbb96f3139c5c17d4995a` (`hash_verified: true`). The
 archive also holds the `records/` metadata and the parsed-row JSON.
@@ -4216,7 +4216,7 @@ note B1-1 "Functions or activities" p15 and note B3-3 depreciation p24. The prin
 `$'000` on every page used here; a missing or conflicting unit rejects the whole extraction.
 
 Exact bytes archived outside the repo at
-`/home/steve/ausspend-source-archive/hornsby-gpfs/hornsby-shire-council-annual-financial-statements-2025-26.pdf`:
+`~/ausspend-source-archive/hornsby-gpfs/hornsby-shire-council-annual-financial-statements-2025-26.pdf`:
 **4,734,335 bytes**, SHA-256
 `e9484b420f24c4ce8abcfc7e75f743a6f0619e8d6cc74591c415f63a67a11579` (`hash_verified: true`).
 
@@ -4306,7 +4306,7 @@ each line label, so the FY2024-25 actual is the first printed amount after the l
 restated FY2023-24).
 
 Exact bytes archived outside the repo at
-`/home/steve/ausspend-source-archive/penrith-gpfs/penrith-city-council-financial-statements-2024-25.pdf`:
+`~/ausspend-source-archive/penrith-gpfs/penrith-city-council-financial-statements-2024-25.pdf`:
 **4,155,530 bytes**, SHA-256
 `eefb5f3f3f09d53cb6b674a2238016c91edf58f04fd53068f4d8629c55ac42f1` (`hash_verified: true`). The
 archive also holds the `.meta.json` sidecar and the `records/` metadata.
@@ -4393,7 +4393,7 @@ before each line label, so the FY2024-25 actual is the first printed amount afte
 the FY2023-24 comparative).
 
 Exact bytes archived outside the repo at
-`/home/steve/ausspend-source-archive/the-hills-gpfs/the-hills-shire-council-financial-statements-2024-25.pdf`:
+`~/ausspend-source-archive/the-hills-gpfs/the-hills-shire-council-financial-statements-2024-25.pdf`:
 **5,589,503 bytes**, SHA-256
 `5972fc23ae97e3884283880bb3c1fda5ea8eb13ce0585e1e26e5609db2a2ff65` (`hash_verified: true`). The
 archive also holds the `.meta.json` sidecar and the `records/` metadata.

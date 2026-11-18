@@ -4,12 +4,12 @@
 #
 # Builds shared+client, validates the built index and every hashed asset it
 # references, then publishes client/dist/ to AUSSPEND_DEPLOY_ROOT. The default
-# root is /srv/ausspend/client (the nginx static root). No sudo, secrets or
+# root is $HOME/ausspend-client unless AUSSPEND_DEPLOY_ROOT is set. No sudo, secrets or
 # container restarts are required when the deploy user owns the root.
 #
 # Usage:
 #   bash scripts/deploy-client.sh [--dry-run] [--skip-build]
-#   AUSSPEND_DEPLOY_ROOT=/srv/ausspend/client bash scripts/deploy-client.sh
+#   AUSSPEND_DEPLOY_ROOT=/path/to/client bash scripts/deploy-client.sh
 #
 # Exit codes: 0 success, 1 build/copy/validation failure, 2 usage error.
 set -euo pipefail
@@ -24,7 +24,7 @@ Options:
   -h, --help    Show this help.
 
 Environment:
-  AUSSPEND_DEPLOY_ROOT  Client static root. Default: /srv/ausspend/client
+  AUSSPEND_DEPLOY_ROOT  Client static root. Default: $HOME/ausspend-client
 EOF
 }
 
@@ -47,7 +47,7 @@ fail() {
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$REPO_ROOT/client/dist"
 INDEX="$BUILD_DIR/index.html"
-DEPLOY_ROOT="${AUSSPEND_DEPLOY_ROOT:-/srv/ausspend/client}"
+DEPLOY_ROOT="${AUSSPEND_DEPLOY_ROOT:-${HOME}/ausspend-client}"
 if [[ "$DEPLOY_ROOT" == "/" ]]; then
   fail "refusing to publish over /"
 fi

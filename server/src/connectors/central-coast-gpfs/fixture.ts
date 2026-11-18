@@ -58,7 +58,7 @@ const CONTEXT: CentralCoastGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/central-coast-gpfs/central-coast-council-audited-financial-statements-2024-25.pdf',
+      '~/ausspend-source-archive/central-coast-gpfs/central-coast-council-audited-financial-statements-2024-25.pdf',
     sha256: PDF_SHA256,
     bytes: PDF_BYTES,
     fetched_at: '2026-11-18T03:30:00.000Z',
