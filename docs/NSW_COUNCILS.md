@@ -855,6 +855,71 @@ FY2023-24 **17**, FY2024-25 **18**, FY2025-26 **19**; `data_sources` still **83*
 measure count changed is `dubbo-council-gpfs`; every other source is unchanged. A second ingest run
 fetched/upserted the same 107 natural keys and left the DB total at **693,427** (idempotent).
 
+#### 7.1.6 FY2019-20 historical variant (landed 2026-11-18)
+
+**Scope.** Add Dubbo Regional Council's audited **FY2019-20** GPFS as actual rows under the
+existing source id `dubbo-council-gpfs`, preserving FY2020-21 (18), FY2021-22 (18), FY2022-23 (17),
+FY2023-24 (17), FY2024-25 (18) and FY2025-26 (19). No older historical year and no other council is
+ingested here.
+
+**Source.** The reviewed D2 packet (`docs/source-discovery/dubbo-regional.md` §10) records the
+document
+<https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20%20Annual%20Financial%20Statements%202019%202020%20-%20Annual%20Report%20(1).pdf.aspx>
+and SHA-256 `d42c0ee29172672a693c0878a83a8c48d5b46c80881bc247f3f61b9f2e8c277e`. The connector
+re-discovers it from the reporting page (no hard-coded PDF URL) and archives the exact bytes outside
+the repo at
+`~/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2019-20.pdf`: **6,841,185
+bytes**, SHA-256 matching the packet exactly. The D2 archive copy at
+`~/ausspend-source-archive/dubbo-regional/2019-20/gpfs-2019-20.pdf` has the same hash. The printed
+unit is explicit `$'000` on the income statement (PDF p.4) and the functions note (PDF p.13).
+
+**Layout variant.** FY2019-20 uses inline face rows with one printed
+`Total expenses from continuing operations` line (145,084) and no "excluding depreciation"
+subtotal. Unlike the newer years, each row prints a numeric note reference immediately after its
+label (`3a`, `3d,3e`, `4`, `5c`, `6`, `16`, …); the parser anchors on the label **plus** that note
+reference, so a bare note number is never read as the current-year amount. The face adds a
+`Net gains from the disposal of assets` revenue line printed as a dash (nil, comparative 703), a
+`Net share of interests in joint ventures and associates using the equity method` revenue component
+(149), and a `Net losses from the disposal of assets` expense line (2,493). It prints
+`Materials and contracts` and `Depreciation and amortisation` rather than the newer labels.
+
+The functions note (Note 2(a), "Total functions and activities") equals the face on income
+(169,828), expenses (145,084) and result (24,744), but its printed grants column is **35,142**,
+which is **not** the sum of the two face grant lines (21,858 operating + 33,077 capital = 54,935).
+The 35,142 is retained as an independent printed anchor and the face grant lines are not adjusted,
+reconciled by force or replaced. No OLG anchor exists for FY2019-20.
+
+| Check                                                                                                                                |                                                                   Printed / derived | Result                            |
+| ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------: | --------------------------------- |
+| Revenue components sum (rates + user charges + other revenue + operating + capital grants + interest + nil disposal gain + JV share) | `64,587 + 42,455 + 1,986 + 21,858 + 33,077 + 5,716 + 0 + 149` = `$169,828` thousand | = printed total income            |
+| Expense components sum (employee + borrowing + materials + depreciation + other + disposal loss)                                     |           `45,200 + 3,691 + 36,364 + 42,261 + 15,075 + 2,493` = `$145,084` thousand | = printed total expenses          |
+| Total revenue − total expenses                                                                                                       |                                                                 `169,828 − 145,084` | = `$24,744` net result            |
+| Functions note Total functions and activities                                                                                        |          income `$169,828`; expenses `$145,084`; result `$24,744`; grants `$35,142` | face income/expenses/result agree |
+| Functions-note grants vs face grant lines                                                                                            |                                  `$35,142` printed vs `$21,858 + $33,077 = $54,935` | independent anchor; never forced  |
+| External anchor                                                                                                                      |                                                          none defined for FY2019-20 | not invented                      |
+
+The printed `(8,333)` net result before capital grants equals `24,744 − 33,077` capital grants and
+is stored as a non-negative magnitude with `gpfs_printed_sign: "negative"`. The printed nil disposal
+gain is stored as a printed zero with `printed_nil: true`, never the comparative 703.
+
+**Rows.** **18** rows for FY2019-20: 8 revenue components (including the nil disposal gain and the
+149 joint-venture share) + total revenue, 6 expense components (including the 2,493 disposal loss) +
+total expenses, and net result + net result before capital grants. Each row has
+`fiscal_year: "2019-20"`, `source_dataset: "Dubbo Regional Council GPFS 2019-20"`,
+`measure_type: "actual"`, `aggregation_role: "agency_detail"`, no `region_id`/`location`, and a
+year-scoped natural key. The 107 earlier rows are unchanged, so the source holds **125** distinct
+year-scoped rows; no row and no API total spans years.
+
+**Database evidence (2026-11-18).** On the pool Mongo scratch instance
+(`mongodb://127.0.0.1:27118`, database `ausspend_proof_dubbo_fy2019_20`) seeded with the six prior
+years' rows parsed from their archived PDFs (107) plus two existing `dubbo-council` rows:
+`measures` 109 → **127** (exactly **+18**); `dubbo-council-gpfs` 107 → **125** with FY2019-20
+**18**, FY2020-21 **18**, FY2021-22 **18**, FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**,
+FY2025-26 **19**; `dubbo-council` still **2**; `records_ingested` 125. Every pre-existing row's
+natural key, amount, source and fiscal year are unchanged, and the only source whose measure count
+changed is `dubbo-council-gpfs`. The automated seven-year ingestion test repeats this with a second
+ingest run to prove idempotency (`TEST_MONGO_URL=... npx vitest run server/test/dubbo-gpfs.test.ts`).
+
 ### 7.2 Second council — City of Sydney FY2024-25 GPFS (landed 2026-11-17)
 
 **Source.** Discovered from the official annual-report page
