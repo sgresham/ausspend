@@ -483,9 +483,10 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 generated [source register](./docs/sources/README.md) lists every id). **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
-(`data-gov-au-pbs`) is live** from the CKAN dataset
-`4f025f38-0c70-45e2-8106-4c29a5e48637`: `package_show` selects the "2025-26 PBS Program Expenses
-Line Items" CSV, which is streamed (Windows-1252, chunked, `csv-parse`) rather than loaded whole.
+(`data-gov-au-pbs`) is live for FY2020-21 through FY2025-26** from the six annual CKAN budget
+packages (FY2022-23 uses only the October final package): `package_show` selects each year's
+program-expense line-item CSV, which is streamed (Windows-1252, chunked, `csv-parse`) rather than
+loaded whole.
 **NSW Budget (`nsw-budget`) is live as of S1** from the official 2025-26 open-data XLSX
 snapshot plus the ArcGIS `Treasury_Project_Data_20260609_gdb` capital-projects layer. Each of the
 803 priced project rows carries structured `project_id`, `agency`, `sector`, `cluster`,
@@ -524,8 +525,9 @@ per-record error is logged as `error`/`partial` and marked `degraded`, and the r
 with the next source. AusTender rows are contract-shaped records: `measure_type: "contract"`,
 `jurisdiction_level: "federal"`, integer `amount_cents`, `natural_key` = `ocid`, and mandatory
 `source_dataset` / `source_url` / `source_date` / `data_quality_flag`. AusTender uses UNSPSC, which
-is stored verbatim and never mapped to COFOG. PBS rows are `measure_type: "budget"`, fiscal year
-`2025-26`, integer cents converted from the published `$'000` column, COFOG-A only where the
+is stored verbatim and never mapped to COFOG. PBS rows are `measure_type: "budget"`, each row keeps
+its own fiscal year (`2020-21` … `2025-26`), integer cents converted from that year's published
+`$'000` column, COFOG-A only where the
 portfolio is defensible (`provisional` otherwise), and `natural_key` = dataset id + stable row
 hash. PBS is not geographically tagged: `location.state` is literally `"Commonwealth"`.
 
