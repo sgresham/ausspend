@@ -31,6 +31,8 @@
     "pretypecheck": "npm run generate:connectors",
     "pretest": "npm run generate:connectors",
     "build": "npm run build -w shared && npm run build -w server && npm run build -w client",
+    "deploy:client": "bash scripts/deploy-client.sh",
+    "deploy:verify": "bash deploy/verify-client.sh",
     "seed": "npm run build -w shared && tsx scripts/seed.ts",
     "seed:real": "npm run build -w shared && tsx scripts/seed.ts --no-synthetic",
     "seed:synthetic": "npm run build -w shared && tsx scripts/seed.ts --synthetic",

@@ -1,31 +1,30 @@
 # Production cutover — ausspend.com.au
 
-Status as at 2026-11-17 (the database host, origin `localhost`, public `<public-origin-ip>`).
+Status as at 2026-11-18 (the database host, origin `localhost`, public `<public-origin-ip>`).
 
 ## TL;DR status
 
 | Piece                                                    | State                                                                                                                                  |
 | -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | nginx on host `:80` / `:443`                             | **LIVE** — nginx 1.18.0, `deploy/nginx/ausspend.conf.template` installed and enabled                                                   |
-| Static client (`${AUSSPEND_DEPLOY_ROOT}/client`)         | **LIVE** — built from this branch and copied to `${AUSSPEND_DEPLOY_ROOT}/client`                                                       |
+| Static client (`/srv/ausspend/client`)                   | **LIVE** — `index.html` references `assets/index-BqHi0MAj.js`; republished 2026-11-18 with `npm run deploy:client`                     |
 | API proxy `/api` → `127.0.0.1:3001`                      | **LIVE** — same-origin, GET/HEAD/OPTIONS only, rate-limited                                                                            |
 | TLS                                                      | **LIVE** — Cloudflare Origin CA cert, Full (strict)-capable; served from `${AUSSPEND_TLS_DIR}/` (root-only, never in git)              |
 | Cloudflare proxied DNS → origin                          | **LIVE and verified** — `curl --resolve …:<cloudflare-edge-ip>` returns 200 with `cf-ray`; CF edge IPs appear in the origin access log |
-| `docker-compose.yml` loopback bindings + `CLIENT_ORIGIN` | **STAGED** — applied on the next `docker compose up -d` from the deployed checkout                                                     |
-| Live container bindings                                  | **STILL PUBLIC** — `ausspend-server-1` 0.0.0.0:3001 and `ausspend-client-1` 0.0.0.0:5173 until that redeploy                           |
+| `docker-compose.yml` loopback bindings + `CLIENT_ORIGIN` | **LIVE** — `ss` shows `ausspend-server-1` on `127.0.0.1:3001` and `ausspend-client-1` on `127.0.0.1:5173` (verified 2026-11-18)        |
+| Live container bindings                                  | **LOOPBACK** — 3001/5173 are no longer published on 0.0.0.0                                                                            |
 
-The public site is reachable through Cloudflare. The only reason it is not
-claimed as fully finished is that the **live containers still publish 3001/5173
-on 0.0.0.0**; the repo now pins them to loopback but the running containers were
-not recreated (that would have restarted the owner's stack from a transient
-worktree). Final rebind happens on deploy — see "Remaining owner actions".
+The public site is reachable through Cloudflare, and the live containers are
+now bound to loopback (`127.0.0.1:3001` and `127.0.0.1:5173`; verified
+2026-11-18). Remaining owner actions are Cloudflare/RouterOS confirmation and
+optional origin hardening — see "Remaining owner actions".
 
 ## Architecture
 
 ```
 Internet → Cloudflare (proxied, Full strict) → <public-origin-ip>:443 (RouterOS NAT)
         → localhost:443 nginx
-            ├─ /, /legal, /soc, /benchmark, deep links → ${AUSSPEND_DEPLOY_ROOT}/client (SPA)
+            ├─ /, /legal, /soc, /benchmark, deep links → /srv/ausspend/client (SPA)
             └─ /api/* → 127.0.0.1:3001 (Express; GET/HEAD/OPTIONS only)
 ```
 
@@ -35,6 +34,10 @@ port 80 again.
 
 ## Files
 
+- `scripts/deploy-client.sh` — build + validate + publish `client/dist/` to
+  `AUSSPEND_DEPLOY_ROOT` (default `/srv/ausspend/client`) without sudo.
+- `deploy/verify-client.sh` — read-only live check of the deployed index, hashed
+  asset, `/api/v1/health`, `/trade` and `/coverage-limitations`.
 - `deploy/nginx/ausspend.conf.template` — the complete edge config (both server blocks,
   rate-limit zone, TLS, headers, SPA fallback, API proxy and blocks).
 - `docker-compose.yml` — app ports pinned to `127.0.0.1`; production
@@ -47,6 +50,60 @@ No certificate, key, token or `.env` is committed.
 
 ## Install / deploy
 
+Prerequisites: Node >=24 / npm 11, `rsync`, and one `npm ci` in the checkout. The publish
+script does **not** use sudo, secrets or container restarts when the deploy user owns the client
+root.
+
+### One-command client publish + verify
+
+```bash
+npm ci
+npm run deploy:client    # build shared+client, validate, publish to /srv/ausspend/client
+npm run deploy:verify    # read-only live check (public hostname)
+```
+
+`deploy:client` runs `scripts/deploy-client.sh`, which:
+
+- builds `shared` and `client`;
+- parses `client/dist/index.html` and requires every referenced `/assets/*` file to exist;
+- copies with `rsync -a --delete` to `${AUSSPEND_DEPLOY_ROOT:-/srv/ausspend/client}`;
+- `cmp`-verifies the copied `index.html` and every referenced asset;
+- exits non-zero with the exact owner-only fallback if the build or root is not writable.
+
+Useful variants:
+
+```bash
+# Path selection / no writes:
+AUSSPEND_DEPLOY_ROOT=/srv/ausspend/client bash scripts/deploy-client.sh --dry-run
+
+# Re-publish an existing client/dist without rebuilding:
+bash scripts/deploy-client.sh --skip-build
+
+# Custom root (the variable is the client static root, not its parent):
+AUSSPEND_DEPLOY_ROOT=/path/to/client bash scripts/deploy-client.sh
+```
+
+`deploy:verify` runs `deploy/verify-client.sh` and is read-only. It checks the deployed index,
+the hashed JS asset it references, `/api/v1/health`, `/trade` and `/coverage-limitations`; it also
+fails if the live asset differs from a local `client/dist/index.html` build. It never restarts
+nginx, Docker, the API or the database.
+
+```bash
+# Public hostname (normal TLS verification):
+npm run deploy:verify
+
+# Local origin, bypassing DNS but using the production Host/SNI:
+AUSSPEND_VERIFY_BASE_URL=https://ausspend.com.au \
+AUSSPEND_VERIFY_RESOLVE=ausspend.com.au:443:127.0.0.1 \
+AUSSPEND_VERIFY_INSECURE=1 \
+npm run deploy:verify
+```
+
+Verify environment: `AUSSPEND_VERIFY_BASE_URL` (default `https://ausspend.com.au`),
+`AUSSPEND_VERIFY_RESOLVE` (optional curl `--resolve`), `AUSSPEND_VERIFY_INSECURE=1` (pass `-k`).
+
+### First-time host install (nginx/TLS)
+
 ```bash
 # On the host (sudo -n works):
 sudo apt-get update -o Acquire::AllowReleaseInfoChange=true
@@ -56,17 +113,14 @@ sudo apt-get install -y nginx                       # nginx 1.18.0 on Ubuntu 22.
 sudo install -d -m 755 ${AUSSPEND_TLS_DIR}
 sudo install -m 600 -o root -g root $HOME/.secrets/ausspend-origin.pem ${AUSSPEND_TLS_DIR}/ausspend-origin.pem
 sudo install -m 600 -o root -g root $HOME/.secrets/ausspend-origin.key ${AUSSPEND_TLS_DIR}/ausspend-origin.key
+```
 
-# Build the static client and copy it to the served root.
-npm ci
-npm run build -w shared
-npm run build -w client
-sudo install -d -m 755 ${AUSSPEND_DEPLOY_ROOT}/client
-sudo rsync -a --delete client/dist/ ${AUSSPEND_DEPLOY_ROOT}/client/
+Render the edge config. **Note the two path conventions:** `deploy/render-nginx.sh` expects the
+**parent** root and appends `/client`; `scripts/deploy-client.sh` expects the **client** root
+directly.
 
-# Install the edge config from the template. render-nginx.sh substitutes only
-# ${AUSSPEND_DEPLOY_ROOT} and ${AUSSPEND_TLS_DIR}; nginx $variables are untouched.
-export AUSSPEND_DEPLOY_ROOT="$HOME/ausspend"
+```bash
+export AUSSPEND_DEPLOY_ROOT="/srv/ausspend"      # parent; render-nginx appends /client
 export AUSSPEND_TLS_DIR="$HOME/.config/ausspend/tls"
 sudo ./deploy/render-nginx.sh | sudo tee /etc/nginx/sites-available/ausspend.conf >/dev/null
 sudo ln -sf /etc/nginx/sites-available/ausspend.conf /etc/nginx/sites-enabled/ausspend.conf
@@ -77,6 +131,21 @@ sudo nginx -t && sudo systemctl reload nginx
 If the rate-limit key changes, a `reload` is refused with
 `limit_req … uses the "$…" key while previously it used …`; use
 `sudo systemctl restart nginx` once, then reloads work normally.
+
+### Manual fallback (kept)
+
+Use this only when the script cannot run (for example a root-owned deploy root and no writable
+parent):
+
+```bash
+npm ci
+npm run build -w shared
+npm run build -w client
+sudo install -d -m 755 /srv/ausspend/client
+sudo rsync -a --delete client/dist/ /srv/ausspend/client/
+```
+
+Then render/reload nginx as above and run the read-only `deploy:verify` checks.
 
 ## TLS / Cloudflare
 
@@ -152,8 +221,9 @@ curl -sk --resolve ausspend.com.au:443:127.0.0.1 'https://ausspend.com.au/api/sp
 curl -sk --resolve ausspend.com.au:443:127.0.0.1 -o /dev/null -w '%{http_code}\n' https://ausspend.com.au/api/source-documents   # 404
 
 # Through Cloudflare (refresh DNS if a stale A record is cached):
+npm run deploy:verify
 curl -sS https://ausspend.com.au/
-curl -sS https://ausspend.com.au/api/health
+curl -sS https://ausspend.com.au/api/v1/health
 
 # Host checks:
 sudo nginx -t
@@ -168,11 +238,9 @@ record.
 
 ## Remaining owner actions
 
-1. **Apply the loopback bindings** on the deployed checkout:
-   `cd ${AUSSPEND_DEPLOY_ROOT} && git pull && docker compose up -d server client`.
-   This recreates the two containers with `127.0.0.1:3001` / `127.0.0.1:5173`;
-   until then they remain reachable on `localhost:3001` and `:5173` (LAN) and
-   on any WAN port-forward.
+1. **Loopback bindings — done 2026-11-18.** `ss` shows `ausspend-server-1` on
+   `127.0.0.1:3001` and `ausspend-client-1` on `127.0.0.1:5173`. Re-check after
+   any container recreation.
 2. **Confirm Cloudflare SSL/TLS mode = Full (strict)** in the dashboard.
 3. **Confirm the RouterOS WAN 80/443 forward** and forward-accept ordering
    (traffic currently reaches the origin, so verify rather than assume).
@@ -180,8 +248,8 @@ record.
    rebind the unrelated `newpool-mongo-1` host port `27018` (currently
    `0.0.0.0:27018`) to loopback. `27017` is the host Mongo bound to
    `localhost` only; the app needs it and it is not on `0.0.0.0`.
-5. Once containers are rebound, verify `3001`/`5173` are unreachable from a
-   non-loopback host; then the cutover is complete.
+5. After every client publish, run `npm run deploy:verify`; deploy is not
+   complete until the index, asset, health and representative SPA routes pass.
 
 ## Rollback
 
@@ -194,7 +262,21 @@ sudo nginx -t && sudo systemctl reload nginx
 
 The running app containers are untouched by this change; only the edge is new.
 
-## Verified on 2026-11-17 (commands abbreviated)
+## Verified on 2026-11-18 (current)
+
+- `npm run deploy:client` built shared+client, published to `/srv/ausspend/client`,
+  and cmp-verified `index.html` plus the single referenced asset
+  `/assets/index-BqHi0MAj.js`.
+- `npm run deploy:verify` passed through the public hostname: index **200**,
+  asset **200**, `/api/v1/health` `ok=true`, `/trade` **200**,
+  `/coverage-limitations` **200**.
+- The same verify passed against the local origin with
+  `AUSSPEND_VERIFY_RESOLVE=ausspend.com.au:443:127.0.0.1` and
+  `AUSSPEND_VERIFY_INSECURE=1`; the live asset matched the local build.
+- `ss -ltnp` shows `127.0.0.1:3001` (server) and `127.0.0.1:5173` (client), and
+  nginx owns `0.0.0.0:80/443`.
+
+## Verified on 2026-11-17 (historical, commands abbreviated)
 
 - `nginx -t` — syntax ok, test successful (nginx/1.18.0).
 - Local SNI (`--resolve …:127.0.0.1`): `/` `/legal` `/soc` `/benchmark` deep
