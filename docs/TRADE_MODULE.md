@@ -67,14 +67,33 @@ Rows from different sources are never mixed into one total.
 - Goods are monthly, financial year derived from the ABS July–June year (`2024-07` → `2024-25`).
 - Services `TIME_PERIOD` is the start year of the ABS financial year (`2024` → `2024-25`, with the
   dataflow's `REPORTING_YEAR_START_DAY` `--07-01`).
-- The connector ingests 12 months of goods observations (`2024-07` to `2025-06`) and the services
-  `2024` financial year, satisfying the one-full-financial-year requirement.
+- The connector discovers the real dataflow range instead of hard-coding a one-year window. At the
+  2026-11-18 check the keyless API returned goods **1971-07–2026-09** (663 months) and services
+  **2000–2024** (25 financial years). Goods are fetched in bounded 60-month chunks (12 requests);
+  services in bounded per-year requests (25). The latest goods financial year, **2026-27**, is
+  partial (July–September).
 - It never derives a goods+services total: goods and services rows remain separate `trade_value`
   observations, and commodity categories are the source's own `DATA_ITEM` hierarchy (parents and
   children are not summed by the connector).
 - Ingestion is idempotent: each observation is upserted by its published dimensions
   (`source_dataset`, flow, measure, `commodity_code`, `time_period`, `financial_year`, location).
 - No profit field exists. A CIF/FOB margin remains the only cost proxy.
+
+**Latest-month external anchor (2026-11-18).** The ABS Sep-2026 `536801.xlsx` summary is archived
+outside the repo at `~/ausspend-source-archive/abs-trade/536801.xlsx` — **171,559 bytes**, SHA-256
+`4a55f3d60a43e3e976f4eb339137755bdc02e3ca4283db81762f1be1ec0760b4`. It prints seasonally adjusted
+total goods credits **48,434 $m** and debits **45,609 $m**. The Data API connector uses `TSEST=10`
+original series and returns Sep-2026 total goods credits **48,173 $m** and debits **46,547 $m**.
+The XLSX is a magnitude/existence check only (SA vs original; not an equality anchor) and is not
+ingested in place of the API.
+
+**Full-history database evidence (2026-11-18).** `trade_records` 3,966 → **35,145**;
+`abs-international-trade` 638 → **31,817** (31,179 new, 638 matched), with **31,767** goods and
+**50** services rows. The FY2024-25 ABS rows are unchanged (638-row canonical digest identical
+before/after). The non-ABS trade rows (OECD and every other trade source) are unchanged (3,328-row
+digest identical). `measures` is unchanged at **693,479** rows with the same per-source counts and
+amount sum. `data_sources.records_ingested` for ABS is **31,817**. A second run fetched the same
+range and upserted **0**, matched **31,817**, leaving all totals unchanged.
 
 ## OECD ITIC live ingestion
 
@@ -165,7 +184,9 @@ All routes are mounted under both `/api` and `/api/v1`; the versioned contract i
 `/api/v1/trade`.
 
 - `GET /api/v1/trade` — filters `trade_flow`, `measure_type`, `commodity`, `partner_country`,
-  `port`, `financial_year`; returns rows plus a summary grouped by `measure_type`.
+  `port`, `financial_year`; accepts bounded `limit` (default 200, max 500) and `offset`; returns
+  the page plus `counts.total`, a `pagination` object and a summary grouped by `measure_type`.
+- `GET /api/v1/trade/years` — distinct financial years available for the same filters, newest first.
 - `GET /api/v1/trade/summary` — grouped by `measure_type` and `trade_flow`; returns
   `additive: false` and an explicit non-additivity warning.
 - `GET /api/v1/trade/commodities` — distinct commodity names/codes with counts.
@@ -179,12 +200,14 @@ spending collection.
 
 The `/trade` page is a read-only ABS view and a top-level nav item. It consumes
 `GET /api/trade` with `measure_type=trade_value` and one `trade_flow` at a time, so the OECD
-CIF/FOB rows are not mixed into the ABS view. Filters are flow, financial year and commodity/service
-label. Rows keep their own published period, unit and `data_quality_flag`; the table renders at most
-20 rows per page and the page never computes or displays a combined trade total, a spending total or
-a profit figure. The warning copy states that trade value is not spending and not profit, and that
-trade measures and commodity parent/child rows are non-additive. Any CIF/FOB figure is labelled a
-border cost, not a margin. Empty, loading and API-error states are explicit.
+CIF/FOB rows are not mixed into the ABS view. It shows the available financial years from
+`GET /api/v1/trade/years`, defaults to the most recent year (which may be partial), and requests one
+financial year and one bounded 20-row server-side page at a time. A commodity/service filter is
+applied by the API. It never downloads the full history. Rows keep their own published period, unit
+and `data_quality_flag`; the page never computes or displays a combined trade total, a spending
+total or a profit figure. The warning copy states that trade value is not spending and not profit,
+and that trade measures and commodity parent/child rows are non-additive. Any CIF/FOB figure is
+labelled a border cost, not a margin. Empty, loading and API-error states are explicit.
 
 ## Separation from spending
 
@@ -235,4 +258,5 @@ is allowed to create a cross-source or cross-measure total.
   publish; the connector records an unweighted diagnostic and flags a mismatch without adjusting a
   published value.
 - Trade records are never mixed with `measures` / spending records.
-- The `/trade` frontend route remains deferred.
+- The `/trade` page is live for ABS trade values; it loads one flow/year page at a time and never fetches the full history.
+- The Sep-2026 ABS XLSX anchor is seasonally adjusted while the connector uses the original series; it is not an equality anchor and is never ingested.

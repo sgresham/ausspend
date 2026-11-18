@@ -81,7 +81,7 @@ export async function recordAbsTradeSource(recordCount: number): Promise<void> {
         errors: [],
         deferred_resources: [],
         notes:
-          'Keyless ABS Data API Beta: ITGS 1.2.0 current-price original monthly goods totals and DATA_ITEM commodity rows, plus TRADE_SERV_CNTRY_FY 1.0.0 total-services credits/debits by financial year. No goods+services total is derived.',
+          'Keyless ABS Data API Beta: ITGS 1.2.0 current-price original monthly goods totals and DATA_ITEM commodity rows from the earliest available month, plus every available TRADE_SERV_CNTRY_FY 1.0.0 total-services financial year. No goods+services total is derived.',
       },
     },
     { upsert: true },
@@ -115,6 +115,6 @@ export const connectorModule = {
     status: 'active' as const,
     license: ABS_TRADE_LICENSE,
     notes:
-      'ABS International Trade via the keyless Data API Beta (https://data.api.abs.gov.au/rest/). Goods: ITGS 1.2.0, MEASURE=M1 current prices, TSEST=10 original, REGION=AUS, FREQ=M, DATA_ITEM 1000/2000 plus printed commodity categories. Services: TRADE_SERV_CNTRY_FY 1.0.0, EXP_IMP EXP/IMP, EBOPS TOTAL, COUNTRY TOT, FREQ=A (FY labelled by 1 July start year). Trade values are observed AUD millions converted to integer cents; no goods+services total is derived and no spending measure is touched.',
+      'ABS International Trade via the keyless Data API Beta (https://data.api.abs.gov.au/rest/). Goods: ITGS 1.2.0, MEASURE=M1 current prices, TSEST=10 original, REGION=AUS, FREQ=M, DATA_ITEM 1000/2000 plus printed commodity categories, ingested from the discovered earliest month (1971-07 at the 2026-11-18 check) through the latest available month (2026-09). Services: TRADE_SERV_CNTRY_FY 1.0.0, EXP_IMP EXP/IMP, EBOPS TOTAL, COUNTRY TOT, FREQ=A, every available financial year (2000–2024) labelled by 1 July start year. Trade values are observed AUD millions converted to integer cents; no goods+services total is derived and no spending measure is touched.',
   }),
 } as const;

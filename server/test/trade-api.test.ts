@@ -51,7 +51,8 @@ describe('Trade API', () => {
     expect(list.status).toBe(200);
     expect(list.body.rows).toEqual([]);
     expect(list.body.summary).toEqual([]);
-    expect(list.body.counts).toEqual({ rows: 0, by_measure_type: {} });
+    expect(list.body.counts).toEqual({ rows: 0, total: 0, by_measure_type: {} });
+    expect(list.body.pagination).toEqual({ limit: 200, offset: 0, total: 0 });
     expect(list.body.warning).toMatch(/must never be summed/);
 
     const summary = await request(app).get('/api/v1/trade/summary');
@@ -70,6 +71,11 @@ describe('Trade API', () => {
     expect(partners.status).toBe(200);
     expect(partners.body.partners).toEqual([]);
     expect(partners.body.count).toBe(0);
+
+    const years = await request(app).get('/api/v1/trade/years');
+    expect(years.status).toBe(200);
+    expect(years.body.years).toEqual([]);
+    expect(years.body.count).toBe(0);
   });
 
   it('applies trade_flow, measure_type, commodity, partner, port and year filters', async () => {
@@ -120,6 +126,56 @@ describe('Trade API', () => {
     expect(response.body.summary).toEqual([
       { measure_type: 'trade_value', count: 1, amount_cents: 100_000 },
     ]);
+  });
+
+  it('applies bounded limit/offset pagination and exposes the total', async () => {
+    await TradeRecordModel.insertMany(
+      Array.from({ length: 5 }, (_, index) =>
+        trade({
+          financial_year: index < 2 ? '2024-25' : '2023-24',
+          time_period: index < 2 ? `2024-0${index + 7}` : `2023-0${index - 1}`,
+          commodity_code: `260${index}`,
+          amount_cents: 100_000 + index,
+        }),
+      ),
+    );
+
+    const first = await request(app)
+      .get('/api/v1/trade')
+      .query({ trade_flow: 'export', limit: 2, offset: 0 });
+    expect(first.status).toBe(200);
+    expect(first.body.rows).toHaveLength(2);
+    expect(first.body.counts.total).toBe(5);
+    expect(first.body.pagination).toEqual({ limit: 2, offset: 0, total: 5 });
+
+    const second = await request(app)
+      .get('/api/v1/trade')
+      .query({ trade_flow: 'export', limit: 2, offset: 2 });
+    expect(second.status).toBe(200);
+    expect(second.body.rows).toHaveLength(2);
+    expect(second.body.rows[0].id).not.toBe(first.body.rows[0].id);
+    expect(second.body.pagination).toEqual({ limit: 2, offset: 2, total: 5 });
+  });
+
+  it('lists available financial years in descending order with the flow filter', async () => {
+    await TradeRecordModel.insertMany([
+      trade({ financial_year: '2024-25' }),
+      trade({ financial_year: '2023-24' }),
+      trade({ financial_year: '2025-26', trade_flow: 'import' }),
+    ]);
+
+    const exports = await request(app).get('/api/v1/trade/years').query({ trade_flow: 'export' });
+    expect(exports.status).toBe(200);
+    expect(exports.body.years).toEqual(['2024-25', '2023-24']);
+
+    const all = await request(app).get('/api/v1/trade/years');
+    expect(all.body.years).toEqual(['2025-26', '2024-25', '2023-24']);
+  });
+
+  it('rejects an invalid pagination limit with a 400', async () => {
+    const response = await request(app).get('/api/v1/trade?limit=1000');
+    expect(response.status).toBe(400);
+    expect(response.body.ok).toBe(false);
   });
 
   it('rejects an invalid trade flow with a 400', async () => {

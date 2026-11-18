@@ -8,6 +8,9 @@ import {
   ABS_TRADE_SERVICES_VERSION,
   absGoodsUrl,
   absServicesUrl,
+  buildGoodsChunks,
+  discoverAbsGoodsRange,
+  discoverAbsServicesYears,
   fetchAbsTradeRecords,
   financialYearForLabelYear,
   financialYearForMonth,
@@ -17,9 +20,26 @@ import {
   upsertAbsTradeRecords,
 } from '../src/connectors/trade/abs-trade/index.js';
 import { TradeRecordModel } from '../src/models/index.js';
-import { ABS_GOODS_FIXTURE, ABS_SERVICES_FIXTURE } from './fixtures/abs-trade-fixtures.js';
+import {
+  ABS_GOODS_FIXTURE,
+  ABS_SERVICES_FIXTURE,
+  goodsFixtureForPeriods,
+  servicesFixtureForYears,
+} from './fixtures/abs-trade-fixtures.js';
 
 const SOURCE_DATE = '2026-11-18';
+
+function monthsBetween(start: string, end: string): string[] {
+  const [startYear, startMonth] = start.split('-').map(Number);
+  const [endYear, endMonth] = end.split('-').map(Number);
+  const periods: string[] = [];
+  let cursor = startYear * 12 + (startMonth - 1);
+  const last = endYear * 12 + (endMonth - 1);
+  for (; cursor <= last; cursor += 1) {
+    periods.push(`${Math.floor(cursor / 12)}-${String((cursor % 12) + 1).padStart(2, '0')}`);
+  }
+  return periods;
+}
 
 function goodsRecords() {
   return parseAbsGoods(ABS_GOODS_FIXTURE, {
@@ -47,7 +67,7 @@ describe('ABS Data API Beta endpoints', () => {
     expect(absGoodsUrl('2024-07', '2025-06')).not.toMatch(/rest\/v1/);
   });
 
-  it('sends no API key and fetches goods and services separately', async () => {
+  it('fetches bounded goods chunks and per-year services without an API key', async () => {
     const calls: Array<{ url: string; headers: Record<string, string> }> = [];
     const fetchImpl: typeof fetch = async (input, init) => {
       const url = String(input);
@@ -55,24 +75,81 @@ describe('ABS Data API Beta endpoints', () => {
         url,
         headers: Object.fromEntries(new Headers(init?.headers).entries()),
       });
-      const body = url.includes(ABS_TRADE_GOODS_DATAFLOW)
-        ? ABS_GOODS_FIXTURE
-        : ABS_SERVICES_FIXTURE;
-      return new Response(JSON.stringify(body), {
-        status: 200,
-        headers: { 'content-type': 'application/vnd.sdmx.data+json; version=2.0' },
-      });
+      const parsed = new URL(url);
+      if (url.includes(ABS_TRADE_GOODS_DATAFLOW)) {
+        const start = parsed.searchParams.get('startPeriod')!;
+        const end = parsed.searchParams.get('endPeriod')!;
+        return Response.json(goodsFixtureForPeriods(monthsBetween(start, end)));
+      }
+      const year = parsed.searchParams.get('startPeriod')!;
+      return Response.json(servicesFixtureForYears([year]));
     };
     const result = await fetchAbsTradeRecords({
       fetchImpl,
+      goodsStartPeriod: '2015-07',
+      goodsEndPeriod: '2015-10',
+      goodsChunkMonths: 2,
+      servicesStartYear: '2000',
+      servicesEndYear: '2001',
       now: () => new Date('2026-11-18T00:00:00.000Z'),
     });
-    expect(calls).toHaveLength(2);
+
+    expect(calls).toHaveLength(4);
     expect(calls.every((call) => call.headers['x-api-key'] === undefined)).toBe(true);
-    expect(result.goodsObservations).toBe(6);
-    expect(result.servicesObservations).toBe(2);
-    expect(result.records).toHaveLength(8);
+    expect(result.goodsUrls).toHaveLength(2);
+    expect(result.servicesUrls).toHaveLength(2);
+    expect(result.goodsEarliestPeriod).toBe('2015-07');
+    expect(result.goodsLatestPeriod).toBe('2015-10');
+    expect(result.servicesYears).toEqual(['2000', '2001']);
+    expect(result.goodsObservations).toBe(12);
+    expect(result.servicesObservations).toBe(4);
+    expect(result.records).toHaveLength(16);
     expect(result.sourceDate).toBe('2026-11-18');
+  });
+
+  it('splits goods history into bounded inclusive chunks', () => {
+    expect(buildGoodsChunks('2015-07', '2015-10', 2)).toEqual([
+      { start: '2015-07', end: '2015-08' },
+      { start: '2015-09', end: '2015-10' },
+    ]);
+    expect(buildGoodsChunks('1971-07', '1971-07', 60)).toEqual([
+      { start: '1971-07', end: '1971-07' },
+    ]);
+  });
+
+  it('discovers the real goods range and every available services year', async () => {
+    const goodsPeriods = ['1971-07', '1971-08', '2026-07', '2026-08', '2026-09'];
+    const fetchImpl: typeof fetch = async (input) => {
+      const url = String(input);
+      const parsed = new URL(url);
+      if (url.includes(ABS_TRADE_GOODS_DATAFLOW)) {
+        const start = parsed.searchParams.get('startPeriod')!;
+        const end = parsed.searchParams.get('endPeriod')!;
+        const periods = goodsPeriods.filter((period) => period >= start && period <= end);
+        return Response.json(goodsFixtureForPeriods(periods));
+      }
+      const start = parsed.searchParams.get('startPeriod')!;
+      const years = start === '1970' ? ['2000', '2024'] : [start];
+      return Response.json(servicesFixtureForYears(years));
+    };
+
+    const goods = await discoverAbsGoodsRange(
+      fetchImpl,
+      () => new Date('2026-11-18T00:00:00.000Z'),
+    );
+    expect(goods).toEqual({ earliestPeriod: '1971-07', latestPeriod: '2026-09' });
+    await expect(discoverAbsServicesYears(fetchImpl)).resolves.toEqual(['2000', '2024']);
+  });
+
+  it('parses multi-year goods including the earliest and latest partial financial years', () => {
+    const records = parseAbsGoods(
+      goodsFixtureForPeriods(['1971-07', '2026-07', '2026-08', '2026-09']),
+      { sourceDate: SOURCE_DATE, sourceUrl: absGoodsUrl('1971-07', '2026-09') },
+    );
+    expect(records).toHaveLength(12);
+    expect(records.filter((record) => record.financial_year === '1971-72')).toHaveLength(3);
+    expect(records.filter((record) => record.financial_year === '2026-27')).toHaveLength(9);
+    expect(records.some((record) => record.time_period === '2026-09')).toBe(true);
   });
 });
 
