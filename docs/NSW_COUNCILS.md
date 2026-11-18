@@ -910,15 +910,13 @@ total expenses, and net result + net result before capital grants. Each row has
 year-scoped natural key. The 107 earlier rows are unchanged, so the source holds **125** distinct
 year-scoped rows; no row and no API total spans years.
 
-**Database evidence (2026-11-18).** On the pool Mongo scratch instance
-(`mongodb://127.0.0.1:27118`, database `ausspend_proof_dubbo_fy2019_20`) seeded with the six prior
-years' rows parsed from their archived PDFs (107) plus two existing `dubbo-council` rows:
-`measures` 109 → **127** (exactly **+18**); `dubbo-council-gpfs` 107 → **125** with FY2019-20
-**18**, FY2020-21 **18**, FY2021-22 **18**, FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**,
-FY2025-26 **19**; `dubbo-council` still **2**; `records_ingested` 125. Every pre-existing row's
-natural key, amount, source and fiscal year are unchanged, and the only source whose measure count
-changed is `dubbo-council-gpfs`. The automated seven-year ingestion test repeats this with a second
-ingest run to prove idempotency (`TEST_MONGO_URL=... npx vitest run server/test/dubbo-gpfs.test.ts`).
+**Database evidence (2026-11-18, shared dev DB).** Ingesting only this source into
+`mongodb://10.10.10.30:27017/ausspend_dev` took `measures` **693,444 → 693,462** (exactly **+18**);
+`dubbo-council-gpfs` **107 → 125** with FY2019-20 **18**, FY2020-21 **18**, FY2021-22 **18**,
+FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**, FY2025-26 **19**. A full per-source diff
+showed **only** `dubbo-council-gpfs` changed; no other source increased or decreased and no rows
+were deleted. Every pre-existing row's natural key, amount, source and fiscal year are unchanged.
+The automated seven-year ingestion test repeats the ingest to prove idempotency.
 
 ### 7.2 Second council — City of Sydney FY2024-25 GPFS (landed 2026-11-17)
 
