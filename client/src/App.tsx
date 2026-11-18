@@ -4,6 +4,7 @@ import { DiscoveryProvider } from './search/DiscoveryProvider';
 import { Layout } from './components/Layout';
 import { AboutPage } from './pages/AboutPage';
 import { BenchmarkPage } from './pages/BenchmarkPage';
+import { CoverageLimitationsPage } from './pages/CoverageLimitationsPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
 import { FunctionsPage } from './pages/FunctionsPage';
 import { HomePage } from './pages/HomePage';
@@ -34,6 +35,7 @@ export function App() {
             <Route path="/benchmark" element={<BenchmarkPage />} />
             <Route path="/soc" element={<SocPage />} />
             <Route path="/data-sources" element={<DataSourcesPage />} />
+            <Route path="/coverage-limitations" element={<CoverageLimitationsPage />} />
             <Route path="/legal" element={<LegalPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/how-it-was-built" element={<HowBuiltPage />} />
