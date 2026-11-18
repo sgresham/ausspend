@@ -48,7 +48,7 @@ GPFS (**§7.33**) then added exactly **18** `mosman-gpfs` rows (**693,113** → 
 concurrent Lane Cove rows later took the live total to **693,148**. On the shared dev DB (after
 concurrent rows reached **693,177**), Hawkesbury City Council FY2024-25 GPFS (**§7.34**) then added
 exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**). Woollahra Municipal Council FY2024-25 GPFS (**§7.35**) was ingested against the earlier shared-dev snapshot: it added exactly **29** `woollahra-gpfs` rows (**693,148** → **693,177**), and the concurrent Hawkesbury landing later took the live total to **693,196**.
-Blue Mountains City Council FY2024-25 GPFS (**§7.36**) also landed as a connector; its 23 rows are in the shared DB, and the live total **693,237** also includes the concurrent Wollondilly Shire Council FY2024-25 GPFS ingest (**§7.37**, 18 `wollondilly-gpfs` rows). At Camden claim time the shared dev DB held **693,259** measures; Camden Council FY2024-25 GPFS (**§7.38**) then added exactly **23** `camden-gpfs` rows (**693,259** → **693,282**), with every other per-source count unchanged; a second ingest was a no-op. The next claim-time snapshot for Central Coast Council FY2024-25 GPFS (**§7.40**) was **693,282** (already including Campbelltown City Council FY2024-25 GPFS, §7.39, 22 `campbelltown-gpfs` rows); Central Coast then added exactly **17** `central-coast-gpfs` rows (**693,282** → **693,299**), with every other per-source count unchanged and a no-op second ingest. The claim-time snapshot for Penrith City Council FY2024-25 GPFS (**§7.42**) was **693,299** with **746** GPFS rows across **41** sources; a concurrent unrelated council added 39 rows before the pre-ingest snapshot (**693,338**), after which Penrith added exactly **17** `penrith-gpfs` rows (**693,338** → **693,355**, GPFS **802** across **43** sources), with every other per-source count unchanged and a no-op second ingest. The claim-time snapshot for The Hills Shire Council FY2024-25 GPFS (**§7.43**) was **693,427** measures with **874** GPFS rows across **43** sources; The Hills then added exactly **17** `the-hills-gpfs` rows (**693,427** → **693,444**, GPFS **891** across **44** sources), with every other per-source count unchanged and a no-op second ingest; a concurrent `dubbo-council-gpfs` historical addition (107 → 125 rows) later took the live total to **693,462**.
+Blue Mountains City Council FY2024-25 GPFS (**§7.36**) also landed as a connector; its 23 rows are in the shared DB, and the live total **693,237** also includes the concurrent Wollondilly Shire Council FY2024-25 GPFS ingest (**§7.37**, 18 `wollondilly-gpfs` rows). At Camden claim time the shared dev DB held **693,259** measures; Camden Council FY2024-25 GPFS (**§7.38**) then added exactly **23** `camden-gpfs` rows (**693,259** → **693,282**), with every other per-source count unchanged; a second ingest was a no-op. The next claim-time snapshot for Central Coast Council FY2024-25 GPFS (**§7.40**) was **693,282** (already including Campbelltown City Council FY2024-25 GPFS, §7.39, 22 `campbelltown-gpfs` rows); Central Coast then added exactly **17** `central-coast-gpfs` rows (**693,282** → **693,299**), with every other per-source count unchanged and a no-op second ingest. The claim-time snapshot for Penrith City Council FY2024-25 GPFS (**§7.42**) was **693,299** with **746** GPFS rows across **41** sources; a concurrent unrelated council added 39 rows before the pre-ingest snapshot (**693,338**), after which Penrith added exactly **17** `penrith-gpfs` rows (**693,338** → **693,355**, GPFS **802** across **43** sources), with every other per-source count unchanged and a no-op second ingest. The claim-time snapshot for The Hills Shire Council FY2024-25 GPFS (**§7.43**) was **693,427** measures with **874** GPFS rows across **43** sources; The Hills then added exactly **17** `the-hills-gpfs` rows (**693,427** → **693,444**, GPFS **891** across **44** sources), with every other per-source count unchanged and a no-op second ingest; a concurrent `dubbo-council-gpfs` historical addition (107 → 125 rows) later took the live total to **693,462**. Dubbo's own FY2018-19 historical variant (**§7.1.7**) then added exactly **17** `dubbo-council-gpfs` rows (**125 → 142**), taking the live total to **693,479** with every other per-source count unchanged; a second ingest was a no-op.
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -299,7 +299,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 909 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 926 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -331,9 +331,9 @@ Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY20
 17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
-GPFS rows. The shared dev DB currently records **44** active `data_sources` GPFS entries and **909**
+GPFS rows. The shared dev DB currently records **44** active `data_sources` GPFS entries and **926**
 GPFS measures, from a fresh aggregate of `source_id` matching `/gpfs$/` (2026-11-18, after the
-§7.43 The Hills landing and a concurrent `dubbo-council-gpfs` historical addition); this is the live
+§7.43 The Hills landing and the §7.1.7 Dubbo FY2018-19 historical addition); this is the live
 DB count, not an increment of the earlier table total.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
@@ -917,6 +917,68 @@ FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**, FY2025-26 **19**. A full p
 showed **only** `dubbo-council-gpfs` changed; no other source increased or decreased and no rows
 were deleted. Every pre-existing row's natural key, amount, source and fiscal year are unchanged.
 The automated seven-year ingestion test repeats the ingest to prove idempotency.
+
+#### 7.1.7 FY2018-19 historical variant (landed 2026-11-18)
+
+**Scope.** Add Dubbo Regional Council's audited **FY2018-19** GPFS as actual rows under the
+existing source id `dubbo-council-gpfs`, preserving FY2019-20 (18), FY2020-21 (18), FY2021-22 (18),
+FY2022-23 (17), FY2023-24 (17), FY2024-25 (18) and FY2025-26 (19). No older historical year and no
+other council is ingested here.
+
+**Source.** The reviewed D2 packet (`docs/source-discovery/dubbo-regional.md` §10) records the
+document
+<https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Financial%20Statements%202018-19.pdf.aspx>
+and SHA-256 `f95027b5bcaf2dc12e9f9b9c752170f2694d88c15b07f170dbda761d5d2034ea`. The connector
+re-discovers it from the reporting page (no hard-coded PDF URL) and archives the exact bytes outside
+the repo at
+`~/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2018-19.pdf`:
+**5,224,896 bytes**, SHA-256 matching the packet exactly. The D2 archive copy at
+`~/ausspend-source-archive/dubbo-regional/2018-19/gpfs-2018-19.pdf` has the same hash. The printed
+unit is explicit `$'000` on the income statement (PDF p.5) and the functions note (PDF p.15).
+
+**Layout variant.** FY2018-19 prints inline face rows in three columns — Original unaudited budget,
+Actual current year and Restated prior year — with a numeric note reference after each label (`3a`,
+`3b`, `3c`, `3d`, `3e,3f`, `5`, `14`, `4a` …). The budget amount is printed _before_ the label and
+the two actual columns after it, so the parser anchors on the label plus its note reference and
+takes the first amount after it: the **Actual 2019** column, never the budget or the restated 2018
+comparative. The year prints `Interest and investment revenue`, `Materials and contracts` and
+`Depreciation and amortisation` rather than the newer labels, and has no disposal-loss expense line;
+the disposal gain (703) and the joint-venture share (49) are revenue components.
+
+The functions note (Note 2(a), "Total functions and activities") equals the face on income
+(184,140), expenses (136,358) and result (47,782), but its printed grants column is **44,452**,
+which is **not** the sum of the two face grant lines (18,610 operating + 47,179 capital = 65,789).
+The 44,452 is retained as an independent printed anchor and the face grant lines are not adjusted,
+reconciled by force or replaced. No OLG anchor exists for FY2018-19.
+
+| Check                                                                                                                      |                                                                    Printed / derived | Result                            |
+| -------------------------------------------------------------------------------------------------------------------------- | -----------------------------------------------------------------------------------: | --------------------------------- |
+| Revenue components sum (rates + user charges + interest + other revenue + operating + capital grants + disposal gain + JV) | `62,438 + 46,393 + 6,834 + 1,934 + 18,610 + 47,179 + 703 + 49` = `$184,140` thousand | = printed total income            |
+| Expense components sum (employee + borrowing + materials + depreciation + other)                                           |                    `40,104 + 4,435 + 35,017 + 39,902 + 16,900` = `$136,358` thousand | = printed total expenses          |
+| Total revenue − total expenses                                                                                             |                                                                  `184,140 − 136,358` | = `$47,782` net result            |
+| Functions note Total functions and activities                                                                              |           income `$184,140`; expenses `$136,358`; result `$47,782`; grants `$44,452` | face income/expenses/result agree |
+| Functions-note grants vs face grant lines                                                                                  |                                   `$44,452` printed vs `$18,610 + $47,179 = $65,789` | independent anchor; never forced  |
+| External anchor                                                                                                            |                                                           none defined for FY2018-19 | not invented                      |
+
+The printed net result before capital grants is `603` (`47,782 − 47,179` capital grants) and is
+stored as a positive magnitude.
+
+**Rows.** **17** rows for FY2018-19: 8 revenue components (including the 703 disposal gain and the
+49 joint-venture share) + total revenue, 5 expense components + total expenses, and net result + net
+result before capital grants. Each row has `fiscal_year: "2018-19"`,
+`source_dataset: "Dubbo Regional Council GPFS 2018-19"`, `measure_type: "actual"`,
+`aggregation_role: "agency_detail"`, no `region_id`/`location`, and a year-scoped natural key. The
+125 earlier rows are unchanged, so the source holds **142** distinct year-scoped rows; no row and no
+API total spans years.
+
+**Database evidence (2026-11-18, shared dev DB).** Ingesting only this source into
+`mongodb://10.10.10.30:27017/ausspend_dev` took `measures` **693,462 → 693,479** (exactly **+17**);
+`dubbo-council-gpfs` **125 → 142** with FY2018-19 **17**, FY2019-20 **18**, FY2020-21 **18**,
+FY2021-22 **18**, FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**, FY2025-26 **19**. A full
+per-source diff showed **only** `dubbo-council-gpfs` changed; no other source increased or decreased
+and no rows were deleted or modified. Every pre-existing row's natural key, amount, source and fiscal
+year are unchanged. A second ingest was a no-op (measures stayed **693,479**), and the automated
+eight-year ingestion test repeats the ingest to prove idempotency.
 
 ### 7.2 Second council — City of Sydney FY2024-25 GPFS (landed 2026-11-17)
 
