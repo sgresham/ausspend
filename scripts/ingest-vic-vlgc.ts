@@ -16,8 +16,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * VIC council pilot A — VLGGC VGC1 2024-25 ingestion (all 79 councils).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
- *   AUSSPEND_SOURCE_ARCHIVE=/home/steve/ausspend-source-archive \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
+ *   AUSSPEND_SOURCE_ARCHIVE=${AUSSPEND_SOURCE_ARCHIVE} \
  *   VGC1_SOURCE_PATH=/path/to/2024-25-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx \
  *   npm run ingest:vic-vlgc
  *

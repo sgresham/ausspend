@@ -24,7 +24,7 @@ import { runIngestion } from '../src/connectors/runner.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_act`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_act`;
 
 const YEARS = ['2021-22', '2022-23', '2023-24', '2024-25', '2025-26'] as const;
 const YEAR_FIELDS = [

@@ -17,7 +17,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * NT Budget 2026-27 — COFOG-A capital works (Budget Paper No. 4, Table 3).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   npm run ingest:nt-budget
  *
  * The NT budget site is Cloudflare-gated; the PDF is retrieved through the

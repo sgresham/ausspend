@@ -74,8 +74,7 @@ const CONTEXT: WaverleyGpfsParseContext = {
     listing_url: WAVERLEY_GPFS_REPORTING_URL,
   },
   archive: {
-    local_path:
-      '/home/steve/ausspend-source-archive/waverley-gpfs/Annual_Financial_Statements_2025.pdf',
+    local_path: '/tmp/ausspend-source-archive/waverley-gpfs/Annual_Financial_Statements_2025.pdf',
     sha256: 'b62cd275e63ae3ab8c7d72c9c84480f526e8829bcde9bbceed185d9a068216da',
     bytes: 5_312_088,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -328,7 +327,7 @@ describe('Waverley GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_waverleygpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_waverleygpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

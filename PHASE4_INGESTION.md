@@ -141,7 +141,7 @@ scope (2025-26 and 2026-27 budget columns) is settled.
 ## Ingestion and idempotency
 
 ```bash
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo \
 npm run ingest:phase4
 ```
@@ -327,7 +327,7 @@ resource is still idempotent.
 ## Ingestion and idempotency
 
 ```
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:phase4 -- --source=qld-qgip
+MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:phase4 -- --source=qld-qgip
 ```
 
 The runner upserts on `natural_key`, so a second run updates the same 34,000 documents and creates
@@ -490,7 +490,7 @@ or an expense-incurred location. The connector never infers an HQ. No coordinate
 ## Ingestion and idempotency
 
 ```
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:phase4 -- --source=acnc-charity
+MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:phase4 -- --source=acnc-charity
 ```
 
 The runner upserts on `natural_key`, so re-running updates the same documents and creates none. It
@@ -634,7 +634,7 @@ ABS GFS is a **top-down statistical benchmark**, not a sum of projects:
 ## Ingestion and idempotency
 
 ```
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:phase4 -- --source=abs-gfs
+MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:phase4 -- --source=abs-gfs
 ```
 
 The runner upserts on `natural_key`, so re-running updates the same 169 documents and creates none.

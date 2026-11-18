@@ -37,10 +37,7 @@ test('a single measure-type filter shows the headline total', async ({ page }) =
 test('filter changes update the URL and reload restores the state', async ({ page }) => {
   await page.goto('/search');
 
-  await page
-    .getByTestId('spending-filters')
-    .getByRole('combobox', { name: 'Function' })
-    .click();
+  await page.getByTestId('spending-filters').getByRole('combobox', { name: 'Function' }).click();
   await page.getByRole('option', { name: '07 — Health' }).click();
 
   await expect(page).toHaveURL(/function=07/);

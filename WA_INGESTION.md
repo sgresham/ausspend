@@ -107,13 +107,13 @@ with each other, with years, or with another source.
 
 ```bash
 # WA row count and measure/table split
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.measures.countDocuments({source_id:"wa-budget"});
   db.measures.aggregate([{$match:{source_id:"wa-budget"}},
     {$group:{_id:{measure:"$wa_budget_measure",type:"$measure_type"},n:{$sum:1}}}]).toArray();
 '
 # unit/sign and no-sum evidence
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.measures.find({source_id:"wa-budget"}, {amount_cents:1,wa_printed_sign:1,aggregation_role:1,wa_budget_table:1}).limit(3)
 '
 ```

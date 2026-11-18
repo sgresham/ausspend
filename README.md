@@ -42,7 +42,7 @@ client, an Express API and shared TypeScript/Zod contracts.
 ## Requirements
 
 - **One-command flow** — Docker Engine with Compose v2 (v5.3.1 used here), plus network access to
-  host `q` at `10.10.10.30:27017`.
+  the database host at `localhost:27017`.
 - **Local non-Docker flow** — Node.js >= 24 (pinned in `package.json` `engines`; developed on Node
   24.14.1) and npm 11.11.0 (pinned via `packageManager`).
 - Ports **3001** (API) and **5173** (client) must be free before either flow starts.
@@ -53,11 +53,30 @@ The application database is an external MongoDB, never the pool Mongo. Point `MO
 own instance:
 
 ```
+# MongoDB: required in production; localhost default is only for development.
 MONGO_URL=mongodb://localhost:27017/ausspend_dev
+
+# API/client ports and browser origin.
 PORT=3001
+SERVER_PORT=3001
+CLIENT_PORT=5173
 CLIENT_ORIGIN=http://localhost:5173
+PUBLIC_ORIGIN=http://localhost:5173
 VITE_API_PROXY_TARGET=http://localhost:3001
+
+# Downloaded source documents and database backups (outside the repo).
+AUSSPEND_SOURCE_ARCHIVE=~/ausspend-source-archive
+AUSSPEND_BACKUP_ROOT=~/ausspend-backups
+
+# Deployment paths used by deploy/render-nginx.sh and the systemd units.
+AUSSPEND_DEPLOY_ROOT=~/ausspend
+AUSSPEND_TLS_DIR=~/.config/ausspend/tls
 ```
+
+No internal IP, production hostname or user-specific absolute path is committed. The systemd
+backup unit uses `%h` and an optional mode-600 `EnvironmentFile`; the nginx config is a template
+rendered by `deploy/render-nginx.sh`. `npm run check:env-leaks` fails on private IPs, the known
+deployment IPs, `/home/<user>` paths, the old one-letter database hostname, and internal deploy paths outside a template.
 
 `MONGO_URL` is required by the dev compose file (it deliberately has **no `mongo` service**). Keep
 credentials in your shell or an untracked `.env`, never in the repository. The application creates
@@ -126,7 +145,7 @@ containers from other compose projects.
 ```bash
 cp .env.example .env               # optional; set MONGO_URL explicitly to be safe
 npm ci
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run seed                       # refuses anything except ausspend_dev
 npm run dev                        # builds shared, then API :3001 + client :5173
 ```
@@ -137,7 +156,7 @@ Or run one side at a time: `npm run dev:server`, `npm run dev:client`. The Vite 
 
 ## Seed data
 
-The seed only ever touches the `ausspend_dev` database on host `q`. It refuses to run against any
+The seed only ever touches the `ausspend_dev` database on the database host. It refuses to run against any
 other database name, so a stray `MONGO_URL` cannot wipe unrelated data.
 
 **Real-only default.** `npm run seed` writes the national/state/territory regions, the ten COFOG
@@ -148,7 +167,7 @@ recreate synthetic rows or wipe real data. `npm run seed:real` is an explicit al
 mode. The compose `seed` service defaults to `SEED_MODE=real`.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run seed
 # [seed] target database: ausspend_dev (mode=real, non-destructive)
 # [seed] mode=real sources=… regions=9 functions=53 measures=348939 synthetic=0 synthetic_written=0 non_synthetic=348939
@@ -161,7 +180,7 @@ npm run seed
 isolated development only; the live database no longer contains those rows.
 
 **Synthetic-seed retirement (executed).** On 2026-11-17 a verified backup was taken at
-`/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures, 810 synthetic), then
+`~/ausspend-backups/2026-11-17T03-26-35.175Z` (349,749 measures, 810 synthetic), then
 `npm run clean:synthetic -- --execute --backup <dir>` deleted exactly the 810
 `source_id: synthetic-seed` measures and its one source-register document. The database is now
 **348,939 measures, 0 synthetic**, and every real source count is unchanged. `npm run clean:synthetic`
@@ -178,7 +197,7 @@ npm run seed -- --reset          # or SEED_RESET=1 npm run seed
 
 It deletes every measure, function, region and data source before seeding. There is no profile or
 default that runs it. The seed also refuses a missing `MONGO_URL` and any database whose name is
-not exactly `ausspend_dev` (for example `mongodb://10.10.10.30:27017/some_other_db`), exiting
+not exactly `ausspend_dev` (for example `mongodb://localhost:27017/some_other_db`), exiting
 nonzero before it changes anything.
 
 ## Backup, restore and the AusTender backfill gate
@@ -234,14 +253,14 @@ territory and local registers (WA/SA/TAS active, ACT/NT territory active, QLD lo
 local explicitly deferred). See [PHASE6_INGESTION.md](PHASE6_INGESTION.md) for the register, unit
 decisions, degraded-SOC recovery and limitations.
 The pre-removal
-backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
+backup is `~/ausspend-backups/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future
 historical backfill:
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run db:backup -- --prune 14
-# [backup] wrote /home/steve/backups/ausspend/<timestamp>
+# [backup] wrote ~/ausspend-backups/<timestamp>
 # [backup] collection measures: 348939
 # [backup] natural_key count=348939 distinct=348939 checksum=...
 # [backup] data_sources abs-gfs=active acnc-charity=active aus-tender=active ... vic-budget=active
@@ -250,7 +269,7 @@ npm run db:backup -- --prune 14
 `db:backup` reads `MONGO_URL`, refuses anything except `ausspend_dev` (or an explicit
 `--scratch` `ausspend_test_*`/`ausspend_restore_test_*` database), and writes every collection as
 Extended JSON to a timestamped directory **outside the repository**. The default root is
-`/home/steve/backups/ausspend` (`AUSSPEND_BACKUP_ROOT` or `--out-root` overrides it). The manifest
+`~/ausspend-backups` (`AUSSPEND_BACKUP_ROOT` or `--out-root` overrides it). The manifest
 records every collection count and index, the `data_sources` statuses, and the `natural_key`
 count, distinct count and SHA-256 checksum. `MONGO_URL` is redacted in logs and never written with
 credentials. `--prune 14` removes only old timestamped backup directories under that root.
@@ -258,8 +277,8 @@ credentials. `--prune 14` removes only old timestamped backup directories under 
 Restore into a **scratch database by default**; this is the only routine restore path:
 
 ```bash
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
-  npm run db:restore -- /home/steve/backups/ausspend/2026-11-16T11-04-33.153Z \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
+  npm run db:restore -- ~/ausspend-backups/2026-11-16T11-04-33.153Z \
   --target ausspend_restore_test_20261116_safety1
 # [restore] verify natural_key count=2092 distinct=2092 checksum=...
 # [restore] OK target=ausspend_restore_test_20261116_safety1
@@ -286,7 +305,7 @@ The gate refuses a missing, stale, truncated or checksum-mismatched backup and r
 attempt in `ingestion_logs` with `records_fetched: 0`. Validate the gate without fetching any data:
 
 ```bash
-BACKFILL_CONFIRM=yes BACKUP_DIR=/home/steve/backups/ausspend/2026-11-16T11-04-33.153Z \
+BACKFILL_CONFIRM=yes BACKUP_DIR=~/ausspend-backups/2026-11-16T11-04-33.153Z \
   npm run ingest:federal -- --backfill --dry-run
 # [ingest] backfill gate passed backup=... age_minutes=... natural_key=...
 # [ingest] backfill gate dry run OK target=ausspend_dev backup=...
@@ -304,7 +323,7 @@ Re-running a chunk is idempotent. The gate still applies to every future re-run.
 User-level systemd units live in `scripts/systemd/` (service + timer). The installer copies them
 to `~/.config/systemd/user/` and snapshots `db-backup.mjs` + `lib/backup-format.mjs` with their
 own `node_modules` into `~/.local/share/ausspend-backup`, so the timer works even when
-`/opt/ausspend/node_modules` is empty and the Docker stack is down. Re-run the installer after
+`${AUSSPEND_DEPLOY_ROOT}/node_modules` is empty and the Docker stack is down. Re-run the installer after
 changing the backup script.
 
 ```bash
@@ -316,7 +335,7 @@ journalctl --user -u ausspend-db-backup.service -n 20
 
 The timer runs daily (`03:15` with a short randomized delay), is `Persistent=true`, keeps 14
 backups via `--prune 14`, and logs to the journal. It prunes only under
-`/home/steve/backups/ausspend`, never application data.
+`~/ausspend-backups`, never application data.
 
 ## API
 
@@ -478,7 +497,7 @@ Narrow live week (the acceptance run):
 AUSTENDER_START_DATE=2026-11-02T00:00:00Z \
 AUSTENDER_END_DATE=2026-11-09T00:00:00Z \
 INGEST_SOURCES=aus-tender \
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 npm run ingest:federal
 ```
 
@@ -498,7 +517,7 @@ PBS requires no date window:
 
 ```bash
 INGEST_SOURCES=data-gov-au-pbs \
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 npm run ingest:federal
 ```
 
@@ -511,8 +530,8 @@ never committed; the metadata manifests are `docs/source-archive/nsw-budget-2025
 `docs/source-archive/data-nsw-ckan.json`.
 
 ```bash
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:nsw
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:nsw -- --source data-nsw-ckan
+MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:nsw
+MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:nsw -- --source data-nsw-ckan
 ```
 
 NSW financial statements are in `$m`, historical fiscal indicators in `$b` and capital projects in
@@ -526,7 +545,7 @@ resources are listed as deferred on `data-nsw-ckan`.
 
 `server/src/connectors/source-archive.ts` and `server/src/models/source-document.ts` provide a
 source-agnostic archive: documents are copied **outside** the repository (default
-`/home/steve/ausspend-source-archive`) and recorded with their exact URL, `sha256`, bytes and
+`~/ausspend-source-archive`) and recorded with their exact URL, `sha256`, bytes and
 content type in the `source_documents` collection. `npm run archive -- list|verify|adopt-nsw|fetch`
 manages them; `GET /api/v1/source-documents?source_id=nsw-budget` and
 `?source_id=data-nsw-ckan` list them read-only. S1's Wayback XLSX workbooks and ArcGIS JSON are
@@ -640,7 +659,8 @@ npm run test:foundation # source-archive + PDF extraction tests (no network)
 npm run build        # shared, server and client production builds
 npm run test:e2e     # Playwright specs with page.route API mocks
 AUSTENDER_LIVE_TEST=1 npx vitest run --project server test/aus-tender.test.ts  # opt-in real-API smoke
-npm run audit        # live audit against an already-running seeded stack (not part of test:e2e)
+npm run check:env-leaks # fails on committed private IPs, home paths and deployment hostnames
+npm run audit        # leak guard + live audit against an already-running seeded stack
 ```
 
 The Playwright suite mocks every `/api` response with `page.route`, so it does not need the seeded

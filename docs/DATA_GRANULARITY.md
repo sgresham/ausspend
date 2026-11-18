@@ -6,7 +6,7 @@ detail the app stores today against what the publisher actually makes available 
 inherently aggregate. A separate execution note for P1 (QGIP earlier years) was added below; the
 audit body otherwise remains the pre-P1 snapshot described in the next paragraph.
 
-Snapshot database: `mongodb://10.10.10.30:27017/ausspend_dev`, **348,981 measures, 0 synthetic
+Snapshot database: `mongodb://localhost:27017/ausspend_dev`, **348,981 measures, 0 synthetic
 rows, 15 active data sources, 58 archived source documents**. Hunter Water landed before this audit
 (6 rows), so the earlier 348,975 baseline is now 348,981. The count was re-read after writing this
 document and is unchanged.
@@ -180,11 +180,11 @@ spot-check.
 Read-only commands used (no write operations):
 
 ```bash
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'db.measures.countDocuments({})'
 # 348981
 
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'db.measures.aggregate([{$group:{_id:"$source_id",n:{$sum:1}}},{$sort:{n:-1}}]).toArray()'
 ```
 
@@ -876,15 +876,15 @@ planning list only.
 
 ```bash
 # Total and per-source counts (read-only)
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'db.measures.countDocuments({}); db.measures.aggregate([{$group:{_id:"$source_id",n:{$sum:1}}},{$sort:{n:-1}}]).toArray()'
 
 # Role, measure-type and field coverage (read-only; no writes)
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'db.measures.aggregate([{$group:{_id:"$aggregation_role",n:{$sum:1}}}]).toArray()'
 
 # Source register and archive documents (read-only)
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'db.data_sources.find({},{_id:0,source_id:1,status:1,records_ingested:1,license:1}).sort({source_id:1}).toArray(); db.source_documents.countDocuments({})'
 ```
 

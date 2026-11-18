@@ -585,7 +585,7 @@ export function liverpoolExtraction(): PdfExtraction {
     source: {
       url: LIVERPOOL_PDF_URL,
       local_path:
-        '/home/steve/ausspend-source-archive/liverpool-gpfs/liverpool-city-council-audited-financial-statements-2024-25.pdf',
+        '/tmp/ausspend-source-archive/liverpool-gpfs/liverpool-city-council-audited-financial-statements-2024-25.pdf',
       sha256: LIVERPOOL_PDF_SHA256,
       bytes: LIVERPOOL_PDF_BYTES,
     },

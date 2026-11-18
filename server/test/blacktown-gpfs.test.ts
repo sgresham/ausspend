@@ -64,7 +64,7 @@ const CONTEXT: BlacktownGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/blacktown-gpfs/2024-to-2025-financial-statements.pdf.pdf',
+      '/tmp/ausspend-source-archive/blacktown-gpfs/2024-to-2025-financial-statements.pdf.pdf',
     sha256: '74d7c880b4e795ea1cc9d17bb786eb9c1878cf9a1127c4d3f5b4d01f94e11b31',
     bytes: 3_873_391,
     fetched_at: '2026-11-17T00:00:00.000Z',
@@ -380,7 +380,7 @@ describe('Blacktown GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_blacktowngpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_blacktowngpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

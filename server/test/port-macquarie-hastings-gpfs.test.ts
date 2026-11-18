@@ -75,7 +75,7 @@ const CONTEXT: PortMacquarieHastingsGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/port-macquarie-hastings-gpfs/part-2-financial-statements.pdf',
+      '/tmp/ausspend-source-archive/port-macquarie-hastings-gpfs/part-2-financial-statements.pdf',
     sha256: 'e73a1cd805f9431001da032e88c2408fb8ad19eed083d2adc46e7850cb16618c',
     bytes: 8_407_089,
     fetched_at: '2026-11-17T00:00:00.000Z',
@@ -312,7 +312,7 @@ describe('Port Macquarie-Hastings GPFS exact reconciliation', () => {
 });
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_pmhgpfs`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_pmhgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

@@ -22,7 +22,7 @@ import { assertBackfillAllowed, DEFAULT_MAX_AGE_MINUTES } from './lib/backfill-g
  *
  *   AUSTENDER_START_DATE=2026-11-02T00:00:00Z \
  *   AUSTENDER_END_DATE=2026-11-09T00:00:00Z \
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   npm run ingest:federal
  *
  * Set INGEST_SOURCES=aus-tender to run only AusTender, or
@@ -32,7 +32,7 @@ import { assertBackfillAllowed, DEFAULT_MAX_AGE_MINUTES } from './lib/backfill-g
  * Historical AusTender backfill is gated. It requires `--backfill`,
  * `BACKFILL_CONFIRM=yes`, and a recent verified backup of ausspend_dev:
  *
- *   BACKFILL_CONFIRM=yes BACKUP_DIR=/home/steve/backups/ausspend/<ISO> \
+ *   BACKFILL_CONFIRM=yes BACKUP_DIR=${AUSSPEND_BACKUP_ROOT}/<ISO> \
  *   npm run ingest:federal -- --backfill --dry-run
  *
  * The dry run validates the gate and records it in ingestion_logs without

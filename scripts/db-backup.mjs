@@ -29,7 +29,7 @@ function usage() {
       'Usage: npm run db:backup -- [--out-root DIR] [--scratch] [--prune N]',
       '',
       'Reads MONGO_URL and dumps every collection as Extended JSON to a timestamped',
-      'directory under /home/steve/backups/ausspend (override with --out-root).',
+      'directory under ${AUSSPEND_BACKUP_ROOT} (override with --out-root).',
       'The backup root must be outside the repository.',
       '',
       'Only ausspend_dev is accepted by default. --scratch additionally permits an',

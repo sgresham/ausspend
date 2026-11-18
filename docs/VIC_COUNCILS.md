@@ -694,7 +694,7 @@ measure type, statement and unit; mark VLGGC rows as questionnaire/unaudited unt
 **DB checks (read-only):**
 
 ```bash
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'print(db.measures.countDocuments({})); print(db.measures.countDocuments({source_id:"vic-budget"}));'
 # 515449
 # 28
@@ -831,7 +831,7 @@ the connector raises the premise falsifier and publishes nothing.
 **Reproduce.**
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 export VGC1_SOURCE_PATH=/path/to/2024-25-VLGGC-Questionnaire-VGC1-Expenditure-and-Revenue.xlsx
 npm run ingest:vic-vlgc
 # [ingest:vic-vlgc] vic-vlgc-vgc1: success fetched=5401 upserted=5401
@@ -925,7 +925,7 @@ category row remains `questionnaire_unaudited`.
 **Reproduce.**
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 export ABS1_SOURCE_PATH=/path/to/2024-25-VLGGC-Questionnaire-ABS1-Capital-Outlays-and-Sales.xlsx
 export ABS23_SOURCE_PATH=/path/to/2024-25-VLGGC-Questionnaire-ABS2-and-3-Balance-Sheets-and-Other-Finances.xlsx
 npm run ingest:vic-vlgc-abs
@@ -1058,8 +1058,8 @@ No cross-council, state-plus-local or cross-year total is created.
 ### 13.6 Reproduce and checks
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
-export VIC_HISTORY_ARCHIVE_ROOT=/home/steve/ausspend-source-archive
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
+export VIC_HISTORY_ARCHIVE_ROOT=~/ausspend-source-archive
 npm run ingest:vic-vlgc-history
 # years 2019-20..2023-24; idempotent upsert on natural_key; no deletes
 # [ingest:vic-vlgc-history] vic-vlgc-vgc1: success fetched=27099 upserted=27099
@@ -1144,7 +1144,7 @@ Before pilot D: **602,062** measures. After: **659,086** (+57,024; VGC1 source 5
 88,916). 2024-25 and 2019-20..2023-24 rows are untouched (idempotent upsert on natural_key); no deletes.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 export VIC_HISTORY_YEARS=2015-16,2016-17,2017-18,2018-19
 export VIC_HISTORY_DIR=/path/with/<year>-VGC1.xlsx-ABS1.xlsx-ABS23.xlsx
 npm run ingest:vic-vlgc-history
@@ -1285,10 +1285,10 @@ Before: **659,086** measures. After: **659,244** (+158; `vic-vlgc-fag` = 158; 79
 per year; Totals entities 0). VGC1 = 54,215 and ABS = 88,916 are untouched; no deletes.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
-export VIC_FAG_ARCHIVE_ROOT=/home/steve/ausspend-source-archive
-export VIC_FAG_2024_25_PATH=/home/steve/ausspend-source-archive/vic-vlgc-fag/2024-25-VLGGC-Annual-Allocation-Report-Sept-2024.pdf
-export VIC_FAG_2023_24_PATH=/home/steve/ausspend-source-archive/vic-vlgc-fag/2023-24-VLGGC-ALLOCATION-REPORT-Sept-2023.pdf
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
+export VIC_FAG_ARCHIVE_ROOT=~/ausspend-source-archive
+export VIC_FAG_2024_25_PATH=~/ausspend-source-archive/vic-vlgc-fag/2024-25-VLGGC-Annual-Allocation-Report-Sept-2024.pdf
+export VIC_FAG_2023_24_PATH=~/ausspend-source-archive/vic-vlgc-fag/2023-24-VLGGC-ALLOCATION-REPORT-Sept-2023.pdf
 npm run ingest:vic-vlgc-fag
 # [ingest:vic-vlgc-fag] vic-vlgc-fag: success fetched=158 upserted=158
 # [ingest:vic-vlgc-fag] db source_rows=158 distinct_councils=79 totals_entities=0 all_measures=659244
@@ -1383,8 +1383,8 @@ per year, 80 distinct names across years, Totals entities 0, non-additive/amount
 **682,312**. No other source's rows were changed or deleted.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
-export LGPRF_ARCHIVE_ROOT=/home/steve/ausspend-source-archive
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
+export LGPRF_ARCHIVE_ROOT=~/ausspend-source-archive
 export LGPRF_SOURCE_PATH=/path/to/LGPRF-2020-2025-Full-Council-Data-Set-Nov25-Final-Release.xlsx
 npm run ingest:vic-lgprf
 # [ingest:vic-lgprf] vic-lgprf: success fetched=23068 upserted=23068

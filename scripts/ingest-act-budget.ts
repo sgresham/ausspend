@@ -17,7 +17,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * ACT Budget — Socrata infrastructure investment programme.
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   npm run ingest:act-budget
  *
  * Paged Socrata resource API (`$limit`/`$offset`), dataset `8275-pg6z`.

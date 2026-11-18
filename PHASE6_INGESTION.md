@@ -29,7 +29,7 @@ Useful controls:
 PHASE6_DRY_RUN=1 npm run ingest:phase6
 
 # run one source (still updates that source's status/log)
-PHASE6_SOURCES=nt-budget MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:phase6
+PHASE6_SOURCES=nt-budget MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:phase6
 ```
 
 `PHASE6_CONTINUE_ON_ERROR=1` keeps a full run going after a source error; by default the script
@@ -37,7 +37,7 @@ exits nonzero after all sources have been attempted.
 
 ## 2. Live source register
 
-Verified against `mongodb://10.10.10.30:27017/ausspend_dev` on 18 November 2026. Total measures:
+Verified against `mongodb://localhost:27017/ausspend_dev` on 18 November 2026. Total measures:
 **693,059**; 65 registered sources, 63 active, 0 degraded, 2 stubs.
 
 | Source                    |    Rows | Status | Measure                | Unit              | Notes                                                                              |
@@ -138,11 +138,11 @@ full recovery detail, paper ids and hashes are in `SOC_INGESTION.md` §6A.
 ## 8. Verification
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 PHASE6_DRY_RUN=1 npm run ingest:phase6
 PHASE6_SOURCES=nt-budget npm run ingest:phase6
 
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   printjson(db.measures.aggregate([{$match:{source_id:{$in:[
     "aihw-health-expenditure","wa-budget","sa-budget-gfs","act-budget",
     "tas-budget","nt-budget","qld-local-government"]}}},

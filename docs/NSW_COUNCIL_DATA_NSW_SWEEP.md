@@ -24,15 +24,15 @@ All calls are unauthenticated GETs against the CKAN 3 action API:
 BASE='https://data.nsw.gov.au/data/api/3/action'
 ```
 
-| Purpose | Query |
-| --- | --- |
-| Portal size | `curl -s "$BASE/package_search?q=*:*&rows=0" \| jq '.result.count'` → `17247` |
-| Organisations (facet) | `curl -s "$BASE/package_search?q=*:*&rows=0&facet.field=%5B%22organization%22%5D&facet.limit=300" \| jq '.result.search_facets.organization.items \| length'` → `219` |
-| Organisations (`organization_list`) | `curl -s "$BASE/organization_list?all_fields=true&limit=1000" \| jq '.result \| length'` → `25` (see §6: API inconsistency) |
-| One council org's packages | `curl -s "$BASE/package_search?q=*:*&fq=organization:%22wollongong-city-council%22&rows=1000" \| jq '.result.count'` |
-| Title search | `curl -s "$BASE/package_search?q=title%3A%28council%20annual%20report%29&rows=1000" \| jq '.result.count'` → `155` |
-| Financial-statement titles | `curl -s "$BASE/package_search?q=title%3A%28financial%20statements%29&rows=1000" \| jq '.result.results[] \| .title'` → 19 titles, all state agencies |
-| Keyword premise check | `curl -s "$BASE/package_search?q=council%20financial%20statements&rows=400"` → `395` noisy hits, 61 with "council" in the title, all PDFs and none a council financial dataset |
+| Purpose                             | Query                                                                                                                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Portal size                         | `curl -s "$BASE/package_search?q=*:*&rows=0" \| jq '.result.count'` → `17247`                                                                                                  |
+| Organisations (facet)               | `curl -s "$BASE/package_search?q=*:*&rows=0&facet.field=%5B%22organization%22%5D&facet.limit=300" \| jq '.result.search_facets.organization.items \| length'` → `219`          |
+| Organisations (`organization_list`) | `curl -s "$BASE/organization_list?all_fields=true&limit=1000" \| jq '.result \| length'` → `25` (see §6: API inconsistency)                                                    |
+| One council org's packages          | `curl -s "$BASE/package_search?q=*:*&fq=organization:%22wollongong-city-council%22&rows=1000" \| jq '.result.count'`                                                           |
+| Title search                        | `curl -s "$BASE/package_search?q=title%3A%28council%20annual%20report%29&rows=1000" \| jq '.result.count'` → `155`                                                             |
+| Financial-statement titles          | `curl -s "$BASE/package_search?q=title%3A%28financial%20statements%29&rows=1000" \| jq '.result.results[] \| .title'` → 19 titles, all state agencies                          |
+| Keyword premise check               | `curl -s "$BASE/package_search?q=council%20financial%20statements&rows=400"` → `395` noisy hits, 61 with "council" in the title, all PDFs and none a council financial dataset |
 
 `package_search` returns at most **1,000 rows per request** (`rows=5000` is capped at 1,000). The
 per-organisation sweep therefore fetched each council organisation separately with `rows=1000`.
@@ -50,24 +50,23 @@ names on `council|shire|municipal|city of` gives **125** council-like organisati
 - 5 council-like organisations are duplicates/legacy bodies and were matched to the current council
   or left out: `city-of-sydney` (duplicate of `council-of-the-city-of-sydney`), `city-of-ryde`
   (duplicate of `ryde-city-council`), `hornsby-shire-council` (legacy; current org is
-  `the-council-of-the-shire-of-hornsby`), `rous-county-council` (county water, not one of the
-  128) and `ssroc` (a regional organisation of councils, not a council).
+  `the-council-of-the-shire-of-hornsby`), `rous-county-council` (county water, not one of the 128) and `ssroc` (a regional organisation of councils, not a council).
 
 ## 2. Premise test — what the catalogue actually contains
 
 Metadata scan of all **3,025** packages in the 125 council organisations:
 
-| Check | Result |
-| --- | --- |
-| Package titles containing "financial", "financial statement", "budget", "expenditure", "income statement", "balance sheet", "revenue", "ledger", "procurement", "general purpose" | **0** |
-| Resources whose name/description contains the same financial terms | **0** |
-| Packages titled "annual report" inside a council organisation | **0** |
-| Loose keyword hits (audit/statement/rates/fees etc.) | 87, all flood studies, levee audits, GIS/environmental datasets or City of Sydney operational price data |
-| CSV/XLSX/XLS resources with "council" in the title, portal-wide | 5 CSV + 1 XLSX, none financial (4 Lake Macquarie environmental sensors, 1 parliament member list, 1 parking-penalty notice count) |
+| Check                                                                                                                                                                             | Result                                                                                                                            |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Package titles containing "financial", "financial statement", "budget", "expenditure", "income statement", "balance sheet", "revenue", "ledger", "procurement", "general purpose" | **0**                                                                                                                             |
+| Resources whose name/description contains the same financial terms                                                                                                                | **0**                                                                                                                             |
+| Packages titled "annual report" inside a council organisation                                                                                                                     | **0**                                                                                                                             |
+| Loose keyword hits (audit/statement/rates/fees etc.)                                                                                                                              | 87, all flood studies, levee audits, GIS/environmental datasets or City of Sydney operational price data                          |
+| CSV/XLSX/XLS resources with "council" in the title, portal-wide                                                                                                                   | 5 CSV + 1 XLSX, none financial (4 Lake Macquarie environmental sensors, 1 parliament member list, 1 parking-penalty notice count) |
 
 Examples of the loose hits, all **not** council financial data: "Visual Audit of Urban Levees",
 "South Albury Levee Rehabilitation — Statement of Environmental Effects", "Business rate category"
-(City of Sydney rate *category definition*), "Ticket parking rates" (price schedule). None contains
+(City of Sydney rate _category definition_), "Ticket parking rates" (price schedule). None contains
 council revenue or expense dollars.
 
 **Financial-statement datasets on the portal are state-agency PDFs.** The 19 titles matching
@@ -83,18 +82,18 @@ council's own organisation. Every package has exactly **one PDF resource** and *
 resource. Licence is `Licence Specified by Agency` (`license_id: lsba`) — not an open licence. The
 resource URLs are Internet Archive snapshots of the former `opengov.nsw.gov.au` download service.
 
-| Council | Packages | Years (range present) | Format | Granularity | Unit | Licence | Machine-readable |
-| --- | --: | --- | --- | --- | --- | --- | --- |
-| Bathurst Regional | 1 | 2014-15 | PDF | annual report (narrative; statements unverified) | unknown | Licence Specified by Agency | No |
-| Cabonne | 3 | 2013-14, 2014-15, 2015/16 | PDF | annual report incl. annexures | unknown | Licence Specified by Agency | No |
-| Campbelltown | 26 | 1986-87 → 2014-15 | PDF | annual report | unknown | Licence Specified by Agency | No |
-| Cowra | 1 | 2021-22 | PDF | annual report | unknown | Licence Specified by Agency | No |
-| Kempsey | 1 | 2014-15 | PDF | annual report | unknown | Licence Specified by Agency | No |
-| Kiama | 2 | 2017-18, 2018-19 | PDF | annual report | unknown | Licence Specified by Agency | No |
-| Lake Macquarie | 1 | 2021-22 | PDF | annual report | unknown | Licence Specified by Agency | No |
-| Port Stephens | 1 | 2019-20 | PDF | annual report | unknown | Licence Specified by Agency | No |
-| Strathfield | 9 | 2006-07 → 2014-15 | PDF | annual report | unknown | Licence Specified by Agency | No |
-| Wollongong | 18 | 2000-01 → 2017-18 | PDF | annual report | unknown | Licence Specified by Agency | No |
+| Council           | Packages | Years (range present)     | Format | Granularity                                      | Unit    | Licence                     | Machine-readable |
+| ----------------- | -------: | ------------------------- | ------ | ------------------------------------------------ | ------- | --------------------------- | ---------------- |
+| Bathurst Regional |        1 | 2014-15                   | PDF    | annual report (narrative; statements unverified) | unknown | Licence Specified by Agency | No               |
+| Cabonne           |        3 | 2013-14, 2014-15, 2015/16 | PDF    | annual report incl. annexures                    | unknown | Licence Specified by Agency | No               |
+| Campbelltown      |       26 | 1986-87 → 2014-15         | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
+| Cowra             |        1 | 2021-22                   | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
+| Kempsey           |        1 | 2014-15                   | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
+| Kiama             |        2 | 2017-18, 2018-19          | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
+| Lake Macquarie    |        1 | 2021-22                   | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
+| Port Stephens     |        1 | 2019-20                   | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
+| Strathfield       |        9 | 2006-07 → 2014-15         | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
+| Wollongong        |       18 | 2000-01 → 2017-18         | PDF    | annual report                                    | unknown | Licence Specified by Agency | No               |
 
 Sample canonical package and resource (link-checked §7):
 
@@ -110,21 +109,21 @@ statement-line dataset", not as statement lines.
 
 ## 4. Near-misses considered and rejected
 
-| Dataset(s) | Why it is not a council financial source |
-| --- | --- |
+| Dataset(s)                                                                                                                                                   | Why it is not a council financial source                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
 | "Financial audit report: Local Government 2019–2022", "Report on Local Government 2017/2018", "Monitoring Local Government" (Audit Office, `nsw-government`) | Narrative audit reports; no row-level council financial data. Context/validation only. |
-| "Department of Local Government Annual Report 2003–04/2004–05", "Office of Local Government Annual Report 2014-15" | Annual reports of the **state agency**, not council financial data. |
-| 2008 Local Government Election council reports (~150 PDFs, `nsw-government`) | Election results/administration, not financial statements. |
-| City of Sydney operational datasets (198 packages: business rate category, ticket parking rates, venues for hire, parking meters) | Rate *categories* and price schedules, not revenue/expense statement lines. |
-| Lake Macquarie Netvox/Decentlab CSV/JSON | Environmental sensor telemetry. |
-| "Penalty Notices for parking offences issued by Councils and NSW Police" (XLSX) | State revenue/penalty counts, not council financial statements. |
-| "NSW Council Roadside Reserves Conservation Values" (`local-government-nsw`) | Environmental/GIS data. |
-| ABS and Treasury organisation datasets | State/aggregate benchmarks, not council-level. |
+| "Department of Local Government Annual Report 2003–04/2004–05", "Office of Local Government Annual Report 2014-15"                                           | Annual reports of the **state agency**, not council financial data.                    |
+| 2008 Local Government Election council reports (~150 PDFs, `nsw-government`)                                                                                 | Election results/administration, not financial statements.                             |
+| City of Sydney operational datasets (198 packages: business rate category, ticket parking rates, venues for hire, parking meters)                            | Rate _categories_ and price schedules, not revenue/expense statement lines.            |
+| Lake Macquarie Netvox/Decentlab CSV/JSON                                                                                                                     | Environmental sensor telemetry.                                                        |
+| "Penalty Notices for parking offences issued by Councils and NSW Police" (XLSX)                                                                              | State revenue/penalty counts, not council financial statements.                        |
+| "NSW Council Roadside Reserves Conservation Values" (`local-government-nsw`)                                                                                 | Environmental/GIS data.                                                                |
+| ABS and Treasury organisation datasets                                                                                                                       | State/aggregate benchmarks, not council-level.                                         |
 
 ## 5. Zero-result list
 
 - **All 128 councils: zero statement-line financial datasets** on data.nsw (no CSV, XLSX, API or
-  PDF financial-statement *dataset*).
+  PDF financial-statement _dataset_).
 - **118 of 128 councils: zero annual-report packages** whose title names the council. The 10 with
   PDFs are in §3; an ambiguously titled "Annual Report YYYY" was not counted as a council document.
 - **8 councils have no data.nsw organisation at all:** Lane Cove, Shellharbour, Gilgandra, Cobar,
@@ -179,7 +178,7 @@ Run 17 November 2026. All requests HTTP 200 unless stated.
 - DB unchanged, read-only check:
 
 ```bash
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'print(db.measures.countDocuments({})); print(db.measures.countDocuments({source_id:"dubbo-council"})); print(db.measures.countDocuments({source_id:"dubbo-council-gpfs"})); print(db.measures.countDocuments({source_id:"data-nsw-ckan"}));'
 # 515467
 # 245

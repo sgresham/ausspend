@@ -104,7 +104,7 @@ deletes, no other source changed. All 4,359 rows have a valid COFOG function and
 `measure_type=actual`; `additive_violations=0`.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run ingest:sa-gfs
 # [ingest:sa-gfs] sa-budget-gfs: success fetched=4359 upserted=4359
 # [ingest:sa-gfs] db source_rows=4359 cofog_rows=4359 additive_violations=0 all_measures=689273
@@ -118,7 +118,7 @@ Checks run: `npm run typecheck`, `npm run lint`, changed files pass Prettier, `n
 ## Verify
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   print(db.measures.countDocuments({source_id:"sa-budget-gfs"}));
   print(db.measures.countDocuments({source_id:"sa-budget-gfs",function_code:{$in:["01","02","03","04","05","06","07","08","09","10"]}}));
   printjson(db.measures.aggregate([{$match:{source_id:"sa-budget-gfs"}},

@@ -24,7 +24,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * QLD Budget 2026-27 ingestion (BP3 Capital Statement + BP4 Budget Measures).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo npm run ingest:qld
  *
  * Runs exactly one connector: qld-budget. Upserts on natural_key, so re-running

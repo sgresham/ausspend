@@ -74,7 +74,7 @@ const CONTEXT: CumberlandGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/cumberland-gpfs/cumberland-city-council-annual-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/cumberland-gpfs/cumberland-city-council-annual-financial-statements-2024-25.pdf',
     sha256: '4c1d003cd8a27e72e71c9ebd75bd80f1c67931ef551b4baa3d7c0010d4dc267e',
     bytes: 7_165_368,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -355,7 +355,7 @@ describe('Cumberland City Council GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_cumberlandgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_cumberlandgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

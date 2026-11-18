@@ -17,8 +17,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * VIC council performance layer — LGPRF 2020-25 full data set.
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
- *   LGPRF_ARCHIVE_ROOT=/home/steve/ausspend-source-archive \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
+ *   LGPRF_ARCHIVE_ROOT=${AUSSPEND_SOURCE_ARCHIVE} \
  *   npm run ingest:vic-lgprf
  *
  * All 79 Victorian councils for FY2020-21..FY2024-25. The official workbook has

@@ -49,7 +49,7 @@ const CONTEXT: FairfieldGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/fairfield-gpfs/fairfield-city-council-audited-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/fairfield-gpfs/fairfield-city-council-audited-financial-statements-2024-25.pdf',
     sha256: FAIRFIELD_PDF_SHA256,
     bytes: 17_656_220,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -376,7 +376,7 @@ describe('Fairfield City Council GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_fairfieldgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_fairfieldgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

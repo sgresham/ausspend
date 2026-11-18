@@ -78,7 +78,7 @@ const CONTEXT: ShellharbourGpfsParseContext = {
     audited_statements_url: 'https://online.fliphtml5.com/usyo/txhe/#p=96',
   },
   archive: {
-    local_path: '/home/steve/ausspend-source-archive/shellharbour-gpfs/full-report_2_4.pdf',
+    local_path: '/tmp/ausspend-source-archive/shellharbour-gpfs/full-report_2_4.pdf',
     sha256: 'f199f5e22b095f1f6b7acae84fc7bbb9414c206a01936a92202e46448a8f2894',
     bytes: 58_205_018,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -332,7 +332,7 @@ describe('Shellharbour GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_shellharbourgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_shellharbourgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

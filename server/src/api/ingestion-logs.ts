@@ -19,7 +19,7 @@ const IngestionLogQuerySchema = z.object({
 /** GET /api/ingestion-logs — newest-first ingestion run history. */
 export const listIngestionLogs: RequestHandler = async (req, res) => {
   // backup_path is a host filesystem path: omit unless explicitly enabled. The
-  // production edge 404s this route publicly (deploy/nginx/ausspend.conf).
+  // production edge 404s this route publicly (deploy/nginx/ausspend.conf.template).
   const exposePaths = process.env.EXPOSE_SOURCE_PATHS === 'true';
   const parsed = IngestionLogQuerySchema.safeParse(req.query);
   if (!parsed.success) {

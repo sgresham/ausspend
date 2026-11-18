@@ -18,7 +18,7 @@ import { runIngestion } from '../src/connectors/runner.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_nt`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_nt`;
 
 const FIXTURE = `2026-27 Budget Paper No. 4 — The Infrastructure Program
 Table 3: Capital works by COFOG - A category 2026-27 Capital works $M % Transport 2 041.1 48.0 Housing and community amenities 782.1 18.4 Economic affairs 496.3 11.7 Public order and safety 426.3 10.0 Education 158.0 3.7 Social protection 112.1 2.7 Health 102.5 2.4 Recreation, culture and religion 99.3 2.3 Environmental protection 26.3 0.6 General public services 9.6 0.2 TOTAL GENERAL GOVERNMENT 4 253.6 100.0 Transport The 2026-27 program continues to invest heavily in transport infrastructure.`;

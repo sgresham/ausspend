@@ -369,7 +369,7 @@ does not copy or mutate them):
 ```bash
 npm run archive -- adopt-nsw            # metadata records; no DB write
 npm run archive -- verify --source-id=nsw-budget
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
   npm run archive -- adopt-nsw --write-db
 ```
 
@@ -506,13 +506,13 @@ Mid-Western and all other NSW councils, plus VIC, QLD, WA, SA, TAS, ACT and NT.
 
 ```bash
 # ingest (upserts on natural_key; never deletes other sources)
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev   npm run ingest:nsw -- --source dubbo-council
+MONGO_URL=mongodb://localhost:27017/ausspend_dev   npm run ingest:nsw -- --source dubbo-council
 
 # unit/total/area tests
 npx vitest run server/test/dubbo-council.test.ts server/test/area-contract.test.ts
 
 # API smoke (alt port, never the user's 3001/5173 stack)
-PORT=3101 MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npx tsx server/src/index.ts
+PORT=3101 MONGO_URL=mongodb://localhost:27017/ausspend_dev npx tsx server/src/index.ts
 curl -s 'http://localhost:3101/api/spending?area=dubbo' | jq '.area_profile.panels | map({key,count,total_cents})'
 curl -s 'http://localhost:3101/api/areas/dubbo' | jq '.region'
 ```

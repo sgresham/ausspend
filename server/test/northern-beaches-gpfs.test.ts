@@ -66,7 +66,7 @@ const CONTEXT: NorthernBeachesGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/northern-beaches-gpfs/northern-beaches-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/northern-beaches-gpfs/northern-beaches-financial-statements-2024-25.pdf',
     sha256: '58f68d6fa2a8487ed66f532c0f2c3432ac41fff227d1892b9518c76af952faf6',
     bytes: 2_106_256,
     fetched_at: '2026-11-17T00:00:00.000Z',
@@ -294,7 +294,7 @@ describe('Northern Beaches GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_northernbeachesgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_northernbeachesgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

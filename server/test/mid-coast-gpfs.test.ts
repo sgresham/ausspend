@@ -73,8 +73,7 @@ const CONTEXT: MidCoastGpfsParseContext = {
     listing_url: MID_COAST_GPFS_REPORTING_URL,
   },
   archive: {
-    local_path:
-      '/home/steve/ausspend-source-archive/mid-coast-gpfs/financial-statements-2024-2025.pdf',
+    local_path: '/tmp/ausspend-source-archive/mid-coast-gpfs/financial-statements-2024-2025.pdf',
     sha256: 'f8f7ede3d8c09467e5f1aea72e697a9278d4d78fd527778c63ccb0d9e3a5e3fe',
     bytes: 2_972_797,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -291,7 +290,7 @@ describe('MidCoast GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_midcoastgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_midcoastgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

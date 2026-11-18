@@ -20,7 +20,7 @@ import { runIngestion } from '../src/connectors/runner.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_tas`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_tas`;
 
 const HEADER_ROWS: string[][] = [
   ['', '', '', 'Estimated', '', '', '', 'Forward', '', 'Forward', '', 'Forward', ''],

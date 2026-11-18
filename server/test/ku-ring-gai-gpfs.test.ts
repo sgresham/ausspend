@@ -47,7 +47,7 @@ const CONTEXT: KuRingGaiGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/ku-ring-gai-gpfs/ku-ring-gai-council-annual-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/ku-ring-gai-gpfs/ku-ring-gai-council-annual-financial-statements-2024-25.pdf',
     sha256: KU_RING_GAI_PDF_SHA256,
     bytes: KU_RING_GAI_PDF_BYTES,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -407,7 +407,7 @@ describe('Ku-ring-gai Council GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_kuringgaigpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_kuringgaigpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

@@ -211,8 +211,7 @@ const CONTEXT: MaitlandGpfsParseContext = {
     listing_url: MAITLAND_GPFS_REPORTING_URL,
   },
   archive: {
-    local_path:
-      '/home/steve/ausspend-source-archive/maitland-gpfs/Financial-Statements-2024-25-Final.pdf',
+    local_path: '/tmp/ausspend-source-archive/maitland-gpfs/Financial-Statements-2024-25-Final.pdf',
     sha256: 'bc67c592a9cb0bade12b62e88457b3f67dad434442ec3bc59b15ea7c8aafbda8',
     bytes: 1_196_382,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -414,7 +413,7 @@ describe('Maitland GPFS exact top-level reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_maitlandgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_maitlandgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

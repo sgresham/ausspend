@@ -67,7 +67,7 @@ const CONTEXT: WollongongGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/wollongong-gpfs/Annual-Financial-Statements-year-ended-30-June-2025.pdf',
+      '/tmp/ausspend-source-archive/wollongong-gpfs/Annual-Financial-Statements-year-ended-30-June-2025.pdf',
     sha256: 'ae26b12b906a09ce17d1c353e4f36d8aec29b0de5e4b539cffe5a953aedc6ad3',
     bytes: 7_343_281,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -295,7 +295,7 @@ describe('Wollongong GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_wollongonggpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_wollongonggpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

@@ -16,11 +16,11 @@ must be able to re-open the _exact bytes_ months later. The rule is:
 - a source with no stable direct link **must** be copied locally and linked by SHA-256;
 - a source with a stable link still records the exact URL and hash;
 - the bytes live **outside** the application repository (default
-  `/home/steve/ausspend-source-archive`, override with `AUSSPEND_SOURCE_ARCHIVE`);
+  `~/ausspend-source-archive`, override with `AUSSPEND_SOURCE_ARCHIVE`);
 - only metadata is committed or written to Mongo — never the blob.
 
 The repository guard `assertOutsideRepo()` refuses any archive path inside the repo
-(`/opt/ausspend` in production, or the pool worktree during development).
+(`${AUSSPEND_DEPLOY_ROOT}` in production, or the pool worktree during development).
 
 ## 2. `source_documents` model
 
@@ -69,7 +69,7 @@ npm run archive -- verify --source-id=nsw-budget
 npm run archive -- adopt-nsw
 
 # optionally upsert the metadata into ausspend_dev
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
   npm run archive -- adopt-nsw --write-db
 
 # archive a new document (bytes go outside the repo)

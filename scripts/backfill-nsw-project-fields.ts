@@ -10,7 +10,7 @@
  *     project fields, and are never updated;
  *   - a dry run is the default; `--apply` performs the update.
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *     npx tsx scripts/backfill-nsw-project-fields.ts [--apply]
  */
 import 'dotenv/config';

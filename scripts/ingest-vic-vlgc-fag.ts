@@ -19,8 +19,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * VIC grants overlay — VLGGC Commonwealth Financial Assistance Grants.
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
- *   VIC_FAG_ARCHIVE_ROOT=/home/steve/ausspend-source-archive \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
+ *   VIC_FAG_ARCHIVE_ROOT=${AUSSPEND_SOURCE_ARCHIVE} \
  *   npm run ingest:vic-vlgc-fag
  *
  * The 2024-25 report supplies the 2024-25 estimated allocation and the final

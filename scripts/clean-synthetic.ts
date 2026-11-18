@@ -14,7 +14,7 @@ import {
  *
  *   npm run clean:synthetic                          # DRY RUN: counts only, no writes
  *   npm run clean:synthetic -- --execute \
- *     --backup /home/steve/backups/ausspend/<stamp>  # delete only synthetic-seed rows
+ *     --backup ${AUSSPEND_BACKUP_ROOT}/<stamp>  # delete only synthetic-seed rows
  *
  * The default is a pure read. `--execute` refuses unless `--backup` points at a
  * complete, recent, internally verified ausspend_dev backup that contains the

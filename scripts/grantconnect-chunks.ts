@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { mongodbUrl } from './lib/env.mjs';
 import { readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -185,7 +186,7 @@ async function commandFetch(args: Args): Promise<void> {
 
   if (writeDb && archived.length > 0) {
     const mongoose = (await import('mongoose')).default;
-    const url = process.env.MONGO_URL ?? 'mongodb://10.10.10.30:27017/ausspend_dev';
+    const url = mongodbUrl();
     await mongoose.connect(url, { serverSelectionTimeoutMS: 8_000 });
     try {
       for (const record of archived) await persistArchivedRecord(record);

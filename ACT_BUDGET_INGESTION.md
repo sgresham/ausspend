@@ -67,7 +67,7 @@ removed and replaced with the corrected 2,120 rows after adding `:id` to the pag
 natural key. No other source row was deleted or modified; the other-source count remained 689,273.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run ingest:act-budget
 # [ingest:act-budget] act-budget: success fetched=2120 upserted=2120
 # [ingest:act-budget] db source_rows=2120 violations=0 all_measures=691393
@@ -81,7 +81,7 @@ Checks: `npm run typecheck`, `npm run lint`, changed files pass Prettier, `npm t
 ## Verify
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   print(db.measures.countDocuments({source_id:"act-budget"}));
   printjson(db.measures.aggregate([{$match:{source_id:"act-budget"}},
     {$group:{_id:{year:"$fiscal_year",level:"$jurisdiction_level",type:"$measure_type"},n:{$sum:1}}},

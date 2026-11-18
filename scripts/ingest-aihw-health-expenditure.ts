@@ -17,8 +17,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * AIHW health expenditure — current 2024-25 release (Phase 6.2b correction).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
- *   AIHW_ARCHIVE_ROOT=/home/steve/ausspend-source-archive \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
+ *   AIHW_ARCHIVE_ROOT=${AUSSPEND_SOURCE_ARCHIVE} \
  *   npm run ingest:aihw
  *
  * The current AIHW supplementary tables publish state x area x source detail

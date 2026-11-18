@@ -74,7 +74,7 @@ const CONTEXT: InnerWestGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/inner-west-gpfs/inner-west-council-annual-report-2024-25-gpfs.pdf',
+      '/tmp/ausspend-source-archive/inner-west-gpfs/inner-west-council-annual-report-2024-25-gpfs.pdf',
     sha256: '03403da8625147450d200cad6a8354f10877893fb2086763f4df9d8fa7622c1f',
     bytes: 10_107_386,
     fetched_at: '2026-11-17T16:45:00.000Z',
@@ -332,7 +332,7 @@ describe('Inner West GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_innerwestgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_innerwestgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

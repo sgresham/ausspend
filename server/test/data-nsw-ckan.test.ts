@@ -54,7 +54,7 @@ function baseContext(overrides: Partial<NswCkanTableBase> = {}): NswCkanTableBas
     entityColumns: ['AgencyName'],
     lgaColumns: ['LGA'],
     archive: {
-      local_path: '/home/steve/ausspend-source-archive/data-nsw-ckan/bp2.json',
+      local_path: '/tmp/ausspend-source-archive/data-nsw-ckan/bp2.json',
       sha256: 'a'.repeat(64),
       bytes: 1234,
     },

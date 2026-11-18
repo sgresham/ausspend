@@ -84,7 +84,7 @@ const CONTEXT: GeorgesRiverGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/georges-river-gpfs/georges-river-council-audited-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/georges-river-gpfs/georges-river-council-audited-financial-statements-2024-25.pdf',
     sha256: '97a46898f9fe5a0e2e8ea6e15817562217cfa6568bbdf7825f8d72a4da856a9f',
     bytes: 2_589_670,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -394,7 +394,7 @@ describe('Georges River Council GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_georgesrivergpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_georgesrivergpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {
