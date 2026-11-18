@@ -45,7 +45,7 @@ export const DUBBO_GPFS_TARGET_YEAR_LABEL = '2024/2025';
 export const DUBBO_GPFS_SOURCE_DATASET = 'Dubbo Regional Council GPFS 2024-25';
 /**
  * Years this connector ingests from their own audited GPFS. The FY2015-16
- * predecessor statements and FY2016-17..FY2019-20 remain deliberately excluded:
+ * predecessor statements and FY2016-17..FY2018-19 remain deliberately excluded:
  * they are separate builders and must not be ingested here.
  */
 export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = [
@@ -55,6 +55,7 @@ export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = [
   '2022-23',
   '2021-22',
   '2020-21',
+  '2019-20',
 ] as const;
 export const DUBBO_GPFS_LICENSE = DUBBO_LICENSE;
 export const DUBBO_GPFS_DATA_QUALITY_FLAG = 'provisional/local_government';
@@ -94,6 +95,13 @@ export type DubboGpfsSection = 'revenue' | 'expenses' | 'result';
 export interface DubboGpfsLineSpec {
   key: string;
   label: string;
+  /**
+   * Note reference printed immediately after the label in the extracted row
+   * (e.g. "3a" or "6"). Used only to anchor the value lookup when the note
+   * number itself is a bare integer that would otherwise be read as the
+   * current-year amount. Never emitted as part of the printed label.
+   */
+  printed_note?: string;
   section: DubboGpfsSection;
   /** Printed subtotal this component belongs to. Omitted on the subtotal itself. */
   component_of?: string;
@@ -672,6 +680,163 @@ export const DUBBO_GPFS_FY2020_21_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
   },
 ];
 
+/**
+ * FY2019-20 prints inline face rows with numeric note references immediately
+ * after each label (`3a`, `4`, `6`, `16`, …). Those bare integers would be read
+ * as amounts without a year-specific anchor, so each affected line carries its
+ * printed note reference. The face adds a `Net gains from the disposal of
+ * assets` revenue line printed as a dash (nil) and a `Net losses from the
+ * disposal of assets` expense line (2,493), plus a `Net share of interests in
+ * joint ventures and associates using the equity method` revenue component
+ * (149). The functions note (Note 2(a), "Total functions and activities") is
+ * equal to the face on income, expenses and result, but its printed grants
+ * column (35,142) is not the sum of the two face grant lines (21,858 operating
+ * + 33,077 capital = 54,935); that printed total is retained as an independent
+ * anchor and never forced to the face grant lines.
+ */
+export const DUBBO_GPFS_FY2019_20_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
+  {
+    key: 'rates_and_annual_charges',
+    label: 'Rates and annual charges',
+    printed_note: '3a',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'user_charges_and_fees',
+    label: 'User charges and fees',
+    printed_note: '3b',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_revenues',
+    label: 'Other revenues',
+    printed_note: '3c',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_operating',
+    label: 'Grants and contributions provided for operating purposes',
+    printed_note: '3d,3e',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_capital',
+    label: 'Grants and contributions provided for capital purposes',
+    printed_note: '3d,3e',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'interest_and_investment_income',
+    label: 'Interest and investment income',
+    printed_note: '4',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_gain_from_disposal_of_assets',
+    label: 'Net gains from the disposal of assets',
+    printed_note: '6',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    allow_printed_nil: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_share_of_interests_in_joint_ventures_and_associates',
+    label: 'Net share of interests in joint ventures and associates using the equity method',
+    printed_note: '16',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_revenue',
+    label: 'Total income from continuing operations',
+    section: 'revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'employee_expenses',
+    label: 'Employee benefits and on-costs',
+    printed_note: '5a',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'borrowing_costs',
+    label: 'Borrowing costs',
+    printed_note: '5b',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'materials_and_services',
+    label: 'Materials and contracts',
+    printed_note: '5c',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'depreciation_amortisation_impairment',
+    label: 'Depreciation and amortisation',
+    printed_note: '5d',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_expenses',
+    label: 'Other expenses',
+    printed_note: '5e',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_loss_from_disposal_of_assets',
+    label: 'Net losses from the disposal of assets',
+    printed_note: '6',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_expenses',
+    label: 'Total expenses from continuing operations',
+    section: 'expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_result',
+    label: 'Net operating result for the year',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_result_before_capital_grants',
+    label:
+      'Net operating result for the year before grants and contributions provided for capital purposes',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+];
+
 export interface DubboGpfsYearLayout {
   fiscalYear: string;
   sourceDataset: string;
@@ -691,11 +856,28 @@ export interface DubboGpfsYearLayout {
     operatingResult: number;
     note: string;
   };
+  /**
+   * Printed functions-note grants total when it is an independent anchor and
+   * does not equal the sum of the face operating and capital grant lines.
+   */
+  functionsGrantsAnchor?: number;
+  /** Why the functions-note grants column is not the face grant-line sum. */
+  functionsGrantsNote?: string;
   /** External OLG anchor, only where a matching published constant exists. */
   olg?: { expensesCents: number; revenueCents: number };
 }
 
 export const DUBBO_GPFS_YEAR_LAYOUTS: Readonly<Record<string, DubboGpfsYearLayout>> = {
+  '2019-20': {
+    fiscalYear: '2019-20',
+    sourceDataset: 'Dubbo Regional Council GPFS 2019-20',
+    lines: DUBBO_GPFS_FY2019_20_LINES,
+    totalExpensesStatement: 'Income Statement',
+    expenseBridge: 'single-total',
+    functionsGrantsAnchor: 35_142,
+    functionsGrantsNote:
+      'the functions note prints grants included in income of 35,142, which differs from the face operating and capital grant lines (21,858 + 33,077 = 54,935); the printed functions-note total is retained as an independent anchor and the face grant lines are not adjusted',
+  },
   '2020-21': {
     fiscalYear: '2020-21',
     sourceDataset: 'Dubbo Regional Council GPFS 2020-21',
@@ -984,8 +1166,11 @@ function lineValue(
   pageNumber: number,
   errors: string[],
 ): DubboGpfsLineValue | null {
+  // Anchor on the label plus its printed note reference where the year defines
+  // one, so a bare note number (e.g. "6") is never mistaken for the amount.
+  const lookup = spec.printed_note ? `${spec.label} ${spec.printed_note}` : spec.label;
   if (spec.allow_printed_nil) {
-    const parsed = firstAmountOrNilAfter(text, spec.label);
+    const parsed = firstAmountOrNilAfter(text, lookup);
     if (!parsed) {
       errors.push(`p${pageNumber}: could not read printed value for "${spec.label}"`);
       return null;
@@ -997,7 +1182,7 @@ function lineValue(
       ...(parsed.printed_nil ? { printed_nil: true } : {}),
     };
   }
-  const value = firstAmountAfter(text, spec.label);
+  const value = firstAmountAfter(text, lookup);
   if (value === null) {
     errors.push(`p${pageNumber}: could not read printed value for "${spec.label}"`);
     return null;
@@ -1183,7 +1368,9 @@ export function parseDubboGpfsExtraction(
     (_page, text) =>
       text.includes('Income Statement') &&
       text.includes('Total income from continuing operations') &&
-      text.includes('Net operating result for the year attributable to Council'),
+      (text.includes('Net operating result for the year attributable to Council') ||
+        // FY2019-20 prints "Net operating result attributable to council".
+        text.includes('Net operating result attributable to council')),
   );
   if (!incomePage) {
     return reject('audited income statement page not found; no rows ingested');
@@ -1339,11 +1526,19 @@ export function parseDubboGpfsExtraction(
       b1OperatingResultVariance,
     );
   }
-  check(
-    'B1-1 grants and contributions = operating grants + capital grants',
-    grantsOperating! + grantsCapital!,
-    functionsTotals.grants_and_contributions,
-  );
+  if (layout.functionsGrantsAnchor !== undefined) {
+    check(
+      'B1-1 grants and contributions = printed functions-note anchor',
+      layout.functionsGrantsAnchor,
+      functionsTotals.grants_and_contributions,
+    );
+  } else {
+    check(
+      'B1-1 grants and contributions = operating grants + capital grants',
+      grantsOperating! + grantsCapital!,
+      functionsTotals.grants_and_contributions,
+    );
+  }
   check(
     'printed total revenue - printed total expenses = printed net result',
     netResult!,
@@ -1398,6 +1593,9 @@ export function parseDubboGpfsExtraction(
       layout.b1Variance
         ? `B1-1 income and operating result are $${layout.b1Variance.income} thousand above the face statement; variance recorded as unexplained and face totals retained`
         : 'B1-1 Total functions and activities equals the face statement',
+      layout.functionsGrantsAnchor !== undefined
+        ? `B1-1 grants and contributions equal the printed functions-note anchor ${layout.functionsGrantsAnchor} (${layout.functionsGrantsNote})`
+        : 'B1-1 grants and contributions equal the operating plus capital grant lines',
       layout.olg
         ? 'OLG FY2024-25 expenses and revenue anchors match exactly'
         : `no external OLG anchor is defined for FY${fiscalYear}`,
@@ -1410,7 +1608,9 @@ export function parseDubboGpfsExtraction(
         (layout.olg ? ' and OLG anchors match' : `; no OLG anchor for FY${fiscalYear}`)
       : layout.b1Variance
         ? `printed total expenses from the income statement; revenue and expense components reconcile exactly; B1-1 income and operating result are $${layout.b1Variance.income} thousand higher than the face (unexplained; face totals retained, no component adjusted); no OLG anchor for this year`
-        : 'printed total expenses from the income statement; expense components, revenue components and B1-1 reconcile exactly (no OLG anchor for this year)';
+        : layout.functionsGrantsAnchor !== undefined
+          ? `printed total expenses from the income statement; revenue and expense components reconcile exactly; B1-1 income, expenses and result equal the face; the B1-1 grants column is the independent printed anchor ${layout.functionsGrantsAnchor} and is not reconciled to the face grant lines; no OLG anchor for this year`
+          : 'printed total expenses from the income statement; expense components, revenue components and B1-1 reconcile exactly (no OLG anchor for this year)';
   const records = values.map((line) =>
     mapLine(line, context, unit, incomeUnit.reason, reconciliationNote),
   );
@@ -1419,7 +1619,9 @@ export function parseDubboGpfsExtraction(
       ? `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000) to OLG ${layout.olg.revenueCents / 100} / ${layout.olg.expensesCents / 100} dollars`
       : layout.b1Variance
         ? `reconciled to the face statement: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000); B1-1 income/result are $${layout.b1Variance.income} thousand higher and remain unexplained; no external anchor for FY${fiscalYear}`
-        : `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000); B1-1 and face statement agree, no external anchor for FY${fiscalYear}`,
+        : layout.functionsGrantsAnchor !== undefined
+          ? `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000); B1-1 income, expenses and result agree with the face; B1-1 grants column ${layout.functionsGrantsAnchor} retained as an independent printed anchor; no external anchor for FY${fiscalYear}`
+          : `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000); B1-1 and face statement agree, no external anchor for FY${fiscalYear}`,
   );
   return { records, reconciliation, warnings, rejections };
 }
@@ -1463,7 +1665,7 @@ export function createDubboGpfsConnector(options: DubboGpfsConnectorOptions = {}
     jurisdiction_level: 'local',
     license: DUBBO_GPFS_LICENSE,
     notes:
-      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25, FY2023-24, FY2022-23, FY2021-22 and FY2020-21 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and B1-1 Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). FY2020-21 reconciles to its face statement; B1-1 prints income and operating result $188 thousand higher, and that variance is recorded as unexplained rather than forced to equality or spread across components. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
+      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25, FY2023-24, FY2022-23, FY2021-22, FY2020-21 and FY2019-20 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and the functions-note Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). FY2020-21 reconciles to its face statement; its functions note prints income and operating result $188 thousand higher, and that variance is recorded as unexplained rather than forced to equality or spread across components. FY2019-20 reconciles to its face statement on income, expenses and result; the functions note prints grants included in income of $35,142 thousand, which differs from the face operating plus capital grant lines ($54,935 thousand), so that printed grant total is retained as an independent anchor and the grant lines are not adjusted. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
