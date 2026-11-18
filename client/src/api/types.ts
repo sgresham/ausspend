@@ -737,15 +737,31 @@ export interface TradeResponse {
     partner_country?: string;
     port?: string;
     financial_year?: string;
+    limit?: number;
+    offset?: number;
   };
   rows: TradeRow[];
   summary: TradeSummaryGroup[];
   counts: {
     rows: number;
+    total: number;
     by_measure_type: Partial<Record<TradeMeasureType, number>>;
+  };
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
   };
   warning: string;
   note: string;
+}
+
+/** GET /api/trade/years — distinct financial years available for the filters. */
+export interface TradeYearsResponse {
+  filters: TradeResponse['filters'];
+  years: string[];
+  count: number;
+  warning: string;
 }
 
 export interface TradeCommoditiesResponse {

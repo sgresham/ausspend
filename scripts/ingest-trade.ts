@@ -140,8 +140,12 @@ async function main(): Promise<void> {
         console.log(
           `[ingest:trade] abs-international-trade: success goods=${abs.goodsObservations} services=${abs.servicesObservations} upserted=${abs.upserted} matched=${abs.matched} total=${abs.total}`,
         );
-        console.log(`[ingest:trade] goods_url=${abs.goodsUrl}`);
-        console.log(`[ingest:trade] services_url=${abs.servicesUrl}`);
+        console.log(
+          `[ingest:trade] goods_range=${abs.goodsEarliestPeriod}..${abs.goodsLatestPeriod} chunks=${abs.goodsUrls.length}`,
+        );
+        console.log(
+          `[ingest:trade] services_years=${abs.servicesYears.join(',')} requests=${abs.servicesUrls.length}`,
+        );
         continue;
       }
       if (source.source_id === 'oecd-itic') {

@@ -21,6 +21,8 @@ const TradeQuerySchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}$/, 'financial_year must look like YYYY-YY')
     .optional(),
+  limit: z.coerce.number().int().min(1).max(500).optional(),
+  offset: z.coerce.number().int().min(0).max(1_000_000).optional(),
 });
 
 export type TradeFilters = z.infer<typeof TradeQuerySchema>;
@@ -134,9 +136,14 @@ function summaryByMeasureType(rows: MeasureTypeSummaryRow[]) {
 export const listTrade: RequestHandler = async (req, res) => {
   const filters = parseTradeFilters(req.query);
   const query = tradeQuery(filters);
-  const [rows, summaryRows] = await Promise.all([
+  const limit = filters.limit ?? 200;
+  const offset = filters.offset ?? 0;
+  const [total, rows, summaryRows] = await Promise.all([
+    TradeRecordModel.countDocuments(query),
     TradeRecordModel.find(query)
       .sort({ financial_year: -1, trade_flow: 1, measure_type: 1, commodity_name: 1, _id: 1 })
+      .skip(offset)
+      .limit(limit)
       .lean<LeanTradeRecord[]>(),
     TradeRecordModel.aggregate<MeasureTypeSummaryRow>([
       { $match: query },
@@ -159,10 +166,12 @@ export const listTrade: RequestHandler = async (req, res) => {
     summary,
     counts: {
       rows: rows.length,
+      total,
       by_measure_type: Object.fromEntries(
         summary.map((entry) => [entry.measure_type, entry.count]),
       ),
     },
+    pagination: { limit, offset, total },
     warning: TRADE_NON_ADDITIVE_WARNING,
     note: 'Trade records are a separate analytical domain. They are never joined to, or summed with, spending records.',
   });
@@ -207,6 +216,20 @@ export const getTradeSummary: RequestHandler = async (req, res) => {
     additive: false,
     warning: TRADE_NON_ADDITIVE_WARNING,
     note: 'Each group is a different measure. Never add values, CIF/FOB margins, port costs, volumes or prices together, and never present a port cost as a national total.',
+  });
+};
+
+/** GET /api/trade/years — distinct financial years available for the filters. */
+export const listTradeYears: RequestHandler = async (req, res) => {
+  const filters = parseTradeFilters(req.query);
+  const query = tradeQuery(filters);
+  const years = (await TradeRecordModel.distinct('financial_year', query)).sort().reverse();
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    filters,
+    years,
+    count: years.length,
+    warning: TRADE_NON_ADDITIVE_WARNING,
   });
 };
 
