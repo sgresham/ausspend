@@ -44,9 +44,9 @@ export const DUBBO_GPFS_FISCAL_YEAR = '2024-25';
 export const DUBBO_GPFS_TARGET_YEAR_LABEL = '2024/2025';
 export const DUBBO_GPFS_SOURCE_DATASET = 'Dubbo Regional Council GPFS 2024-25';
 /**
- * Years this connector ingests from their own audited GPFS. FY2025-26 and the
- * historical FY2015-16..FY2020-21 series are deliberately excluded: they are
- * separate builders and must not be ingested here.
+ * Years this connector ingests from their own audited GPFS. The FY2015-16
+ * predecessor statements and FY2016-17..FY2019-20 remain deliberately excluded:
+ * they are separate builders and must not be ingested here.
  */
 export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = [
   '2025-26',
@@ -54,6 +54,7 @@ export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = [
   '2023-24',
   '2022-23',
   '2021-22',
+  '2020-21',
 ] as const;
 export const DUBBO_GPFS_LICENSE = DUBBO_LICENSE;
 export const DUBBO_GPFS_DATA_QUALITY_FLAG = 'provisional/local_government';
@@ -533,6 +534,144 @@ export const DUBBO_GPFS_FY2021_22_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
   ...DUBBO_GPFS_FY2023_24_LINES.filter((spec) => spec.section === 'result'),
 ];
 
+/**
+ * FY2020-21 keeps the inline single-total face shape but prints the revised
+ * labels `Other revenue`, `Net gains from the disposal of assets`, `Materials
+ * and services`, `Depreciation, amortisation and impairment for non-financial
+ * assets` and `Net losses from the disposal of assets` (the loss is printed as a
+ * dash for the current year). The disposal gain of 3,446 is a printed revenue
+ * component. B1-1 income and operating result are both 188 ($'000) higher than
+ * the face; that variance is recorded as unexplained and never forced.
+ */
+export const DUBBO_GPFS_FY2020_21_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
+  {
+    key: 'rates_and_annual_charges',
+    label: 'Rates and annual charges',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'user_charges_and_fees',
+    label: 'User charges and fees',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_revenues',
+    label: 'Other revenue',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_operating',
+    label: 'Grants and contributions provided for operating purposes',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_capital',
+    label: 'Grants and contributions provided for capital purposes',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'interest_and_investment_income',
+    label: 'Interest and investment income',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_income',
+    label: 'Other income',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_gain_from_disposal_of_assets',
+    label: 'Net gains from the disposal of assets',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_revenue',
+    label: 'Total income from continuing operations',
+    section: 'revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'employee_expenses',
+    label: 'Employee benefits and on-costs',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'materials_and_services',
+    label: 'Materials and services',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'borrowing_costs',
+    label: 'Borrowing costs',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'depreciation_amortisation_impairment',
+    label: 'Depreciation, amortisation and impairment for non-financial assets',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_expenses',
+    label: 'Other expenses',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_loss_from_disposal_of_assets',
+    label: 'Net losses from the disposal of assets',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    allow_printed_nil: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_expenses',
+    label: 'Total expenses from continuing operations',
+    section: 'expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_result',
+    label: 'Net operating result for the year attributable to Council',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_result_before_capital_grants',
+    label:
+      'Net operating result for the year before grants and contributions provided for capital purposes',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+];
+
 export interface DubboGpfsYearLayout {
   fiscalYear: string;
   sourceDataset: string;
@@ -541,11 +680,35 @@ export interface DubboGpfsYearLayout {
   totalExpensesStatement: 'Income Statement' | 'B1-1 Functions or activities';
   /** Whether the face prints an "excluding depreciation" subtotal to bridge. */
   expenseBridge: 'excluding-depreciation' | 'single-total';
+  /**
+   * A known-but-unexplained B1-1 variance against the face statement, in printed
+   * $'000. When present, B1-1 is required to differ from the face by exactly
+   * these amounts; equality is never forced and no component is adjusted.
+   */
+  b1Variance?: {
+    income: number;
+    expenses: number;
+    operatingResult: number;
+    note: string;
+  };
   /** External OLG anchor, only where a matching published constant exists. */
   olg?: { expensesCents: number; revenueCents: number };
 }
 
 export const DUBBO_GPFS_YEAR_LAYOUTS: Readonly<Record<string, DubboGpfsYearLayout>> = {
+  '2020-21': {
+    fiscalYear: '2020-21',
+    sourceDataset: 'Dubbo Regional Council GPFS 2020-21',
+    lines: DUBBO_GPFS_FY2020_21_LINES,
+    totalExpensesStatement: 'Income Statement',
+    expenseBridge: 'single-total',
+    b1Variance: {
+      income: 188,
+      expenses: 0,
+      operatingResult: 188,
+      note: 'B1-1 prints income 186,942 and operating result 37,312, both $188 thousand above the face statement (income 186,754; result 37,124); the $188 remains unexplained, so the face totals are retained and no component is adjusted',
+    },
+  },
   '2021-22': {
     fiscalYear: '2021-22',
     sourceDataset: 'Dubbo Regional Council GPFS 2021-22',
@@ -630,6 +793,11 @@ export interface DubboGpfsReconciliation {
   functions_total_expenses: number;
   functions_operating_result: number;
   functions_grants_and_contributions: number;
+  /** B1-1 minus face, in printed $'000. Zero except where a variance is declared. */
+  b1_income_variance: number;
+  b1_expenses_variance: number;
+  b1_operating_result_variance: number;
+  b1_variance_note: string | null;
   revenue_components_sum: number;
   expense_components_sum: number;
   face_expense_bridge: number;
@@ -1137,9 +1305,40 @@ export function parseDubboGpfsExtraction(
   } else {
     check('expense components = printed total expenses', totalExpenses, expenseComponentsSum);
   }
-  check('B1-1 total expenses = printed total expenses', totalExpenses, functionsTotals.expenses);
-  check('B1-1 total income = printed total revenue', totalRevenue!, functionsTotals.income);
-  check('B1-1 operating result = printed net result', netResult!, functionsTotals.operating_result);
+  const b1IncomeVariance = functionsTotals.income - totalRevenue!;
+  const b1ExpensesVariance = functionsTotals.expenses - totalExpenses;
+  const b1OperatingResultVariance = functionsTotals.operating_result - netResult!;
+  const expectedB1Income = totalRevenue! + (layout.b1Variance?.income ?? 0);
+  const expectedB1Expenses = totalExpenses + (layout.b1Variance?.expenses ?? 0);
+  const expectedB1Result = netResult! + (layout.b1Variance?.operatingResult ?? 0);
+  check(
+    'B1-1 total expenses = printed total expenses',
+    expectedB1Expenses,
+    functionsTotals.expenses,
+  );
+  check('B1-1 total income = printed total revenue', expectedB1Income, functionsTotals.income);
+  check(
+    'B1-1 operating result = printed net result',
+    expectedB1Result,
+    functionsTotals.operating_result,
+  );
+  if (layout.b1Variance) {
+    check(
+      'B1-1 income variance = declared unexplained variance',
+      layout.b1Variance.income,
+      b1IncomeVariance,
+    );
+    check(
+      'B1-1 expenses variance = declared unexplained variance',
+      layout.b1Variance.expenses,
+      b1ExpensesVariance,
+    );
+    check(
+      'B1-1 operating result variance = declared unexplained variance',
+      layout.b1Variance.operatingResult,
+      b1OperatingResultVariance,
+    );
+  }
   check(
     'B1-1 grants and contributions = operating grants + capital grants',
     grantsOperating! + grantsCapital!,
@@ -1182,6 +1381,10 @@ export function parseDubboGpfsExtraction(
     functions_total_expenses: functionsTotals.expenses,
     functions_operating_result: functionsTotals.operating_result,
     functions_grants_and_contributions: functionsTotals.grants_and_contributions,
+    b1_income_variance: b1IncomeVariance,
+    b1_expenses_variance: b1ExpensesVariance,
+    b1_operating_result_variance: b1OperatingResultVariance,
+    b1_variance_note: layout.b1Variance?.note ?? null,
     revenue_components_sum: revenueComponentsSum,
     expense_components_sum: expenseComponentsSum,
     face_expense_bridge: faceExpenseBridge,
@@ -1192,7 +1395,9 @@ export function parseDubboGpfsExtraction(
       layout.expenseBridge === 'excluding-depreciation'
         ? 'printed total expenses excluding depreciation + depreciation = B1-1 total expenses'
         : 'printed expense components sum to the printed total expenses',
-      'B1-1 Total functions and activities equals the face statement',
+      layout.b1Variance
+        ? `B1-1 income and operating result are $${layout.b1Variance.income} thousand above the face statement; variance recorded as unexplained and face totals retained`
+        : 'B1-1 Total functions and activities equals the face statement',
       layout.olg
         ? 'OLG FY2024-25 expenses and revenue anchors match exactly'
         : `no external OLG anchor is defined for FY${fiscalYear}`,
@@ -1203,14 +1408,18 @@ export function parseDubboGpfsExtraction(
     layout.expenseBridge === 'excluding-depreciation'
       ? 'printed total expenses from B1-1, not a component sum; face-statement bridge reconciles exactly' +
         (layout.olg ? ' and OLG anchors match' : `; no OLG anchor for FY${fiscalYear}`)
-      : 'printed total expenses from the income statement; expense components, revenue components and B1-1 reconcile exactly (no OLG anchor for this year)';
+      : layout.b1Variance
+        ? `printed total expenses from the income statement; revenue and expense components reconcile exactly; B1-1 income and operating result are $${layout.b1Variance.income} thousand higher than the face (unexplained; face totals retained, no component adjusted); no OLG anchor for this year`
+        : 'printed total expenses from the income statement; expense components, revenue components and B1-1 reconcile exactly (no OLG anchor for this year)';
   const records = values.map((line) =>
     mapLine(line, context, unit, incomeUnit.reason, reconciliationNote),
   );
   warnings.push(
     layout.olg
       ? `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000) to OLG ${layout.olg.revenueCents / 100} / ${layout.olg.expensesCents / 100} dollars`
-      : `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000); B1-1 and face statement agree, no external anchor for FY${fiscalYear}`,
+      : layout.b1Variance
+        ? `reconciled to the face statement: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000); B1-1 income/result are $${layout.b1Variance.income} thousand higher and remain unexplained; no external anchor for FY${fiscalYear}`
+        : `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000); B1-1 and face statement agree, no external anchor for FY${fiscalYear}`,
   );
   return { records, reconciliation, warnings, rejections };
 }
@@ -1254,7 +1463,7 @@ export function createDubboGpfsConnector(options: DubboGpfsConnectorOptions = {}
     jurisdiction_level: 'local',
     license: DUBBO_GPFS_LICENSE,
     notes:
-      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25, FY2023-24, FY2022-23 and FY2021-22 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and B1-1 Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
+      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25, FY2023-24, FY2022-23, FY2021-22 and FY2020-21 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and B1-1 Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). FY2020-21 reconciles to its face statement; B1-1 prints income and operating result $188 thousand higher, and that variance is recorded as unexplained rather than forced to equality or spread across components. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
