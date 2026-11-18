@@ -3,6 +3,7 @@ import { createWaBudgetConnector } from './wa-budget.js';
 import { createTasBudgetConnector } from './tas-budget.js';
 import { createQldLocalGovernmentConnector } from './qld-local-government.js';
 import { createWaMyCouncilConnector } from './wa-mycouncil.js';
+import { createTasLgCdcConnector } from './tas-lg-cdc.js';
 import { createAihwHealthExpenditureConnector } from './aihw-health-expenditure.js';
 import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
@@ -542,6 +543,11 @@ export const CONNECTORS: readonly Connector[] = [
   // program/year plus the controlled finance-actual snapshot. Never queries the
   // MyCouncil budget or grant entity sets; wa-budget remains separate.
   createWaMyCouncilConnector(),
+  // Phase 3 local government: TAS CDC LIST Open Data statewide ZIP repository,
+  // Financial Data sheet for the latest three complete years and all 29
+  // councils. Whole-dollar unit detection and printed reconciliation; never
+  // mixed with tas-budget.
+  createTasLgCdcConnector(),
   // Module-style connectors discovered by scripts/generate-connector-manifest.mjs.
   ...MODULAR_CONNECTORS,
 ];
