@@ -16,7 +16,7 @@ import {
   parseWilloughbyGpfsReportPage,
   willoughbyGpfsNaturalKey,
   type WilloughbyGpfsParseContext,
-} from '../src/connectors/willoughby-gpfs.js';
+} from '../src/connectors/willoughby-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

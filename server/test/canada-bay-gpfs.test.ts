@@ -16,7 +16,7 @@ import {
   parseCanadaBayGpfsExtraction,
   parseCanadaBayGpfsReportPage,
   type CanadaBayGpfsParseContext,
-} from '../src/connectors/canada-bay-gpfs.js';
+} from '../src/connectors/canada-bay-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

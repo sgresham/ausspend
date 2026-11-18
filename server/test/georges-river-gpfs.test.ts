@@ -16,7 +16,7 @@ import {
   parseGeorgesRiverGpfsExtraction,
   parseGeorgesRiverGpfsReportPage,
   type GeorgesRiverGpfsParseContext,
-} from '../src/connectors/georges-river-gpfs.js';
+} from '../src/connectors/georges-river-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

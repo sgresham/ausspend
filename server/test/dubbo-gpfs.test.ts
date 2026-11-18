@@ -17,7 +17,7 @@ import {
   parseDubboGpfsReportLinks,
   selectDubboGpfsDocument,
   type DubboGpfsParseContext,
-} from '../src/connectors/dubbo-gpfs.js';
+} from '../src/connectors/dubbo-council-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

@@ -1,0 +1,17 @@
+import {
+  RANDWICK_GPFS_ID,
+  RANDWICK_GPFS_NAME,
+  RANDWICK_GPFS_PUBLISHER,
+  RANDWICK_GPFS_FISCAL_YEAR,
+  RANDWICK_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: RANDWICK_GPFS_ID,
+  name: RANDWICK_GPFS_NAME,
+  publisher: RANDWICK_GPFS_PUBLISHER,
+  fiscalYear: RANDWICK_GPFS_FISCAL_YEAR,
+  dataQualityFlag: RANDWICK_GPFS_DATA_QUALITY_FLAG,
+} as const;

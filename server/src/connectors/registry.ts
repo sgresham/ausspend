@@ -8,36 +8,7 @@ import { createAcncCharityConnector } from './acnc-charity.js';
 import { createAusTenderConnector } from './aus-tender.js';
 import { createNswCkanConnector } from './data-nsw-ckan.js';
 import { createDubboConnector } from './dubbo-council.js';
-import { createDubboGpfsConnector } from './dubbo-gpfs.js';
-import { createCityOfSydneyGpfsConnector } from './city-of-sydney-gpfs.js';
 import { MODULAR_CONNECTORS } from './generated-connectors.js';
-import { createParramattaGpfsConnector } from './parramatta-gpfs.js';
-import { createNorthernBeachesGpfsConnector } from './northern-beaches-gpfs.js';
-import { createCanterburyBankstownGpfsConnector } from './canterbury-bankstown-gpfs.js';
-import { createSutherlandShireGpfsConnector } from './sutherland-shire-gpfs.js';
-import { createWollongongGpfsConnector } from './wollongong-gpfs.js';
-import { createNewcastleGpfsConnector } from './newcastle-gpfs.js';
-import { createLakeMacquarieGpfsConnector } from './lake-macquarie-gpfs.js';
-import { createMaitlandGpfsConnector } from './maitland-gpfs.js';
-import { createCoffsHarbourGpfsConnector } from './coffs-harbour-gpfs.js';
-import { createMidCoastGpfsConnector } from './mid-coast-gpfs.js';
-import { createPortMacquarieHastingsGpfsConnector } from './port-macquarie-hastings-gpfs.js';
-import { createTweedShireGpfsConnector } from './tweed-shire-gpfs.js';
-import { createShoalhavenGpfsConnector } from './shoalhaven-gpfs.js';
-import { createShellharbourGpfsConnector } from './shellharbour-gpfs.js';
-import { createWaverleyGpfsConnector } from './waverley-gpfs.js';
-import { createWilloughbyGpfsConnector } from './willoughby-gpfs.js';
-import { createInnerWestGpfsConnector } from './inner-west-gpfs.js';
-import { createBaysideGpfsConnector } from './bayside-gpfs.js';
-import { createRandwickGpfsConnector } from './randwick-gpfs.js';
-import { createRydeGpfsConnector } from './ryde-gpfs.js';
-import { createNorthSydneyGpfsConnector } from './north-sydney-gpfs.js';
-import { createCanadaBayGpfsConnector } from './canada-bay-gpfs.js';
-import { createCumberlandGpfsConnector } from './cumberland-gpfs.js';
-import { createGeorgesRiverGpfsConnector } from './georges-river-gpfs.js';
-import { createFairfieldGpfsConnector } from './fairfield-gpfs.js';
-import { createLiverpoolGpfsConnector } from './liverpool-gpfs.js';
-import { createKuRingGaiGpfsConnector } from './ku-ring-gai-gpfs.js';
 import { createPbsConnector } from './data-gov-au-pbs.js';
 import { createGrantConnectConnector } from './grantconnect.js';
 import { createNswBudgetConnector } from './nsw-budget-open-data.js';
@@ -167,55 +138,47 @@ export const CONNECTORS: readonly Connector[] = [
   // from the budget/forecast PDF above: every row is non-additive
   // agency_detail, has no region/LGA allocation, and reconciles exactly to the
   // OLG FY2024-25 totals. Never summed with the 245 dubbo-council rows.
-  createDubboGpfsConnector(),
   // GPFS expansion: second council only (City of Sydney). Its audited FY2024-25
   // General Purpose Financial Statements are a separate source id: every row is
   // non-additive agency_detail, has no region/LGA allocation, and reconciles
   // exactly to the printed Income Statement, B1-1 and comprehensive-income
   // totals. Never summed with any other council, the Dubbo rows or state rows.
-  createCityOfSydneyGpfsConnector(),
   // GPFS expansion: fourth council only (City of Parramatta). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
   // reconciles exactly to the printed Income Statement, B1-1 and
   // comprehensive-income totals. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createParramattaGpfsConnector(),
   // GPFS expansion: fifth council only (Northern Beaches Council). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
   // reconciles exactly to the printed Income Statement, B1-1 and
   // comprehensive-income totals. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createNorthernBeachesGpfsConnector(),
   // GPFS expansion: sixth council only (Canterbury-Bankstown Council). Its
   // audited FY2024-25 General Purpose Financial Statements are a separate source
   // id: every row is non-additive agency_detail, has no region/LGA allocation,
   // and reconciles exactly to the printed Income Statement, B1-1 and
   // comprehensive-income totals. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createCanterburyBankstownGpfsConnector(),
   // GPFS expansion: seventh council only (Sutherland Shire Council). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
   // reconciles exactly to the printed Income Statement, B1-1 and
   // comprehensive-income totals. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createSutherlandShireGpfsConnector(),
   // GPFS expansion: eighth council only (Wollongong City Council). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
   // reconciles exactly to the printed Income Statement, B1-1 and
   // comprehensive-income totals. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createWollongongGpfsConnector(),
   // GPFS expansion: ninth council only (Newcastle City Council). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
   // reconciles exactly to the printed Income Statement, B1-1 and
   // comprehensive-income totals. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createNewcastleGpfsConnector(),
   // GPFS expansion: tenth council only (Lake Macquarie City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are a separate source
   // id: every row is non-additive agency_detail, has no region/LGA allocation,
@@ -224,7 +187,6 @@ export const CONNECTORS: readonly Connector[] = [
   // the documented headless Chromium/Playwright path because Akamai returns
   // HTTP 403 to direct HTTP. Never summed with any other council, the Dubbo
   // budget rows, the existing council GPFS rows or State rows.
-  createLakeMacquarieGpfsConnector(),
   // GPFS expansion: eleventh council only (Maitland City Council). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
@@ -233,7 +195,6 @@ export const CONNECTORS: readonly Connector[] = [
   // rounding is retained as evidence and components are never emitted/summed.
   // Never summed with any other council, the Dubbo budget rows, the existing
   // council GPFS rows or State rows.
-  createMaitlandGpfsConnector(),
   // GPFS expansion: twelfth council only (Coffs Harbour City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are a separate source
   // id: every row is non-additive agency_detail, has no region/LGA allocation,
@@ -243,7 +204,6 @@ export const CONNECTORS: readonly Connector[] = [
   // path because Akamai returns HTTP 403 to direct HTTP. Never summed with any
   // other council, the Dubbo budget rows, the existing council GPFS rows or State
   // rows.
-  createCoffsHarbourGpfsConnector(),
   // GPFS expansion: thirteenth council only (MidCoast Council). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
@@ -252,7 +212,6 @@ export const CONNECTORS: readonly Connector[] = [
   // the official reporting page over plain HTTP; the exact bytes are SHA-256
   // archived outside the repo. Never summed with any other council, the Dubbo
   // budget rows, the existing council GPFS rows or State rows.
-  createMidCoastGpfsConnector(),
   // GPFS expansion: fourteenth council only (Port Macquarie-Hastings Council).
   // Its audited FY2024-25 General Purpose Financial Statements are a separate
   // source id: every row is non-additive agency_detail, has no region/LGA
@@ -262,7 +221,6 @@ export const CONNECTORS: readonly Connector[] = [
   // path because an Akamai edge returns HTTP 403 to direct HTTP; the exact bytes
   // are SHA-256 archived outside the repo. Never summed with any other council,
   // the Dubbo budget rows, the existing council GPFS rows or State rows.
-  createPortMacquarieHastingsGpfsConnector(),
   // GPFS expansion: fifteenth council only (Tweed Shire Council). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
@@ -272,7 +230,6 @@ export const CONNECTORS: readonly Connector[] = [
   // bytes are SHA-256 archived outside the repo. Never summed with any other
   // council, the Dubbo budget rows, the existing council GPFS rows or State
   // rows.
-  createTweedShireGpfsConnector(),
   // GPFS expansion: sixteenth council only (Shoalhaven City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are a separate source
   // id: every row is non-additive agency_detail, has no region/LGA allocation,
@@ -283,7 +240,6 @@ export const CONNECTORS: readonly Connector[] = [
   // bytes are SHA-256 archived outside the repo. Never summed with any other
   // council, the Dubbo budget rows, the existing council GPFS rows or State
   // rows.
-  createShoalhavenGpfsConnector(),
   // GPFS expansion: seventeenth council only (Shellharbour City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are a separate source
   // id: every row is non-additive agency_detail, has no region/LGA allocation,
@@ -294,7 +250,6 @@ export const CONNECTORS: readonly Connector[] = [
   // page, and the exact bytes are SHA-256 archived outside the repo. Never
   // summed with any other council, the Dubbo budget rows, the existing council
   // GPFS rows or State rows.
-  createShellharbourGpfsConnector(),
   // GPFS expansion: eighteenth council only (Waverley Council). Its audited
   // FY2024-25 General Purpose Financial Statements are the official "Annual
   // Statement of Accounts 2024-2025" and a separate source id: every row is
@@ -305,7 +260,6 @@ export const CONNECTORS: readonly Connector[] = [
   // the documented headless Chromium path; the exact bytes are SHA-256 archived
   // outside the repo. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
-  createWaverleyGpfsConnector(),
   // GPFS expansion: nineteenth council only (Willoughby City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are the official
   // "Annual Financial Statements 2024-2025" and a separate source id: every row
@@ -316,7 +270,6 @@ export const CONNECTORS: readonly Connector[] = [
   // the documented headless Chromium path; the exact bytes are SHA-256 archived
   // outside the repo. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
-  createWilloughbyGpfsConnector(),
   // GPFS expansion: twentieth council only (Inner West Council). Its audited
   // FY2024-25 General Purpose Financial Statements are published inside the
   // official "Annual Report 2024-25" (the Annual Report page states the report
@@ -329,7 +282,6 @@ export const CONNECTORS: readonly Connector[] = [
   // from the official page with Node's fetch; the exact bytes are SHA-256
   // archived outside the repo. Never summed with any other council, the Dubbo
   // budget rows, the existing council GPFS rows or State rows.
-  createInnerWestGpfsConnector(),
   // GPFS expansion: twenty-first council only (Bayside Council). Its audited
   // FY2024-25 General Purpose Financial Statements are the standalone official
   // "General Purpose Financial Statements & Special Schedules for the year
@@ -341,7 +293,6 @@ export const CONNECTORS: readonly Connector[] = [
   // the official page with Node's fetch; the exact bytes are SHA-256 archived
   // outside the repo. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
-  createBaysideGpfsConnector(),
   // GPFS expansion: twenty-second council only (Randwick City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are the standalone
   // official "Financial Statements - 2024-25" PDF linked from the Our reports
@@ -353,7 +304,6 @@ export const CONNECTORS: readonly Connector[] = [
   // connector still selects the link from the cleared HTML; the exact bytes are
   // SHA-256 archived outside the repo. Never summed with any other council, the
   // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createRandwickGpfsConnector(),
   // GPFS expansion: twenty-third council only (the Council of the City of
   // Ryde). Its audited FY2024-25 General Purpose Financial Statements are the
   // standalone official "Financial Statements (General and Special Purpose)"
@@ -367,7 +317,6 @@ export const CONNECTORS: readonly Connector[] = [
   // Node's fetch; the exact bytes are SHA-256 archived outside the repo. Never
   // summed with any other council, the Dubbo budget rows, the existing council
   // GPFS rows or State rows.
-  createRydeGpfsConnector(),
   // GPFS expansion: twenty-fourth council only (North Sydney Council). Its
   // audited FY2024-25 General Purpose Financial Statements are the standalone
   // official "Financial Statements 2024-2025" PDF linked from the Financial
@@ -381,7 +330,6 @@ export const CONNECTORS: readonly Connector[] = [
   // the link from the cleared HTML; the exact bytes are SHA-256 archived outside
   // the repo. Never summed with any other council, the Dubbo budget rows, the
   // existing council GPFS rows or State rows.
-  createNorthSydneyGpfsConnector(),
   // GPFS expansion: twenty-fifth council only (City of Canada Bay Council). Its
   // audited FY2024-25 General Purpose Financial Statements are published inside
   // the official "Annual Report 2024-2025" PDF linked from the council's Our
@@ -392,8 +340,6 @@ export const CONNECTORS: readonly Connector[] = [
   // page (no hard-coded document URL); the exact bytes are SHA-256 archived
   // outside the repo. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
-  createCanadaBayGpfsConnector(),
-  createCumberlandGpfsConnector(),
   // GPFS expansion: twenty-seventh council only (Georges River Council). Its
   // audited FY2024-25 General Purpose Financial Statements are the standalone
   // official "Audited Financial Statement and Auditors Report for 1 July 2024 -
@@ -408,7 +354,6 @@ export const CONNECTORS: readonly Connector[] = [
   // difference is retained and flagged for a human spot check, never silently
   // reconciled. Never summed with any other council, the Dubbo budget rows, the
   // existing council GPFS rows or State rows.
-  createGeorgesRiverGpfsConnector(),
   // GPFS expansion: twenty-eighth council only (Fairfield City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are the standalone
   // official "2024-2025 Financial Statements" PDF linked from the council's
@@ -423,7 +368,6 @@ export const CONNECTORS: readonly Connector[] = [
   // and flagged for a human spot check, never silently reconciled. Never summed
   // with any other council, the Dubbo budget rows, the existing council GPFS
   // rows or State rows.
-  createFairfieldGpfsConnector(),
   // GPFS expansion: twenty-ninth council only (Liverpool City Council). Its
   // audited FY2024-25 General Purpose Financial Statements are the official
   // "Audited Financial Statement" PDF listed under the "Financial Year
@@ -440,7 +384,6 @@ export const CONNECTORS: readonly Connector[] = [
   // expenses"); it is retained and flagged for a human spot check, never
   // silently reconciled. Never summed with any other council, the Dubbo budget
   // rows, the existing council GPFS rows or State rows.
-  createLiverpoolGpfsConnector(),
   // Thirtieth council GPFS source: Ku-ring-gai Council's audited FY2024-25
   // General Purpose Financial Statements are the official "Financial statements
   // 2024-2025" PDF linked from the council's Finance page, and are a separate
@@ -456,7 +399,6 @@ export const CONNECTORS: readonly Connector[] = [
   // GPFS (21,997); that internal printed discrepancy is retained and flagged for
   // a human spot check, never silently reconciled. Never summed with any other
   // council, the Dubbo budget rows, the existing council GPFS rows or State rows.
-  createKuRingGaiGpfsConnector(),
   // Phase 4: live DataVic CKAN ingestion of the 2026-27 COFOG-A aggregate
   // expenses XLSX plus one departmental statement XLSX. Budget columns only.
   createVicBudgetConnector(),

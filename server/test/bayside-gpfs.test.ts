@@ -16,7 +16,7 @@ import {
   parseBaysideGpfsExtraction,
   parseBaysideGpfsReportPage,
   type BaysideGpfsParseContext,
-} from '../src/connectors/bayside-gpfs.js';
+} from '../src/connectors/bayside-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

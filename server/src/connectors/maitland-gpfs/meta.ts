@@ -1,0 +1,17 @@
+import {
+  MAITLAND_GPFS_ID,
+  MAITLAND_GPFS_NAME,
+  MAITLAND_GPFS_PUBLISHER,
+  MAITLAND_GPFS_FISCAL_YEAR,
+  MAITLAND_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: MAITLAND_GPFS_ID,
+  name: MAITLAND_GPFS_NAME,
+  publisher: MAITLAND_GPFS_PUBLISHER,
+  fiscalYear: MAITLAND_GPFS_FISCAL_YEAR,
+  dataQualityFlag: MAITLAND_GPFS_DATA_QUALITY_FLAG,
+} as const;

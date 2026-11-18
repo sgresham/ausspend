@@ -16,7 +16,7 @@ import {
   parseCanterburyBankstownGpfsReportLinks,
   selectCanterburyBankstownGpfsDocument,
   type CanterburyBankstownGpfsParseContext,
-} from '../src/connectors/canterbury-bankstown-gpfs.js';
+} from '../src/connectors/canterbury-bankstown-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

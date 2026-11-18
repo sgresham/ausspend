@@ -17,7 +17,7 @@ import {
   parseKuRingGaiGpfsExtraction,
   parseKuRingGaiGpfsReportPage,
   type KuRingGaiGpfsParseContext,
-} from '../src/connectors/ku-ring-gai-gpfs.js';
+} from '../src/connectors/ku-ring-gai-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

@@ -1,0 +1,17 @@
+import {
+  NEWCASTLE_GPFS_ID,
+  NEWCASTLE_GPFS_NAME,
+  NEWCASTLE_GPFS_PUBLISHER,
+  NEWCASTLE_GPFS_FISCAL_YEAR,
+  NEWCASTLE_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: NEWCASTLE_GPFS_ID,
+  name: NEWCASTLE_GPFS_NAME,
+  publisher: NEWCASTLE_GPFS_PUBLISHER,
+  fiscalYear: NEWCASTLE_GPFS_FISCAL_YEAR,
+  dataQualityFlag: NEWCASTLE_GPFS_DATA_QUALITY_FLAG,
+} as const;

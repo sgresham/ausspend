@@ -16,7 +16,7 @@ import {
   parseCumberlandGpfsExtraction,
   parseCumberlandGpfsReportPage,
   type CumberlandGpfsParseContext,
-} from '../src/connectors/cumberland-gpfs.js';
+} from '../src/connectors/cumberland-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

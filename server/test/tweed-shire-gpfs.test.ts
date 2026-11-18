@@ -16,7 +16,7 @@ import {
   selectTweedShireGpfsDocument,
   tweedShireGpfsNaturalKey,
   type TweedShireGpfsParseContext,
-} from '../src/connectors/tweed-shire-gpfs.js';
+} from '../src/connectors/tweed-shire-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

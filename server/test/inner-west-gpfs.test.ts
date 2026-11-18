@@ -16,7 +16,7 @@ import {
   parseInnerWestGpfsExtraction,
   parseInnerWestGpfsReportPage,
   type InnerWestGpfsParseContext,
-} from '../src/connectors/inner-west-gpfs.js';
+} from '../src/connectors/inner-west-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

@@ -1,0 +1,15 @@
+import {
+  WOLLONGONG_GPFS_ID,
+  WOLLONGONG_GPFS_PUBLISHER,
+  WOLLONGONG_GPFS_FISCAL_YEAR,
+  WOLLONGONG_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: WOLLONGONG_GPFS_ID,
+  publisher: WOLLONGONG_GPFS_PUBLISHER,
+  fiscalYear: WOLLONGONG_GPFS_FISCAL_YEAR,
+  dataQualityFlag: WOLLONGONG_GPFS_DATA_QUALITY_FLAG,
+} as const;

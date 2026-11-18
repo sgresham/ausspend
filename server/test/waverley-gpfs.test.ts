@@ -16,7 +16,7 @@ import {
   parseWaverleyGpfsReportPage,
   waverleyGpfsNaturalKey,
   type WaverleyGpfsParseContext,
-} from '../src/connectors/waverley-gpfs.js';
+} from '../src/connectors/waverley-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

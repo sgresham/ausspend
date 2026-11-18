@@ -17,7 +17,7 @@ import {
   parseLiverpoolGpfsExtraction,
   parseLiverpoolGpfsReportPage,
   type LiverpoolGpfsParseContext,
-} from '../src/connectors/liverpool-gpfs.js';
+} from '../src/connectors/liverpool-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';
