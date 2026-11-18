@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily refresh of the Cloudflare origin allowlist
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=1h
+Persistent=true
+Unit=cloudflare-allowlist.service
+
+[Install]
+WantedBy=timers.target
