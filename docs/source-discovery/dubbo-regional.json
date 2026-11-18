@@ -842,5 +842,451 @@
     "olge_anchor": "Use the existing OLG FY2024-25 revenue/expense anchors where the year matches; do not invent anchors for other years.",
     "rows": "Emit non-additive agency_detail actual rows for total revenue, total expenses, net result, employee expenses, D&A and grant components; never create region/LGA allocation and never sum across councils or across measure types.",
     "tests": "Golden-file tests from the archived byte sequence for each supported year, including a rejection test for the wrong layout and a unit-missing test."
+  },
+  "historical_deep_verify": {
+    "former-dubbo-2015-16": {
+      "fiscal_year": "2015-16",
+      "document_type": "former-council",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/The_former_Dubbo_Council_Financial_Statements_2015-16.pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "b74a17854409ef56d97504130ced20cdccb6d081d4475ca7b79f5bd6e842dc53",
+      "bytes": 5822888,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2015-16/former-dubbo-2015-16.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": null,
+      "status": "rejected",
+      "statement_pages": {
+        "income_statement_pdf_page": 5,
+        "b1_1_pdf_page": null
+      },
+      "totals_k": {
+        "total_revenue": 117764,
+        "total_expenses": 79926,
+        "net_result": 37838,
+        "employee_expenses": 24892,
+        "depreciation_amortisation_impairment": 21364,
+        "grants_operating": 13964,
+        "grants_capital": 22494,
+        "grants_total": 36458
+      },
+      "reconciliation_k": {
+        "revenue_components": [41871, 32961, 3700, 976, 13964, 22494, 1778, 20],
+        "revenue_components_sum": 117764,
+        "expense_components": [24892, 3673, 19522, 21364, 10475],
+        "expense_components_sum": 79926,
+        "income_minus_expenses": 37838,
+        "b1_1_totals": null,
+        "checks": [
+          "revenue components = 117,764",
+          "expense components = 79,926",
+          "117,764 - 79,926 = 37,838",
+          "no B1-1 functions/activities note in this document; income statement is the only anchor"
+        ]
+      },
+      "notes": "Former Dubbo City Council. Period 1 July 2015 to 12 May 2016 (pre-amalgamation partial period). Separate predecessor entity; never added to former Wellington or to Dubbo Regional Council totals. No B1-1 functions/activities note is printed in this document.",
+      "parser_feasibility": "not builder-ready as council actuals: predecessor entity and a 1/7/15-12/5/16 partial period. Context only."
+    },
+    "former-wellington-2015-16": {
+      "fiscal_year": "2015-16",
+      "document_type": "former-council",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/The_former_Wellington_Council_Financial_Statements_2015-16.pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "ded763340e54e269a26b0cdb572ae05573418f647057432d50560112c71ae964",
+      "bytes": 3136063,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2015-16/former-wellington-2015-16.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": null,
+      "status": "rejected",
+      "statement_pages": {
+        "income_statement_pdf_page": 5,
+        "b1_1_pdf_page": 30
+      },
+      "totals_k": {
+        "total_revenue": 25366,
+        "total_expenses": 20143,
+        "net_result": 5223,
+        "employee_expenses": 6588,
+        "depreciation_amortisation_impairment": 5904,
+        "grants_operating": 7611,
+        "grants_capital": 2633,
+        "grants_total": 10244
+      },
+      "reconciliation_k": {
+        "revenue_components": [8464, 5376, 792, 341, 7611, 2633, 145, 4],
+        "revenue_components_sum": 25366,
+        "expense_components": [6588, 558, 5009, 5904, 0, 2084],
+        "expense_components_sum": 20143,
+        "income_minus_expenses": 5223,
+        "b1_1_totals": {
+          "income": 25366,
+          "expenses": 20143,
+          "result": 5224,
+          "grants": 3898
+        },
+        "checks": [
+          "revenue components = 25,366",
+          "expense components = 20,143",
+          "25,366 - 20,143 = 5,223",
+          "B1-1 total functions and activities income/expenses/result equal the face statement within $1 rounding"
+        ]
+      },
+      "notes": "Former Wellington Council. Period 1 July 2015 to 12 May 2016 (pre-amalgamation partial period). Separate predecessor entity; never added to former Dubbo or to Dubbo Regional Council totals. B1-1 total functions 15,039 + share of associates 4 + general purpose income 10,323 = 25,366 income; expenses 20,143; result 5,224 (one-dollar rounding vs face 5,223).",
+      "parser_feasibility": "not builder-ready as council actuals: predecessor entity and a 1/7/15-12/5/16 partial period. Context only."
+    },
+    "gpfs-2016-17": {
+      "fiscal_year": "2016-17",
+      "document_type": "gpfs",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20Financial%20Statements%202016-2017.pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "0379e3a81a856d7320c1923303ec7a893ec4ab0658feda2013624301bc9fa88b",
+      "bytes": 2404714,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2016-17/gpfs-2016-17.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": "dubbo-council-gpfs",
+      "status": "accepted",
+      "statement_pages": {
+        "income_statement_pdf_page": 4,
+        "b1_1_pdf_page": 25
+      },
+      "totals_k": {
+        "total_revenue": 201796,
+        "total_expenses": 140525,
+        "net_result": 61271,
+        "employee_expenses": 43183,
+        "depreciation_amortisation_impairment": 35131,
+        "grants_operating": 37994,
+        "grants_capital": 36155,
+        "grants_total": 74149
+      },
+      "reconciliation_k": {
+        "revenue_components": [59787, 55912, 6291, 1778, 37994, 36155, 3696, 183],
+        "revenue_components_sum": 201796,
+        "expense_components": [43183, 5215, 38940, 35131, 18056],
+        "expense_components_sum": 140525,
+        "income_minus_expenses": 61271,
+        "b1_1_totals": {
+          "income": 201797,
+          "expenses": 140525,
+          "result": 61272,
+          "grants": 36159
+        },
+        "checks": [
+          "revenue components = 201,796",
+          "expense components = 140,525",
+          "201,796 - 140,525 = 61,271",
+          "B1-1 total functions and activities income/expenses/result equal the face statement within $1 rounding"
+        ]
+      },
+      "notes": "Period 13 May 2016 to 30 June 2017 (post-amalgamation partial period). Face prints operating result 61,271 and a separate amalgamation gain/transfer of 2,266,670 giving net result 2,327,941; the 2,327,941 is NOT an operating total and must never be ingested as the year result. B1-1 total functions 149,245 + share of associates 183 + general purpose income 52,369 = 201,797 income; expenses 140,525; result 61,272 (one-dollar rounding vs face 61,271).",
+      "parser_feasibility": "variant required: split label/number columns in text extraction; use operating result (61,271), not net result after amalgamation (2,327,941); partial period."
+    },
+    "gpfs-2017-18": {
+      "fiscal_year": "2017-18",
+      "document_type": "gpfs",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20Financial%20Statements%202017-2018.pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "1ca80eb0981aedc442dcea94745a28ed4312bfa86b3c4348614a0402ebf02dfd",
+      "bytes": 3036559,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2017-18/gpfs-2017-18.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": "dubbo-council-gpfs",
+      "status": "accepted",
+      "statement_pages": {
+        "income_statement_pdf_page": 4,
+        "b1_1_pdf_page": 13
+      },
+      "totals_k": {
+        "total_revenue": 213627,
+        "total_expenses": 122281,
+        "net_result": 91346,
+        "employee_expenses": 37187,
+        "depreciation_amortisation_impairment": 30407,
+        "grants_operating": 30703,
+        "grants_capital": 60804,
+        "grants_total": 91507
+      },
+      "reconciliation_k": {
+        "revenue_components": [56909, 54445, 6494, 1359, 30703, 60804, 2762, 151],
+        "revenue_components_sum": 213627,
+        "expense_components": [37187, 5682, 32936, 30407, 16069],
+        "expense_components_sum": 122281,
+        "income_minus_expenses": 91346,
+        "b1_1_totals": {
+          "income": 213627,
+          "expenses": 122281,
+          "result": 91346,
+          "grants": 53226
+        },
+        "checks": [
+          "revenue components = 213,627",
+          "expense components = 122,281",
+          "213,627 - 122,281 = 91,346",
+          "B1-1 total functions and activities income/expenses/result equal the face statement"
+        ]
+      },
+      "notes": "Comparative FY2016-17 is restated in this report (net result 2,291,534 vs the 2016-17 original 2,327,941 and operating result restated to 61,271 -> see B1-1 prior 61,271). Do not ingest the comparative column from this document for 2016-17.",
+      "parser_feasibility": "variant required: split label/number columns; standard face labels otherwise."
+    },
+    "gpfs-2018-19": {
+      "fiscal_year": "2018-19",
+      "document_type": "gpfs",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Financial%20Statements%202018-19.pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "f95027b5bcaf2dc12e9f9b9c752170f2694d88c15b07f170dbda761d5d2034ea",
+      "bytes": 5224896,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2018-19/gpfs-2018-19.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": "dubbo-council-gpfs",
+      "status": "accepted",
+      "statement_pages": {
+        "income_statement_pdf_page": 5,
+        "b1_1_pdf_page": 15
+      },
+      "totals_k": {
+        "total_revenue": 184140,
+        "total_expenses": 136358,
+        "net_result": 47782,
+        "employee_expenses": 40104,
+        "depreciation_amortisation_impairment": 39902,
+        "grants_operating": 18610,
+        "grants_capital": 47179,
+        "grants_total": 65789
+      },
+      "reconciliation_k": {
+        "revenue_components": [62438, 46393, 6834, 1934, 18610, 47179, 703, 49],
+        "revenue_components_sum": 184140,
+        "expense_components": [40104, 4435, 35017, 39902, 16900],
+        "expense_components_sum": 136358,
+        "income_minus_expenses": 47782,
+        "b1_1_totals": {
+          "income": 184140,
+          "expenses": 136358,
+          "result": 47782,
+          "grants": 44452
+        },
+        "checks": [
+          "revenue components = 184,140",
+          "expense components = 136,358",
+          "184,140 - 136,358 = 47,782",
+          "B1-1 total functions and activities income/expenses/result equal the face statement"
+        ]
+      },
+      "notes": "Income statement prints original unaudited budget, Actual 2019 and Restated Actual 2018 columns. Use the Actual 2019 column only.",
+      "parser_feasibility": "supported shape: inline label/number rows; select the current-year Actual column by header, not by position."
+    },
+    "gpfs-2019-20": {
+      "fiscal_year": "2019-20",
+      "document_type": "gpfs",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20%20Annual%20Financial%20Statements%202019%202020%20-%20Annual%20Report%20(1).pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "d42c0ee29172672a693c0878a83a8c48d5b46c80881bc247f3f61b9f2e8c277e",
+      "bytes": 6841185,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2019-20/gpfs-2019-20.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": "dubbo-council-gpfs",
+      "status": "accepted",
+      "statement_pages": {
+        "income_statement_pdf_page": 4,
+        "b1_1_pdf_page": 13
+      },
+      "totals_k": {
+        "total_revenue": 169828,
+        "total_expenses": 145084,
+        "net_result": 24744,
+        "employee_expenses": 45200,
+        "depreciation_amortisation_impairment": 42261,
+        "grants_operating": 21858,
+        "grants_capital": 33077,
+        "grants_total": 54935
+      },
+      "reconciliation_k": {
+        "revenue_components": [64587, 42455, 1986, 21858, 33077, 5716, 0, 149],
+        "revenue_components_sum": 169828,
+        "expense_components": [45200, 3691, 36364, 42261, 15075, 2493],
+        "expense_components_sum": 145084,
+        "income_minus_expenses": 24744,
+        "b1_1_totals": {
+          "income": 169828,
+          "expenses": 145084,
+          "result": 24744,
+          "grants": 35142
+        },
+        "checks": [
+          "revenue components = 169,828",
+          "expense components = 145,084",
+          "169,828 - 145,084 = 24,744",
+          "B1-1 total functions and activities income/expenses/result equal the face statement"
+        ]
+      },
+      "notes": "Adds a Net losses from the disposal of assets expense line (2,493) and a nil net-gains revenue line. AASB 1058/15/16 transition: comparatives not restated.",
+      "parser_feasibility": "variant required: disposal-loss expense line is part of total expenses; nil disposal-gain revenue line."
+    },
+    "gpfs-2020-21": {
+      "fiscal_year": "2020-21",
+      "document_type": "gpfs",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Annual%20Financial%20Statements%20-2020-2021%20(3).pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "69a7b9cb99774a63b845bdb85950265a870246ce0c1f82a3929c2642244aab9b",
+      "bytes": 2637455,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2020-21/gpfs-2020-21.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": "dubbo-council-gpfs",
+      "status": "accepted",
+      "statement_pages": {
+        "income_statement_pdf_page": 4,
+        "b1_1_pdf_page": 14
+      },
+      "totals_k": {
+        "total_revenue": 186754,
+        "total_expenses": 149630,
+        "net_result": 37124,
+        "employee_expenses": 44932,
+        "depreciation_amortisation_impairment": 45551,
+        "grants_operating": 22054,
+        "grants_capital": 48265,
+        "grants_total": 70319
+      },
+      "reconciliation_k": {
+        "revenue_components": [66845, 39776, 2628, 22054, 48265, 3703, 37, 3446],
+        "revenue_components_sum": 186754,
+        "expense_components": [44932, 53696, 3095, 45551, 2356, 0],
+        "expense_components_sum": 149630,
+        "income_minus_expenses": 37124,
+        "b1_1_totals": {
+          "income": 186942,
+          "expenses": 149630,
+          "result": 37312,
+          "grants": 70319
+        },
+        "checks": [
+          "revenue components = 186,754",
+          "expense components = 149,630",
+          "186,754 - 149,630 = 37,124",
+          "B1-1 differs from face: income 186,942 vs 186,754 (diff +188), result 37,312 vs 37,124 (diff +188); reconcile to the face statement until explained"
+        ]
+      },
+      "notes": "Restructured face labels (Other revenue, Materials and services, Depreciation/amortisation/impairment for non-financial assets). B1-1 income 186,942 and result 37,312 are 188 higher than the face totals 186,754 / 37,124; reconcile the builder to the face statement, not to B1-1, until the 188 is explained.",
+      "parser_feasibility": "variant required: revised labels and B1-1 vs face 188 income/result difference; must not assume B1-1 equality."
+    },
+    "gpfs-2021-22": {
+      "fiscal_year": "2021-22",
+      "document_type": "gpfs",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Annual%20Financial%20Statements%202021-2022%20(1).pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "d28778f441953f17b01e78b2797c8bac9e34b1e42b94ba1777d7a922516a6153",
+      "bytes": 3891387,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2021-22/gpfs-2021-22.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": "dubbo-council-gpfs",
+      "status": "accepted",
+      "statement_pages": {
+        "income_statement_pdf_page": 5,
+        "b1_1_pdf_page": 15
+      },
+      "totals_k": {
+        "total_revenue": 192666,
+        "total_expenses": 152220,
+        "net_result": 40446,
+        "employee_expenses": 44485,
+        "depreciation_amortisation_impairment": 48457,
+        "grants_operating": 26053,
+        "grants_capital": 49260,
+        "grants_total": 75313
+      },
+      "reconciliation_k": {
+        "revenue_components": [69356, 39771, 5062, 26053, 49260, 3006, 158, 0],
+        "revenue_components_sum": 192666,
+        "expense_components": [44485, 46710, 2981, 48457, 2438, 7149],
+        "expense_components_sum": 152220,
+        "income_minus_expenses": 40446,
+        "b1_1_totals": {
+          "income": 192666,
+          "expenses": 152220,
+          "result": 40446,
+          "grants": 75313
+        },
+        "checks": [
+          "revenue components = 192,666",
+          "expense components = 152,220",
+          "192,666 - 152,220 = 40,446",
+          "B1-1 total functions and activities income/expenses/result equal the face statement"
+        ]
+      },
+      "notes": "Net loss from disposal of assets 7,149 is an expense line; net gain revenue line is nil. B1-1 current-year income/expenses/result equal the face statement.",
+      "parser_feasibility": "variant required: disposal-loss expense line included in total expenses."
+    },
+    "gpfs-2022-23": {
+      "fiscal_year": "2022-23",
+      "document_type": "gpfs",
+      "document_url": "https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Annual%20Financial%20Statements-%20%202022-2023%20(1).pdf.aspx",
+      "listing_url": "https://www.dubbo.nsw.gov.au/About-Council/Our-Responsibilities/reporting",
+      "sha256": "b663ddc3a8a5fca8f1887de978a1df7d1cecd24550815fdc7c1c64209074212a",
+      "bytes": 3665534,
+      "local_path": "/home/steve/ausspend-source-archive/dubbo-regional/2022-23/gpfs-2022-23.pdf",
+      "printed_unit": "$'000",
+      "measure_type": "actual",
+      "proposed_source_id": "dubbo-council-gpfs",
+      "status": "accepted",
+      "statement_pages": {
+        "income_statement_pdf_page": 5,
+        "b1_1_pdf_page": 15
+      },
+      "totals_k": {
+        "total_revenue": 213640,
+        "total_expenses": 162924,
+        "net_result": 50716,
+        "employee_expenses": 47319,
+        "depreciation_amortisation_impairment": 54323,
+        "grants_operating": 28542,
+        "grants_capital": 56552,
+        "grants_total": 85094
+      },
+      "reconciliation_k": {
+        "revenue_components": [72492, 44916, 3405, 28542, 56552, 7662, 71],
+        "revenue_components_sum": 213640,
+        "expense_components": [47319, 51966, 2995, 54323, 3045, 3276],
+        "expense_components_sum": 162924,
+        "income_minus_expenses": 50716,
+        "b1_1_totals": {
+          "income": 213640,
+          "expenses": 162924,
+          "result": 50716,
+          "grants": 85094
+        },
+        "checks": [
+          "revenue components = 213,640",
+          "expense components = 162,924",
+          "213,640 - 162,924 = 50,716",
+          "B1-1 total functions and activities income/expenses/result equal the face statement"
+        ]
+      },
+      "notes": "No separate net gains/losses on disposal revenue line; Net loss from disposal of assets 3,276 is included in expenses. B1-1 current-year totals equal the face statement.",
+      "parser_feasibility": "variant required: disposal-loss expense line included in total expenses; no disposal revenue line."
+    }
+  },
+  "historical_recommendations": [
+    "Keep one source id dubbo-council-gpfs for FY2016-17..FY2022-23 and add a per-year layout spec keyed by fiscal_year; do not create per-year source ids.",
+    "Treat former Dubbo and former Wellington FY2015-16 as separate predecessor entities with 1/7/15-12/5/16 partial periods; never add them together or to Dubbo Regional Council.",
+    "For FY2016-17 ingest the operating result 61,271, never the net result 2,327,941 that includes the 2,266,670 amalgamation transfer.",
+    "Reconcile to the face income statement. Use B1-1 as a secondary anchor, and refuse when B1-1 differs from the face unless the difference is explicitly explained (FY2020-21 has a 188 difference).",
+    "Do not ingest any comparative column from a later report for an earlier year; each year must come from its own GPFS."
+  ],
+  "historical_builder_brief": {
+    "target": "Extend dubbo-council-gpfs to FY2016-17..FY2022-23 with one council and a per-year layout spec.",
+    "input": "Archived PDF path and SHA-256 from historical_deep_verify; discover the document from the reporting page by fiscal year (no hard-coded document URL).",
+    "unit_gate": "Require the printed $'000 header on the income statement page. Reject if absent.",
+    "face_lines": "Select line labels per year; FY2016-17 and FY2017-18 use split label/number columns, FY2018-19..FY2022-23 use inline rows, FY2020-21+ use revised labels.",
+    "result_line": "For FY2016-17 use the operating result line (61,271). Never use net result after the amalgamation transfer (2,327,941).",
+    "reconciliation": "Sum printed revenue components to printed total income and printed expense components to printed total expenses; compare with the printed operating result and with B1-1 total functions and activities where B1-1 equals the face. Refuse on mismatch or unexplained B1-1 difference.",
+    "rows": "Emit non-additive agency_detail actual rows for total revenue, total expenses, net result, employee expenses, D&A and grant components; never allocate to region/LGA and never sum across councils, predecessor entities or measure types.",
+    "tests": "Per-year golden-file tests from the archived bytes, plus rejection tests for missing unit, wrong layout and the FY2016-17 amalgamation net-result trap."
   }
 }

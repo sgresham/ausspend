@@ -16,7 +16,7 @@ The reporting page lists audited GPFS for FY2016-17 through FY2025-26 (10 years)
 
 The page lists standalone audited GPFS for every year FY2016-17 to FY2025-26, two former-council FY2015-16 statements, annual reports for FY2017-18 to FY2025-26, and (on the Integrated Planning and Reporting page) budget/forward forecasts and IP&R plans. This is not a one-PDF source.
 
-The three current/recent GPFS checked in depth (FY2023-24, FY2024-25, FY2025-26) each carry an explicit printed `$'000` header and printed total income and total expenses, so none is rejected by the falsifier. Older years and non-GPFS documents are marked below with their status and reason; none is used to derive a total.
+The three current/recent GPFS checked in depth (FY2023-24, FY2024-25, FY2025-26) each carry an explicit printed `$'000` header and printed total income and total expenses, so none is rejected by the falsifier. The historical series FY2015-16 to FY2022-23 is deep-verified in §10: seven standalone Dubbo Regional Council GPFS (FY2016-17..FY2022-23) plus two former-council predecessor statements (FY2015-16), each with an explicit printed unit and printed totals. Older years and non-GPFS documents are marked below with their status and reason; none is used to derive a total.
 
 ## 2. Method and archive
 
@@ -43,6 +43,8 @@ The three current/recent GPFS checked in depth (FY2023-24, FY2024-25, FY2025-26)
 | `gpfs-2025-26` | 2025-26 | 2,940,971 |   111 |  200 | $'000        | accepted | variant required: face statement adds a 'Net gain from the disposal of assets' revenue line (864) and prints the loss line at nil; the FY2024-25 parser excludes that line from total revenue and would fail reconciliation.                                     |
 
 All ten are standalone statutory financial reports with an independent auditor report, printed `$'000` and printed total income and total expenses. They are accepted as the council-wide actual series. `dubbo-council-gpfs` currently reads FY2024-25 only; FY2023-24 and FY2025-26 need layout variants (§6).
+
+The parser notes in the table above for FY2016-17..FY2022-23 describe builder readiness from the first discovery pass; those seven years are now deep-verified with printed totals, reconciliation and per-year variants in §10, which supersedes the "not deep-verified" wording.
 
 ### 3.2 Other published sources (listed, rejected for totals)
 
@@ -195,7 +197,7 @@ Reconciliation:
 - **FY2024-25:** supported by the existing module without change.
 - **FY2023-24:** variant required — the face prints one `Total expenses from continuing operations` (181,317) and a `Net loss from the disposal of assets` line; the existing parser expects the FY2024-25 `excluding depreciation` label.
 - **FY2025-26:** variant required — the face adds a `Net gain from the disposal of assets` revenue line (864) and prints the loss line at nil; the existing revenue sum would miss 864 and reconciliation would fail.
-- **FY2016-17 to FY2022-23:** deferred pending per-year layout review. FY2016-17 is also a partial period.
+- **FY2016-17 to FY2022-23:** deferred pending per-year layout review (deep-verified with printed totals and anchors in §10; each year still needs its own layout spec in the builder). FY2016-17 is also a partial period and prints an amalgamation net-result trap.
 - Recommendation: keep **one** source id `dubbo-council-gpfs` and add a per-year layout spec plus `fiscal_year` on the parse context. Do not create per-year source ids; natural keys already include the fiscal year.
 
 ## 7. Builder-ready brief
@@ -246,3 +248,100 @@ Archived bytes are retained for public-interest research and verification only; 
 | `resourcing-strategy-2025-29` | `~/ausspend-source-archive/dubbo-regional/2025-26/resourcing-strategy-2025-29.pdf` |   4,844,520 | `eeb940b09ad19b786dffe4ee7892084f56ae784e47ad077c1a278371bcf5332c` |
 
 All 25 files were re-hashed from the archive on write; `SHA256SUMS` matches the table above. The FY2024-25 GPFS SHA-256 `d9213cea468547a318548dfd72d7faa0d9fd2da81bcf6835138d10b58914a43f` is the same hash already pinned in the `dubbo-council-gpfs` fixture.
+
+## 10. Historical deep verify — FY2015-16 to FY2022-23
+
+This section extends the packet to the historical series. It adds no connector, DB or `measures` write. Every figure below is printed in `$'000`; nothing is scaled, derived or summed across entities.
+
+### 10.0 Method and re-verification
+
+- Each historical PDF was re-downloaded from the reporting-page URL, and its exact bytes and SHA-256 were compared with the archive manifest in §9: **9/9 matched**, so the archived bytes are the bytes read here.
+- Text was extracted with `pdfjs-dist` in row-aware mode (items grouped by page y-position and sorted by x); no OCR. Values were read only from the printed income statement and, where present, the printed B1-1 `Total functions and activities` row.
+- The printed unit header is `$ '000` on every historical income statement; none is rejected by the unit gate.
+- Reconciliation below re-adds the printed components of each face statement, then compares the printed total income, total expenses and operating result with the printed B1-1 anchor where one exists.
+
+### 10.1 Former councils — FY2015-16 (pre-amalgamation, rejected as council actuals)
+
+Both are predecessor entities with a **1 July 2015 to 12 May 2016** partial period. They are separate from each other and from Dubbo Regional Council, and are **never added together or to the current council series**. Historical context only.
+
+| source_id                   | entity                    | period           | printed unit | revenue ($'000) | expenses ($'000) | net result ($'000) | income stmt (PDF p.) | B1-1         |
+| --------------------------- | ------------------------- | ---------------- | ------------ | --------------: | ---------------: | -----------------: | -------------------- | ------------ |
+| `former-dubbo-2015-16`      | former Dubbo City Council | 1/7/15 – 12/5/16 | `$'000`      |         117,764 |           79,926 |             37,838 | p.5                  | none printed |
+| `former-wellington-2015-16` | former Wellington Council | 1/7/15 – 12/5/16 | `$'000`      |          25,366 |           20,143 |              5,223 | p.5                  | p.30         |
+
+- `former-dubbo-2015-16`: revenue 41,871 + 32,961 + 3,700 + 976 + 13,964 + 22,494 + 1,778 + 20 = **117,764**; expenses 24,892 + 3,673 + 19,522 + 21,364 + 10,475 = **79,926**; 117,764 − 79,926 = **37,838**. No by-function/B1-1 note is printed, so the income statement is the only anchor.
+- `former-wellington-2015-16`: revenue 8,464 + 5,376 + 792 + 341 + 7,611 + 2,633 + 145 + 4 = **25,366**; expenses 6,588 + 558 + 5,009 + 5,904 + 0 + 2,084 = **20,143**; 25,366 − 20,143 = **5,223**. B1-1 anchor: total functions 15,039 + share of associates 4 + general purpose income 10,323 = 25,366 income; expenses 20,143; result 5,224 (one-dollar rounding vs face 5,223).
+- Neither former-council statement is a `Dubbo Regional Council` actual and neither may seed the council series.
+
+### 10.2 Dubbo Regional Council GPFS — FY2016-17 to FY2022-23
+
+All seven are standalone audited GPFS with printed `$'000`, printed total income, total expenses and an operating result. They form the council-wide actual series for these years.
+
+| source_id      | FY      | period            | revenue ($'000) | expenses ($'000) | operating result ($'000) | income stmt (PDF p.) | B1-1 (PDF p.) | B1-1 vs face |
+| -------------- | ------- | ----------------- | --------------: | ---------------: | -----------------------: | -------------------- | ------------- | ------------ |
+| `gpfs-2016-17` | 2016-17 | 13/5/16 – 30/6/17 |         201,796 |          140,525 |                   61,271 | p.4                  | p.25          | +$1 rounding |
+| `gpfs-2017-18` | 2017-18 | 1/7/17 – 30/6/18  |         213,627 |          122,281 |                   91,346 | p.4                  | p.13          | equal        |
+| `gpfs-2018-19` | 2018-19 | 1/7/18 – 30/6/19  |         184,140 |          136,358 |                   47,782 | p.5                  | p.15          | equal        |
+| `gpfs-2019-20` | 2019-20 | 1/7/19 – 30/6/20  |         169,828 |          145,084 |                   24,744 | p.4                  | p.13          | equal        |
+| `gpfs-2020-21` | 2020-21 | 1/7/20 – 30/6/21  |         186,754 |          149,630 |                   37,124 | p.4                  | p.14          | **+188**     |
+| `gpfs-2021-22` | 2021-22 | 1/7/21 – 30/6/22  |         192,666 |          152,220 |                   40,446 | p.5                  | p.15          | equal        |
+| `gpfs-2022-23` | 2022-23 | 1/7/22 – 30/6/23  |         213,640 |          162,924 |                   50,716 | p.5                  | p.15          | equal        |
+
+Per-year printed reconciliation (components in `$'000`):
+
+- **FY2016-17** — revenue 59,787 + 55,912 + 6,291 + 1,778 + 37,994 + 36,155 + 3,696 + 183 = **201,796**; expenses 43,183 + 5,215 + 38,940 + 35,131 + 18,056 = **140,525**; 201,796 − 140,525 = **61,271**. B1-1: total functions 149,245 + share 183 + general purpose 52,369 = 201,797; expenses 140,525; result 61,272. **Trap:** the face also prints an amalgamation gain/asset transfer of 2,266,670 and a resulting `Net result for the period` of **2,327,941**. That is not an operating total and must never be ingested as the year result.
+- **FY2017-18** — revenue 56,909 + 54,445 + 6,494 + 1,359 + 30,703 + 60,804 + 2,762 + 151 = **213,627**; expenses 37,187 + 5,682 + 32,936 + 30,407 + 16,069 = **122,281**; 213,627 − 122,281 = **91,346**. B1-1 income 213,627, expenses 122,281, result 91,346, grants 53,226 — equal.
+- **FY2018-19** — revenue 62,438 + 46,393 + 6,834 + 1,934 + 18,610 + 47,179 + 703 + 49 = **184,140**; expenses 40,104 + 4,435 + 35,017 + 39,902 + 16,900 = **136,358**; 184,140 − 136,358 = **47,782**. B1-1 income 184,140, expenses 136,358, result 47,782, grants 44,452 — equal.
+- **FY2019-20** — revenue 64,587 + 42,455 + 1,986 + 21,858 + 33,077 + 5,716 + 0 + 149 = **169,828**; expenses 45,200 + 3,691 + 36,364 + 42,261 + 15,075 + 2,493 = **145,084**; 169,828 − 145,084 = **24,744**. B1-1 income 169,828, expenses 145,084, result 24,744, grants 35,142 — equal.
+- **FY2020-21** — revenue 66,845 + 39,776 + 2,628 + 22,054 + 48,265 + 3,703 + 37 + 3,446 = **186,754**; expenses 44,932 + 53,696 + 3,095 + 45,551 + 2,356 + 0 = **149,630**; 186,754 − 149,630 = **37,124**. B1-1 prints income 186,942 and result 37,312, both **188 higher** than the face. Reconcile to the face statement and treat the 188 as unexplained until resolved; do not assume B1-1 equality.
+- **FY2021-22** — revenue 69,356 + 39,771 + 5,062 + 26,053 + 49,260 + 3,006 + 158 + 0 = **192,666**; expenses 44,485 + 46,710 + 2,981 + 48,457 + 2,438 + 7,149 = **152,220**; 192,666 − 152,220 = **40,446**. B1-1 income 192,666, expenses 152,220, result 40,446, grants 75,313 — equal.
+- **FY2022-23** — revenue 72,492 + 44,916 + 3,405 + 28,542 + 56,552 + 7,662 + 71 = **213,640**; expenses 47,319 + 51,966 + 2,995 + 54,323 + 3,045 + 3,276 = **162,924**; 213,640 − 162,924 = **50,716**. B1-1 income 213,640, expenses 162,924, result 50,716, grants 85,094 — equal.
+
+### 10.3 Overlap and traps (historical)
+
+- **Own-year GPFS only:** each year must be read from its own GPFS. Do not ingest a later report's restated comparative (e.g. FY2016-17 restated inside FY2017-18) as the earlier year.
+- **Annual reports:** the FY2017-18..FY2022-23 annual reports restate/summarise the same-year GPFS and remain rejected as totals sources (§3.2).
+- **Budget/forward estimates:** budget documents are `measure_type=budget`; never summed with these actuals.
+- **Former councils:** FY2015-16 former Dubbo (117,764 / 79,926) and former Wellington (25,366 / 20,143) are predecessor partial periods; never add them to each other or to any Dubbo Regional Council year.
+- **Amalgamation:** FY2016-17 is a 13 May 2016 – 30 June 2017 partial period; the 2,266,670 amalgamation transfer is excluded from the operating result.
+- **FY2020-21 B1-1:** income/result are 188 above the face; reconcile to the face.
+
+### 10.4 Parser feasibility (historical)
+
+- **FY2016-17:** variant required — split label/number columns in extracted text; partial period; must select `Operating result from continuing operations` (61,271) and must not select `Net result for the period` (2,327,941).
+- **FY2017-18:** variant required — split label/number columns; three printed columns (budget, actual, restated prior); select the Actual current-year column.
+- **FY2018-19:** inline label/number rows; three columns (budget, actual, restated prior); select Actual current-year.
+- **FY2019-20:** inline rows; adds a `Net losses from the disposal of assets` expense line (2,493) and a nil disposal-gain revenue line.
+- **FY2020-21:** revised labels (`Other revenue`, `Materials and services`, `Depreciation, amortisation and impairment for non-financial assets`); B1-1 differs from face by 188.
+- **FY2021-22:** disposal-loss expense line 7,149; B1-1 equals face.
+- **FY2022-23:** disposal-loss expense line 3,276; no disposal revenue line; B1-1 equals face.
+- **Former councils:** not builder-ready as council actuals; predecessor partial periods. Keep as rejected context unless a predecessor series is explicitly scoped.
+
+### 10.5 Builder-ready brief (historical)
+
+- **target:** extend `dubbo-council-gpfs` to FY2016-17..FY2022-23 with one council and a per-year layout spec.
+- **input:** archived PDF path and SHA-256 from §10.6; discover the document from the reporting page by fiscal year (no hard-coded document URL).
+- **unit gate:** require the printed `$'000` header on the income statement page; reject if absent.
+- **face lines:** select labels per year; FY2016-17/FY2017-18 use split label/number columns, FY2018-19..FY2022-23 inline rows, FY2020-21+ revised labels.
+- **result line:** for FY2016-17 use the operating result (61,271), never the net result after amalgamation (2,327,941).
+- **reconciliation:** sum printed revenue components to printed total income and printed expense components to printed total expenses; compare with the printed operating result and with B1-1 where B1-1 equals the face. Refuse on mismatch or unexplained B1-1 difference.
+- **rows:** non-additive `agency_detail` actual rows for total revenue, total expenses, net result, employee expenses, D&A and grant components; never allocate to region/LGA and never sum across councils, predecessor entities or measure types.
+- **tests:** per-year golden-file tests from the archived bytes, plus rejection tests for missing unit, wrong layout and the FY2016-17 amalgamation net-result trap.
+
+### 10.6 Historical archive re-verification
+
+All paths are outside the repository under `/home/steve/ausspend-source-archive/dubbo-regional/`. Each file was re-downloaded on 2026-11-18 and matched the manifest SHA-256 exactly; bytes are the archived byte counts.
+
+| source_id                   | local path                                                                       |     bytes | sha256                                                             |
+| --------------------------- | -------------------------------------------------------------------------------- | --------: | ------------------------------------------------------------------ |
+| `former-dubbo-2015-16`      | `~/ausspend-source-archive/dubbo-regional/2015-16/former-dubbo-2015-16.pdf`      | 5,822,888 | `b74a17854409ef56d97504130ced20cdccb6d081d4475ca7b79f5bd6e842dc53` |
+| `former-wellington-2015-16` | `~/ausspend-source-archive/dubbo-regional/2015-16/former-wellington-2015-16.pdf` | 3,136,063 | `ded763340e54e269a26b0cdb572ae05573418f647057432d50560112c71ae964` |
+| `gpfs-2016-17`              | `~/ausspend-source-archive/dubbo-regional/2016-17/gpfs-2016-17.pdf`              | 2,404,714 | `0379e3a81a856d7320c1923303ec7a893ec4ab0658feda2013624301bc9fa88b` |
+| `gpfs-2017-18`              | `~/ausspend-source-archive/dubbo-regional/2017-18/gpfs-2017-18.pdf`              | 3,036,559 | `1ca80eb0981aedc442dcea94745a28ed4312bfa86b3c4348614a0402ebf02dfd` |
+| `gpfs-2018-19`              | `~/ausspend-source-archive/dubbo-regional/2018-19/gpfs-2018-19.pdf`              | 5,224,896 | `f95027b5bcaf2dc12e9f9b9c752170f2694d88c15b07f170dbda761d5d2034ea` |
+| `gpfs-2019-20`              | `~/ausspend-source-archive/dubbo-regional/2019-20/gpfs-2019-20.pdf`              | 6,841,185 | `d42c0ee29172672a693c0878a83a8c48d5b46c80881bc247f3f61b9f2e8c277e` |
+| `gpfs-2020-21`              | `~/ausspend-source-archive/dubbo-regional/2020-21/gpfs-2020-21.pdf`              | 2,637,455 | `69a7b9cb99774a63b845bdb85950265a870246ce0c1f82a3929c2642244aab9b` |
+| `gpfs-2021-22`              | `~/ausspend-source-archive/dubbo-regional/2021-22/gpfs-2021-22.pdf`              | 3,891,387 | `d28778f441953f17b01e78b2797c8bac9e34b1e42b94ba1777d7a922516a6153` |
+| `gpfs-2022-23`              | `~/ausspend-source-archive/dubbo-regional/2022-23/gpfs-2022-23.pdf`              | 3,665,534 | `b663ddc3a8a5fca8f1887de978a1df7d1cecd24550815fdc7c1c64209074212a` |
+
+No historical year is rejected for a missing unit or missing printed total; the two former-council statements are rejected as council actuals because they are predecessor entities, not because their printed totals are absent.
