@@ -230,6 +230,27 @@ describe('LGPRF parse and premise', { timeout: 30_000 }, () => {
   });
 });
 
+describe('LGPRF financial boundary', () => {
+  it('has no total-dollar income/expense indicator; every AUD unit is a per-unit rate', () => {
+    const units = Object.values(LGPRF_INDICATOR_UNITS);
+    expect(units).not.toContain('AUD');
+    expect(
+      units.some((unit) => /total.*(income|expense)|(income|expense).*total/i.test(unit)),
+    ).toBe(false);
+    const audUnits = units.filter((unit) => /^AUD/i.test(unit));
+    expect(audUnits.length).toBeGreaterThan(0);
+    expect(audUnits.every((unit) => /^AUD per /.test(unit))).toBe(true);
+  });
+
+  it('stores every performance value as a non-monetary performance row', async () => {
+    const built = await buildLgprfRecords(await buildSyntheticWorkbook());
+    expect(built.records).toHaveLength(LGPRF_EXPECTED_TOTAL_ROWS);
+    expect(built.records.every((record) => record.amount_cents === 0)).toBe(true);
+    expect(built.records.every((record) => record.performance_non_additive === true)).toBe(true);
+    expect(built.records.every((record) => record.performance_unit !== 'AUD')).toBe(true);
+  });
+});
+
 describe('LGPRF transform and no-sum semantics', { timeout: 30_000 }, () => {
   async function records() {
     const workbook = await buildSyntheticWorkbook();
