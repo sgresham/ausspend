@@ -203,6 +203,7 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'dubbo-council-gpfs' ||
           connector.id === 'city-of-sydney-gpfs' ||
           connector.id === 'blacktown-gpfs' ||
+          connector.id === 'hunters-hill-gpfs' ||
           connector.id === 'parramatta-gpfs' ||
           connector.id === 'northern-beaches-gpfs' ||
           connector.id === 'canterbury-bankstown-gpfs' ||
