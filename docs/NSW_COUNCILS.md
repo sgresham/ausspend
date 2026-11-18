@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Thirty-nine council GPFS sources have landed
+**Status:** the inventory and plan below are unchanged. Forty council GPFS sources have landed
 as separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -49,7 +49,7 @@ concurrent Lane Cove rows later took the live total to **693,148**. On the share
 concurrent rows reached **693,177**), Hawkesbury City Council FY2024-25 GPFS (**§7.34**) then added
 exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**). Woollahra Municipal Council FY2024-25 GPFS (**§7.35**) was ingested against the earlier shared-dev snapshot: it added exactly **29** `woollahra-gpfs` rows (**693,148** → **693,177**), and the concurrent Hawkesbury landing later took the live total to **693,196**.
 Blue Mountains City Council FY2024-25 GPFS (**§7.36**) also landed as a connector; its 23 rows are in the shared DB, and the live total **693,237** also includes the concurrent Wollondilly ingest (18 rows).
-Campbelltown City Council FY2024-25 GPFS (**§7.39**) then added exactly **22** `campbelltown-gpfs` rows on the shared dev DB (**693,237** → **693,259**); a fresh aggregate of `measure` rows whose `source_id` matches `/gpfs$/` gives **706 rows across 39 sources** after that ingest (pre-ingest **684 across 38**).
+Campbelltown City Council FY2024-25 GPFS (**§7.39**) then added exactly **22** `campbelltown-gpfs` rows on the shared dev DB (**693,237** → **693,259**); its own ingest moved the fresh `/gpfs$/` aggregate from **684 rows across 38 sources** to **706 across 39**. A concurrent Camden ingest (`camden-gpfs`, 23 rows) then took the live aggregate to **729 rows across 40 sources**; Campbelltown remains exactly **22** of those.
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -300,9 +300,10 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB (fresh aggregate, 2026-11-18): 706 GPFS rows across 39
-sources** — sum of `measure` rows whose `source_id` matches `/gpfs$/` (pre-ingest **684 across 38**).
-Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) contributes **22** of those. The
+comparatives inside each report). **In DB (fresh aggregate, 2026-11-18): 729 GPFS rows across 40
+sources** — sum of `measure` rows whose `source_id` matches `/gpfs$/` (pre-Campbelltown **684 across
+38**). Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) contributes **22** of those;
+a concurrent Camden ingest (`camden-gpfs`, §7.38) contributes 23. The
 previously documented per-source counts follow: 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
@@ -329,7 +330,8 @@ Council FY2024-25 (`ku-ring-gai-gpfs`, §7.30) and 17 for Strathfield Council FY
 (`strathfield-gpfs`, §7.31) and 17 for Lane Cove Council FY2024-25 (`lane-cove-gpfs`, §7.32) and 18
 for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Council FY2024-25
 (`hawkesbury-gpfs`, §7.34) and 29 for Woollahra Municipal Council FY2024-25 (`woollahra-gpfs`,
-§7.35) and 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) — all separate
+§7.35) and 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) and 23 for
+Camden City Council FY2024-25 (`camden-gpfs`, §7.38, concurrent landing) — all separate
 source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
@@ -3569,9 +3571,12 @@ preserved untouched and never summed.
 **693,237**, of which **684** GPFS rows across **38** sources and **0** `campbelltown-gpfs` rows.
 After ingesting only this source: total **693,259** (+22), GPFS **706** across **39** sources
 (+22 and +1 source), `campbelltown-gpfs` **22**; the per-source diff changed **only**
-`campbelltown-gpfs` (0 → 22), no source count decreased and no rows were deleted. `data_sources`
-records the source `active` with `records_ingested: 22`. A second ingest run upserts the same 22
-SHA-anchored natural keys (idempotent). Targeted connector tests passed (15/15).
+`campbelltown-gpfs` (0 → 22), no source count decreased and no rows were deleted. A later fresh
+aggregate (after a concurrent Camden ingest of 23 rows) is **693,282 total / 729 GPFS rows across 40
+sources**, with `campbelltown-gpfs` still exactly **22**; the later change is entirely the concurrent
+`camden-gpfs` landing, not this source. `data_sources` records `campbelltown-gpfs` as `active` with
+`records_ingested: 22`. A second ingest run upserts the same 22 SHA-anchored natural keys
+(idempotent). Targeted connector tests passed (15/15).
 
 ---
 
@@ -3629,8 +3634,9 @@ SHA-anchored natural keys (idempotent). Targeted connector tests passed (15/15).
    FY2024-25 GPFS, 19 non-additive rows (§7.34). **Thirty-fifth expansion landed 2026-11-18:** Woollahra Municipal Council FY2024-25 GPFS, 29
    non-additive rows (§7.35). **Thirty-sixth expansion landed 2026-11-18:** Blue Mountains City
    Council FY2024-25 GPFS, 23 non-additive rows (§7.36). **Thirty-ninth expansion landed
-   2026-11-18:** Campbelltown City Council FY2024-25 GPFS, 22 non-additive rows (§7.39); §7.37
-   (Wollondilly) and §7.38 (Camden) remain reserved.
+   2026-11-18:** Campbelltown City Council FY2024-25 GPFS, 22 non-additive rows (§7.39).
+   **Concurrent landing 2026-11-18:** Camden City Council FY2024-25 GPFS, 23 non-additive rows
+   (`camden-gpfs`, §7.38); §7.37 (Wollondilly) remains reserved.
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -3996,8 +4002,10 @@ migration were performed.
 - `campbelltown-gpfs` rows: 22, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - DB: claim-time 693,237 total / 684 GPFS rows across 38 sources / 0 Campbelltown; after this ingest
   693,259 / 706 across 39; per-source diff changed only `campbelltown-gpfs` (0 → 22), no source
-  count decreased and no rows deleted; `data_sources` active with `records_ingested: 22`; a second
-  run upserted the same 22 natural keys with no count change.
+  count decreased and no rows deleted; `data_sources` active with `records_ingested: 22`. A later
+  fresh aggregate after a concurrent Camden landing is 693,282 total / 729 across 40, with
+  `campbelltown-gpfs` still exactly 22; a second Campbelltown run upserted the same 22 natural keys
+  with no count change.
 
 ---
 
@@ -4045,7 +4053,7 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the landed council GPFS sections in §7 (through §7.39): thirty-nine council
+The only ingestions are the landed council GPFS sections in §7 (through §7.39): forty council
 GPFS sources, one audited year each, non-additive rows with no region/LGA allocation, and the
 existing budget/estimate and federal/state/charity rows left untouched. No cross-council total is
 created or implied.
