@@ -1,0 +1,369 @@
+{
+  "schema": "ausspend.source-discovery.v1",
+  "source_id": "abares",
+  "title": "ABARES agricultural commodity trade — historical values, volumes, prices and forecasts",
+  "publisher": "Australian Bureau of Agricultural and Resource Economics and Sciences (ABARES), Department of Agriculture, Fisheries and Forestry (DAFF)",
+  "generated_at": "2026-11-18T04:46:37Z",
+  "state": "discovery-only; no connector, no database write, no trade_records rows",
+  "jurisdiction": "federal",
+  "geography": "Australia national. AFF reference tables add partner-country and ABARES commodity breakdowns; Agricultural Commodity Statistics add state and destination detail for some commodities. No port/SA2/postcode dimension.",
+  "premise_falsifier": {
+    "result": "PARTIAL / CONDITIONAL — DEFER under the current schema",
+    "reason": "ABARES publishes accessible agricultural trade values and some commodity volumes/unit values under CC BY 4.0, but the usable value series is ABS-derived and not additive with ABS; AFF volumes are empty; statistical volume/price columns are indices with estimates/forecasts; commodity statistics mix fiscal, marketing and calendar years plus ABS/ABARES/FAO/USDA sources and ABARES estimates; ABS confidentiality suppression can understate totals.",
+    "clean_independent_series": false,
+    "recommendation": "DEFER a trade_records builder. Only a bounded AFF actual-value slice (FY, values only, source-overlap guard) is potentially defensible after schema work."
+  },
+  "official_urls": {
+    "abares_data": "https://www.agriculture.gov.au/abares/data",
+    "commodities_and_trade_data": "https://www.agriculture.gov.au/abares/research-topics/agricultural-outlook/data",
+    "aff_trade_reference_tables": "https://www.agriculture.gov.au/biosecurity-trade/market-access-trade/trade-tips",
+    "trade_dashboard": "https://www.agriculture.gov.au/abares/research-topics/trade/dashboard",
+    "definitions": "https://www.agriculture.gov.au/abares/research-topics/agricultural-outlook/definitions",
+    "historical_forecasts": "https://www.agriculture.gov.au/abares/research-topics/agricultural-outlook/historical-forecasts",
+    "copyright": "https://www.agriculture.gov.au/about/copyright",
+    "latest_agricultural_commodities_report": "https://www.agriculture.gov.au/abares/research-topics/agricultural-outlook/september-2026"
+  },
+  "access": {
+    "login_required": false,
+    "api": false,
+    "api_note": "No API/JSON endpoint found. The trade dashboard is interactive only; bulk data are XLSX (report series also PDF).",
+    "http_status": 200,
+    "tested_at": "2026-11-18",
+    "formats": "XLSX (trade reference tables, statistical/outlook tables, commodity statistics); PDF report narrative; interactive dashboard."
+  },
+  "cadence": {
+    "aff_reference_tables": {
+      "type": "monthly",
+      "evidence": "Files retrieved 9–11 November 2026; latest month Sep-2026; current FY 2026-27 marked incomplete.",
+      "underlying_source": "ABS International Trade in Goods, cat. no. 5368.0"
+    },
+    "agricultural_commodities_report": {
+      "type": "quarterly",
+      "latest": "September Quarter 2026",
+      "prior_releases": ["June Quarter 2026", "March Quarter 2026", "December Quarter 2025"],
+      "note": "Statistical tables carry actuals to 2023-24 and 2024-25 s / 2025-26 f / 2026-27 f; outlook tables carry estimates/forecasts."
+    },
+    "agricultural_commodity_statistics": {
+      "type": "annual",
+      "latest": "2024-25, released 30 April 2026",
+      "coverage": "commodity chapters mostly from the 1970s to 2024-25"
+    },
+    "historical_forecast_database": {
+      "type": "irregular; no settled update schedule",
+      "last_updated": "2023-02-22",
+      "first_release_coverage": "2000–2019"
+    }
+  },
+  "coverage": {
+    "aff_reference_tables": {
+      "financial_years": [
+        "2021-22",
+        "2022-23",
+        "2023-24",
+        "2024-25",
+        "2025-26",
+        "2026-27 (incomplete, Jul–Sep)"
+      ],
+      "calendar_year_equivalents": "Published on the same page; not archived here.",
+      "flows": ["export", "import"],
+      "breakdowns": ["partner (EU as one)", "commodity (TopN, ABARES classification)"],
+      "volume_data": "Columns exist but are empty ('-' / 'Not Recorded') in the four FY workbooks inspected."
+    },
+    "agricultural_commodities_statistical_tables": {
+      "table4_years": "1994-95 to 2026-27",
+      "actual_to": "2023-24",
+      "estimate_forecast": ["2024-25 s (estimate)", "2025-26 f (forecast)", "2026-27 f (forecast)"]
+    },
+    "outlook_tables": {
+      "years": ["2024-25 s", "2025-26 s", "2026-27 f"],
+      "note": "Estimates and forecasts; not actuals."
+    },
+    "commodity_statistics": {
+      "wheat": "Fiscal-year production/area/yield; Oct–Sep export quantity and unit value.",
+      "dairy": "Fiscal-year export values by destination; calendar-year world balances; fiscal-year unit values.",
+      "other_chapters": "coarse grains, cotton, fisheries, forestry, horticulture, meat, oilseeds, pulses, rice, sugar, wool, wine, farm inputs"
+    }
+  },
+  "measures": {
+    "trade_values": {
+      "available": true,
+      "forms": [
+        "AFF actual ABS-derived values by partner/commodity, FY 2021-22..2025-26 + partial 2026-27",
+        "Agricultural Commodities Table 4 nominal agricultural export values 1994-95..2026-27 (last three years estimate/forecast)",
+        "Commodity Statistics destination values $m for selected commodities"
+      ],
+      "units": ["AUD million", "AUD thousand", "$m"],
+      "not_additive_across_products": true
+    },
+    "trade_volumes": {
+      "available": "partial",
+      "forms": [
+        "Commodity Statistics export quantities in kt/ML/Mt by marketing/fiscal year",
+        "Agricultural Commodities Table 4 chain-volume indices, base 2025-26=100"
+      ],
+      "note": "AFF reference-table volume columns are empty. Table 4 indices are not absolute volumes."
+    },
+    "trade_prices": {
+      "available": "partial",
+      "forms": [
+        "Commodity Statistics export unit values $/t",
+        "Agricultural Commodities Table 4 price indices",
+        "Outlook tables world/indicator prices US$/t, USc/lb, etc."
+      ],
+      "note": "No single consistent price series across all AFF commodities; indices are not dollar prices."
+    },
+    "forecasts": {
+      "available": true,
+      "sources": [
+        "Agricultural Commodities outlook tables",
+        "Historical agricultural forecast database"
+      ],
+      "labels": { "s": "estimate", "f": "forecast" },
+      "must_not_be_treated_as_actual": true
+    }
+  },
+  "valuation_basis": {
+    "exports": "Free on board (FOB) at the Australian port of export; freight/insurance beyond the Australian customs border excluded.",
+    "imports": "Customs value for duty, identical to FOB; freight/insurance to the Australian port of destination excluded.",
+    "source": "https://www.agriculture.gov.au/abares/research-topics/agricultural-outlook/definitions",
+    "aff_workbook_note": "The AFF workbooks themselves do not print FOB/CIF labels; they cite ABS ITGS 5368.0. The definitions page is the published basis."
+  },
+  "classification": {
+    "aff": "ABARES Agricultural, Fisheries and Forestry trade classification, based on AHECC 8-digit codes; 'Commodity (TopN)' is an ABARES grouping, not an HS row code.",
+    "commodity_statistics": "ABARES commodity chapters plus AG/AB identifier columns; no uniform HS/ANZSIC code.",
+    "partner": "Published partner labels including 'EU' (as one), 'Other', 'No Country Details' and 'Australia (Re-Imports)'; not ISO country codes.",
+    "period": "AFF FY; Table 4 FY; Commodity Statistics may use fiscal year, October–September marketing year or calendar year."
+  },
+  "overlap": [
+    {
+      "source": "ABS International Trade in Goods (ITGS, 5368.0)",
+      "overlap": "AFF reference tables are compiled from ABS ITGS; Table 4 and commodity-statistics trade values are also ABS-derived.",
+      "consequence": "Not additive with ABS; requires an explicit source-overlap/additivity guard."
+    },
+    {
+      "source": "DISR Resources and Energy Quarterly (REQ)",
+      "overlap": "REQ historical trade tables are also ABS-derived; different (resource/energy) commodity scope.",
+      "consequence": "Not additive with ABARES or ABS."
+    },
+    {
+      "source": "OECD ITIC",
+      "overlap": "OECD publishes CIF/FOB margins, not trade values.",
+      "consequence": "Different measure; never sum a margin with a value."
+    },
+    {
+      "source": "Within ABARES",
+      "overlap": "AFF includes agriculture, fisheries and forestry; Table 4 is agriculture-only; Commodity Statistics are commodity-specific and often marketing-year based; Total sheets duplicate partner/commodity breakdowns.",
+      "consequence": "Do not add AFF to Table 4 or Commodity Statistics; do not add AFF Total to its partner/commodity sheets."
+    },
+    {
+      "source": "World data in Commodity Statistics",
+      "overlap": "World production/consumption/trade from FAO/USDA/other sources.",
+      "consequence": "Not Australian trade; never mix into an Australian total."
+    },
+    {
+      "source": "Confidentiality suppression",
+      "overlap": "ABS suppresses some commodity detail; ABARES states totals can understate true value and creates unofficial sugar/rice estimates.",
+      "consequence": "Published totals are not a complete official actual; do not label unofficial estimates as ABS statistics."
+    }
+  ],
+  "licence": {
+    "statement": "Material on this website is copyright Department of Agriculture, Fisheries and Forestry except as otherwise stated.",
+    "grant": "Unless otherwise specified, you can use our material under a Creative Commons Attribution (CC-BY) 4.0 International licence.",
+    "excluded": [
+      "Commonwealth Coat of Arms",
+      "Department of Agriculture, Fisheries and Forestry logo",
+      "third-party copyright or other licence terms"
+    ],
+    "attribution": "Department of Agriculture, Fisheries and Forestry. 2026. [Insert name of publication and include website link].",
+    "copyright_line": "© Department of Agriculture, Fisheries and Forestry 2026",
+    "third_party": "Charts, photographs, maps and some tables may carry separate rights; third-party rights remain with their owner."
+  },
+  "archive": {
+    "root": "/home/steve/ausspend-source-archive/abares",
+    "checksums_file": "/home/steve/ausspend-source-archive/abares/SHA256SUMS",
+    "files": [
+      {
+        "key": "aff_exports_partner_fy",
+        "filename": "aff-exports-by-partner-fy-jan-2021-to-sep-2026.xlsx",
+        "url": "https://www.agriculture.gov.au/sites/default/files/documents/1-aff-exports-by-partner-fy-jan-2021-to-sep-2026.xlsx",
+        "bytes": 818552,
+        "sha256": "025bb4241804ddb137f617128655a76756e543105e8abcf853bbe18a9ebe8908",
+        "unit": "AUD million (Total sheet; per-sheet unit column)"
+      },
+      {
+        "key": "aff_exports_commodity_fy",
+        "filename": "aff-exports-by-commodity-topn-fy-jan-2021-to-sep-2026.xlsx",
+        "url": "https://www.agriculture.gov.au/sites/default/files/documents/3-aff-exports-by-commodity-topn-fy-jan-2021-to-sep-2026.xlsx",
+        "bytes": 1727543,
+        "sha256": "29c33ac080425c96dea11ea5516afc2bd1d8525d8d6132a0310d8b7ff53deb6c",
+        "unit": "AUD million or AUD thousand per sheet"
+      },
+      {
+        "key": "aff_imports_partner_fy",
+        "filename": "aff-imports-by-partner-fy-jan-2021-to-sep-2026.xlsx",
+        "url": "https://www.agriculture.gov.au/sites/default/files/documents/5-aff-imports-by-partner-fy-jan-2021-to-sep-2026.xlsx",
+        "bytes": 848800,
+        "sha256": "a6b119087fa1f85402f53f57f136e608c46d9bbb91276aa6adb7e5dbc13e4d08",
+        "unit": "AUD million (Total sheet; per-sheet unit column)"
+      },
+      {
+        "key": "aff_imports_commodity_fy",
+        "filename": "aff-imports-by-commodity-topn-fy-jan-2021-to-sep-2026.xlsx",
+        "url": "https://www.agriculture.gov.au/sites/default/files/documents/7-aff-imports-by-commodity-topn-fy-jan-2021-to-sep-2026.xlsx",
+        "bytes": 1642580,
+        "sha256": "0f347a0dd72ce554da46da0ae3161fe8220fc782e2f811d123f62a0995f2a795",
+        "unit": "AUD million or AUD thousand per sheet"
+      },
+      {
+        "key": "ag_commodities_statistical_2026_q3",
+        "filename": "agricultural-commodities-september-2026-statistical-tables.xlsx",
+        "url": "https://daff.ent.sirsidynix.net.au/client/en_AU/search/asset/1038521/3",
+        "bytes": 508825,
+        "sha256": "971ab4702970b1297981880374a6ef73993fb2552ea194dfe84c575b7e1cf4f3",
+        "unit": "$m values; volume/price indices (2025-26=100)"
+      },
+      {
+        "key": "ag_commodities_outlook_2026_q3",
+        "filename": "agricultural-commodities-september-2026-outlook-tables.xlsx",
+        "url": "https://daff.ent.sirsidynix.net.au/client/en_AU/search/asset/1038521/2",
+        "bytes": 219979,
+        "sha256": "2a7872eb91ae59efb916caf73b9bec6404c0df1ca4ba799f3454d012fe6feef4",
+        "unit": "A$m, kt, ML, Mt, $/t, US$/t; s=estimate, f=forecast"
+      },
+      {
+        "key": "ag_commodity_statistics_2024_25_wheat",
+        "filename": "agricultural-commodity-statistics-2024-25-wheat.xlsx",
+        "url": "https://daff.ent.sirsidynix.net.au/client/en_AU/search/asset/1038141/20",
+        "bytes": 131381,
+        "sha256": "c00da1f1a7a246a6aeed75885858b804a0625ee2c3b15319c22b435ba6f0c995",
+        "unit": "kt, $/t, '000 ha, t/ha; fiscal and Oct–Sep years"
+      },
+      {
+        "key": "ag_commodity_statistics_2024_25_dairy",
+        "filename": "agricultural-commodity-statistics-2024-25-dairy.xlsx",
+        "url": "https://daff.ent.sirsidynix.net.au/client/en_AU/search/asset/1038141/5",
+        "bytes": 236508,
+        "sha256": "928af28734b9c69275c2b8bf4660fc0348f10fd4f031c5bac02c67064609d790",
+        "unit": "$/t, $m, kt, ML, Mt; fiscal and calendar years"
+      },
+      {
+        "key": "ag_commodity_statistics_2024_25_farm_sector",
+        "filename": "agricultural-commodity-statistics-2024-25-farm-sector.xlsx",
+        "url": "https://daff.ent.sirsidynix.net.au/client/en_AU/search/asset/1038141/2",
+        "bytes": 257181,
+        "sha256": "b696ddca9001811ea505e0b71f878baa09d6ab5269abda85c2848c3c4d509163",
+        "unit": "farm-sector tables (values, indices)"
+      }
+    ]
+  },
+  "evidence": {
+    "aff_exports_total_fy_aud_million": {
+      "2021-22": 68960.487345,
+      "2022-23": 80395.836073,
+      "2023-24": 72550.209334,
+      "2024-25": 78097.181523,
+      "2025-26": 83042.913304,
+      "2026-27_incomplete": 20096.603721
+    },
+    "aff_imports_total_fy_aud_million": {
+      "2021-22": 30621.69101093,
+      "2022-23": 34287.36129599,
+      "2023-24": 33777.45397314,
+      "2024-25": 37393.57319252,
+      "2025-26": 37952.29521814,
+      "2026-27_incomplete": 9496.31287156
+    },
+    "table4_total_agricultural_exports": {
+      "2023-24_actual_nominal_m": 71576.86,
+      "2024-25_s_nominal_m": 75832.795,
+      "2025-26_f_nominal_m": 80608.893,
+      "2026-27_f_nominal_m": 76257.693,
+      "2023-24_volume_index": 92.025,
+      "2024-25_s_volume_index": 95.683,
+      "2025-26_f_volume_index": 100,
+      "2023-24_price_index": 96.491,
+      "2024-25_s_price_index": 98.319,
+      "2025-26_f_price_index": 100
+    },
+    "wheat_example": {
+      "frequency": "Fiscal Year for production/area/yield; Oct-Sep Year for exports quantity/unit value",
+      "export_unit": "kt",
+      "unit_value_unit": "$/t",
+      "source_note": "export unit value based on July–June year exports until 1987–88 and crop year thereafter; ABARES/ABS sources"
+    },
+    "dairy_example": {
+      "export_value_unit": "$m by destination; Fiscal Year",
+      "export_unit_value_unit": "$/t; Fiscal Year",
+      "world_balance_unit": "kt/Mt; Calendar Year",
+      "source_mix": "ABARES/ABS/FAO/other"
+    },
+    "aff_total_vs_table4": {
+      "aff_2024-25_exports_aud_m": 78097.181523,
+      "table4_2024-25_s_agricultural_exports_aud_m": 75832.795,
+      "reason_not_equal": "AFF includes agriculture, fisheries and forestry; Table 4 is agriculture-only and is an estimate. Not additive and not a revision."
+    },
+    "unit_variation_example": {
+      "file": "aff-exports-by-commodity-topn-fy-jan-2021-to-sep-2026.xlsx",
+      "sheet": "AFF Finishing agents",
+      "value_unit": "AUD thousand",
+      "total_sheet_value_unit": "AUD million"
+    },
+    "notes_verbatim": {
+      "aff_source": "1. Source: Australian Bureau of Statistics (ABS) International Trade in Goods publication (cat. no. 5368.0).",
+      "aff_grouping": "2. The department applies its own commodity groupings for agriculture, fisheries and forestry goods."
+    }
+  },
+  "mapping_proposal": {
+    "bounded_aff_actual_value_phase": {
+      "source_dataset": "ABARES AFF exports by partner (FY) / ABARES AFF imports by commodity (FY), one breakdown per dataset",
+      "trade_flow": "export | import",
+      "measure_type": "trade_value",
+      "commodity_name": "AFF Commodity (TopN) as published",
+      "commodity_code": "Leave null unless a reviewed AHECC mapping is added; do not invent HS codes",
+      "partner_country": "AFF partner label exactly, including EU / Other / No Country Details / Australia (Re-Imports)",
+      "financial_year": "AFF FY column; flag 2026-27 as incomplete",
+      "time_period": "AFF FY label",
+      "amount_cents": "value × 100,000,000 for AUD million; × 100,000 for AUD thousand",
+      "volume": null,
+      "price": null,
+      "location": "Australia national only",
+      "data_quality_flag": "observed for complete FYs; provisional for the incomplete FY",
+      "provenance": "official landing URL + exact archive path + SHA-256 + retrieval date + sheet/row"
+    },
+    "later_commodity_statistics_phase": {
+      "measure_type": "trade_volume | trade_price | trade_value",
+      "period": "Preserve printed frequency and marketing year",
+      "units": "Store unit in new volume_unit/price_unit fields",
+      "data_quality_flag": "observed only for ABS/ABARES actuals; estimated where note is 's. ABARES estimate …'",
+      "totals": "Never sum commodity subtotals or destination rows"
+    },
+    "forecasts": "Separate product only; never map to actual trade_value/volume/price rows without a forecast-vintage flag."
+  },
+  "schema_blockers": [
+    "No volume_unit, price_unit or unit_multiplier; kt/ML/Mt, $/t, US$/t and indices would be ambiguous.",
+    "No period_basis/marketing_year; financial_year cannot represent Oct–Sep or calendar-year series without loss.",
+    "No forecast_vintage/release_id/estimate_status; 'estimated' alone cannot separate a forecast from a later estimate or actual.",
+    "No source-overlap/additivity guard; the API would sum ABARES with ABS/REQ.",
+    "No classification_system field; ABARES/AHECC TopN and ABARES commodity identifiers would collide with HS.",
+    "No partner_type/partner_code; EU as one, Other, No Country Details and re-import buckets are not ISO countries.",
+    "No explicit total/component/index marker on trade_records rows.",
+    "No field to distinguish ABARES unofficial sugar/rice estimates or ABS-confidentiality undercounts from official ABS actuals."
+  ],
+  "recommendation": {
+    "decision": "DEFER",
+    "reason": "The broad premise (a clean, independent, additive agricultural trade value and volume series) is not met. The value series is ABS-derived and only 2021-22+; AFF volumes are empty; statistical volumes/prices are indices; commodity statistics mix marketing years, sources and estimates; forecasts are not actuals.",
+    "bounded_sequence_if_resumed": [
+      "Phase A: AFF actual values only, one breakdown per dataset, FY 2021-22..2025-26 complete plus partial 2026-27 provisional; add source-overlap guard first; no volumes, no forecasts.",
+      "Phase B: commodity volumes/unit values only after adding volume_unit, price_unit, period_basis/marketing_year and classification_system; one commodity chapter at a time; keep ABARES estimates estimated; no national total.",
+      "Forecasts: separate product with vintage/forecast flag; never mix with AFF actuals."
+    ],
+    "must_not": [
+      "Do not add ABARES values to ABS or DISR REQ.",
+      "Do not treat AFF Total and partner/commodity sheets as additive.",
+      "Do not map Table 4 indices to trade_volume or trade_price.",
+      "Do not label forecasts or ABARES unofficial estimates as observed/verified actuals.",
+      "Do not derive a national total from commodity chapters."
+    ]
+  },
+  "premise_falsifier_restated": "ABARES publishes accessible agricultural trade values and some commodity volumes/unit values under CC BY 4.0. However, the usable value series is ABS-derived and non-additive with ABS; AFF volumes are empty; statistical volume/price series are indices with estimates/forecasts; the long commodity series mix marketing years, sources and ABARES estimates; and ABS suppression/ABARES unofficial estimates break a clean official-actual series. The broad premise is not satisfied; defer rather than invent a series."
+}

@@ -50,7 +50,14 @@ The ingest skeleton runs in this fixed priority order:
    are ABS-derived, contain totals and forecasts, and would double-count with ABS in the current
    trade API. A bounded REQ commodity-aggregate builder needs a source/overlap guard, aggregation
    role, forecast flag and unit fields first; no connector is implemented.
-5. **ABARES** — agricultural commodity trade values and volumes.
+5. **ABARES** — **discovery only; deferred**. The source packet
+   ([`docs/source-discovery/abares.md`](source-discovery/abares.md)) finds accessible AFF export/import
+   reference tables (ABS-derived actual values, FY2021-22–FY2025-26 plus partial FY2026-27, values
+   only) and ABARES Agricultural Commodity Statistics/forecast tables (volumes, unit values, estimates
+   and forecasts) under CC BY 4.0. The actual value series is ABS-derived and not additive with ABS;
+   the long commodity series mix marketing years, sources and ABARES estimates, and the forecast
+   tables are not actuals. A builder needs a source-overlap guard, forecast vintage, aggregation role
+   and marketing-year/unit fields first; no connector is implemented.
 
 Each source keeps its own `source_dataset`, `source_url`, `source_date` and `data_quality_flag`.
 Rows from different sources are never mixed into one total.
