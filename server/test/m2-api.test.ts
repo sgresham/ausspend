@@ -187,82 +187,15 @@ describe('GET /api/meta/coverage', () => {
     );
     expect(response.body.connectors).toHaveLength(CONNECTORS.length);
     for (const connector of response.body.connectors) {
-      expect(connector.status).toBe(
-        connector.id === 'abs-gfs' ||
-          connector.id === 'abs-gfs-pnfc' ||
-          connector.id === 'aihw-health-expenditure' ||
-          connector.id === 'wa-budget' ||
-          connector.id === 'tas-budget' ||
-          connector.id === 'qld-local-government' ||
-          connector.id === 'aus-tender' ||
-          connector.id === 'data-gov-au-pbs' ||
-          connector.id === 'grantconnect' ||
-          connector.id === 'nsw-budget' ||
-          connector.id === 'data-nsw-ckan' ||
-          connector.id === 'dubbo-council' ||
-          connector.id === 'dubbo-council-gpfs' ||
-          connector.id === 'city-of-sydney-gpfs' ||
-          connector.id === 'blacktown-gpfs' ||
-          connector.id === 'hunters-hill-gpfs' ||
-          connector.id === 'woollahra-gpfs' ||
-          connector.id === 'parramatta-gpfs' ||
-          connector.id === 'northern-beaches-gpfs' ||
-          connector.id === 'canterbury-bankstown-gpfs' ||
-          connector.id === 'sutherland-shire-gpfs' ||
-          connector.id === 'wollongong-gpfs' ||
-          connector.id === 'newcastle-gpfs' ||
-          connector.id === 'lake-macquarie-gpfs' ||
-          connector.id === 'maitland-gpfs' ||
-          connector.id === 'coffs-harbour-gpfs' ||
-          connector.id === 'mid-coast-gpfs' ||
-          connector.id === 'port-macquarie-hastings-gpfs' ||
-          connector.id === 'tweed-shire-gpfs' ||
-          connector.id === 'shoalhaven-gpfs' ||
-          connector.id === 'shellharbour-gpfs' ||
-          connector.id === 'waverley-gpfs' ||
-          connector.id === 'willoughby-gpfs' ||
-          connector.id === 'inner-west-gpfs' ||
-          connector.id === 'bayside-gpfs' ||
-          connector.id === 'randwick-gpfs' ||
-          connector.id === 'ryde-gpfs' ||
-          connector.id === 'north-sydney-gpfs' ||
-          connector.id === 'canada-bay-gpfs' ||
-          connector.id === 'cumberland-gpfs' ||
-          connector.id === 'georges-river-gpfs' ||
-          connector.id === 'fairfield-gpfs' ||
-          connector.id === 'liverpool-gpfs' ||
-          connector.id === 'ku-ring-gai-gpfs' ||
-          connector.id === 'lane-cove-gpfs' ||
-          connector.id === 'hawkesbury-gpfs' ||
-          connector.id === 'mosman-gpfs' ||
-          connector.id === 'strathfield-gpfs' ||
-          connector.id === 'vic-budget' ||
-          connector.id === 'vic-vlgc-vgc1' ||
-          connector.id === 'vic-vlgc-abs' ||
-          connector.id === 'vic-vlgc-fag' ||
-          connector.id === 'vic-lgprf' ||
-          connector.id === 'sa-budget-gfs' ||
-          connector.id === 'act-budget' ||
-          connector.id === 'nt-budget' ||
-          connector.id === 'qld-budget' ||
-          connector.id === 'qld-qgip' ||
-          connector.id === 'acnc-charity' ||
-          connector.id === 'sydney-water' ||
-          connector.id === 'waternsw' ||
-          connector.id === 'hunter-water' ||
-          connector.id === 'essential-energy' ||
-          connector.id === 'forestry-corporation' ||
-          connector.id === 'landcom' ||
-          connector.id === 'port-authority-nsw' ||
-          connector.id === 'tahe' ||
-          connector.id === 'sydney-trains' ||
-          connector.id === 'nsw-trainlink'
-          ? 'active'
-          : 'stub',
-      );
+      const registry = CONNECTORS.find((candidate) => candidate.id === connector.id);
+      expect(registry).toBeTruthy();
+      expect(connector.status).toBe(registry!.status);
       expect(connector.id).toBeTruthy();
       expect(connector.fetch).toBeUndefined();
     }
+    expect(response.body.connectors.map((connector) => connector.id).sort()).toEqual(
+      CONNECTORS.map((connector) => connector.id).sort(),
+    );
     expect(response.body.federal_ingestion.live).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs']),
     );

@@ -21,6 +21,7 @@
     "lint": "eslint .",
     "format:check": "prettier --check .",
     "test": "npm run build -w shared && vitest run",
+    "test:merge-gate": "node scripts/merge-gate.mjs",
     "test:e2e": "playwright test",
     "check:env-leaks": "node scripts/check-env-leaks.mjs",
     "audit": "npm run check:env-leaks && node scripts/audit.mjs",

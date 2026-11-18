@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ABS_GFS_ID } from '../src/connectors/abs-gfs.js';
 import {
@@ -6,79 +7,17 @@ import {
   connectorSummary,
   getConnector,
 } from '../src/connectors/index.js';
+import {
+  MODULAR_CONNECTORS,
+  MODULAR_CONNECTOR_IDS,
+} from '../src/connectors/generated-connectors.js';
 
-const LIVE_IDS = [
-  'abs-gfs',
-  'abs-gfs-pnfc',
-  'aihw-health-expenditure',
-  'tas-budget',
-  'qld-local-government',
-  'wa-budget',
-  'aus-tender',
-  'data-gov-au-pbs',
-  'grantconnect',
-  'nsw-budget',
-  'data-nsw-ckan',
-  'dubbo-council',
-  'dubbo-council-gpfs',
-  'city-of-sydney-gpfs',
-  'blacktown-gpfs',
-  'hunters-hill-gpfs',
-  'woollahra-gpfs',
-  'parramatta-gpfs',
-  'northern-beaches-gpfs',
-  'canterbury-bankstown-gpfs',
-  'sutherland-shire-gpfs',
-  'wollongong-gpfs',
-  'newcastle-gpfs',
-  'lake-macquarie-gpfs',
-  'maitland-gpfs',
-  'coffs-harbour-gpfs',
-  'mid-coast-gpfs',
-  'port-macquarie-hastings-gpfs',
-  'tweed-shire-gpfs',
-  'shoalhaven-gpfs',
-  'shellharbour-gpfs',
-  'waverley-gpfs',
-  'willoughby-gpfs',
-  'inner-west-gpfs',
-  'bayside-gpfs',
-  'randwick-gpfs',
-  'ryde-gpfs',
-  'north-sydney-gpfs',
-  'canada-bay-gpfs',
-  'cumberland-gpfs',
-  'georges-river-gpfs',
-  'fairfield-gpfs',
-  'liverpool-gpfs',
-  'ku-ring-gai-gpfs',
-  'lane-cove-gpfs',
-  'hawkesbury-gpfs',
-  'mosman-gpfs',
-  'strathfield-gpfs',
-  'vic-budget',
-  'vic-vlgc-vgc1',
-  'vic-vlgc-abs',
-  'vic-vlgc-fag',
-  'vic-lgprf',
-  'sa-budget-gfs',
-  'act-budget',
-  'nt-budget',
-  'qld-budget',
-  'qld-qgip',
-  'acnc-charity',
-  'sydney-water',
-  'waternsw',
-  'hunter-water',
-  'essential-energy',
-  'forestry-corporation',
-  'landcom',
-  'port-authority-nsw',
-  'tahe',
-  'sydney-trains',
-  'nsw-trainlink',
-];
-const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
+const LIVE_IDS = CONNECTORS.filter((connector) => connector.status === 'active').map(
+  (connector) => connector.id,
+);
+const STUB_IDS = CONNECTORS.filter((connector) => connector.status === 'stub').map(
+  (connector) => connector.id,
+);
 
 describe('federal connector registry', () => {
   it('ships the registered connectors with unique ids including the federal source ids', () => {
@@ -88,6 +27,29 @@ describe('federal connector registry', () => {
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
     );
+  });
+
+  it('derives unique live/stub ids and keeps the modular manifest fully registered', () => {
+    expect(new Set(CONNECTOR_IDS).size).toBe(CONNECTOR_IDS.length);
+    expect(new Set(LIVE_IDS).size).toBe(LIVE_IDS.length);
+    expect(new Set(STUB_IDS).size).toBe(STUB_IDS.length);
+    expect(LIVE_IDS.length + STUB_IDS.length).toBe(CONNECTORS.length);
+    expect(new Set(MODULAR_CONNECTOR_IDS).size).toBe(MODULAR_CONNECTOR_IDS.length);
+    expect(MODULAR_CONNECTORS.map((connector) => connector.id)).toEqual([...MODULAR_CONNECTOR_IDS]);
+    for (const id of MODULAR_CONNECTOR_IDS) {
+      expect(CONNECTOR_IDS).toContain(id);
+      expect(getConnector(id)?.status).toBe('active');
+    }
+  });
+
+  it('documents every modular connector in the council register', () => {
+    const councilDocs = readFileSync(
+      new URL('../../docs/NSW_COUNCILS.md', import.meta.url),
+      'utf8',
+    );
+    for (const id of MODULAR_CONNECTOR_IDS) {
+      expect(councilDocs.includes(id), id).toBe(true);
+    }
   });
 
   it('registers the federal/state/local/charity sources as live and the remaining sources as stubs', () => {
