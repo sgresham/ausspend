@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { CONNECTORS } from '../src/connectors/registry.js';
 import mongoose from 'mongoose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { SYNTHETIC_SOURCE } from '@ausspend/shared';
@@ -184,7 +185,7 @@ describe('GET /api/meta/coverage', () => {
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
-    expect(response.body.connectors).toHaveLength(65);
+    expect(response.body.connectors).toHaveLength(CONNECTORS.length);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'abs-gfs' ||

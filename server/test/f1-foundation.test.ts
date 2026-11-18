@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { CONNECTORS } from '../src/connectors/registry.js';
 import mongoose from 'mongoose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app';
@@ -240,8 +241,14 @@ describe('F1 extended measure shape and API', () => {
     expect(coverage.body.live_ingestion).toBe(true);
     expect(
       coverage.body.connector_status_counts.active + coverage.body.connector_status_counts.degraded,
-    ).toBe(63);
-    expect(coverage.body.connector_status_counts.stub).toBe(2);
+    ).toBe(
+      CONNECTORS.filter(
+        (connector) => connector.status === 'active' || connector.status === 'degraded',
+      ).length,
+    );
+    expect(coverage.body.connector_status_counts.stub).toBe(
+      CONNECTORS.filter((connector) => connector.status === 'stub').length,
+    );
     expect([
       ...coverage.body.federal_ingestion.live,
       ...coverage.body.federal_ingestion.degraded,

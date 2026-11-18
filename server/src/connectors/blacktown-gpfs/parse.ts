@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import type { SpendingRecord } from '@ausspend/shared';
 import {
   detectMoneyUnit,
@@ -9,15 +8,15 @@ import {
   type PdfExtraction,
   type PdfPage,
   type UnitDetection,
-} from './pdf-extract.js';
+} from '../pdf-extract.js';
 import {
   archiveSourceDocument,
   listArchivedRecords,
   verifySourceDocument,
   type ArchivedSourceRecord,
-} from './source-archive.js';
-import { MeasureModel } from '../models/index.js';
-import type { Connector, RawRecord } from './types.js';
+} from '../source-archive.js';
+import { MeasureModel } from '../../models/index.js';
+import type { Connector, RawRecord } from '../types.js';
 
 /**
  * Third NSW council GPFS adapter: Blacktown City Council's audited General
@@ -50,17 +49,17 @@ import type { Connector, RawRecord } from './types.js';
  * component of the printed total.
  */
 
-export const BLACKTOWN_GPFS_ID = 'blacktown-gpfs';
-export const BLACKTOWN_GPFS_NAME = 'Blacktown City Council — General Purpose Financial Statements';
-export const BLACKTOWN_GPFS_PUBLISHER = 'Blacktown City Council';
-export const BLACKTOWN_GPFS_REPORTING_URL =
-  'https://www.blacktown.nsw.gov.au/About-Council/Plans-policies-and-reports/Annual-audit-and-financial-reports';
-export const BLACKTOWN_GPFS_FISCAL_YEAR = '2024-25';
-export const BLACKTOWN_GPFS_TARGET_YEAR_LABEL = '2024/25';
-export const BLACKTOWN_GPFS_SOURCE_DATASET = 'Blacktown City Council GPFS 2024-25';
-export const BLACKTOWN_GPFS_LICENSE =
-  '© Blacktown City Council. Published council documents used here for public-interest research; not an open-data licence grant.';
-export const BLACKTOWN_GPFS_DATA_QUALITY_FLAG = 'provisional/local_government';
+import {
+  BLACKTOWN_GPFS_DATA_QUALITY_FLAG,
+  BLACKTOWN_GPFS_FISCAL_YEAR,
+  BLACKTOWN_GPFS_ID,
+  BLACKTOWN_GPFS_LICENSE,
+  BLACKTOWN_GPFS_NAME,
+  BLACKTOWN_GPFS_PUBLISHER,
+  BLACKTOWN_GPFS_REPORTING_URL,
+  BLACKTOWN_GPFS_SOURCE_DATASET,
+} from './meta.js';
+import { gpfsFundingSource, gpfsNaturalKey, gpfsUnitLabel } from '../gpfs/engine.js';
 
 export interface BlacktownGpfsDocument {
   id: string;
@@ -758,28 +757,6 @@ function mapScheduleExpense(
   );
 }
 
-function gpfsFundingSource(spec: BlacktownGpfsLineSpec): string {
-  if (spec.potential_double_count) return 'Government grants and contributions';
-  if (spec.key === 'total_revenue')
-    return 'Council total revenue (own-source plus government grants and contributions)';
-  if (spec.section === 'revenue') return 'Council own-source revenue';
-  if (spec.section === 'expenses') return 'Council expenditure';
-  return 'Council result';
-}
-
-function gpfsUnitLabel(unit: MoneyUnitKind): string {
-  switch (unit) {
-    case 'dollars':
-      return 'AUD_dollars';
-    case 'thousands':
-      return 'AUD_thousands';
-    case 'millions':
-      return 'AUD_millions';
-    case 'billions':
-      return 'AUD_billions';
-  }
-}
-
 function notesFor(
   context: BlacktownGpfsParseContext,
   spec: BlacktownGpfsLineSpec,
@@ -811,10 +788,7 @@ export function blacktownGpfsNaturalKey(
   lineItem: string,
   fiscalYear: string = BLACKTOWN_GPFS_FISCAL_YEAR,
 ): string {
-  return `${BLACKTOWN_GPFS_ID}:${createHash('sha256')
-    .update(`${documentUrl}\u001f${lineItem}\u001f${fiscalYear}`)
-    .digest('hex')
-    .slice(0, 40)}`;
+  return gpfsNaturalKey(BLACKTOWN_GPFS_ID, documentUrl, lineItem, fiscalYear);
 }
 
 function mapLine(
@@ -842,7 +816,7 @@ function mapLine(
     jurisdiction_level: 'local',
     jurisdiction: 'NSW',
     delivery_entity: 'Blacktown City Council',
-    funding_source: gpfsFundingSource(spec),
+    funding_source: gpfsFundingSource(spec.section, Boolean(spec.potential_double_count), spec.key),
     source_dataset: BLACKTOWN_GPFS_SOURCE_DATASET,
     source_date: context.sourceDate,
     data_quality_flag: BLACKTOWN_GPFS_DATA_QUALITY_FLAG,

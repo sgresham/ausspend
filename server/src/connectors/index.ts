@@ -505,7 +505,7 @@ export {
   type BlacktownGpfsReconciliation,
   type BlacktownGpfsRejection,
   type BlacktownGpfsSection,
-} from './blacktown-gpfs.js';
+} from './blacktown-gpfs/index.js';
 export {
   PARRAMATTA_GPFS_DATA_QUALITY_FLAG,
   PARRAMATTA_GPFS_FISCAL_YEAR,
@@ -2416,3 +2416,9 @@ export {
   type NtCofogCategory,
   type NtCofogRow,
 } from './nt-budget.js';
+
+export {
+  MODULAR_CONNECTORS,
+  MODULAR_CONNECTOR_IDS,
+  MODULAR_CONNECTOR_MODULES,
+} from './generated-connectors.js';
