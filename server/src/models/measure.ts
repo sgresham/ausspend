@@ -151,6 +151,9 @@ export interface MeasureDocument {
   wa_budget_measure?: 'asset_investment' | 'major_spending_change';
   wa_budget_table?: string;
   wa_printed_sign?: 'positive' | 'negative';
+  tas_budget_table?: string;
+  tas_budget_column?: string;
+  tas_budget_unit?: string;
   /** AIHW exact published detailed funding source. */
   aihw_detailed_source_of_funding?: string;
   /** AIHW state/territory code the published table applies to. */
@@ -338,6 +341,9 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     },
     wa_budget_table: { type: String, index: true },
     wa_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    tas_budget_table: { type: String, index: true },
+    tas_budget_column: { type: String },
+    tas_budget_unit: { type: String },
     aihw_detailed_source_of_funding: { type: String, index: true },
     aihw_state: { type: String, index: true },
     aihw_funding_sector: {

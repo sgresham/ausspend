@@ -209,6 +209,11 @@ Phase 6.6 adds **2,120 ACT Budget rows** from the data.act.gov.au Socrata resour
 424 projects × five budgeted-financing years (2021-22..2025-26), $'000, `measure_type=budget`,
 territory/ACT, with every project's year components reconciled to its printed total. The printed
 project total is never emitted.
+Phase 6.7 adds **66 TAS Budget rows** from Budget Paper No. 1 (2026-27), Table 9.16:
+General Government Expenses from Transactions by Purpose, COFOG-A categories × six
+`$m` columns, with all six years reconciled to the printed total. Rows are
+provisional non-additive benchmark aggregates; nominal interest on superannuation
+is a non-COFOG reconciliation line. The latest verified snapshot is 691,459 measures.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future

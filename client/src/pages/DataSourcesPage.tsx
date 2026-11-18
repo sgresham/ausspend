@@ -439,9 +439,10 @@ export function DataSourcesPage() {
         is metadata-only): its real/constant-price government and non-government series are
         non-additive. <code>wa-budget</code> is live from catalogue.data.wa.gov.au CKAN EFO tables
         (provisional, no BP2 machine-readable agency detail; no COFOG invented).{' '}
-        <code>grantconnect</code> is blocked pending a usable adaptor (no public award API; no
-        direct scraper) and the remaining two federal connectors are stubs. No other council is
-        covered.
+        <code>tas-budget</code> is live from Budget Paper No. 1 Table 9.16: COFOG-A expenses
+        reconciled to the printed total, provisional and non-additive. <code>grantconnect</code> is
+        blocked pending a usable adaptor (no public award API; no direct scraper) and the remaining
+        two federal connectors are stubs. No other council is covered.
       </Typography>
 
       {!coverage.data && coverage.error ? (

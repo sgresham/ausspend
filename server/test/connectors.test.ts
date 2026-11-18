@@ -11,6 +11,7 @@ const LIVE_IDS = [
   'abs-gfs',
   'abs-gfs-pnfc',
   'aihw-health-expenditure',
+  'tas-budget',
   'wa-budget',
   'aus-tender',
   'data-gov-au-pbs',
@@ -72,9 +73,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships sixty-two connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(62);
-    expect(new Set(CONNECTOR_IDS).size).toBe(62);
+  it('ships sixty-three connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(63);
+    expect(new Set(CONNECTOR_IDS).size).toBe(63);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),
