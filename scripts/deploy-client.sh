@@ -48,14 +48,13 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="$REPO_ROOT/client/dist"
 INDEX="$BUILD_DIR/index.html"
 DEPLOY_ROOT="${AUSSPEND_DEPLOY_ROOT:-/srv/ausspend/client}"
-DEPLOY_ROOT="${DEPLOY_ROOT%/}"
-
-if [[ -z "$DEPLOY_ROOT" || "$DEPLOY_ROOT" != /* ]]; then
-  fail "AUSSPEND_DEPLOY_ROOT must be an absolute path, got '${DEPLOY_ROOT:-<empty>}'"
-fi
 if [[ "$DEPLOY_ROOT" == "/" ]]; then
   fail "refusing to publish over /"
 fi
+if [[ -z "$DEPLOY_ROOT" || "$DEPLOY_ROOT" != /* ]]; then
+  fail "AUSSPEND_DEPLOY_ROOT must be an absolute path, got '${DEPLOY_ROOT:-<empty>}'"
+fi
+DEPLOY_ROOT="${DEPLOY_ROOT%/}"
 case "$DEPLOY_ROOT" in
   "$REPO_ROOT"|"$REPO_ROOT"/*)
     fail "refusing to publish inside the repository ($DEPLOY_ROOT)"
