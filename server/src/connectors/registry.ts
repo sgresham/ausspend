@@ -4,6 +4,7 @@ import { createTasBudgetConnector } from './tas-budget.js';
 import { createQldLocalGovernmentConnector } from './qld-local-government.js';
 import { createWaMyCouncilConnector } from './wa-mycouncil.js';
 import { createTasLgCdcConnector } from './tas-lg-cdc.js';
+import { createNtLgPilotConnector } from './nt-lg-pilot.js';
 import { createAihwHealthExpenditureConnector } from './aihw-health-expenditure.js';
 import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
@@ -548,6 +549,9 @@ export const CONNECTORS: readonly Connector[] = [
   // councils. Whole-dollar unit detection and printed reconciliation; never
   // mixed with tas-budget.
   createTasLgCdcConnector(),
+  // Phase 6 local government: NT three-council GPFS pilot (Darwin, Palmerston,
+  // Alice Springs) only; explicit $'000 guard and zero-tolerance reconciliation.
+  createNtLgPilotConnector(),
   // Module-style connectors discovered by scripts/generate-connector-manifest.mjs.
   ...MODULAR_CONNECTORS,
 ];

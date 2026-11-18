@@ -5,7 +5,8 @@
 **performance-indicator-only** layer (`vic-lgprf`, 23,068 rows); it is not a financial-spending
 source and is not added to the spending layer. SA's statewide package is **governance/services
 only** (no council financial data; Parse host no longer resolves), so SA local financial coverage is
-deferred. NT is not added; the runner has an explicit priority-order extension point for it.
+deferred. NT has a **three-council GPFS pilot** (`nt-lg-pilot`: Darwin, Palmerston, Alice Springs)
+only; it is not statewide NT coverage.
 
 ## QLD — source and package
 
@@ -329,6 +330,60 @@ financial API/class was found.
 source, stub or spending mapper is created. Council names, elected members, events, libraries and
 parks are not spending and are not ingested. A council-by-council SA GPFS layer is deferred under
 the user non-goal; `sa-budget-gfs` remains the separate SA state GFS source and is never duplicated.
+
+## NT — three-council GPFS pilot (not statewide)
+
+- source id: `nt-lg-pilot`
+- councils: **City of Darwin**, **City of Palmerston**, **Alice Springs Town Council** only
+- latest audited GPFS: **FY2025-26** (year ended 30 June 2026), extracted from the annual reports
+- archive root: `/home/steve/ausspend-source-archive/nt-lg-pilot` (outside the repo)
+
+### Documents
+
+| council                    | official URL                                                                                                                            |      bytes | SHA-256                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------: | ------------------------------------------------------------------ |
+| City of Darwin             | `https://www.darwin.nt.gov.au/sites/default/files/2026-11/109572%20City%20of%20Darwin%20Annual%20Report%202025%20-%2026_FA%20Pages.pdf` | 28,591,026 | `7291498d18748194e2eb8d5e4a8d1ff7d3eaee7f2f6583c4a55a76f456d0ef79` |
+| City of Palmerston         | `https://palmerston.nt.gov.au/sites/default/files/uploads/files/2026/COP_Annual%20Report%202025-26_WEB%20-%20Final.pdf`                 |  7,910,758 | `57c33a4d90e682ffef0c86b5f3380aa9c814b9e183fe098b290cb5b9f3f271eb` |
+| Alice Springs Town Council | `https://www.alicesprings.nt.gov.au/documents/1041/annual-report-2025-2026`                                                             | 11,640,642 | `68944b6d82f1ab443e3c5a235785767985dae061606c364699618016f535c48b` |
+
+All three are audited entity-level GPFS; each Statement of Comprehensive Income prints an explicit
+`$'000` header.
+
+### Extracted rows (37)
+
+Per council: 6 income categories (rates, statutory charges, user charges, operating grants,
+investment/interest income, other income; Darwin also prints reimbursements) + total income; 4
+expense categories (employee, materials/contracts/other, depreciation/amortisation,
+finance costs) + total expenses. That is 13 rows for Darwin and 12 each for Palmerston and Alice
+Springs = **37 non-additive actual rows**.
+
+- `jurisdiction_level: "local"`, `jurisdiction: "NT"`,
+  `delivery_entity`/`location.lga_name` = council name, `location.state: "NT"`,
+  `measure_type: "actual"`, integer cents after `$'000` × 100,000.
+- `source_dataset`: `NT local government pilot — <council>`; source URL/archive SHA in every row.
+- `data_quality_flag: "provisional"`, `reconciliation_status: "printed_totals_reconciled"`,
+  `notes` includes `human_spot_check: required`.
+- COFOG is blank; no cross-council or statewide total. Never added to `nt-budget` or any territory
+  spending. This is a 3-council pilot, not full NT local-government coverage.
+
+### Zero-tolerance reconciliation
+
+| council                    | total income | income components | total expenses | expense components |
+| -------------------------- | -----------: | ----------------: | -------------: | -----------------: |
+| City of Darwin             |      148,681 |           148,681 |        161,642 |            161,642 |
+| City of Palmerston         |       46,613 |            46,613 |         56,027 |             56,027 |
+| Alice Springs Town Council |       51,532 |            51,532 |         56,301 |             56,301 |
+
+All in printed `$'000`; any mismatch rejects the council document.
+
+### Verification (2026-11-18)
+
+- Live fetch/parse: 3 councils, **37 rows**; all three reconciliations exact.
+- Shared DB: all `measures` **731,455 → 731,492** (+37); `nt-lg-pilot` 0 → 37; only new source.
+- `qld-local-government` 11,321, `wa-mycouncil` 27,561, `tas-lg-cdc` 684 and `nt-budget` 10
+  unchanged.
+- Second run: source still 37, all measures still 731,492.
+- `LOCAL_GOV_DRY_RUN=1 npm run ingest:local-gov` → `qld-local-government -> wa-mycouncil -> tas-lg-cdc -> nt-lg-pilot`.
 
 ## Ingestion
 
