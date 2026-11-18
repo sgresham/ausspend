@@ -80,7 +80,9 @@ code (`HS17_0101` → `0101`); partner totals have no commodity code and use the
 
 Raw SDMX-JSON responses are fetched once per request and SHA-256 archived **outside the repo** under
 `~/ausspend-source-archive/oecd-itic/` before any row is written. Ingestion is idempotent per
-published dimension (source, flow, measure, commodity, partner, year, location granularity).
+published dimension (source, flow, measure, commodity, partner, year, location granularity). If the
+public endpoint rate-limits (HTTP 429), `--from-archive` replays those exact archived responses
+through the same parser and upsert keys, so a replay cannot change a row or touch another source.
 
 ### Sanity flag (2019 ≈ 3.5%, 2022 ≈ 6.4%)
 
