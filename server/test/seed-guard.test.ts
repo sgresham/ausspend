@@ -4,8 +4,8 @@ import { assertSeedTarget, databaseNameFromUrl, SEED_DATABASE_NAME } from '../sr
 describe('seed target guard', () => {
   it('accepts exactly ausspend_dev', () => {
     expect(SEED_DATABASE_NAME).toBe('ausspend_dev');
-    expect(assertSeedTarget('mongodb://10.10.10.30:27017/ausspend_dev')).toBe('ausspend_dev');
-    expect(assertSeedTarget('mongodb://10.10.10.30:27017/ausspend_dev?directConnection=true')).toBe(
+    expect(assertSeedTarget('mongodb://localhost:27017/ausspend_dev')).toBe('ausspend_dev');
+    expect(assertSeedTarget('mongodb://localhost:27017/ausspend_dev?directConnection=true')).toBe(
       'ausspend_dev',
     );
   });
@@ -17,13 +17,13 @@ describe('seed target guard', () => {
 
   it('refuses every other database name', () => {
     for (const url of [
-      'mongodb://10.10.10.30:27017/ausspend_prod',
-      'mongodb://10.10.10.30:27017/ausspend_test_123',
-      'mongodb://10.10.10.30:27017/ausspend_dev_extra',
-      'mongodb://10.10.10.30:27017/Ausspend_Dev',
+      'mongodb://localhost:27017/ausspend_prod',
+      'mongodb://localhost:27017/ausspend_test_123',
+      'mongodb://localhost:27017/ausspend_dev_extra',
+      'mongodb://localhost:27017/Ausspend_Dev',
       'mongodb://127.0.0.1:27018/otto_pool',
-      'mongodb://10.10.10.30:27017/',
-      'mongodb://10.10.10.30:27017',
+      'mongodb://localhost:27017/',
+      'mongodb://localhost:27017',
       'not a url',
     ]) {
       expect(() => assertSeedTarget(url), url).toThrow(/Refusing to seed database/);

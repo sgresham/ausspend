@@ -17,8 +17,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * SA state general government GFS expenses by function (GPC) and economic type.
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
- *   SA_GFS_ARCHIVE_ROOT=/home/steve/ausspend-source-archive \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
+ *   SA_GFS_ARCHIVE_ROOT=${AUSSPEND_SOURCE_ARCHIVE} \
  *   npm run ingest:sa-gfs
  *
  * Statewide SA only; no SA local government, agency/project or LGA allocation.

@@ -104,7 +104,7 @@ function capitalPage(
 const CONTEXT: DubboParseContext = {
   document: DUBBO_DOCUMENTS[0]!,
   archive: {
-    local_path: '/home/steve/ausspend-source-archive/dubbo-council/budget.pdf',
+    local_path: '/tmp/ausspend-source-archive/dubbo-council/budget.pdf',
     sha256: 'a'.repeat(64),
     bytes: 1234,
     fetched_at: '2026-11-17T00:00:00.000Z',

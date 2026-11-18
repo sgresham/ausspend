@@ -75,7 +75,7 @@ source deleted or modified. A second run upserts the same ten natural keys and l
 **691,469**.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run ingest:nt-budget
 # [ingest:nt-budget] nt-budget: success fetched=10 upserted=10
 # [ingest:nt-budget] db source_rows=10 violations=0 all_measures=691469
@@ -89,7 +89,7 @@ nginx are not touched.
 ## Verify
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   print(db.measures.countDocuments({source_id:"nt-budget"}));
   printjson(db.measures.aggregate([{$match:{source_id:"nt-budget"}},
     {$group:{_id:{cofog:"$function_code",quality:"$data_quality_flag",confidence:"$extraction_confidence"},n:{$sum:1}}},

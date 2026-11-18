@@ -1,18 +1,18 @@
 [Unit]
 Description=ausspend MongoDB backup
-Documentation=file:///opt/ausspend/README.md
 After=network-online.target
 
 [Service]
 Type=oneshot
 # The installer snapshots db-backup.mjs + lib/backup-format.mjs and installs
-# their dependencies here, so the timer does not depend on /opt/ausspend/node_modules
-# or on the Docker stack being up. Re-run scripts/install-db-backup-timer.sh after
-# changing the backup script.
+# their dependencies here, so the timer does not depend on the application
+# checkout or on the Docker stack being up. Re-run the installer after changing
+# the backup script.
 WorkingDirectory=%h/.local/share/ausspend-backup
-Environment=MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
-Environment=AUSSPEND_BACKUP_ROOT=/home/steve/backups/ausspend
-ExecStart=/home/steve/.nvm/versions/node/v24.14.1/bin/node %h/.local/share/ausspend-backup/db-backup.mjs --out-root /home/steve/backups/ausspend --prune 14
+Environment=AUSSPEND_BACKUP_ROOT=%h/ausspend-backups
+# Optional user configuration (mode 600), e.g. MONGO_URL for a non-local DB.
+EnvironmentFile=-%h/.config/ausspend/backup.env
+ExecStart=%h/.local/share/ausspend-backup/run-backup.sh
 SyslogIdentifier=ausspend-db-backup
 Nice=10
 IOSchedulingClass=idle

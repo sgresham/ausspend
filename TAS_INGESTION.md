@@ -96,7 +96,7 @@ Estimates"`, exact PDF `source_url`, `tas_budget_table = "Table 9.16"`,
 ## Verify
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.measures.countDocuments({source_id:"tas-budget"});
   db.measures.aggregate([{$match:{source_id:"tas-budget"}},
     {$group:{_id:{measure:"$measure_type",fn:"$function_code"},n:{$sum:1}}}]).toArray();

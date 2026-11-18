@@ -10,7 +10,7 @@ import {
 import { DataSourceModel, IngestionLogModel, MeasureModel } from '../src/models/index.js';
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_seed`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_seed`;
 
 const FAKE_CONTRACT = {
   amount_cents: 123_456_789,
@@ -122,7 +122,7 @@ describe('seed restart safety', () => {
     expect(() => assertSeedTarget('mongodb://127.0.0.1:27018/otto_pool')).toThrow(
       /Refusing to seed database/,
     );
-    expect(assertSeedTarget('mongodb://10.10.10.30:27017/ausspend_dev')).toBe('ausspend_dev');
+    expect(assertSeedTarget('mongodb://localhost:27017/ausspend_dev')).toBe('ausspend_dev');
   });
 
   it('wiring: an explicit reset is the only destructive path', async () => {

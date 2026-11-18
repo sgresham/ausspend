@@ -27,7 +27,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * VIC council pilot C — VLGGC VGC1/ABS1/ABS2-3 historical series.
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   VIC_HISTORY_YEARS=2019-20,2020-21,2021-22,2022-23,2023-24 \
  *   npm run ingest:vic-vlgc-history
  *

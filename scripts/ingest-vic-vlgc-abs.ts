@@ -16,7 +16,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * VIC council pilot B — VLGGC ABS1/ABS2-3 2024-25 ingestion (all 79 councils).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   ABS1_SOURCE_PATH=/path/to/ABS1.xlsx \
  *   ABS23_SOURCE_PATH=/path/to/ABS2-3.xlsx \
  *   npm run ingest:vic-vlgc-abs

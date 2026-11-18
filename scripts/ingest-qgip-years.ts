@@ -27,7 +27,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * QGIP earlier-year breadth ingestion (P1).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo \
  *   npm run ingest:qgip-years
  *

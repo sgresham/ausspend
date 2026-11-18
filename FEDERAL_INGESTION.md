@@ -204,7 +204,7 @@ PBS_LIVE_TEST=1 npx vitest run server/test/data-gov-au-pbs.test.ts
 
 ```bash
 INGEST_SOURCES=data-gov-au-pbs \
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 npm run ingest:federal
 ```
 
@@ -364,7 +364,7 @@ npm run grantconnect:chunks -- fetch --fy=2025-26 --chunk-days=31 --delay-ms=100
 npm run grantconnect:chunks -- audit --fy=2025-26 --dir=~/ausspend-source-archive/grantconnect
 
 # Import the complete chunk set (pull requests: no rows are ever fabricated).
-INGEST_SOURCES=grantconnect MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev   npm run ingest:federal
+INGEST_SOURCES=grantconnect MONGO_URL=mongodb://localhost:27017/ausspend_dev   npm run ingest:federal
 ```
 
 `GRANTCONNECT_DOWNLOAD_URL_TEMPLATE` overrides the `DownloadResult` URL shape (`{start}`/`{end}`
@@ -476,7 +476,7 @@ non-government; 8 states). Every other source is byte-for-byte unchanged
 (`other_sources_unchanged=true`).
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run ingest:aihw
 # [ingest:aihw] before all=689090 aihw=6778 other_sources=682312
 # [ingest:aihw] deleted stale aihw-health-expenditure rows=6778
@@ -487,7 +487,7 @@ npm run ingest:aihw
 ### Verify
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   print(db.measures.countDocuments({source_id:"aihw-health-expenditure"}));
   print(db.measures.countDocuments({source_id:"aihw-health-expenditure",function_code:"07"}));
   printjson(db.measures.aggregate([{$match:{source_id:"aihw-health-expenditure"}},
@@ -504,13 +504,13 @@ SHA-verified real-archive parse.
 ## Narrow live run
 
 The acceptance run ingests **one recent full week** into
-`mongodb://10.10.10.30:27017/ausspend_dev` (never the pool Mongo):
+`mongodb://localhost:27017/ausspend_dev` (never the pool Mongo):
 
 ```bash
 AUSTENDER_START_DATE=2026-11-02T00:00:00Z \
 AUSTENDER_END_DATE=2026-11-09T00:00:00Z \
 INGEST_SOURCES=aus-tender \
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 npm run ingest:federal
 ```
 
@@ -526,7 +526,7 @@ historical contracts.
 To verify:
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.measures.countDocuments({jurisdiction_level:"federal", measure_type:"contract"}),
   db.measures.distinct("natural_key", {jurisdiction_level:"federal"}).length
 '
@@ -539,7 +539,7 @@ curl -s 'http://localhost:3101/api/v1/meta/coverage'
 For PBS, run `INGEST_SOURCES=data-gov-au-pbs` (no date window) and check:
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.measures.countDocuments({source_id:"data-gov-au-pbs"}),
   db.measures.distinct("natural_key", {source_id:"data-gov-au-pbs"}).length,
   db.measures.countDocuments({source_id:"synthetic-seed"}),
@@ -614,8 +614,8 @@ never ran PBS, GrantConnect, state/local/SOC/charity sources, and it never delet
 | Chunking                  | 105 contiguous 7-day chunks (`AUSTENDER_CHUNK_DAYS=7`), no gaps/overlaps      |
 | Page bound per chunk      | `AUSTENDER_PAGE_LIMIT=100` (≈10,000 releases/week); peak observed 2,195       |
 | Rate policy               | 1 s between pages, `Retry-After`/exponential 429 backoff (existing connector) |
-| Pre-run backup            | `/home/steve/backups/ausspend/2026-11-16T11-22-19.156Z`                       |
-| Post-run backup           | `/home/steve/backups/ausspend/2026-11-16T12-30-14.670Z`                       |
+| Pre-run backup            | `~/ausspend-backups/2026-11-16T11-22-19.156Z`                                 |
+| Post-run backup           | `~/ausspend-backups/2026-11-16T12-30-14.670Z`                                 |
 | Fetched / upserted        | 152,616 releases / 117,033 distinct `ocid`s                                   |
 | Result                    | 117,894 AusTender rows (861 pre-existing + 117,033 backfilled)                |
 | Database total            | 119,935 (117,894 AusTender + 1,231 PBS + 810 synthetic)                       |
@@ -628,11 +628,11 @@ closed/verified):
 
 ```bash
 BACKFILL_CONFIRM=yes \
-BACKUP_DIR=/home/steve/backups/ausspend/2026-11-16T11-22-19.156Z \
+BACKUP_DIR=~/ausspend-backups/2026-11-16T11-22-19.156Z \
 AUSTENDER_START_DATE=2024-07-01T00:00:00Z \
 AUSTENDER_END_DATE=2026-07-01T00:00:00Z \
 INGEST_SOURCES=aus-tender \
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 AUSTENDER_PAGE_LIMIT=100 AUSTENDER_CHUNK_DAYS=7 \
 npm run ingest:federal -- --backfill
 ```
@@ -692,14 +692,14 @@ refuses to fetch anything without a recent verified backup.
 The backup/restore tools use the existing Mongo driver; they do not require `mongodump`.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run db:backup -- --prune 14
-# [backup] wrote /home/steve/backups/ausspend/<ISO>
+# [backup] wrote ~/ausspend-backups/<ISO>
 # [backup] natural_key count=<n> distinct=<n> checksum=<sha256>
 ```
 
 - Writes every collection as Extended JSON to a timestamped directory outside the repository
-  (default `/home/steve/backups/ausspend`).
+  (default `~/ausspend-backups`).
 - Refuses any database except `ausspend_dev`; `--scratch` additionally permits an explicit
   `ausspend_test_*` / `ausspend_restore_test_*` database for tests.
 - The manifest records collection counts and indexes, `data_sources` statuses, and the
@@ -709,8 +709,8 @@ npm run db:backup -- --prune 14
 Restore to a scratch database by default:
 
 ```bash
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
-  npm run db:restore -- /home/steve/backups/ausspend/<ISO> \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
+  npm run db:restore -- ~/ausspend-backups/<ISO> \
   --target ausspend_restore_test_<timestamp>
 ```
 
@@ -750,7 +750,7 @@ successful gated run also records the verified backup path in `ingestion_logs.ba
 Validate the gate without fetching data:
 
 ```bash
-BACKFILL_CONFIRM=yes BACKUP_DIR=/home/steve/backups/ausspend/<ISO> \
+BACKFILL_CONFIRM=yes BACKUP_DIR=~/ausspend-backups/<ISO> \
   npm run ingest:federal -- --backfill --dry-run
 ```
 
@@ -768,7 +768,7 @@ nonzero exit, records the failing chunk and leaves already-upserted chunks intac
 `scripts/systemd/ausspend-db-backup.service` and `.timer` run the backup daily at 03:15 with a
 randomized delay, `Persistent=true`, journal logging and 14-backup retention. The installer creates
 a self-contained runner snapshot under `~/.local/share/ausspend-backup` (including its own
-`node_modules`) so the timer does not depend on the Docker stack or on host `/opt/ausspend`
+`node_modules`) so the timer does not depend on the Docker stack or on host `${AUSSPEND_DEPLOY_ROOT}`
 dependencies. Re-run it after changing the backup script. Then check:
 
 ```bash

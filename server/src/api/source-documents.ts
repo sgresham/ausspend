@@ -10,7 +10,7 @@ import { SourceDocumentModel } from '../models/index.js';
  * The bytes live outside the repository; `local_path` + `sha256` let a reviewer
  * verify the exact copy that an ingestion run used. Host filesystem paths are
  * stripped unless EXPOSE_SOURCE_PATHS=true: the production edge also 404s this
- * route (see deploy/nginx/ausspend.conf) so paths are never public.
+ * route (see deploy/nginx/ausspend.conf.template) so paths are never public.
  */
 export const listSourceDocuments: RequestHandler = async (req, res) => {
   const exposePaths = process.env.EXPOSE_SOURCE_PATHS === 'true';

@@ -44,7 +44,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * NSW ingestion (S1 + S2).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npm run ingest:nsw
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:nsw
  *   MONGO_URL=... npm run ingest:nsw -- --source data-nsw-ckan
  *
  * With no `--source`, every registered NSW source runs sequentially:

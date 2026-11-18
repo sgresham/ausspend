@@ -73,7 +73,7 @@ const CONTEXT: CanadaBayGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/canada-bay-gpfs/canada-bay-council-annual-report-2024-25.pdf',
+      '/tmp/ausspend-source-archive/canada-bay-gpfs/canada-bay-council-annual-report-2024-25.pdf',
     sha256: 'c83a0b579bf0f3bb493f154f2ef1cc089fe5490b844d5ad62d6ff0a400ab9776',
     bytes: 35_521_573,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -347,7 +347,7 @@ describe('City of Canada Bay GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_canadabaygpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_canadabaygpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

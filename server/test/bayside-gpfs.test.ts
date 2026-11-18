@@ -73,7 +73,7 @@ const CONTEXT: BaysideGpfsParseContext = {
     listing_url: BAYSIDE_GPFS_REPORTING_URL,
   },
   archive: {
-    local_path: '/home/steve/ausspend-source-archive/bayside-gpfs/bayside-council-gpfs-2024-25.pdf',
+    local_path: '/tmp/ausspend-source-archive/bayside-gpfs/bayside-council-gpfs-2024-25.pdf',
     sha256: 'c91290369d85aa34c95a47a806d1187809ef7816f0a76a1872b70a79560a8bf0',
     bytes: 2_174_485,
     fetched_at: '2026-11-18T04:00:00.000Z',
@@ -334,7 +334,7 @@ describe('Bayside GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_baysidegpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_baysidegpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

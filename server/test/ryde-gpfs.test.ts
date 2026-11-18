@@ -76,7 +76,7 @@ const CONTEXT: RydeGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/ryde-gpfs/council-of-the-city-of-ryde-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/ryde-gpfs/council-of-the-city-of-ryde-financial-statements-2024-25.pdf',
     sha256: '4a70b2a68b47142b79679a4ea4763849d7c07fc76b90a19c7bbc48e635a4bdb5',
     bytes: 12_685_077,
     fetched_at: '2026-11-18T04:40:00.000Z',
@@ -347,7 +347,7 @@ describe('Ryde GPFS exact reconciliation', () => {
 });
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_rydegpfs`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_rydegpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

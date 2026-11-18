@@ -74,7 +74,7 @@ const CONTEXT: TweedShireGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/tweed-shire-gpfs/tweed-shire-council-financial-statements-2024-2025.pdf',
+      '/tmp/ausspend-source-archive/tweed-shire-gpfs/tweed-shire-council-financial-statements-2024-2025.pdf',
     sha256: '8eabbdf40bf180e051598eaa90d542ca3ab8b7a27187ff0b8230b0433e7dee8f',
     bytes: 4_202_080,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -299,8 +299,7 @@ describe('Tweed Shire GPFS exact reconciliation', () => {
 });
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_tweedgpfs`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_tweedgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

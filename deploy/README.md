@@ -1,18 +1,18 @@
 # Production cutover — ausspend.com.au
 
-Status as at 2026-11-17 (host `q`, origin `10.10.10.30`, public `180.150.4.132`).
+Status as at 2026-11-17 (the database host, origin `localhost`, public `<public-origin-ip>`).
 
 ## TL;DR status
 
-| Piece | State |
-| --- | --- |
-| nginx on host `:80` / `:443` | **LIVE** — nginx 1.18.0, `deploy/nginx/ausspend.conf` installed and enabled |
-| Static client (`/srv/ausspend/client`) | **LIVE** — built from this branch and copied to `/srv/ausspend/client` |
-| API proxy `/api` → `127.0.0.1:3001` | **LIVE** — same-origin, GET/HEAD/OPTIONS only, rate-limited |
-| TLS | **LIVE** — Cloudflare Origin CA cert, Full (strict)-capable; served from `/etc/nginx/tls/` (root-only, never in git) |
-| Cloudflare proxied DNS → origin | **LIVE and verified** — `curl --resolve …:104.21.46.135` returns 200 with `cf-ray`; CF edge IPs appear in the origin access log |
-| `docker-compose.yml` loopback bindings + `CLIENT_ORIGIN` | **STAGED** — applied on the next `docker compose up -d` from the deployed checkout |
-| Live container bindings | **STILL PUBLIC** — `ausspend-server-1` 0.0.0.0:3001 and `ausspend-client-1` 0.0.0.0:5173 until that redeploy |
+| Piece                                                    | State                                                                                                                                  |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| nginx on host `:80` / `:443`                             | **LIVE** — nginx 1.18.0, `deploy/nginx/ausspend.conf.template` installed and enabled                                                   |
+| Static client (`${AUSSPEND_DEPLOY_ROOT}/client`)         | **LIVE** — built from this branch and copied to `${AUSSPEND_DEPLOY_ROOT}/client`                                                       |
+| API proxy `/api` → `127.0.0.1:3001`                      | **LIVE** — same-origin, GET/HEAD/OPTIONS only, rate-limited                                                                            |
+| TLS                                                      | **LIVE** — Cloudflare Origin CA cert, Full (strict)-capable; served from `${AUSSPEND_TLS_DIR}/` (root-only, never in git)              |
+| Cloudflare proxied DNS → origin                          | **LIVE and verified** — `curl --resolve …:<cloudflare-edge-ip>` returns 200 with `cf-ray`; CF edge IPs appear in the origin access log |
+| `docker-compose.yml` loopback bindings + `CLIENT_ORIGIN` | **STAGED** — applied on the next `docker compose up -d` from the deployed checkout                                                     |
+| Live container bindings                                  | **STILL PUBLIC** — `ausspend-server-1` 0.0.0.0:3001 and `ausspend-client-1` 0.0.0.0:5173 until that redeploy                           |
 
 The public site is reachable through Cloudflare. The only reason it is not
 claimed as fully finished is that the **live containers still publish 3001/5173
@@ -23,9 +23,9 @@ worktree). Final rebind happens on deploy — see "Remaining owner actions".
 ## Architecture
 
 ```
-Internet → Cloudflare (proxied, Full strict) → 180.150.4.132:443 (RouterOS NAT)
-        → 10.10.10.30:443 nginx
-            ├─ /, /legal, /soc, /benchmark, deep links → /srv/ausspend/client (SPA)
+Internet → Cloudflare (proxied, Full strict) → <public-origin-ip>:443 (RouterOS NAT)
+        → localhost:443 nginx
+            ├─ /, /legal, /soc, /benchmark, deep links → ${AUSSPEND_DEPLOY_ROOT}/client (SPA)
             └─ /api/* → 127.0.0.1:3001 (Express; GET/HEAD/OPTIONS only)
 ```
 
@@ -35,7 +35,7 @@ port 80 again.
 
 ## Files
 
-- `deploy/nginx/ausspend.conf` — the complete edge config (both server blocks,
+- `deploy/nginx/ausspend.conf.template` — the complete edge config (both server blocks,
   rate-limit zone, TLS, headers, SPA fallback, API proxy and blocks).
 - `docker-compose.yml` — app ports pinned to `127.0.0.1`; production
   `CLIENT_ORIGIN=https://ausspend.com.au`.
@@ -53,19 +53,22 @@ sudo apt-get update -o Acquire::AllowReleaseInfoChange=true
 sudo apt-get install -y nginx                       # nginx 1.18.0 on Ubuntu 22.04
 
 # TLS: Cloudflare Origin CA cert/key, root-only, outside the repo.
-sudo install -d -m 755 /etc/nginx/tls
-sudo install -m 600 -o root -g root /home/steve/.secrets/ausspend-origin.pem /etc/nginx/tls/ausspend-origin.pem
-sudo install -m 600 -o root -g root /home/steve/.secrets/ausspend-origin.key /etc/nginx/tls/ausspend-origin.key
+sudo install -d -m 755 ${AUSSPEND_TLS_DIR}
+sudo install -m 600 -o root -g root $HOME/.secrets/ausspend-origin.pem ${AUSSPEND_TLS_DIR}/ausspend-origin.pem
+sudo install -m 600 -o root -g root $HOME/.secrets/ausspend-origin.key ${AUSSPEND_TLS_DIR}/ausspend-origin.key
 
 # Build the static client and copy it to the served root.
 npm ci
 npm run build -w shared
 npm run build -w client
-sudo install -d -m 755 /srv/ausspend/client
-sudo rsync -a --delete client/dist/ /srv/ausspend/client/
+sudo install -d -m 755 ${AUSSPEND_DEPLOY_ROOT}/client
+sudo rsync -a --delete client/dist/ ${AUSSPEND_DEPLOY_ROOT}/client/
 
-# Install the edge config.
-sudo cp deploy/nginx/ausspend.conf /etc/nginx/sites-available/ausspend.conf
+# Install the edge config from the template. render-nginx.sh substitutes only
+# ${AUSSPEND_DEPLOY_ROOT} and ${AUSSPEND_TLS_DIR}; nginx $variables are untouched.
+export AUSSPEND_DEPLOY_ROOT="$HOME/ausspend"
+export AUSSPEND_TLS_DIR="$HOME/.config/ausspend/tls"
+sudo ./deploy/render-nginx.sh | sudo tee /etc/nginx/sites-available/ausspend.conf >/dev/null
 sudo ln -sf /etc/nginx/sites-available/ausspend.conf /etc/nginx/sites-enabled/ausspend.conf
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
@@ -78,7 +81,7 @@ If the rate-limit key changes, a `reload` is refused with
 ## TLS / Cloudflare
 
 - Certificate: `CN=CloudFlare Origin Certificate`, issuer `CloudFlare Origin SSL
-  Certificate Authority`, SAN `DNS:*.ausspend.com.au, DNS:ausspend.com.au`,
+Certificate Authority`, SAN `DNS:*.ausspend.com.au, DNS:ausspend.com.au`,
   valid 2026-11-17 → 2041-11-13, key matches. SHA-256 fingerprint
   `E3:41:CD:BE:CC:96:19:9B:79:3D:40:FA:6B:99:23:23:F9:9D:91:D2:E7:F3:80:D1:26:2F:B6:87:9B:88:CF:6E`.
 - Cloudflare SSL/TLS mode must be **Full (strict)**. The origin cert is a
@@ -120,8 +123,7 @@ If the rate-limit key changes, a `reload` is refused with
 ## Pi-hole
 
 - Pi-hole stays on host `8053 → 80`; DNS/53 untouched.
-- The pihole container also exposes internal `443/tcp` but does not publish host
-  443. nginx owns host 80 and 443. Do not re-add a host `80` mapping for Pi-hole.
+- The pihole container also exposes internal `443/tcp` but does not publish host 443. nginx owns host 80 and 443. Do not re-add a host `80` mapping for Pi-hole.
 
 ## RouterOS (owner side; not changed here)
 
@@ -129,8 +131,8 @@ Documented, not applied (no router access):
 
 ```
 /ip firewall nat
-add chain=dstnat in-interface-list=WAN protocol=tcp dst-port=80  action=dst-nat to-addresses=10.10.10.30 to-ports=80  comment="ausspend http"
-add chain=dstnat in-interface-list=WAN protocol=tcp dst-port=443 action=dst-nat to-addresses=10.10.10.30 to-ports=443 comment="ausspend https"
+add chain=dstnat in-interface-list=WAN protocol=tcp dst-port=80  action=dst-nat to-addresses=localhost to-ports=80  comment="ausspend http"
+add chain=dstnat in-interface-list=WAN protocol=tcp dst-port=443 action=dst-nat to-addresses=localhost to-ports=443 comment="ausspend https"
 /ip firewall filter
 # accept established/related first, then the two dst-nat accept rules BEFORE any drop.
 add chain=forward action=accept connection-nat-state=dstnat in-interface-list=WAN protocol=tcp dst-port=80,443 comment="ausspend edge"
@@ -158,7 +160,7 @@ sudo nginx -t
 sudo ss -ltnp | grep -E ':(80|443)\b'
 ```
 
-A stale A record for `ausspend.com.au` → `103.42.108.46` (VentraIP parking) was
+A stale A record for `ausspend.com.au` → `<parking-ip>` (VentraIP parking) was
 still cached by some public resolvers during the cutover. Cloudflare
 authoritative DNS (`1.1.1.1`) returns only Cloudflare anycast addresses; the
 stale entry clears with its TTL. If it persists, re-check the Cloudflare DNS
@@ -167,9 +169,9 @@ record.
 ## Remaining owner actions
 
 1. **Apply the loopback bindings** on the deployed checkout:
-   `cd /opt/ausspend && git pull && docker compose up -d server client`.
+   `cd ${AUSSPEND_DEPLOY_ROOT} && git pull && docker compose up -d server client`.
    This recreates the two containers with `127.0.0.1:3001` / `127.0.0.1:5173`;
-   until then they remain reachable on `10.10.10.30:3001` and `:5173` (LAN) and
+   until then they remain reachable on `localhost:3001` and `:5173` (LAN) and
    on any WAN port-forward.
 2. **Confirm Cloudflare SSL/TLS mode = Full (strict)** in the dashboard.
 3. **Confirm the RouterOS WAN 80/443 forward** and forward-accept ordering
@@ -177,7 +179,7 @@ record.
 4. Optional hardening: firewall origin 80/443 to Cloudflare IP ranges, and
    rebind the unrelated `newpool-mongo-1` host port `27018` (currently
    `0.0.0.0:27018`) to loopback. `27017` is the host Mongo bound to
-   `10.10.10.30` only; the app needs it and it is not on `0.0.0.0`.
+   `localhost` only; the app needs it and it is not on `0.0.0.0`.
 5. Once containers are rebound, verify `3001`/`5173` are unreachable from a
    non-loopback host; then the cutover is complete.
 
@@ -200,7 +202,7 @@ The running app containers are untouched by this change; only the edge is new.
   `/api/{v1/}source-documents`, `/api/{v1/}ingestion-logs` → **404**;
   `/assets/` → **404** (no listing); POST `/api/health` → **405**; burst →
   **429** after burst.
-- Through Cloudflare (`--resolve …:104.21.46.135`): same matrix, all **200/404**
+- Through Cloudflare (`--resolve …:<cloudflare-edge-ip>`): same matrix, all **200/404**
   as above, response carries `cf-ray` and our CSP/HSTS headers.
 - Public edge TLS verifies (`ssl_verify_result=0`, Let's Encrypt edge cert);
   origin presents the Cloudflare Origin CA cert for `ausspend.com.au`.

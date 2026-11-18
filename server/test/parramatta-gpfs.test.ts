@@ -65,7 +65,7 @@ const CONTEXT: ParramattaGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/parramatta-gpfs/city-of-parramatta-annual-financial-statements-2024-2025.pdf',
+      '/tmp/ausspend-source-archive/parramatta-gpfs/city-of-parramatta-annual-financial-statements-2024-2025.pdf',
     sha256: '9dad166100cdf224a2c34d210b12673450b8b134fe2a7e257dec350e65c1be59',
     bytes: 4_098_410,
     fetched_at: '2026-11-17T00:00:00.000Z',
@@ -302,7 +302,7 @@ describe('Parramatta GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_parramattagpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_parramattagpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

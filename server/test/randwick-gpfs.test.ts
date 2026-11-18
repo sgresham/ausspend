@@ -74,7 +74,7 @@ const CONTEXT: RandwickGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/randwick-gpfs/randwick-city-council-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/randwick-gpfs/randwick-city-council-financial-statements-2024-25.pdf',
     sha256: '40845270cd20290dad620e3f398e4ee91d9566aa9e1ed701254b560618a7d455',
     bytes: 5_567_387,
     fetched_at: '2026-11-18T04:00:00.000Z',
@@ -331,7 +331,7 @@ describe('Randwick GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_randwickgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_randwickgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

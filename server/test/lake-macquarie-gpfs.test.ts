@@ -70,7 +70,7 @@ const CONTEXT: LakeMacquarieGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/lake-macquarie-gpfs/annual-financial-statements-for-the-year-ended-30-june-2025.pdf',
+      '/tmp/ausspend-source-archive/lake-macquarie-gpfs/annual-financial-statements-for-the-year-ended-30-june-2025.pdf',
     sha256: 'b5e031999a9e37d69e8df2afcd9a1756adb95229218412dc5919ee16fb93b72b',
     bytes: 2_290_159,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -308,7 +308,7 @@ describe('Lake Macquarie GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_lake-macquariegpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_lake-macquariegpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

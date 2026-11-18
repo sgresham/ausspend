@@ -25,7 +25,7 @@ import {
 import { MeasureModel } from '../src/models/index.js';
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_pnfc`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_pnfc`;
 const app = createApp({ pingDb: async () => 'connected' });
 
 let fixtureDir = '';

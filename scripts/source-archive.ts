@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { mongodbUrl } from './lib/env.mjs';
 import { readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -126,7 +127,7 @@ function assertMatch(
 
 async function connectForWrite(): Promise<{ close: () => Promise<void> }> {
   const mongoose = (await import('mongoose')).default;
-  const url = process.env.MONGO_URL ?? 'mongodb://10.10.10.30:27017/ausspend_dev';
+  const url = mongodbUrl();
   const dbName = new URL(url).pathname.replace(/^\//, '');
   if (dbName !== 'ausspend_dev') {
     throw new Error(

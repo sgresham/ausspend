@@ -81,7 +81,7 @@ const CONTEXT: ShoalhavenGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/shoalhaven-gpfs/shoalhaven-city-council-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/shoalhaven-gpfs/shoalhaven-city-council-financial-statements-2024-25.pdf',
     sha256: '74076e6f5b966575deb498e3805c9f5ff66aaa71ace5b001972f7d33313add20',
     bytes: 5_881_682,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -375,7 +375,7 @@ describe('Shoalhaven GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_shoalhavengpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_shoalhavengpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

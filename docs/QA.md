@@ -7,7 +7,7 @@ separate from the mocked Playwright suite (`npm run test:e2e`).
 ## Prerequisites
 
 - Docker Engine + Compose v2, or Node 24 + npm 11.11.0 for the non-Docker flow.
-- Host `q` Mongo reachable at `mongodb://10.10.10.30:27017`. **Never** use the pool Mongo
+- The database host Mongo reachable at `mongodb://localhost:27017`. **Never** use the pool Mongo
   (`127.0.0.1:27018`).
 - Ports 3001 and 5173 free before starting; verify they are free again after teardown.
 - The app database is `ausspend_dev` only. The seed guard refuses any other database name.
@@ -77,7 +77,7 @@ Check by hand:
 ## Local non-Docker audit
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run seed
 npm run dev            # in another shell, or run after seed
 npm run audit
@@ -89,7 +89,7 @@ The audit defaults to <http://localhost:5173> and <http://localhost:3001>; overr
 ## Seed guard and determinism
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 npm run seed
 npm run seed
 # both: [seed] mode=real ... regions=9 functions=53 synthetic=0 synthetic_written=0
@@ -97,7 +97,7 @@ npm run seed
 
 npm run seed:synthetic          # explicit legacy opt-in only: synthetic_written=810
 
-MONGO_URL=mongodb://10.10.10.30:27017/not_ausspend_dev npm run seed
+MONGO_URL=mongodb://localhost:27017/not_ausspend_dev npm run seed
 # exits nonzero: Refusing to seed database "not_ausspend_dev" ...
 ```
 
@@ -107,12 +107,12 @@ The guard runs before any delete or connect, so a refused target is never touche
 
 Read [SYNTHETIC_REMOVAL_READINESS.md](SYNTHETIC_REMOVAL_READINESS.md) first. The 810
 `source_id: synthetic-seed` rows were removed on 2026-11-17 after a verified backup at
-`/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z`. The database now has **348,939 measures,
+`~/ausspend-backups/2026-11-17T03-26-35.175Z`. The database now has **348,939 measures,
 0 synthetic**, and the default seed is real-only. The commands below are still the safe way to
 re-check the state and the backup gate.
 
 ```bash
-export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+export MONGO_URL=mongodb://localhost:27017/ausspend_dev
 
 # DRY RUN: counts by type/year/region/function; no writes.
 npm run clean:synthetic
@@ -122,7 +122,7 @@ npm run clean:synthetic
 
 # Real-only bootstrap on a scratch DB (never the live DB): 0 synthetic rows.
 SEED_ALLOW_SCRATCH=1 \
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_test_manual_realonly \
+MONGO_URL=mongodb://localhost:27017/ausspend_test_manual_realonly \
   npm run seed:real
 # [seed] mode=real ... synthetic=0 synthetic_written=0
 ```
@@ -147,7 +147,7 @@ AUDIT_WEB_URL=http://localhost:5174 AUDIT_API_URL=http://localhost:3101 npm run 
 - `git -C <worktree> status --short` before commit lists only intended changes.
 - The compose bind mount uses named volumes for `node_modules` and `shared/dist`; the checkout has
   no `node_modules`/`dist` written by containers.
-- `/opt/ausspend` is not the compose project directory and is untouched.
+- `${AUSSPEND_DEPLOY_ROOT}` is not the compose project directory and is untouched.
 - No `.env`, secret, `node_modules`, `dist`, report or test-results output is committed.
 - Ports 3001 and 5173 are free after `docker compose down -v` and after stopping the local stack.
 

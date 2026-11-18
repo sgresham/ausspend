@@ -878,7 +878,7 @@ URL). The page's "Financial Statements 2024-25 and Auditor's Reports PDF (3.36 M
 (`href="https://haveyoursay.cbcity.nsw.gov.au/download_file/7155/2442"`, distinct from the separate
 2024/25 Annual Report link) resolves to the statements PDF (HTTP 200, 3,526,499 bytes). Exact bytes
 are archived outside the repo at
-`/home/steve/ausspend-source-archive/canterbury-bankstown-gpfs/canterbury-bankstown-financial-statements-2024-25.pdf`,
+`~/ausspend-source-archive/canterbury-bankstown-gpfs/canterbury-bankstown-financial-statements-2024-25.pdf`,
 SHA-256 `d195790e10452808497fdc0eb95589e751ae6a64a50fc8d076ce467ac0ce8650`. The printed unit is
 explicit `$ '000` (thousands) on the Income Statement (printed p4 / PDF p4), the Statement of
 Comprehensive Income (printed p5 / PDF p5) and note B1-1 (printed p14 / PDF p14); a missing or
@@ -946,7 +946,7 @@ link resolves to
 <https://www.sutherlandshire.nsw.gov.au/__data/assets/pdf_file/0019/109144/2024-2025-Sutherland-Shire-Council-Financial-Statements.pdf>
 (HTTP 200, 5,464,555 bytes). The separate "Appendix D - Financial Statements" annual-report appendix
 is deliberately not selected. Exact bytes are archived outside the repo at
-`/home/steve/ausspend-source-archive/sutherland-shire-gpfs/2024-2025-Sutherland-Shire-Council-Financial-Statements.pdf`,
+`~/ausspend-source-archive/sutherland-shire-gpfs/2024-2025-Sutherland-Shire-Council-Financial-Statements.pdf`,
 SHA-256 `a97e7719e485a0fb6f49468c0eb7672a5b120c0aa6077ccfdb0349d56dd2b743`. The printed unit is
 explicit `$ '000` (thousands) on the Income Statement (printed p4 / PDF p5), the Statement of
 Comprehensive Income (printed p5 / PDF p6) and note B1-1 (printed p13 / PDF p14); a missing or
@@ -1014,7 +1014,7 @@ connector parses the PDF link from the cleared HTML — no document URL is hard-
 anchor **"Financial Report for the Year Ended 30 June 2025 PDF, 7171.17 KB"** resolves to
 <https://www.wollongong.nsw.gov.au/__data/assets/pdf_file/0011/300404/Annual-Financial-Statements-year-ended-30-June-2025.pdf>
 (downloaded by the browser; 7,343,281 bytes). Exact bytes are archived outside the repo at
-`/home/steve/ausspend-source-archive/wollongong-gpfs/Annual-Financial-Statements-year-ended-30-June-2025.pdf`,
+`~/ausspend-source-archive/wollongong-gpfs/Annual-Financial-Statements-year-ended-30-June-2025.pdf`,
 SHA-256 `ae26b12b906a09ce17d1c353e4f36d8aec29b0de5e4b539cffe5a953aedc6ad3`, with the archive
 metadata record alongside. The printed unit is explicit `$ '000` on the Income Statement (printed
 p4 / PDF p15), the Statement of Comprehensive Income (printed p5 / PDF p16) and note B1-1 (printed
@@ -1085,7 +1085,7 @@ updates to any other source.
 <https://newcastle.nsw.gov.au/getmedia/4bba4207-e815-43df-a8db-c09f6f94fc7e/Newcastle-City-Council-Financial-Statements-2024-25.pdf>
 (3,484,233 bytes). The URL is parsed from the page HTML, never hard-coded. Exact bytes are archived
 outside the repo at
-`/home/steve/ausspend-source-archive/newcastle-gpfs/Newcastle-City-Council-Financial-Statements-2024-25.pdf`,
+`~/ausspend-source-archive/newcastle-gpfs/Newcastle-City-Council-Financial-Statements-2024-25.pdf`,
 SHA-256 `ed415f31b8b57358ce2f3be2dbbd8193edab74fc3be4b6df3cf3e3d4b80a24cc`, with the archive
 metadata record alongside (`hash_verified: true`). The printed unit is explicit `$ '000` on the
 Income Statement (printed p5 / PDF p6), the Statement of Comprehensive Income (printed p6 / PDF p7)
@@ -1158,7 +1158,7 @@ as Wollongong). The page's FY2024-25 anchor **"Annual financial statements for t
 <https://www.lakemac.com.au/files/assets/public/v/1/council/annual-reports/annual-financial-statements-for-the-year-ended-30-june-2025.pdf>
 (2,290,159 bytes). The URL is parsed from the browser-cleared page HTML, never hard-coded. Exact
 bytes are archived outside the repo at
-`/home/steve/ausspend-source-archive/lake-macquarie-gpfs/annual-financial-statements-for-the-year-ended-30-june-2025.pdf`,
+`~/ausspend-source-archive/lake-macquarie-gpfs/annual-financial-statements-for-the-year-ended-30-june-2025.pdf`,
 SHA-256 `b5e031999a9e37d69e8df2afcd9a1756adb95229218412dc5919ee16fb93b72b`, with the archive
 metadata record alongside (`hash_verified: true`). The printed unit is explicit `$ '000` on the
 Income Statement (p4), the Statement of Comprehensive Income (p5) and note B1-1 (p14); a missing or
@@ -1227,7 +1227,7 @@ download use direct fetch. The page's FY2024-25 anchor **"General Purpose Financ
 <https://www.maitland.nsw.gov.au/sites/default/files/documents/2025-11/Financial%20Statements%202024-25%20Final.pdf>
 (1,196,382 bytes; HTTP 200 `application/pdf`). The URL is parsed from the page HTML, never
 hard-coded. Exact bytes are archived outside the repo at
-`/home/steve/ausspend-source-archive/maitland-gpfs/Financial-Statements-2024-25-Final.pdf`,
+`~/ausspend-source-archive/maitland-gpfs/Financial-Statements-2024-25-Final.pdf`,
 SHA-256 `bc67c592a9cb0bade12b62e88457b3f67dad434442ec3bc59b15ea7c8aafbda8`, with the archive
 metadata record alongside (`hash_verified: true`). The printed unit is explicit `$'000` on the
 Income Statement (p4), the Statement of Comprehensive Income (p5) and note B1-1 (p12); a missing or
@@ -1301,7 +1301,7 @@ The FY2024-25 anchor **"Annual Report Section 3 - Annual Financial Statements 20
 <https://www.coffsharbour.nsw.gov.au/files/sharedassets/public/v/1/resident-services/your-council/corporate-planning-and-reporting/202425/annual-report-24-25/2024-25-annual-report-section-3.pdf>
 (4,006,409 bytes; HTTP 200 `application/pdf`). The separate FY2025-26 Section 3 link is discovered but
 not selected. Exact bytes are archived outside the repo at
-`/home/steve/ausspend-source-archive/coffs-harbour-gpfs/2024-25-annual-report-section-3.pdf`,
+`~/ausspend-source-archive/coffs-harbour-gpfs/2024-25-annual-report-section-3.pdf`,
 SHA-256 `026fd09fed7099b1276beb2775c62193d00e60ed13c7f71c72a202c7f25ebf5e`, with the archive
 metadata record alongside (`hash_verified: true`). The printed unit is explicit `$ '000` on the Income
 Statement (p5 of 101), the Statement of Comprehensive Income (p6), note B1-1 (p15) and note B3-4
@@ -1384,7 +1384,7 @@ from the cleared page HTML (never hard-coded). The FY2024-25 anchor **"Financial
 (2,972,797 bytes). The older years ("Financial Statement 2023-2024", "2022-2023", …) and the annual
 report/annual-report-summary anchors are discovered but not selected. Exact bytes are archived outside
 the repo at
-`/home/steve/ausspend-source-archive/mid-coast-gpfs/financial-statements-2024-2025.pdf`,
+`~/ausspend-source-archive/mid-coast-gpfs/financial-statements-2024-2025.pdf`,
 SHA-256 `f8f7ede3d8c09467e5f1aea72e697a9278d4d78fd527778c63ccb0d9e3a5e3fe`, with the archive
 metadata record alongside (`hash_verified: true`). The printed unit is explicit `$ '000` on the
 Income Statement (PDF page 6, printed p4), the Statement of Comprehensive Income (PDF page 7, printed
@@ -1469,7 +1469,7 @@ Financial Statements (PDF, 8MB)"** (title "Part 2 Financial Statements") resolve
 <https://www.pmhc.nsw.gov.au/files/assets/public/v/1/document-files/your-council/election/annualreports/2024-2025/part-2-financial-statements.pdf>
 (8,407,089 bytes). The older years ("Part 2 | Financial Statements (PDF, 38MB)" for 2023-24 and the
 2022-23 statements) are discovered but not selected. Exact bytes are archived outside the repo at
-`/home/steve/ausspend-source-archive/port-macquarie-hastings-gpfs/part-2-financial-statements.pdf`,
+`~/ausspend-source-archive/port-macquarie-hastings-gpfs/part-2-financial-statements.pdf`,
 SHA-256 `e73a1cd805f9431001da032e88c2408fb8ad19eed083d2adc46e7850cb16618c`, with the archive
 metadata record alongside (`hash_verified: true`) and the cleared listing HTML. The printed unit is
 explicit `$ '000` on the Income Statement (PDF page 7, printed p4), the Statement of Comprehensive
@@ -3288,7 +3288,7 @@ differ); always show the source, year, measure type and fund/basis.
 **DB checks (read-only):**
 
 ```bash
-mongosh "mongodb://10.10.10.30:27017/ausspend_dev" --quiet --eval \
+mongosh "mongodb://localhost:27017/ausspend_dev" --quiet --eval \
   'print(db.measures.countDocuments({})); print(db.measures.countDocuments({source_id:"dubbo-council"})); print(db.measures.countDocuments({source_id:"dubbo-council-gpfs"})); print(db.measures.countDocuments({source_id:"data-nsw-ckan"}));'
 # 515467
 # 245

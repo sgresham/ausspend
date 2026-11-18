@@ -135,7 +135,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * SOC ingestion runner — Phase 5 skeleton.
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo npm run ingest:soc
  *
  * It runs, in order: the ABS GFS Public Non-Financial Corporations (PNFC)

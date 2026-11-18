@@ -60,7 +60,7 @@ const CONTEXT: CityOfSydneyGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/city-of-sydney-gpfs/city-of-sydney-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/city-of-sydney-gpfs/city-of-sydney-financial-statements-2024-25.pdf',
     sha256: 'b52e7a1ecdde5bea6937f2d3040e04ed340a6db8cceb959d51c73e84504f623b',
     bytes: 2_285_656,
     fetched_at: '2026-11-17T00:00:00.000Z',
@@ -273,8 +273,7 @@ describe('City of Sydney GPFS exact reconciliation', () => {
 });
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_sydneygpfs`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_sydneygpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

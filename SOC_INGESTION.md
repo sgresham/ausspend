@@ -1397,7 +1397,7 @@ deferred documents with their reason and URL.
 ## 6. Runner and archive
 
 ```bash
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo \
 npm run ingest:soc
 ```
@@ -1428,7 +1428,7 @@ official PDF URL and an optional Parliament mirror without hard-coding either in
 the source:
 
 ```bash
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 WATERNSW_ANNUAL_REPORT_URL='https://www.waternsw.com.au/documents/publications/general-publications/annual-reports/WaterNSW-Annual-Report-2024-2025.pdf' \
 WATERNSW_ANNUAL_REPORT_MIRROR_URL='https://files.parliament.nsw.gov.au/.../Attachment%20C1%20-%20WaterNSW%20Annual%20Report%202024-2025.pdf' \
 npm run ingest:soc
@@ -1442,7 +1442,7 @@ challenge (its PDF endpoint is reachable). The live ingest can supply the exact
 official PDF URL without hard-coding it in source:
 
 ```bash
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+MONGO_URL=mongodb://localhost:27017/ausspend_dev \
 ESSENTIAL_ENERGY_ANNUAL_REPORT_URL='https://www.essentialenergy.com.au/ext/ar2025/files/2025/11/Essential-Energy_Annual-Report_2024-25.pdf' \
 npm run ingest:soc
 ```
@@ -1536,12 +1536,12 @@ Verify the recovery in the live database:
 
 ```bash
 # source statuses, strategies and staleness
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.data_sources.find({source_id:{$in:["waternsw","essential-energy","forestry-corporation"]}},
     {source_id:1,status:1,records_ingested:1,fetch_strategy:1,last_successful_fetch:1,staleness_days:1}).toArray()
 '
 # row counts are unchanged and no duplicates were inserted
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.measures.aggregate([{$match:{source_id:{$in:["waternsw","essential-energy","forestry-corporation"]}}},
     {$group:{_id:"$source_id",rows:{$sum:1}}}]).toArray()
 '

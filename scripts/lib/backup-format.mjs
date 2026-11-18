@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { backupRoot } from './env.mjs';
 
 /** The only application database a backup/restore may touch by default. */
 export const APP_DATABASE = 'ausspend_dev';
 export const BACKUP_SCHEMA_VERSION = 1;
-export const BACKUP_ROOT_DEFAULT = '/home/steve/backups/ausspend';
+export const BACKUP_ROOT_DEFAULT = process.env.AUSSPEND_BACKUP_ROOT ?? backupRoot();
 export const TIMESTAMP_DIR_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.\d{3}Z$/;
 
 /**

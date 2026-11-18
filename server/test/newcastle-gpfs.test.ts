@@ -67,7 +67,7 @@ const CONTEXT: NewcastleGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/newcastle-gpfs/Newcastle-City-Council-Financial-Statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/newcastle-gpfs/Newcastle-City-Council-Financial-Statements-2024-25.pdf',
     sha256: 'ed415f31b8b57358ce2f3be2dbbd8193edab74fc3be4b6df3cf3e3d4b80a24cc',
     bytes: 3_484_233,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -293,7 +293,7 @@ describe('Newcastle GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_newcastlegpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_newcastlegpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

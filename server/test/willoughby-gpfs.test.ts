@@ -75,7 +75,7 @@ const CONTEXT: WilloughbyGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/willoughby-gpfs/willoughby-city-council-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/willoughby-gpfs/willoughby-city-council-financial-statements-2024-25.pdf',
     sha256: '496c569c64c69ef2bb79b233f638011cc561a98882fd732348c1b864fbf2d1d9',
     bytes: 3_217_101,
     fetched_at: '2026-11-17T16:31:15.619Z',
@@ -334,7 +334,7 @@ describe('Willoughby GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_willoughbygpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_willoughbygpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

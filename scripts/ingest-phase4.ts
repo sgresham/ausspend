@@ -42,7 +42,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * Phase 4 ingestion runner (ABS GFS benchmark + VIC Budget + QLD QGIP + ACNC).
  *
- *   MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev \
+ *   MONGO_URL=mongodb://localhost:27017/ausspend_dev \
  *   AUSSPEND_SOURCE_ARCHIVE=/path/outside/repo npm run ingest:phase4
  *
  * Runs the Phase 4 connectors:

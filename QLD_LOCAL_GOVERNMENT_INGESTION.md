@@ -75,7 +75,7 @@ cross-council total is calculated.
 ## Verify
 
 ```bash
-mongosh 'mongodb://10.10.10.30:27017/ausspend_dev' --quiet --eval '
+mongosh 'mongodb://localhost:27017/ausspend_dev' --quiet --eval '
   db.measures.countDocuments({source_id:"qld-local-government"});
   db.measures.aggregate([{$match:{source_id:"qld-local-government"}},
     {$group:{_id:"$qld_lg_measure",n:{$sum:1}}}]).toArray();

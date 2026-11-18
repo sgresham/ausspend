@@ -86,7 +86,7 @@ const CONTEXT: DubboGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2024-25.pdf',
+      '/tmp/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2024-25.pdf',
     sha256: 'd9213cea468547a318548dfd72d7faa0d9fd2da81bcf6835138d10b58914a43f',
     bytes: 1_807_768,
     fetched_at: '2026-11-17T00:00:00.000Z',
@@ -277,8 +277,7 @@ describe('Dubbo GPFS exact reconciliation', () => {
 });
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_dubbogpfs`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_dubbogpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

@@ -74,7 +74,7 @@ const CONTEXT: NorthSydneyGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/north-sydney-gpfs/north-sydney-council-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/north-sydney-gpfs/north-sydney-council-financial-statements-2024-25.pdf',
     sha256: '37c7de1f8114ff91b0a9643b5f607bdc21af5394ec7d54c14c55e90740d8d72f',
     bytes: 12_205_070,
     fetched_at: '2026-11-18T05:00:00.000Z',
@@ -345,7 +345,7 @@ describe('North Sydney GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_northsydneygpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_northsydneygpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

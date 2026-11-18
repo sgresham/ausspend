@@ -74,7 +74,7 @@ const CONTEXT: CoffsHarbourGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/coffs-harbour-gpfs/2024-25-annual-report-section-3.pdf',
+      '/tmp/ausspend-source-archive/coffs-harbour-gpfs/2024-25-annual-report-section-3.pdf',
     sha256: '026fd09fed7099b1276beb2775c62193d00e60ed13c7f71c72a202c7f25ebf5e',
     bytes: 4_006_409,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -293,8 +293,7 @@ describe('Coffs Harbour GPFS exact reconciliation', () => {
 });
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_coffsgpfs`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_coffsgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

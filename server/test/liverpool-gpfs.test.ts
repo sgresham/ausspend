@@ -45,7 +45,7 @@ const CONTEXT: LiverpoolGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/liverpool-gpfs/liverpool-city-council-audited-financial-statements-2024-25.pdf',
+      '/tmp/ausspend-source-archive/liverpool-gpfs/liverpool-city-council-audited-financial-statements-2024-25.pdf',
     sha256: LIVERPOOL_PDF_SHA256,
     bytes: 9_940_306,
     fetched_at: '2026-11-18T00:00:00.000Z',
@@ -397,7 +397,7 @@ describe('Liverpool City Council GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_liverpoolgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_liverpoolgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

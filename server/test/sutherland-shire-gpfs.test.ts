@@ -65,7 +65,7 @@ const CONTEXT: SutherlandShireGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/sutherland-shire-gpfs/2024-2025-Sutherland-Shire-Council-Financial-Statements.pdf',
+      '/tmp/ausspend-source-archive/sutherland-shire-gpfs/2024-2025-Sutherland-Shire-Council-Financial-Statements.pdf',
     sha256: 'a97e7719e485a0fb6f49468c0eb7672a5b120c0aa6077ccfdb0349d56dd2b743',
     bytes: 5_464_555,
     fetched_at: '2026-11-17T00:00:00.000Z',
@@ -293,7 +293,7 @@ describe('Sutherland Shire GPFS exact reconciliation', () => {
 
 const TEST_DB_URL =
   process.env.TEST_MONGO_URL ??
-  `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_sutherlandgpfs`;
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_sutherlandgpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

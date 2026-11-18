@@ -6,7 +6,7 @@ import { seedSyntheticData, SYNTHETIC_MEASURE_COUNT } from '../src/seed/syntheti
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_${process.pid}_clean`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_clean`;
 
 const FAKE_REAL_CONTRACT = {
   amount_cents: 987_654_321,

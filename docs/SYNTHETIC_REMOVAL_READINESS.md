@@ -27,7 +27,7 @@ was met, followed by the recorded removal evidence.
 | VIC Budget 2026-27 (`vic-budget`)         |      28 |
 
 Verified backup taken before deletion:
-`/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (total 349,749; synthetic 810; ABS GFS 169;
+`~/ausspend-backups/2026-11-17T03-26-35.175Z` (total 349,749; synthetic 810; ABS GFS 169;
 natural-key count 348,939, checksum
 `71a5c5f5b3a4c949ef9130e0365d4d92a9220a66f0fad488da51b1dfd2dd755c`).
 
@@ -153,7 +153,7 @@ npm run clean:synthetic
 
 # Deletion (executed 2026-11-17): requires a complete, recent, verified backup.
 npm run clean:synthetic -- --execute \
-  --backup /home/steve/backups/ausspend/2026-11-17T03-26-35.175Z
+  --backup ~/ausspend-backups/2026-11-17T03-26-35.175Z
 ```
 
 `clean:synthetic --execute`:
@@ -173,7 +173,7 @@ See the item completion evidence for exact commands/output. In summary:
 
 - `npm run clean:synthetic` dry run before deletion: synthetic 810 / total 349,749 /
   non-synthetic 348,939; after = identical; 0 deleted.
-- Verified backup: `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z`; manifest measures 349,749,
+- Verified backup: `~/ausspend-backups/2026-11-17T03-26-35.175Z`; manifest measures 349,749,
   810 synthetic rows, ABS GFS 169, natural-key count 348,939/digest verified.
 - `npm run clean:synthetic -- --execute --backup <dir>` deleted **810 measures + 1 data-source
   record**; after = synthetic 0 / total 348,939 / non-synthetic 348,939, and all 11 real per-source

@@ -5,7 +5,7 @@ import { createApp } from '../src/app';
 import { MeasureModel } from '../src/models/index.js';
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ?? `mongodb://10.10.10.30:27017/ausspend_test_acnc_${process.pid}`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_acnc_${process.pid}`;
 
 const app = createApp({ pingDb: async () => 'connected' });
 
