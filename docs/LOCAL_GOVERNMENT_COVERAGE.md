@@ -1,8 +1,8 @@
 # Local government coverage
 
-**Status as at 2026-11-18.** Phase 1 covers **Queensland only**, through the existing
-`qld-local-government` source. WA/TAS/VIC/SA/NT are not added by this phase; the runner has an
-explicit priority-order extension point for them.
+**Status as at 2026-11-18.** Phase 1 covers **Queensland** (`qld-local-government`); Phase 2 adds
+**Western Australia** (`wa-mycouncil`). TAS/VIC/SA/NT are not added; the runner has an explicit
+priority-order extension point for them.
 
 ## QLD — source and package
 
@@ -113,6 +113,73 @@ Every row has:
   this source, and these council financial/road rows are never summed with QGIP.
 - No state budget, ABS GFS, other council, or other state local-government source is touched.
 
+## WA — MyCouncil actual expenditure and snapshot
+
+- source id: `wa-mycouncil`
+- service root: <https://prod-mycouncil-services.azurewebsites.net/data.svc/>
+- metadata: <https://prod-mycouncil-services.azurewebsites.net/data.svc/$metadata> (45,290 B)
+- public site: <https://mycouncil.wa.gov.au/>
+- licence/caveat: **© Government of Western Australia — MyCouncil**. Controlled public financial
+  snapshot, **not audited general-purpose financial statements**; not a whole-of-government
+  open-data licence grant.
+- archive root: `/home/steve/ausspend-source-archive/wa-mycouncil` (outside the repo)
+
+### OData audit
+
+`$metadata` exposes **29 entity sets**; the connector validates the required `vw_LG_Expenditure`
+and `vw_LG_FinanceActuals` properties before reading pages.
+
+| Entity set                              |   Rows | Councils | Years                    | Unit/measure                                                                        | This phase                                                              |
+| --------------------------------------- | -----: | -------: | ------------------------ | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **vw_LG_Expenditure**                   | 24,196 |      139 | FY2010-11–FY2024-25 (15) | whole AUD; program expenditure, including a printed council `Total Expenditure` row | **Ingested**: 24,007 non-additive rows; 11 programs + Total Expenditure |
+| **vw_LG_FinanceActuals**                |  1,813 |      140 | FY2012-13–FY2024-25 (13) | whole AUD; revenue/employee/asset snapshot                                          | **Ingested**: TotalRevenue + EmployeeCost where positive → 3,554 rows   |
+| vw_LG_FinanceBudget                     |      — |        — | —                        | budget revenue                                                                      | **Not queried**; separate from actuals and from `wa-budget`             |
+| vw_LG_GrantData                         |      — |        — | —                        | state grant amounts                                                                 | **Not queried**; never mixed with council actuals                       |
+| vw_LG_List / vw_LG_Details / other sets |      — |        — | —                        | council/suburb/other data                                                           | Reference only; not ingested                                            |
+
+The 189 `vw_LG_Expenditure` rows not emitted have no valid council/year/program or a negative
+expenditure. The `vw_LG_FinanceActuals` zeros are treated as unavailable snapshot values, not
+published zero-dollar actuals; only positive TotalRevenue/EmployeeCost values are emitted.
+
+### Unit and spot-check
+
+The OData fields are whole dollars. MyCouncil displays the same value with a `$` prefix; the
+connector converts whole AUD ×100 to integer cents. Live spot-check for **Swan FY2024/25**:
+
+- `vw_LG_Expenditure` Total Expenditure: **284,214,363** → `28,421,436,300` cents.
+- MyCouncil `/Council/getExpenditureTableForCouncil/119` prints **$284,214,363** for the same
+  council-year — exact match.
+
+No COFOG mapping is invented: the MyCouncil `Program` labels are WA local-government program
+areas, not COFOG, so `function_code` is left blank and rows are `provisional`.
+
+### Paging, keys and separation
+
+- OData paging uses `$select`, `$orderby`, `$top=1000` and `$skip`; live run used **25**
+  expenditure pages and **2** finance pages.
+- Natural key includes source + MyCouncil `LGId` + `fiscal_year` + program/line, so the same
+  council/program in another year never collides.
+- Every row has `jurisdiction_level: "local"`, `jurisdiction: "WA"`,
+  `delivery_entity`/`location.lga_name` = council name, `location.state: "WA"`,
+  `measure_type: "actual"`, `aggregation_role: "agency_detail"` and `verified: false`.
+- No row is a cross-council total. `Total Expenditure` is a council-level printed row, not a
+  statewide total.
+- `wa-budget` remains the separate WA state budget source and was not touched. MyCouncil budget
+  and grant sets were not queried.
+
+### Verification (2026-11-18)
+
+- Live fetch: 24,007 expenditure + 3,554 finance = **27,561** non-additive rows; 139 councils;
+  FY2010-11–FY2024-25.
+- Shared DB: all `measures` **703,210 → 730,771** (+27,561); `wa-mycouncil` 0 → 27,561;
+  `qld-local-government` **11,321** unchanged; `qld-qgip` **200,387** unchanged;
+  `wa-budget` **855** unchanged. Only new source: `wa-mycouncil`.
+- Second run: counts unchanged, source rows still 27,561, all measures still 730,771.
+- Archive: `metadata.xml` 45,290 B SHA-256
+  `1432ce5a437298a62d3277e92fb230a3636cea4b155457e6dc527cfc1a15e210`;
+  `records.json` SHA-256
+  `3ad0bc966797938a3131b73c6f9391aec714c2177d9bc870487f0997cfd10dbe`.
+
 ## Ingestion
 
 ```bash
@@ -123,8 +190,8 @@ MONGO_URL=... npx tsx scripts/ingest-local-gov.ts --source=qld-local-government
 LOCAL_GOV_DRY_RUN=1 npm run ingest:local-gov
 ```
 
-The runner order is `qld-local-government` only in this phase. The extension point for
-WA/TAS/VIC/SA/NT is `LOCAL_GOVERNMENT_SOURCES` in `scripts/ingest-local-gov.ts`; each future source
+The runner order is `qld-local-government` → `wa-mycouncil`. The extension point for
+TAS/VIC/SA/NT is `LOCAL_GOVERNMENT_SOURCES` in `scripts/ingest-local-gov.ts`; each future source
 must also be registered in the connector registry and must have its own source id and non-additive
 rules.
 
