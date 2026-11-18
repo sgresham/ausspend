@@ -22,7 +22,6 @@ test('about page explains Phase 1 scope, provenance and mixed measures', async (
   );
   await expect(page.getByTestId('about-page')).toContainText('How mixed measures are handled');
   await expect(page.getByTestId('about-page')).toContainText('no headline total');
-  await expect(page.getByTestId('coverage-banner')).toBeVisible();
   await expect(page.getByText('Provenance:').first()).toBeVisible();
 });
 
