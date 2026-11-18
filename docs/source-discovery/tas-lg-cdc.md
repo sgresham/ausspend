@@ -19,7 +19,7 @@ reconcilable revenue/expense and asset/liability totals.
 | `LGA_CDC_Data_Repository_2015-2025.zip` | 13,432,951 | `007679502515e36e0f72783020ad59f7873416e42c2f231c15adb5242a4fe69f` | one `LISTData Repository - MASTER - 2015-2025.xlsx`; 29 councils × FY2015-16–FY2024-25 |
 
 Direct base: `https://listdata.thelist.tas.gov.au/opendata/data/`
-Archived outside the repo at `/home/steve/ausspend-source-archive/tas-lg-cdc/`.
+Archived outside the repo at `~/ausspend-source-archive/tas-lg-cdc/`.
 
 ## Coverage and decisions
 

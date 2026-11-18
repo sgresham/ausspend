@@ -13,7 +13,7 @@
 | Alice Springs Town Council | `https://www.alicesprings.nt.gov.au/documents/1041/annual-report-2025-2026`                                                             | 11,640,642 | `68944b6d82f1ab443e3c5a235785767985dae061606c364699618016f535c48b` |  Statement of Comprehensive Income p.51 |
 
 All three print explicit `$'000` and audited GPFS. Archived outside the repo at
-`/home/steve/ausspend-source-archive/nt-lg-pilot/`.
+`~/ausspend-source-archive/nt-lg-pilot/`.
 
 ## Printed anchors ($'000)
 

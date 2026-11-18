@@ -31,7 +31,7 @@ All local rows are non-additive `agency_detail`; no cross-council/state total. S
 - publisher: Queensland Department of Local Government, Water and Volunteers
 - licence: Creative Commons Attribution 4.0 International (CC BY 4.0)
 - package metadata modified: **2025-06-12**; every CSV resource last modified **2022-11-25**
-- archive root: `/home/steve/ausspend-source-archive/qld-local-government` (outside the repo)
+- archive root: `~/ausspend-source-archive/qld-local-government` (outside the repo)
 - no duplicate QLD source and no `qld-qgip` rows are touched.
 
 ## Package audit (12 resources)
@@ -141,7 +141,7 @@ Every row has:
 - licence/caveat: **© Government of Western Australia — MyCouncil**. Controlled public financial
   snapshot, **not audited general-purpose financial statements**; not a whole-of-government
   open-data licence grant.
-- archive root: `/home/steve/ausspend-source-archive/wa-mycouncil` (outside the repo)
+- archive root: `~/ausspend-source-archive/wa-mycouncil` (outside the repo)
 
 ### OData audit
 
@@ -208,7 +208,7 @@ areas, not COFOG, so `function_code` is left blank and rows are `provisional`.
     `91a1418941150169a3155a3ff171b1977aa3dc2de1362316c3dfa374b6f7a641` (one XLSX, FY2000-01–FY2014-15)
   - `LGA_CDC_Data_Repository_2015-2025.zip` — **13,432,951 B**, SHA-256
     `007679502515e36e0f72783020ad59f7873416e42c2f231c15adb5242a4fe69f` (one `LISTData Repository - MASTER - 2015-2025.xlsx`, 29 councils × 10 years)
-- archive root: `/home/steve/ausspend-source-archive/tas-lg-cdc` (outside the repo; both ZIPs and SHA256SUMS)
+- archive root: `~/ausspend-source-archive/tas-lg-cdc` (outside the repo; both ZIPs and SHA256SUMS)
 
 ### What is ingested
 
@@ -351,7 +351,7 @@ the user non-goal; `sa-budget-gfs` remains the separate SA state GFS source and 
 - source id: `nt-lg-pilot`
 - councils: **City of Darwin**, **City of Palmerston**, **Alice Springs Town Council** only
 - latest audited GPFS: **FY2025-26** (year ended 30 June 2026), extracted from the annual reports
-- archive root: `/home/steve/ausspend-source-archive/nt-lg-pilot` (outside the repo)
+- archive root: `~/ausspend-source-archive/nt-lg-pilot` (outside the repo)
 
 ### Documents
 
