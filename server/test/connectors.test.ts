@@ -23,6 +23,7 @@ const LIVE_IDS = [
   'dubbo-council-gpfs',
   'city-of-sydney-gpfs',
   'blacktown-gpfs',
+  'hunters-hill-gpfs',
   'parramatta-gpfs',
   'northern-beaches-gpfs',
   'canterbury-bankstown-gpfs',
