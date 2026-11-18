@@ -11,18 +11,40 @@ client, an Express API and shared TypeScript/Zod contracts.
 > at `/api/coverage`). Real sources include
 > **AusTender federal contracts**, **data.gov.au PBS budget line items**, **GrantConnect** grant
 > awards (a human-downloaded, SHA-256-archived XLSX export; no API and no scraper), NSW/VIC/QLD
-> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus thirty-one
-> audited council GPFS sources (Dubbo, City of Sydney, Blacktown, City of Parramatta, Northern
-> Beaches, Canterbury-Bankstown, Sutherland Shire, Wollongong, Newcastle, Lake Macquarie, Maitland,
-> Coffs Harbour, MidCoast, Port Macquarie-Hastings, Tweed, Shoalhaven, Shellharbour, Waverley,
-> Willoughby, Inner West, Bayside, Randwick, Ryde, North Sydney, Canada Bay, Cumberland, Georges
-> River, Fairfield, Liverpool, Ku-ring-gai, Strathfield, Lane Cove and Mosman), ACNC
+> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus the
+> audited council GPFS sources listed in the generated source register (see
+> [Current source counts](#current-source-counts)), ACNC
 > charity expenses and the official ABS GFS COFOG-A benchmark. Project and charity rows are real
 > published records but remain unverified (`verified: false`); only the ABS GFS benchmark rows are
 > `verified: true` and they are never summed with project data. The app never sums across measure
 > types. PBS line items do **not** sum to the Budget Paper 1 total general government expense.
 > GrantConnect exports above the 50,000-result cap are rejected, so grant coverage is partial until
 > complete date-range chunks cover the period.
+
+<!-- BEGIN GENERATED SOURCE COUNTS (npm run generate:sources) -->
+
+## Current source counts
+
+Generated from the checked-in connector registry by `npm run generate:sources` and verified by
+`npm run check:doc-counts`. Do not edit this block by hand.
+
+| Current-state count                 | Value |
+| ----------------------------------- | ----- |
+| Registered spending connectors      | 79    |
+| Active spending connectors          | 77    |
+| Degraded spending connectors        | 0     |
+| Stub spending connectors            | 2     |
+| NSW council GPFS sources            | 44    |
+| NSW local-government source ids     | 45    |
+| Trade connectors (separate subtree) | 2     |
+| Generated connector source docs     | 46    |
+
+These are current registry counts, not database row counts. The landing notes in
+[`docs/NSW_COUNCILS.md`](./docs/NSW_COUNCILS.md) are chronological snapshots of individual
+ingests and are never rewritten by this generator. Live totals for registered `data_sources`,
+spending measures and trade records are served by `GET /api/coverage`; they are not hard-coded
+here or checked in CI because no stable checked-in metadata file records them.
+<!-- END GENERATED SOURCE COUNTS -->
 
 ## Stack
 
@@ -389,7 +411,7 @@ invalid query parameters return JSON `400`.
 connector status: true once AusTender/PBS ingest), `generated_at`,
 `counts {data_sources, regions, functions, measures, synthetic_measures, real_measures}`,
 `coverage_gaps` (the real national/state actual/estimate, COFOG, region and PBS gaps), distinct sorted
-`fiscal_years`, supported/observed `measure_types`, `region_levels`, the twenty-seven `connectors`
+`fiscal_years`, supported/observed `measure_types`, `region_levels`, the registered `connectors`
 (id/name/publisher/source_url/status/jurisdiction_level/last_fetched_at/records_ingested/errors),
 `connector_status_counts {active, degraded, stub}`, the latest `ingestion.latest_logs`, and
 `federal_ingestion {live, degraded, pending, stubs, pbs_last_ingested_at, pbs_caveat, grantconnect_caveat, grantconnect_note}` and
@@ -456,7 +478,9 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 
 ### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers fifty-one Australian public-spending sources, including the thirty-one separate council GPFS sources (`dubbo-council-gpfs`, `city-of-sydney-gpfs`, `blacktown-gpfs`, `parramatta-gpfs`, `northern-beaches-gpfs`, `canterbury-bankstown-gpfs`, `sutherland-shire-gpfs`, `wollongong-gpfs`, `newcastle-gpfs`, `lake-macquarie-gpfs`, `maitland-gpfs`, `coffs-harbour-gpfs`, `mid-coast-gpfs`, `port-macquarie-hastings-gpfs`, `tweed-shire-gpfs`, `shoalhaven-gpfs`, `shellharbour-gpfs`, `waverley-gpfs`, `willoughby-gpfs`, `inner-west-gpfs`, `bayside-gpfs`, `randwick-gpfs`, `ryde-gpfs`, `north-sydney-gpfs`, `canada-bay-gpfs`, `cumberland-gpfs`, `georges-river-gpfs`, `fairfield-gpfs`, `liverpool-gpfs`, `ku-ring-gai-gpfs`, `strathfield-gpfs`, `lane-cove-gpfs` and `mosman-gpfs`). **AusTender
+`server/src/connectors` registers the Australian public-spending connectors summarised under
+[Current source counts](#current-source-counts), including the separate council GPFS sources (the
+generated [source register](./docs/sources/README.md) lists every id). **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
@@ -490,7 +514,8 @@ Information Statement CSV (2024), archives the programs CSV and explanatory note
 `expense_total` row per charity plus reconciled `expense_component` rows with an explicit
 `expense_category`; charity expenses are not government spending, have no COFOG function, and total
 and components are never summed together. The remaining connectors are stubs (`status: "stub"`;
-`fetch()` rejects with "not implemented" and `transform()` returns no records); WA remains a stub.
+`fetch()` rejects with "not implemented" and `transform()` returns no records); the
+`federal-budget-portal` and `aofm` connectors remain stubs.
 
 `npm run ingest:federal` runs `scripts/ingest-federal.ts` against `ausspend_dev`. It walks the
 selected connectors sequentially, writes an `ingestion_logs` row per source, upserts on
@@ -710,7 +735,7 @@ It proves:
 - API invariants: `function=07` is mixed with `total_cents: null` and per-type totals;
   `measure_type=actual` has a numeric total; `region=NSW` is `400`; an unknown measure id is `404`;
   `/api/meta/coverage` reports `synthetic: false`, `synthetic_measures: 0`, the 348,939 real
-  measures, live ingestion, seven stubs, `pending: []`, a GrantConnect manual-export caveat and
+  measures, live ingestion, the stub connectors, `pending: []`, a GrantConnect manual-export caveat and
   nonzero counts.
 
 The mocked `npm run test:e2e` run stays database-free; the audit script is not a Playwright spec.

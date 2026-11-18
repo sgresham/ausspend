@@ -1,5 +1,25 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
+<!-- BEGIN GENERATED NSW COUNCIL COUNTS (npm run generate:sources) -->
+
+## Current source counts vs historical landing snapshots
+
+The §7 landing records below are **chronological snapshots** taken at each ingest. They are kept
+as evidence and are not current totals. The current registry counts are:
+
+| Current-state count                 | Value |
+| ----------------------------------- | ----- |
+| NSW council GPFS sources            | 44    |
+| NSW local-government source ids     | 45    |
+| Registered spending connectors      | 79    |
+| Active spending connectors          | 77    |
+| Stub spending connectors            | 2     |
+| Trade connectors (separate subtree) | 2     |
+
+Live database totals (registered `data_sources`, spending measures and trade records) come from
+`GET /api/coverage`, not from this file, so they cannot drift here and are not checked in CI.
+<!-- END GENERATED NSW COUNCIL COUNTS -->
+
 **Status:** the inventory and plan below are unchanged. Forty-four council GPFS sources have landed
 as separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
