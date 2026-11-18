@@ -440,9 +440,13 @@ export function DataSourcesPage() {
         non-additive. <code>wa-budget</code> is live from catalogue.data.wa.gov.au CKAN EFO tables
         (provisional, no BP2 machine-readable agency detail; no COFOG invented).{' '}
         <code>tas-budget</code> is live from Budget Paper No. 1 Table 9.16: COFOG-A expenses
-        reconciled to the printed total, provisional and non-additive. <code>grantconnect</code> is
-        blocked pending a usable adaptor (no public award API; no direct scraper) and the remaining
-        two federal connectors are stubs. No other council is covered.
+        reconciled to the printed total, provisional and non-additive.{' '}
+        <code>qld-local-government</code>
+        is live from the QLD comparative-information Financial Inputs CSV: council-level actual
+        $’000 inputs, separate from QGIP and never summed across councils or measures.{' '}
+        <code>grantconnect</code> is blocked pending a usable adaptor (no public award API; no
+        direct scraper) and the remaining two federal connectors are stubs. No other local council
+        set is covered.
       </Typography>
 
       {!coverage.data && coverage.error ? (

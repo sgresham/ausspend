@@ -200,6 +200,9 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.tas_budget_table ? { tas_budget_table: measure.tas_budget_table } : {}),
     ...(measure.tas_budget_column ? { tas_budget_column: measure.tas_budget_column } : {}),
     ...(measure.tas_budget_unit ? { tas_budget_unit: measure.tas_budget_unit } : {}),
+    ...(measure.qld_lg_measure ? { qld_lg_measure: measure.qld_lg_measure } : {}),
+    ...(measure.qld_lg_unit ? { qld_lg_unit: measure.qld_lg_unit } : {}),
+    ...(measure.qld_lg_component_of ? { qld_lg_component_of: measure.qld_lg_component_of } : {}),
     ...(measure.aihw_detailed_source_of_funding
       ? { aihw_detailed_source_of_funding: measure.aihw_detailed_source_of_funding }
       : {}),

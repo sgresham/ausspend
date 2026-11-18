@@ -283,6 +283,13 @@ export interface MeasureRow {
   tas_budget_table?: string;
   tas_budget_column?: string;
   tas_budget_unit?: string;
+  qld_lg_measure?:
+    | 'total_operating_expenses'
+    | 'employee_expenses'
+    | 'depreciation_amortisation'
+    | 'interest_paid_borrowing_costs';
+  qld_lg_unit?: string;
+  qld_lg_component_of?: string;
 }
 
 /** Per-measure-type count and sum. The API never sums across types. */

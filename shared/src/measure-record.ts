@@ -289,6 +289,17 @@ export const MeasureRecordSchema = z.object({
   tas_budget_table: z.string().min(1).optional(),
   tas_budget_column: z.string().min(1).optional(),
   tas_budget_unit: z.string().min(1).optional(),
+  /** QLD local government comparative-information financial-input measure. */
+  qld_lg_measure: z
+    .enum([
+      'total_operating_expenses',
+      'employee_expenses',
+      'depreciation_amortisation',
+      'interest_paid_borrowing_costs',
+    ])
+    .optional(),
+  qld_lg_unit: z.string().min(1).optional(),
+  qld_lg_component_of: z.string().min(1).optional(),
   /** Exact published detailed funding source. */
   aihw_detailed_source_of_funding: z.string().min(1).optional(),
   /** State/territory code the published table applies to. */

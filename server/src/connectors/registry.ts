@@ -1,6 +1,7 @@
 import { createAbsGfsConnector } from './abs-gfs.js';
 import { createWaBudgetConnector } from './wa-budget.js';
 import { createTasBudgetConnector } from './tas-budget.js';
+import { createQldLocalGovernmentConnector } from './qld-local-government.js';
 import { createAihwHealthExpenditureConnector } from './aihw-health-expenditure.js';
 import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
@@ -596,6 +597,11 @@ export const CONNECTORS: readonly Connector[] = [
   // Agency-level tables are in BP2 and are not part of this item. Rows are
   // provisional benchmark aggregates; no COFOG mapping is invented.
   createTasBudgetConnector(),
+  // Phase 6.9: QLD local government comparative information report, Financial
+  // Inputs CSV from data.qld.gov.au CKAN. Council-level actual $'000 financial
+  // inputs, separate from QGIP project grants/procurement; every row is
+  // agency_detail and non-additive.
+  createQldLocalGovernmentConnector(),
 ];
 
 export const CONNECTOR_IDS = CONNECTORS.map((connector) => connector.id);
