@@ -29,8 +29,8 @@ export const TRADE_PLANNED_SOURCES: readonly PlannedTradeSource[] = [
     name: 'OECD ITIC',
     publisher: 'Organisation for Economic Co-operation and Development',
     priority: 2,
-    status: 'planned',
-    note: 'OECD ITIC dataflow is reachable (HTTP 200). Rows must preserve the published observed/estimated distinction; no connector yet.',
+    status: 'active',
+    note: 'Public OECD SDMX dataflow DSD_ITIC@DF_ITIC 1.1. Australia is the importer, COUNTERPART_AREA the exporter; MEASURE=C_F and UNIT_MEASURE=PT_IM_CIF (percentage of CIF import value). Per-partner totals and Australia–World HS 2017 4-digit product margins are stored as `cif_fob_margin` rows. OBS_STATUS/METHODOLOGY_TYPE are preserved so modelled, derived, interpolated and adjusted values are flagged estimated/provisional, never observed. CIF/FOB is a border cost, not profit; margins are never summed with trade values or port costs.',
   },
   {
     source_id: 'bitre-waterline',
@@ -61,8 +61,11 @@ export const TRADE_PLANNED_SOURCES: readonly PlannedTradeSource[] = [
 export const TRADE_LIMITATIONS = [
   'No profit data are collected, derived or estimated.',
   'CIF/FOB is a border cost proxy, not profit.',
+  'A CIF/FOB margin is the (CIF - FOB) / CIF share of import value, never a profit margin.',
   'Trade values, CIF/FOB margins, port interface costs, trade volumes and trade prices are different measures and are not additive.',
   'Port costs are not national totals and are never added to trade values.',
+  'OECD ITIC rows preserve the published observed/estimated distinction: model-based, derived, interpolated and adjusted observations are never relabelled observed, audited or provisional actuals.',
+  'OECD ITIC margins are calendar-year percentages, not Australian financial-year dollars, and no margin is summed into a national total.',
   'Trade records are strictly separate from spending records; no trade row is returned by a spending API and no spending row is returned by a trade API.',
 ] as const;
 
@@ -72,5 +75,5 @@ export const TRADE_COVERAGE = {
   implemented: true,
   planned_sources: TRADE_PLANNED_SOURCES,
   limitations: TRADE_LIMITATIONS,
-  note: 'Trade is a separate analytical domain. ABS International Trade is live from the keyless Data API Beta; the other sources remain planned. No goods+services total is derived and trade rows are never joined to spending measures.',
+  note: 'Trade is a separate analytical domain. ABS International Trade is live from the keyless Data API Beta and OECD ITIC CIF/FOB margins are live from the public OECD SDMX endpoint; the other sources remain planned. OECD margins are border costs, not profit, and remain non-additive with trade values and port costs. No goods+services total is derived and trade rows are never joined to spending measures.',
 } as const;

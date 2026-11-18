@@ -1,8 +1,9 @@
 # Trade module — ABS live, foundation UI
 
-**Status:** ABS International Trade is live through the keyless ABS Data API Beta. The
-`trade_records` model, read-only `/api/v1/trade` endpoints and separation guards remain separate from
-spending. The `/trade` frontend route is still deferred.
+**Status:** ABS International Trade is live through the keyless ABS Data API Beta, and OECD ITIC
+CIF/FOB margins are live through the public OECD SDMX endpoint. The `trade_records` model, read-only
+`/api/v1/trade` endpoints and separation guards remain separate from spending. The `/trade`
+frontend route is still deferred.
 
 ## Why a separate domain
 
@@ -31,9 +32,12 @@ The ingest skeleton runs in this fixed priority order:
    commodity category. Services: `TRADE_SERV_CNTRY_FY` 1.0.0 (`EBOPS=TOTAL`, `COUNTRY=TOT`,
    `FREQ=A`), total credits/debits by financial year. Both carry `UNIT_MEASURE=AUD` and
    `UNIT_MULT=6` (millions), converted to integer cents. No `x-api-key` header is sent.
-2. **OECD ITIC** — the OECD International Trade in Goods and Services dataflow, useful for
-   cross-country partner comparisons. The dataflow is reachable (HTTP 200); no connector is
-   implemented yet.
+2. **OECD ITIC** — **live**. The OECD International Transport and Insurance Costs dataflow
+   (`OECD.SDD.TPS, DSD_ITIC@DF_ITIC`, 1.1) on the public SDMX endpoint
+   <https://sdmx.oecd.org/sti-public/rest>. Australia is the reference/importer, `COUNTERPART_AREA`
+   is the exporter, `MEASURE=C_F`, `PRODUCT_TYPE=C` and `UNIT_MEASURE=PT_IM_CIF` (percentage of CIF
+   import value). It provides partner-total and HS 2017 4-digit product margins, preserving the
+   published `OBS_STATUS` and `METHODOLOGY_TYPE`.
 3. **BITRE Waterline** — port-level Australian trade statistics, the best fit for
    `location.granularity: "port"` and port interface costs.
 4. **DISR Resources and Energy Quarterly (REQ)** — quarterly resources and energy trade values,
@@ -57,13 +61,55 @@ Rows from different sources are never mixed into one total.
   (`source_dataset`, flow, measure, `commodity_code`, `time_period`, `financial_year`, location).
 - No profit field exists. A CIF/FOB margin remains the only cost proxy.
 
+## OECD ITIC live ingestion
+
+The `server/src/connectors/trade/oecd-itic` connector queries the public OECD SDMX endpoint with no
+key or secret. It ingests, one year at a time:
+
+- **per-partner totals** for 2019–2022 (`COUNTERPART_AREA` across all partners,
+  `COMM_HS2017=_T`), and
+- **Australia–World HS 2017 4-digit product margins** for 2019 and 2022 (`COUNTERPART_AREA=W`,
+  every `COMM_HS2017` product), which supplies the HS codes and the sanity diagnostic.
+
+Every row is `trade_flow: "import"` (the reference area is the importer), `measure_type:
+"cif_fob_margin"` and `margin_percent`; `amount_cents` is `0` because a margin is a percentage, not
+a dollar amount. `financial_year` is the calendar year (`2019`, not `2019-20`) because ITIC is an
+annual calendar-year dataset; `time_period` carries the same year. Product rows carry the 4-digit HS
+code (`HS17_0101` → `0101`); partner totals have no commodity code and use the commodity name
+`Total - all products`.
+
+Raw SDMX-JSON responses are fetched once per request and SHA-256 archived **outside the repo** under
+`~/ausspend-source-archive/oecd-itic/` before any row is written. Ingestion is idempotent per
+published dimension (source, flow, measure, commodity, partner, year, location granularity). If the
+public endpoint rate-limits (HTTP 429), `--from-archive` replays those exact archived responses
+through the same parser and upsert keys, so a replay cannot change a row or touch another source.
+
+### Sanity flag (2019 ≈ 3.5%, 2022 ≈ 6.4%)
+
+ITIC publishes margins per partner and per HS 4-digit product; it does **not** publish an
+all-product World total, and the dataflow carries no trade values. The requested headline is a
+CIF-import-value-weighted aggregate, so it cannot be reproduced from ITIC alone. The connector
+therefore computes an explicit, reproducible **unweighted mean over the Australia–World HS4 product
+margins** and records whether it is within 0.25 percentage points of the headline. A mismatch is
+**flagged in the source notes and in the ingest log, and no published value is adjusted**; no
+invented weights are applied. This is deliberate: the raw margin rows remain exactly as published.
+
 ## Observed vs estimated (OECD)
 
-OECD data can contain both observed values and estimates/forecasts. The model stores the published
-quality in `data_quality_flag` (`observed`, `estimated`, `provisional` or `verified`). A later OECD
-connector must preserve the published distinction rather than relabelling an estimate as observed.
-The API returns the flag with every row and the summary keeps the separate measure groups; it does
-not silently combine estimated and observed rows into a single "official" figure.
+OECD data contains both reported and estimated values. The connector derives `data_quality_flag`
+from `OBS_STATUS` and `METHODOLOGY_TYPE`:
+
+- `OBS_STATUS=I` (imputed) → `estimated`, regardless of methodology;
+- `METHODOLOGY_TYPE=ME` (model-based estimation), `IE` (interpolation/extrapolation) or `DE`
+  (derivation) → `estimated`;
+- `METHODOLOGY_TYPE=AD` (adjustment) → `provisional`;
+- `METHODOLOGY_TYPE=AG` (aggregation) with a normal observation status → `observed`.
+
+A modelled, derived, interpolated or adjusted row is never relabelled `observed`, `verified` or
+`audited`. The API returns the flag with every row and the summary keeps the separate measure
+groups; it does not silently combine estimated and observed rows into a single "official" figure.
+The current 2019–2022 Australia extract is labelled `estimated` where the source marks the
+observation imputed/aggregated.
 
 ## Unit detection (BITRE, DISR, ABARES)
 
@@ -128,15 +174,16 @@ presented as a national total.
 
 ## Ingest skeleton and cadence
 
-`npm run ingest:trade` runs `scripts/ingest-trade.ts` in the fixed priority order above. Every
-source is currently recorded in `data_sources` as a `stub` with its reason; the script exits non-zero
-if any source is unimplemented. It never marks a planned source as active and never writes a trade
-row.
+`npm run ingest:trade` runs `scripts/ingest-trade.ts` in the fixed priority order above. ABS and
+OECD ITIC are implemented; the remaining sources are recorded in `data_sources` as `stub` with their
+reason. Use `--source=<id>` to run one source only, for example
+`npx tsx scripts/ingest-trade.ts --source=oecd-itic`; this neither fetches nor rewrites any other
+source.
 
-The planned batch cadence is:
+The batch cadence is:
 
-- ABS: monthly/quarterly releases, key-gated;
-- OECD ITIC: per OECD release, preserving observed/estimated flags;
+- ABS: monthly/quarterly releases, keyless Data API Beta;
+- OECD ITIC: per OECD release, preserving observed/estimated flags and calendar years;
 - BITRE Waterline: per quarterly/annual release, port-level;
 - DISR REQ: quarterly;
 - ABARES: per quarterly/seasonal release.
@@ -151,5 +198,11 @@ is allowed to create a cross-source or cross-measure total.
 - Trade values, CIF/FOB margins, port interface costs, trade volumes and trade prices are different
   measures and are not additive.
 - Port costs are not national totals.
+- OECD ITIC margins are calendar-year percentages, not Australian financial-year dollars, and no
+  margin is summed into a national total.
+- OECD modelled, derived, interpolated and adjusted observations are never relabelled observed.
+- The 2019 ≈ 3.5% / 2022 ≈ 6.4% headline is a CIF-import-value-weighted aggregate that ITIC does not
+  publish; the connector records an unweighted diagnostic and flags a mismatch without adjusting a
+  published value.
 - Trade records are never mixed with `measures` / spending records.
-- No live trade connector and no frontend route ship in this foundation item.
+- The `/trade` frontend route remains deferred.
