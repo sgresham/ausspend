@@ -333,9 +333,10 @@ Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY20
 17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
-GPFS rows. The shared dev DB currently records **42** active `data_sources` GPFS entries and **785**
+GPFS rows. The shared dev DB currently records **43** active `data_sources` GPFS entries and **802**
 GPFS measures, from a fresh aggregate of `source_id` matching `/gpfs$/` (2026-11-18, after the
-§7.41 Hornsby landing); this is the live DB count, not an increment of the earlier table total.
+§7.41 Hornsby landing and a concurrent `penrith-gpfs` landing); this is the live DB count, not an
+increment of the earlier table total.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
 
@@ -3949,7 +3950,10 @@ ingesting only this source: total **693,338** (+22), GPFS **785** across **42** 
 source), `hornsby-gpfs` **22**; the per-source diff changed **only** `hornsby-gpfs` (0 → 22), no
 source count decreased and no rows were deleted. `data_sources` records `hornsby-gpfs` as `active`
 with `records_ingested: 22`. A second ingest run upserts the same 22 SHA-anchored natural keys and
-leaves the totals unchanged (idempotent). Targeted connector tests passed (15/15).
+leaves the totals unchanged (idempotent). Targeted connector tests passed (15/15). A later fresh
+aggregate (after a concurrent `penrith-gpfs` ingest of 17 rows) is **693,355 total / 802 GPFS rows
+across 43 sources**, with `hornsby-gpfs` still exactly **22**; the later change is entirely the
+concurrent Penrith landing, not this source.
 
 ---
 
