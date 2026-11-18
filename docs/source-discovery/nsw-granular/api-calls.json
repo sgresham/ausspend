@@ -1,0 +1,181 @@
+{
+  "generated_at": "2026-11-18T22:06:43Z",
+  "note": "Research-only evidence. No raw data files committed; samples are API JSON rows.",
+  "calls": [
+    {
+      "at": "2026-11-18T22:04:56Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_show?id=bc0a3d68-52ab-4110-acf9-d3bc3769b8ca",
+      "http": 200,
+      "bytes": 8628,
+      "result": "Budget Data Visualisation; metadata_modified 2021-12-23; resources 5"
+    },
+    {
+      "at": "2026-11-18T22:04:58Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_search?q=Budget%20Data%20Visualisation&rows=20",
+      "http": 200,
+      "bytes": 154726,
+      "result": "count 121; only Budget Data Visualisation package for this title"
+    },
+    {
+      "at": "2026-11-18T22:05:01Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/datastore_search?resource_id=0769f5e8-b1a8-45d1-b795-896bdded9cf4&limit=3",
+      "http": 200,
+      "bytes": 1737,
+      "result": "total 400; fields: Fiscal Year, Cluster, Agency, Service Group, Sub-service group, Account Type, Account Description, Amount (m), Amount in millions"
+    },
+    {
+      "at": "2026-11-18T22:05:12Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/datastore_search?resource_id=0769f5e8-b1a8-45d1-b795-896bdded9cf4&limit=1000",
+      "http": 200,
+      "bytes": 118302,
+      "result": "400 rows; 4 FYs; 3 cluster labels; 26 agencies; 42 service groups; 4 account types; Account Description all null"
+    },
+    {
+      "at": "2026-11-18T22:05:20Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_show?id=nsw-government-ict-metrics",
+      "http": 200,
+      "bytes": 11522,
+      "result": "NSW Government ICT Metrics; modified 2021-04-20; resources for 2013-14, 2014-15, 2015-16 (XLS/CSV/DQS)"
+    },
+    {
+      "at": "2026-11-18T22:05:40Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/datastore_search?resource_id=6d4afa6d-55e2-4dd5-9c1b-956210b70909&limit=3",
+      "http": 200,
+      "bytes": 745,
+      "result": "total 6; fields Year, No. of FTEs; summary only"
+    },
+    {
+      "at": "2026-11-18T22:05:45Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_search?q=fleet%20vehicle&rows=100",
+      "http": 200,
+      "result": "count 10; FY16-17, FY17-18, FY18-19, FY19-20, FY20-21, FY21-22, FY22-23; latest package 82e324c0-d22f-4699-b32e-d61cf09e04d6"
+    },
+    {
+      "at": "2026-11-18T22:05:46Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_show?id=82e324c0-d22f-4699-b32e-d61cf09e04d6",
+      "http": 200,
+      "result": "FY22-23; XLSX + PDF; license not specified"
+    },
+    {
+      "at": "2026-11-18T22:05:50Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_search?q=media%20expenditure%20agency&rows=10",
+      "http": 200,
+      "result": "count 46; latest 2024/2025 package a1a350b5-2c9a-4055-8030-7b570364421d"
+    },
+    {
+      "at": "2026-11-18T22:05:51Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_show?id=a1a350b5-2c9a-4055-8030-7b570364421d",
+      "http": 200,
+      "result": "2024/2025; one DOCX (202407-202506-q4-expenditure-by-agency.docx); license not specified"
+    },
+    {
+      "at": "2026-11-18T22:05:53Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_show?id=1c36207e-816d-43af-884e-95dd54d40ec8",
+      "http": 200,
+      "result": "Procurement and reporting of consultancy services; one PDF via Wayback; license lsba"
+    },
+    {
+      "at": "2026-11-18T22:05:55Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_search?q=workforce%20profile&rows=10",
+      "http": 200,
+      "result": "count 2; Gender and diversity Workforce Profile data 30bc9bcf-fd3e-4477-86ea-32652ba8a311"
+    },
+    {
+      "at": "2026-11-18T22:05:56Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/package_show?id=30bc9bcf-fd3e-4477-86ea-32652ba8a311",
+      "http": 200,
+      "result": "2006-2015 XLS datastore + workforce profile reports link; aggregate/gender-diversity"
+    },
+    {
+      "at": "2026-11-18T22:05:58Z",
+      "method": "GET",
+      "url": "https://data.nsw.gov.au/data/api/3/action/datastore_search?resource_id=76a17820-2b8b-4771-a08e-68e220d052ea&limit=3",
+      "http": 200,
+      "bytes": 4407,
+      "result": "total 10; aggregate total staff/gender/disability/etc, no agency dimension"
+    },
+    {
+      "at": "2026-11-18T22:06:10Z",
+      "method": "GET",
+      "url": "https://www.budget.nsw.gov.au/business-and-economy/nsw-budget/2026-27-budget-papers",
+      "http": 200,
+      "bytes": 161508,
+      "result": "current Budget Papers landing; no direct PDF/XLSX href in HTML"
+    },
+    {
+      "at": "2026-11-18T22:06:20Z",
+      "method": "GET",
+      "url": "https://www.budget.nsw.gov.au/business-and-economy/nsw-budget/2026-27-budget-papers/key-budget-charts",
+      "http": 200,
+      "bytes": 161508,
+      "result": "no xlsx/xls/csv links; same general budget shell"
+    },
+    {
+      "at": "2026-11-18T22:06:35Z",
+      "method": "GET",
+      "url": "https://www.parliament.nsw.gov.au/fileapi/parlfiles/getartifact?serverRelativeUrl=/tp/files/211353/2026-27%20Budget%20Paper%20No.01%20-%20Budget%20Statement.pdf",
+      "http": 403,
+      "result": "PDF not retrieved (Cloudflare 403); no PDF data extraction"
+    },
+    {
+      "at": "2026-11-18T22:06:36Z",
+      "method": "GET",
+      "url": "https://www.parliament.nsw.gov.au/fileapi/parlfiles/getartifact?serverRelativeUrl=/tp/files/211354/2026-27%20Budget%20Paper%20No.02%20-%20Performance%20and%20Wellbeing%20Statement.pdf",
+      "http": 403,
+      "result": "PDF not retrieved (Cloudflare 403); no PDF data extraction"
+    },
+    {
+      "at": "2026-11-18T22:06:37Z",
+      "method": "GET",
+      "url": "https://www.parliament.nsw.gov.au/fileapi/parlfiles/getartifact?serverRelativeUrl=/tp/files/211333/2026-27%20Budget%20Paper%20No.03%20-%20Infrastructure%20Statement.pdf",
+      "http": 403,
+      "result": "PDF not retrieved (Cloudflare 403); no PDF data extraction"
+    }
+  ],
+  "datastore_samples": {
+    "budget_data_visualisation": [
+      {
+        "Fiscal Year": "FY16-17",
+        "Cluster": "Finance, Services and Innovation",
+        "Agency": "DFSI",
+        "Service Group": "ICT, Digital and Innovation",
+        "Sub-service group": null,
+        "Account Type": "Capital Expenditure",
+        "Account Description": null,
+        "Amount (m)": "10.1",
+        "Amount in millions": "10,055,000.00"
+      },
+      {
+        "Fiscal Year": "FY16-17",
+        "Cluster": "Finance, Services and Innovation",
+        "Agency": "DFSI",
+        "Service Group": "Government Services",
+        "Sub-service group": null,
+        "Account Type": "Capital Expenditure",
+        "Account Description": null,
+        "Amount (m)": "1.7",
+        "Amount in millions": "1,722,000.00"
+      }
+    ],
+    "ict_metrics": [
+      { "Year": "2012-2013", "No. of FTEs": 78 },
+      { "Year": "2013-2014", "No. of FTEs": 84 }
+    ],
+    "workforce_profile": [
+      { "Year Code": "2006", "Total Staff": 323912, "Males": 130714, "Female": 192162 }
+    ]
+  }
+}
