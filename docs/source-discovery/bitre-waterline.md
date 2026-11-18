@@ -4,8 +4,8 @@
 - jurisdiction: federal
 - generated: 2026-11-18
 - packet: [`bitre-waterline.json`](bitre-waterline.json)
-- archive root: `/home/steve/ausspend-source-archive/bitre-waterline` (outside the repo)
-- checksums: `/home/steve/ausspend-source-archive/bitre-waterline/SHA256SUMS` (19/19 re-hashed and matched)
+- archive root: `~/ausspend-source-archive/bitre-waterline` (outside the repo)
+- checksums: `~/ausspend-source-archive/bitre-waterline/SHA256SUMS` (19/19 re-hashed and matched)
 - status: **discovery only** — no connector, no database write, no `trade_records` rows, no derived margin or port cost.
 
 ## 1. Premise falsifier
@@ -268,8 +268,8 @@ Never: sum rates; multiply rates by throughput to invent a port cost total; conv
 
 ## 10. Archive and checks
 
-- archive root: `/home/steve/ausspend-source-archive/bitre-waterline`
-- checksums: `/home/steve/ausspend-source-archive/bitre-waterline/SHA256SUMS`
+- archive root: `~/ausspend-source-archive/bitre-waterline`
+- checksums: `~/ausspend-source-archive/bitre-waterline/SHA256SUMS`
 - **19/19** archived documents re-hashed and matched their SHA-256 records.
 - raw bytes: 3 HTML/XML evidence pages (series landing, issue 71, issue 70, old 404, copyright, sitemap), the PDF, 4 XLSX, the time-series ZIP and 7 extracted CSVs.
 - no PDFs/XLSX/CSVs are committed to the repo; only this packet and the JSON are committed.

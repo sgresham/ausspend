@@ -29,7 +29,7 @@ const CONTEXT: PenrithGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/penrith-gpfs/penrith-city-council-financial-statements-2024-25.pdf',
+      '~/ausspend-source-archive/penrith-gpfs/penrith-city-council-financial-statements-2024-25.pdf',
     sha256: PENRITH_PDF_SHA256,
     bytes: PENRITH_PDF_BYTES,
     fetched_at: '2026-11-18T00:00:00.000Z',

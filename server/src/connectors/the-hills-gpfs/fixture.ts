@@ -29,7 +29,7 @@ const CONTEXT: TheHillsGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/ausspend-source-archive/the-hills-gpfs/the-hills-shire-council-financial-statements-2024-25.pdf',
+      '~/ausspend-source-archive/the-hills-gpfs/the-hills-shire-council-financial-statements-2024-25.pdf',
     sha256: THE_HILLS_PDF_SHA256,
     bytes: THE_HILLS_PDF_BYTES,
     fetched_at: '2026-11-18T00:00:00.000Z',
