@@ -1,0 +1,439 @@
+{
+  "schema": "ausspend.source-discovery.v1",
+  "source_id": "disr-req",
+  "title": "DISR Resources and Energy Quarterly — historical trade values, volumes, prices and forecasts",
+  "publisher": "Department of Industry, Science and Resources (DISR) — Office of the Chief Economist",
+  "generated_at": "2026-11-18T04:28:14Z",
+  "state": "discovery-only; no connector, no database write, no trade_records rows",
+  "jurisdiction": "federal",
+  "geography": "Australia national. The core trade tables are national totals by REQ commodity; no state/port/region breakdown. Tables 38–41 add principal export markets by country (FY/CY) but are not complete bilateral trade values.",
+  "official_urls": {
+    "series_landing": "https://www.industry.gov.au/publications/resources-and-energy-quarterly",
+    "old_stub_url": "https://www.industry.gov.au/data-and-publications/resources-and-energy-quarterly",
+    "old_stub_note": "Redirects to the live series landing page (HTTP 200).",
+    "latest_release": "https://www.industry.gov.au/publications/resources-and-energy-quarterly-september-2026",
+    "prior_release": "https://www.industry.gov.au/publications/resources-and-energy-quarterly-june-2026",
+    "files": {
+      "pdf": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026.pdf",
+      "forecast_xlsx": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026-forecast-data.xlsx",
+      "historical_xlsx": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026-historical-data.xlsx"
+    }
+  },
+  "access": {
+    "login_required": false,
+    "api": false,
+    "api_note": "No API/JSON endpoint found; the release page exposes direct PDF and XLSX downloads only.",
+    "http_status": 200,
+    "formats": "PDF, forecast-data XLSX, historical-data XLSX; no CSV, no API.",
+    "old_stub": "The old /data-and-publications/resources-and-energy-quarterly URL redirects to the live /publications/resources-and-energy-quarterly page."
+  },
+  "release": {
+    "latest_issue": "September 2026",
+    "date_published": "2026-10-02",
+    "data_cutoff": "developments and data up to 20 September 2026",
+    "quarter": "September quarter 2026 (forecast release); historical data to June quarter 2026",
+    "pdf_metadata": {
+      "pages": 147,
+      "tables_detected": 213,
+      "volume": "Vol. 15, no. 3",
+      "issn": "1839-5007",
+      "copyright": "© Commonwealth of Australia 2026"
+    },
+    "xlsx_metadata_caveat": "The forecast XLSX About sheet says 'Vol. 13, no 2' and the historical XLSX About sheet says 'Vol. 13, no 3'; the PDF front matter is authoritative at Vol. 15, no. 3. Treat the XLSX volume labels as a metadata defect, not a different release.",
+    "prior_release": {
+      "issue": "June 2026",
+      "date_published": "2026-07-03",
+      "format": "same PDF + forecast XLSX + historical XLSX"
+    },
+    "status": "current as at 2026-11-18"
+  },
+  "cadence": {
+    "type": "quarterly",
+    "evidence": [
+      "September 2026 published 2 October 2026",
+      "June 2026 published 3 July 2026",
+      "series page lists March/June/September/December issues for 2025 and 2026"
+    ],
+    "note": "Quarterly release cadence; the September 2026 release is the latest visible issue. Data in the PDF goes to 20 September 2026."
+  },
+  "formats": [
+    {
+      "format": "PDF",
+      "file": "resources-and-energy-quarterly-september-2026.pdf",
+      "bytes": 5739545,
+      "notes": "147-page report; authoritative definitions, units, licence, forecast narrative, Tables 1–41."
+    },
+    {
+      "format": "XLSX — forecast",
+      "file": "resources-and-energy-quarterly-september-2026-forecast-data.xlsx",
+      "bytes": 849083,
+      "sheets": 24,
+      "notes": "Forecast workbook: Quarters Dec-25 to Dec-31; s=estimate, f=forecast, z=projection. Not an actuals source."
+    },
+    {
+      "format": "XLSX — historical",
+      "file": "resources-and-energy-quarterly-september-2026-historical-data.xlsx",
+      "bytes": 3426384,
+      "sheets": 48,
+      "notes": "Historical workbook: Tables 1–41; quarterly 1990Q1–2026Q2 and annual 1989–90–2025–26. ABS-derived; latest quarter preliminary."
+    }
+  ],
+  "coverage": {
+    "quarterly_historical": "1990Q1–2026Q2 (146 quarters)",
+    "annual_historical": "1989–90–2025–26 (37 financial years)",
+    "forecast_workbook": "Dec-25–Dec-31 (includes some historical quarters, then estimates/forecasts/projections)",
+    "latest_historical_quarter": "2026Q2 (preliminary)",
+    "commodities": "REQ commodity groups, not HS/ANZSIC: resources (aluminium, bauxite, alumina, copper, diamonds/gemstones, gold, iron ore, lead, lithium, nickel, silver, steel, tin, zinc, titanium, zircon, other resources) and energy (metallurgical coal, thermal coal, crude oil/refinery feedstock, LPG, refinery products, LNG, other energy), plus published totals.",
+    "geography": "Australia national; no state/port/region detail. Principal export markets by country are in Tables 38–41 (FY/CY) but are a market summary, not complete bilateral values."
+  },
+  "commodity_classification": {
+    "type": "REQ custom commodity groups",
+    "hs_codes": false,
+    "anzsic_codes": false,
+    "examples": [
+      "Iron ore",
+      "Metallurgical coal",
+      "Thermal coal",
+      "LNG",
+      "Crude oil and other refinery feedstock",
+      "Gold",
+      "Copper",
+      "Aluminium",
+      "Alumina",
+      "Bauxite",
+      "Lithium",
+      "Nickel",
+      "Zinc",
+      "Uranium",
+      "Total resources",
+      "Total energy",
+      "Total resources and energy",
+      "Total merchandise",
+      "Total goods and services"
+    ],
+    "mapping_note": "The model can store the REQ commodity_name but has no commodity_code for these groups; joins to ABS HS-level goods or OECD HS4 margins are not possible without a crosswalk."
+  },
+  "measures": [
+    {
+      "id": "export_values_historical",
+      "table": "Historical workbook Table 17",
+      "description": "Quarterly commodity exports, by value (fob), Australia.",
+      "unit": "$m (millions of Australian dollars), FOB.",
+      "period": "1990Q1–2026Q2",
+      "actual_estimate_forecast": "Historical/actual, ABS-derived; latest period preliminary; some rows marked s=estimate.",
+      "additive": false,
+      "notes": "Components and published totals are both present. Do not add totals to components; do not add to ABS values."
+    },
+    {
+      "id": "import_values_historical",
+      "table": "Historical workbook Table 19",
+      "description": "Quarterly commodity imports, Australia.",
+      "unit": "$m for value; quantities in kt/ML/'000 ct.",
+      "period": "1990Q1–2026Q2",
+      "actual_estimate_forecast": "Historical/actual, ABS-derived; latest period preliminary.",
+      "additive": false,
+      "notes": "Import valuation basis (customs value/FOB vs CIF) is not stated in the workbook; must be confirmed before treating it as FOB or CIF."
+    },
+    {
+      "id": "export_volumes_historical",
+      "table": "Historical workbook Table 16",
+      "description": "Quarterly commodity exports, by volume, Australia.",
+      "unit": "Mt, kt, t, ML, LCE kt, '000 ct (varies by commodity).",
+      "period": "1990Q1–2026Q2",
+      "actual_estimate_forecast": "Historical/actual; latest period preliminary.",
+      "additive": false,
+      "notes": "Volumes are not dollars; units differ by commodity and table. The model has no volume_unit field."
+    },
+    {
+      "id": "export_unit_values_historical",
+      "table": "Historical workbook Table 18; annual Table 3",
+      "description": "Export unit value index (export values divided by volumes).",
+      "unit": "Index, base September 2026 = 100.",
+      "period": "1990Q1–2026Q2 (quarterly); 1989–90–2025–26 (annual).",
+      "actual_estimate_forecast": "Historical/derived index, not a spot price.",
+      "additive": false,
+      "notes": "Despite the title 'export unit values', Table 18 is an index (base September 2026 = 100), not US$/t. Do not treat it as a price."
+    },
+    {
+      "id": "forecast_values_volumes_prices",
+      "table": "Forecast workbook (Quarterly export values, Quarterly prices, Quarterly export volumes)",
+      "description": "Forecast/projection values, volumes and spot prices for Australian resources and energy exports.",
+      "unit": "$m for values; Mt/kt/t/ML/LCE kt for volumes; US$/t, US$/bbl, US$/MMBtu for spot prices.",
+      "period": "Dec-25–Dec-31; s=estimate, f=forecast, z=projection.",
+      "actual_estimate_forecast": "Estimate/forecast/projection. Never treat f/z as actual.",
+      "additive": false,
+      "notes": "The forecast workbook includes some historical quarters; use the historical workbook for actuals. Forecasts are a different vintage and are revised."
+    },
+    {
+      "id": "cif_fob_margin",
+      "published": false,
+      "description": "No CIF/FOB margin is published; OECD ITIC remains the only margin source."
+    },
+    {
+      "id": "profit",
+      "published": false,
+      "description": "No profit data."
+    }
+  ],
+  "units": {
+    "values": "$m = millions of Australian dollars. Exports are explicitly FOB. Import valuation basis is not stated.",
+    "volumes": "Mt (million tonnes), kt (thousand tonnes), t (tonnes), ML (megalitres), LCE kt (lithium carbonate equivalent), '000 ct (thousand carats); varies by commodity.",
+    "prices": "Forecast workbook spot prices: US$/t, US$/bbl, US$/MMBtu; not AUD trade values. Historical Table 18 is an index (base September 2026 = 100), not a price.",
+    "periods": "Quarterly tables are calendar quarters (Mar/Jun/Sep/Dec). Annual tables are Australian financial years (1989–90 etc.). The model's financial_year/time_period semantics must not mix these.",
+    "no_unit_inference": "Do not infer an import basis, a commodity unit, or a price currency from a bare number; the workbook has explicit unit columns for most rows and the PDF notes define the exceptions."
+  },
+  "actual_estimate_forecast": {
+    "historical_workbook": "Actual/ABS-derived historical data; latest period is preliminary; some rows are marked s=estimate.",
+    "forecast_workbook": "s=estimate, f=forecast, z=projection; forecast values are not actuals and are revised between releases.",
+    "pdf": "The report contains both historical discussion and forecasts; the executive summary's 2026–27/2027–28 numbers are forecasts.",
+    "rule": "Never treat an f or z value as an actual. Never mix a forecast vintage with a historical actual series."
+  },
+  "sample_values": {
+    "note": "XLSX values are unrounded $m; latest historical quarter is preliminary.",
+    "historical_2026Q2": {
+      "total_resources_and_energy_exports_m": 105458.904303145,
+      "total_resources_exports_m": 67966.4916721455,
+      "total_energy_exports_m": 37492.412631,
+      "total_merchandise_exports_m": 138985,
+      "total_goods_and_services_exports_m": 172885,
+      "total_imports_m": 33340.62847333,
+      "lng_exports_m": 13286.424806,
+      "metallurgical_coal_exports_m": 10705.734737,
+      "thermal_coal_exports_m": 8197.432958
+    },
+    "forecast_examples_from_pdf": {
+      "2026_27_resources_and_energy_exports_forecast_b": 422,
+      "2027_28_resources_and_energy_exports_forecast_b": 391,
+      "2030_31_resources_and_energy_exports_forecast_b": 379,
+      "warning": "Forecasts; do not ingest as actuals."
+    }
+  },
+  "licence": {
+    "name": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "copyright": "© Commonwealth of Australia 2026",
+    "issn": "1839-5007",
+    "volume": "Vol. 15, no. 3",
+    "verbatim": "All material in this publication is licensed under a Creative Commons Attribution 4.0 International License, with the exception of: • the Commonwealth Coat of Arms • content supplied by third parties • logos • any material protected by trademark or otherwise noted in this publication.",
+    "attribution_verbatim": "Content contained herein should be attributed as follows: Department of Industry, Science and Resources, Commonwealth of Australia Resources and Energy Quarterly September 2026",
+    "endorsement": "The Commonwealth of Australia does not necessarily endorse the content of this publication.",
+    "exceptions": "Coat of Arms, third-party content, logos, trademark-protected material and material otherwise noted are excluded. Underlying ABS data may have its own terms.",
+    "reuse_note": "Attribution required; do not imply Commonwealth endorsement; do not redistribute third-party content."
+  },
+  "overlap": {
+    "abs_international_trade": {
+      "relationship": "The REQ historical trade tables explicitly cite ABS International Trade in Goods and Services, Australia, Cat. No. 5368.0, and are ABS-derived commodity aggregates. They are not an independent source and are not additive with ABS. The current trade API summary groups by measure_type/trade_flow and sums amount_cents across sources, so ingesting REQ trade_value rows alongside ABS would double-count in the summary.",
+      "action": "Do not ingest REQ trade values as an additive second source. If used, label as ABS-derived/non-additive and add a source/overlap guard in the API summary."
+    },
+    "oecd_itic": {
+      "relationship": "OECD ITIC publishes CIF/FOB margins as a percentage of CIF import value. REQ publishes FOB export values and import values; no CIF/FOB margin. Different measures. Do not derive a margin by combining REQ exports and imports; that would be a cross-source derivation.",
+      "action": "Keep separate measure groups; never derive or add a CIF/FOB margin from REQ."
+    },
+    "within_req": {
+      "totals_vs_components": "Tables 16/17/19 include published totals (Total resources, Total energy, Total resources and energy, Total merchandise, Total goods and services) alongside commodity components. Never sum totals with components.",
+      "forecast_vs_actual": "Forecast workbook values are not actuals; never mix forecast vintages with historical actuals.",
+      "volumes_vs_values": "Volumes (Mt/kt/t/ML) are not dollars; never add volumes to values.",
+      "prices_vs_values": "Table 18 is an export unit value index, not a price; forecast spot prices are USD, not AUD trade values. Never mix them with values."
+    }
+  },
+  "mapping_proposal": {
+    "target_collection": "trade_records",
+    "candidate_rows": [
+      {
+        "measure_type": "trade_value",
+        "source_tables": [
+          "Historical workbook Table 17 (FOB exports)",
+          "Historical workbook Table 19 (imports)"
+        ],
+        "fields": {
+          "trade_flow": "export for Table 17; import for Table 19",
+          "commodity_name": "REQ commodity label (e.g. Iron ore, LNG, Metallurgical coal)",
+          "commodity_code": "undefined (REQ custom group; no HS code)",
+          "amount_cents": "value_m * 100,000,000 (1 $m = 100,000,000 cents)",
+          "financial_year": "calendar year for quarterly rows (e.g. 2026); financial-year label for annual FY rows (e.g. 2025-26)",
+          "time_period": "2026Q2 for quarterly rows; 2025-26 for annual FY rows",
+          "location": "{ granularity: 'national' }",
+          "jurisdiction_level": "federal",
+          "source_dataset": "DISR REQ",
+          "source_url": "exact historical XLSX URL",
+          "source_date": "2026-10-02",
+          "data_quality_flag": "provisional for historical ABS-derived rows (latest period preliminary); estimated for rows marked s=estimate"
+        }
+      },
+      {
+        "measure_type": "trade_volume",
+        "source_tables": ["Historical workbook Table 16"],
+        "fields": {
+          "trade_flow": "export",
+          "commodity_name": "REQ commodity label",
+          "volume": "published quantity",
+          "amount_cents": "0",
+          "data_quality_flag": "provisional"
+        },
+        "blocker": "No volume_unit field; units vary by commodity/table."
+      },
+      {
+        "measure_type": "trade_price",
+        "source_tables": [
+          "Historical Table 18 (index)",
+          "Forecast workbook Quarterly prices (USD spot)"
+        ],
+        "fields": {
+          "price": "not usable as a single column without currency/unit",
+          "index_value": "Table 18 index base Sep 2026 = 100",
+          "data_quality_flag": "estimated for forecasts"
+        },
+        "blocker": "No price_unit/currency/index_base field; forecasts need a forecast flag."
+      }
+    ],
+    "blockers": [
+      "Cross-source additivity: the current /api/v1/trade/summary groups by measure_type/trade_flow and sums amount_cents across all sources; REQ trade_value rows would double-count with ABS.",
+      "No aggregation_role/is_total field: REQ tables include published totals alongside commodity components; ingesting both would double-count within REQ.",
+      "No forecast flag/vintage: f/z forecasts and s estimates cannot be distinguished from actuals except by estimated/provisional; forecasts need a separate flag and release vintage.",
+      "No volume_unit/price_unit/currency/index_base: volumes and prices cannot be represented unambiguously.",
+      "No HS/REQ commodity code: commodity_name only; joins to ABS HS-level goods or OECD HS4 margins are not possible.",
+      "Import value basis is unstated (customs/FOB vs CIF); resolve before treating imports as FOB or CIF.",
+      "Quarterly calendar periods and annual financial-year periods are mixed in the same workbook; the model's financial_year/time_period semantics must not mix them.",
+      "The XLSX About sheets say Vol. 13 while the PDF says Vol. 15; use the PDF/release page as authoritative."
+    ],
+    "schema_changes_required": [
+      "Add a source/overlap group (e.g. abs-itgs-5368) and group the trade summary by it, or exclude derived sources from ABS-inclusive sums.",
+      "Add aggregation_role/is_total so published totals are not summed with components.",
+      "Add forecast/is_forecast and release_vintage fields.",
+      "Add volume_unit, price_unit, currency and index_base fields.",
+      "Add or crosswalk a commodity code/classification for REQ groups."
+    ],
+    "recommended_action": "DEFER a trade-value builder in the current schema. The data are defensible (historical FOB export values and import values, 1990Q1–2026Q2), but the current trade API would double-count REQ trade_value rows with ABS and would sum REQ totals with components. If the product wants a REQ commodity-aggregate view, first add a source/overlap guard, an aggregation_role, a forecast flag and unit fields; then build a bounded connector for historical Tables 17/19 only. Otherwise use ABS for trade values and treat REQ as context/forecast material.",
+    "deferral_conditions": [
+      "If the product requires a single additive national trade total across ABS + REQ, defer: the source is ABS-derived and the current API would double-count.",
+      "If the product requires forecasts as actuals, defer: f/z values are not actuals and the schema has no forecast flag/vintage.",
+      "If the product requires HS-level commodity mapping or partner-country values, defer: REQ uses custom commodity groups and national totals.",
+      "If the import valuation basis cannot be confirmed, defer the import-value series; exports are explicitly FOB and can be considered separately.",
+      "If the trade API summary is not changed to separate sources and totals, defer."
+    ]
+  },
+  "premise": {
+    "statement": "DISR REQ publishes accessible quarterly Australian resources/energy trade values with a usable licence and a defensible period/commodity mapping.",
+    "result": "true_for_historical_values_with_overlap_and_schema_caveats",
+    "finding": "The source does publish accessible quarterly FOB export values and import values for 1990Q1–2026Q2, with a CC BY 4.0 licence and a clear REQ commodity/period structure. It is ABS-derived, contains published totals and forecasts, and uses custom commodity groups. The current trade API/schema cannot ingest it safely alongside ABS without double-counting.",
+    "falsifier": "If the required output is a single additive national trade total, an HS-level or partner-level series, or a forecast treated as an actual, the premise fails. In that case defer; do not invent a value series or derive a margin."
+  },
+  "archive": {
+    "root": "/home/steve/ausspend-source-archive/disr-req",
+    "checksums_file": "/home/steve/ausspend-source-archive/disr-req/SHA256SUMS",
+    "records": 6,
+    "verified": 6,
+    "note": "Raw PDF/XLSX/HTML bytes are archived outside the repo; the repo contains only this discovery packet."
+  },
+  "sources": [
+    {
+      "document_id": "disr-req:3b9033c4cd9318a5aad393b0",
+      "source_id": "disr-req",
+      "title": "DISR Resources and energy quarterly series landing page",
+      "original_url": "https://www.industry.gov.au/publications/resources-and-energy-quarterly",
+      "retrieved_from": "https://www.industry.gov.au/publications/resources-and-energy-quarterly",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/disr-req/req-series-landing.html",
+      "sha256": "3b9033c4cd9318a5aad393b0a47ae718aac048c137e3f5820bf08ead13ac52d1",
+      "bytes": 137813,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:26:32.794Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Series landing page; the old /data-and-publications/resources-and-energy-quarterly URL redirects here."
+    },
+    {
+      "document_id": "disr-req:bbf83a79316107c30d6d0b2c",
+      "source_id": "disr-req",
+      "title": "DISR Resources and Energy Quarterly September 2026 release page",
+      "original_url": "https://www.industry.gov.au/publications/resources-and-energy-quarterly-september-2026",
+      "retrieved_from": "https://www.industry.gov.au/publications/resources-and-energy-quarterly-september-2026",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/disr-req/req-september-2026-release.html",
+      "sha256": "bbf83a79316107c30d6d0b2c41c9c46d1d786cfa41a6baf40260dcd220d47a2c",
+      "bytes": 196925,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:26:32.805Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Date published 2 October 2026; links PDF, forecast-data XLSX and historical-data XLSX."
+    },
+    {
+      "document_id": "disr-req:91a98d59f11a7d9d250444e1",
+      "source_id": "disr-req",
+      "title": "DISR Resources and Energy Quarterly June 2026 release page",
+      "original_url": "https://www.industry.gov.au/publications/resources-and-energy-quarterly-june-2026",
+      "retrieved_from": "https://www.industry.gov.au/publications/resources-and-energy-quarterly-june-2026",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/disr-req/req-june-2026-release.html",
+      "sha256": "91a98d59f11a7d9d250444e130904af8dad7ca7447fa6a0e5760441bff339488",
+      "bytes": 197155,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:26:32.810Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Date published 3 July 2026; prior quarterly release, same format."
+    },
+    {
+      "document_id": "disr-req:eb9dd61c43654a4393aad58f",
+      "source_id": "disr-req",
+      "title": "Resources and Energy Quarterly September 2026 (PDF)",
+      "original_url": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026.pdf",
+      "retrieved_from": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026.pdf",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/disr-req/resources-and-energy-quarterly-september-2026.pdf",
+      "sha256": "eb9dd61c43654a4393aad58fe5d3fe6db7e4568e1e3e340cee84e66ba1bab6db",
+      "bytes": 5739545,
+      "content_type": "application/pdf",
+      "fetched_at": "2026-11-18T04:26:32.828Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "147-page report; Vol. 15, no. 3; ISSN 1839-5007; licence and attribution in the front matter."
+    },
+    {
+      "document_id": "disr-req:010ee389273048f983441185",
+      "source_id": "disr-req",
+      "title": "Resources and Energy Quarterly September 2026 forecast data",
+      "original_url": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026-forecast-data.xlsx",
+      "retrieved_from": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026-forecast-data.xlsx",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/disr-req/resources-and-energy-quarterly-september-2026-forecast-data.xlsx",
+      "sha256": "010ee389273048f983441185100fddc4d4fd2a42df716e137c352a87673ca66f",
+      "bytes": 849083,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "fetched_at": "2026-11-18T04:26:32.873Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Forecast workbook: s=estimate, f=forecast, z=projection. Not an actuals source."
+    },
+    {
+      "document_id": "disr-req:4181789a95f2ad479143763c",
+      "source_id": "disr-req",
+      "title": "Resources and Energy Quarterly September 2026 historical data",
+      "original_url": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026-historical-data.xlsx",
+      "retrieved_from": "https://www.industry.gov.au/sites/default/files/2026-10/resources-and-energy-quarterly-september-2026-historical-data.xlsx",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/disr-req/resources-and-energy-quarterly-september-2026-historical-data.xlsx",
+      "sha256": "4181789a95f2ad479143763c84db18d43442cfab1d4da0ed194a1676bb850f56",
+      "bytes": 3426384,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "fetched_at": "2026-11-18T04:26:32.886Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Historical workbook: Tables 1-41, quarterly values 1990Q1-2026Q2; ABS-derived; latest period preliminary."
+    }
+  ],
+  "checks": {
+    "http": "Series landing, September 2026 release page, June 2026 release page, PDF, forecast XLSX and historical XLSX all returned HTTP 200; the old /data-and-publications URL redirects to the live series page.",
+    "pdf": "147 pages and 213 tables detected with the repo PDF extractor; licence/volume/attribution read from the front matter.",
+    "xlsx": "Forecast workbook 24 sheets; historical workbook 48 sheets. Table 17/19 quarterly dates 1990Q1–2026Q2; annual Tables 1/2/3/4 1989–90–2025–26.",
+    "archive": "6/6 archived documents re-hashed and matched their SHA-256 records.",
+    "no_database_write": true,
+    "no_connector": true
+  }
+}

@@ -43,8 +43,12 @@ The ingest skeleton runs in this fixed priority order:
    accessible five-container-port throughput, performance and indicative port-interface-cost data
    under CC BY 4.0, but no trade values, CIF/FOB margins or national port total. A `trade_records`
    builder needs a schema/unit review first; no connector is implemented.
-4. **DISR Resources and Energy Quarterly (REQ)** — quarterly resources and energy trade values,
-   volumes and prices.
+4. **DISR Resources and Energy Quarterly (REQ)** — **discovery only; deferred**. The source packet
+   ([`docs/source-discovery/disr-req.md`](source-discovery/disr-req.md)) finds accessible quarterly
+   FOB export values and import values (1990Q1–2026Q2) under CC BY 4.0, but the historical tables
+   are ABS-derived, contain totals and forecasts, and would double-count with ABS in the current
+   trade API. A bounded REQ commodity-aggregate builder needs a source/overlap guard, aggregation
+   role, forecast flag and unit fields first; no connector is implemented.
 5. **ABARES** — agricultural commodity trade values and volumes.
 
 Each source keeps its own `source_dataset`, `source_url`, `source_date` and `data_quality_flag`.
@@ -203,6 +207,8 @@ is allowed to create a cross-source or cross-measure total.
 - Port costs are not national totals.
 - BITRE Waterline is discovery-only and deferred: it covers five container ports and publishes
   volumes and indicative port interface costs, not trade values or CIF/FOB margins.
+- DISR REQ is discovery-only and deferred: its historical trade values are ABS-derived and not
+  additive with ABS, and its forecast workbook is not an actuals source.
 - OECD ITIC margins are calendar-year percentages, not Australian financial-year dollars, and no
   margin is summed into a national total.
 - OECD modelled, derived, interpolated and adjusted observations are never relabelled observed.
