@@ -69,7 +69,8 @@ const CONTEXT: CentralCoastGpfsParseContext = {
 
 /** Golden fixture for the central-coast-gpfs module: 17 rows. */
 export const CENTRAL_COAST_GPFS_ROW_COUNT = 17;
-export const CENTRAL_COAST_GPFS_GOLDEN_DIGEST = '6fb6a4ecdc2c2f0b403074c429aa4311d99c72d428d2ff65f79bc0c3196f9d9e';
+export const CENTRAL_COAST_GPFS_GOLDEN_DIGEST =
+  '6fb6a4ecdc2c2f0b403074c429aa4311d99c72d428d2ff65f79bc0c3196f9d9e';
 export const ROW_COUNT = 17;
 export const GOLDEN_DIGEST = CENTRAL_COAST_GPFS_GOLDEN_DIGEST;
 

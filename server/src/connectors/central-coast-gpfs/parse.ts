@@ -71,7 +71,8 @@ import type { Connector, RawRecord } from '../types.js';
  */
 
 export const CENTRAL_COAST_GPFS_ID = 'central-coast-gpfs';
-export const CENTRAL_COAST_GPFS_NAME = 'Central Coast Council — General Purpose Financial Statements';
+export const CENTRAL_COAST_GPFS_NAME =
+  'Central Coast Council — General Purpose Financial Statements';
 export const CENTRAL_COAST_GPFS_PUBLISHER = 'Central Coast Council';
 export const CENTRAL_COAST_GPFS_REPORTING_URL =
   'https://www.centralcoast.nsw.gov.au/council/forms-and-publications/annual-report-2024-25';
@@ -90,11 +91,11 @@ export const CENTRAL_COAST_GPFS_DELIVERY_ENTITY = 'Central Coast Council';
  * Referer. This is not a browser challenge: the same bytes come back to a plain
  * HTTP client with these headers.
  */
-const BROWSER_HEADERS = {
+const BROWSER_HEADERS: Record<string, string> = {
   'user-agent':
     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36',
   accept: 'text/html,application/pdf,*/*;q=0.8',
-} as const;
+};
 
 export interface CentralCoastGpfsDocument {
   id: string;
@@ -295,8 +296,10 @@ export const CENTRAL_COAST_GPFS_LINES: ReadonlyArray<CentralCoastGpfsLineSpec> =
 
 export const CENTRAL_COAST_GPFS_BEFORE_CAPITAL_LABEL =
   'Net operating result for the year before grants and contributions provided for capital purposes';
-export const CENTRAL_COAST_GPFS_OPERATING_RESULT_LABEL = 'Operating result from continuing operations';
-export const CENTRAL_COAST_GPFS_DEPRECIATION_NOTE_LABEL = 'Total depreciation and amortisation costs';
+export const CENTRAL_COAST_GPFS_OPERATING_RESULT_LABEL =
+  'Operating result from continuing operations';
+export const CENTRAL_COAST_GPFS_DEPRECIATION_NOTE_LABEL =
+  'Total depreciation and amortisation costs';
 
 interface CentralCoastGpfsLineValue {
   spec: CentralCoastGpfsLineSpec;
@@ -646,7 +649,9 @@ export interface CentralCoastGpfsFunctionsTotals {
  * 2025/2024, Carrying amount 2025/2024); the 2025 values are at indices 0, 2, 4
  * and 6.
  */
-export function parseCentralCoastGpfsFunctionsTotals(page: PdfPage): CentralCoastGpfsFunctionsTotals | null {
+export function parseCentralCoastGpfsFunctionsTotals(
+  page: PdfPage,
+): CentralCoastGpfsFunctionsTotals | null {
   const text = normalizeText(page.text);
   const label = 'Total functions and activities';
   if (!text.includes(label)) return null;
@@ -751,7 +756,11 @@ function mapLine(
     source_id: CENTRAL_COAST_GPFS_ID,
     source_url: context.document.url,
     verified: false,
-    natural_key: centralCoastGpfsNaturalKey(context.document.url, spec.key, CENTRAL_COAST_GPFS_FISCAL_YEAR),
+    natural_key: centralCoastGpfsNaturalKey(
+      context.document.url,
+      spec.key,
+      CENTRAL_COAST_GPFS_FISCAL_YEAR,
+    ),
     project_name: `Central Coast Council GPFS 2024-25 — ${printedLineLabel(spec)}`,
     description: `${spec.section === 'revenue' ? 'Revenue' : spec.section === 'expenses' ? 'Expense' : 'Result'} line item — ${spec.statement}`,
     jurisdiction_level: 'local',
@@ -890,7 +899,10 @@ export function parseCentralCoastGpfsExtraction(
   const materials = lineByKey(values, 'materials_and_services');
   const borrowing = lineByKey(values, 'borrowing_costs');
   const otherExpenses = lineByKey(values, 'other_expenses');
-  const netResultBeforeCapital = actualAmountAfter(incomeText, CENTRAL_COAST_GPFS_BEFORE_CAPITAL_LABEL);
+  const netResultBeforeCapital = actualAmountAfter(
+    incomeText,
+    CENTRAL_COAST_GPFS_BEFORE_CAPITAL_LABEL,
+  );
   const operatingResult = actualAmountAfter(
     incomeText,
     CENTRAL_COAST_GPFS_OPERATING_RESULT_LABEL,
@@ -1091,7 +1103,9 @@ function documentFilename(_url: string): string {
 }
 
 /** Build the live Central Coast Council GPFS connector. */
-export function createCentralCoastGpfsConnector(options: CentralCoastGpfsConnectorOptions = {}): Connector {
+export function createCentralCoastGpfsConnector(
+  options: CentralCoastGpfsConnectorOptions = {},
+): Connector {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const metadata = {
     lastFetchedAt: null as string | null,
@@ -1186,9 +1200,7 @@ export function createCentralCoastGpfsConnector(options: CentralCoastGpfsConnect
           typeof entry.record !== 'object' ||
           entry.record === null
         ) {
-          metadata.errors.push(
-            'raw entry is not a Central Coast Council GPFS measure; skipped',
-          );
+          metadata.errors.push('raw entry is not a Central Coast Council GPFS measure; skipped');
           continue;
         }
         records.push(entry.record as SpendingRecord);

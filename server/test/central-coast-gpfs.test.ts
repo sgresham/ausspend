@@ -104,7 +104,9 @@ describe('Central Coast GPFS source discovery', () => {
       <a href="//cdn.centralcoast.nsw.gov.au/sites/default/files/2026-01/annual-report-2024-25-central-coast-council.pdf">Annual Report 2024-25 30 MB</a>
       <a href="//cdn.centralcoast.nsw.gov.au/sites/default/files/2025-11/audited-financial-statements-2024-25-central-coast-council.pdf">Audited Financial Statement 2024-25 8 MB</a>
     `;
-    expect(parseCentralCoastGpfsReportPage(indexHtml, CENTRAL_COAST_GPFS_REPORTING_URL, '2024-25')).toEqual({
+    expect(
+      parseCentralCoastGpfsReportPage(indexHtml, CENTRAL_COAST_GPFS_REPORTING_URL, '2024-25'),
+    ).toEqual({
       pdfUrl: PDF_URL,
       title:
         'Central Coast Council Audited Financial Statements 2024-25 (General Purpose Financial Statements)',
@@ -313,10 +315,7 @@ describe('Central Coast GPFS exact reconciliation', () => {
   });
 
   it('rejects the whole extraction when the B1-1 row no longer reconciles internally', () => {
-    const broken = FUNCTIONS_TEXT.replace(
-      '734,180 678,747 157,958',
-      '734,170 678,747 157,958',
-    );
+    const broken = FUNCTIONS_TEXT.replace('734,180 678,747 157,958', '734,170 678,747 157,958');
     const parsed = parseCentralCoastGpfsExtraction(extraction({ functions: broken }), CONTEXT);
     expect(parsed.records).toEqual([]);
     expect(parsed.reconciliation).toBeNull();
@@ -399,8 +398,7 @@ describe('Central Coast GPFS ingestion is additive-only and idempotent', () => {
         source_url: 'https://www.grants.gov.au/example1',
         verified: false,
         natural_key: 'grantconnect-central-coast-council-existing-1',
-        project_name:
-          'Existing GrantConnect grant under the exact string Central Coast Council',
+        project_name: 'Existing GrantConnect grant under the exact string Central Coast Council',
         delivery_entity: 'Central Coast Council',
       },
       {
@@ -499,12 +497,12 @@ describe('Central Coast GPFS ingestion is additive-only and idempotent', () => {
         delivery_entity: 'CENTRAL COAST COUNCIL',
       }),
     ).toBe(1);
-    expect(
-      await MeasureModel.countDocuments({ delivery_entity: 'Central Coast Council' }),
-    ).toBe(18);
-    expect(
-      await MeasureModel.countDocuments({ delivery_entity: /^central coast council$/i }),
-    ).toBe(19);
+    expect(await MeasureModel.countDocuments({ delivery_entity: 'Central Coast Council' })).toBe(
+      18,
+    );
+    expect(await MeasureModel.countDocuments({ delivery_entity: /^central coast council$/i })).toBe(
+      19,
+    );
 
     expect(
       await MeasureModel.countDocuments({
