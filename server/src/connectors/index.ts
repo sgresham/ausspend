@@ -1519,8 +1519,10 @@ export {
   PBS_DATASET_URL,
   PBS_FISCAL_YEAR,
   PBS_ID,
+  PBS_LATEST_YEAR,
   PBS_NAME,
   PBS_RESOURCE_NAME,
+  PBS_YEARS,
   createPbsConnector,
   mapPbsRow,
   parsePbsCsvStream,
@@ -1535,6 +1537,8 @@ export {
   type PbsResourceRef,
   type PbsSkip,
   type PbsTransformResult,
+  type PbsYearConfig,
+  type PbsYearContext,
 } from './data-gov-au-pbs.js';
 export {
   ARCGIS_EXPECTED_PROJECTS,

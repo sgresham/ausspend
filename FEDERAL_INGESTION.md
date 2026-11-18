@@ -127,45 +127,76 @@ deletes an existing row.
 ## PBS (data.gov.au) — source, CSV and streaming parse
 
 - CKAN API base: <https://data.gov.au/data/api/3/action/>. Read-only, no API key.
-- Dataset id: `4f025f38-0c70-45e2-8106-4c29a5e48637`
-  (<https://data.gov.au/data/dataset/4f025f38-0c70-45e2-8106-4c29a5e48637>).
-- The connector calls `package_show?id=...`, then selects the CSV resource named
-  **"2025-26 PBS Program Expenses Line Items"** (resource id
-  `7cc8640f-b5d4-41de-a665-3197739b965f`). The ZIP/Excel bundles and the Budget Paper 1/4
-  resources are ignored.
+- The connector calls `package_show?id=<dataset>`, then selects that year's machine-readable
+  line-item CSV. The ZIP/Excel bundles and the Budget Paper 1/4 resources are ignored.
+- Historical coverage is **FY2020-21 through FY2025-26**. Each year keeps its own dataset id,
+  resource, fiscal-year label and amount column; the connector does not copy one year's schema onto
+  another.
+
+| Fiscal year | CKAN dataset id                        | Published CSV resource (selected)                   | Amount column |
+| ----------- | -------------------------------------- | --------------------------------------------------- | ------------- |
+| 2020-21     | `86d7d307-92e2-48d9-b375-480685056673` | `2020-21 PBS Program Expense Line Items csv`        | `2020-21`     |
+| 2021-22     | `98039365-ae78-4290-8d7c-eb0a4fcbd52b` | `2021-22 PBS Program Expense Line Items.csv`        | `2021-22`     |
+| 2022-23     | `72594fbc-ef66-40f2-a8af-845372dc0f99` | `2022-23 October Budget Program Expense Line Items` | `2022-23`     |
+| 2023-24     | `9dc4136b-8daa-44a9-af0e-ace9dba41905` | `2023-24 Budget Program Expense Line Items (CSV)`   | `2023-24`     |
+| 2024-25     | `6aeeefa5-65c4-45fb-bc7e-c8f33c7ffa44` | `2024-25 PBS Program Expense Line Items.csv`        | `2024-25`     |
+| 2025-26     | `4f025f38-0c70-45e2-8106-4c29a5e48637` | `2025-26 PBS Program Expenses Line Items`           | `2025-26`     |
+
+**FY2022-23 has two packages (March and October).** The October package is the canonical final
+budget for the year and the only one ingested. The March package (`4c514578-a6aa-463d-ba2f-5d333fed077f`)
+is deliberately excluded so FY2022-23 is never counted twice; its CSV is byte-different but budgets
+the same fiscal year, so ingesting both would create duplicate FY rows with no schema-safe way to
+tell them apart. If the position ever changes, add an explicit source-order field first — do not
+add a second dataset to the year list as-is.
+
+- Resource names are **not stable across years** (for example "Program Expense" vs "Program
+  Expenses", "PBS" vs "Budget", with or without a `.csv` suffix). Selection scores the exact
+  published name, the fiscal year in the name, and the "program expense"/"line item" phrases, so a
+  wrapped or renamed resource is still matched to the correct year without hard-coding resource ids.
+- Column headers also vary: FY2020-21..FY2024-25 use spaced names (`Expense type`,
+  `Appropriation type`, `Source document`, `Source table`), while FY2025-26 uses underscores
+  (`Expense_type`, …). Both spellings are accepted per field.
+- Several published CSVs (FY2022-23 March/October and FY2023-24) begin with four rows of empty
+  comma-delimited cells before the real header. The parser decodes the stream as arrays, finds the
+  first row containing `Portfolio` and `Program`, then maps the following rows using the raw header
+  names.
 - The CSV is decoded as **Windows-1252** (the source has 0x92 curly quotes, not valid UTF-8) and
   parsed with a **streaming CSV parser** (`csv-parse`, pinned exactly). Chunks are fed straight
   from the HTTP body; the file is never loaded as a single string.
 - CKAN and download calls are 500 ms apart. A `429` honours `Retry-After` (seconds or HTTP date,
   capped at 60 s) with bounded exponential backoff.
+- If one historical package cannot be read, that year is recorded as a year-specific gap while the
+  remaining complete years still ingest; the source is marked `partial`/`degraded`. If no year can
+  be read, the source errors. No year is zero-filled or fabricated.
 
 ### PBS row mapping
 
-| Target field         | Source / rule                                                                                                        |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `source_id`          | literal `"data-gov-au-pbs"`                                                                                          |
-| `source_dataset`     | literal `"2025-26 Portfolio Budget Statements (data.gov.au)"`                                                        |
-| `measure_type`       | literal `"budget"`                                                                                                   |
-| `jurisdiction_level` | literal `"federal"`; `jurisdiction` literal `"Commonwealth"`                                                         |
-| `project_name`       | `Program` (whitespace/NBSP-normalised)                                                                               |
-| `description`        | `Outcome`                                                                                                            |
-| `delivery_entity`    | `Department/Agency`                                                                                                  |
-| `funding_source`     | `Portfolio`                                                                                                          |
-| `amount_cents`       | `2025-26` column × 1,000 (published `$'000`) × 100, safe integer; `nfp`, blank, negative or invalid rows are skipped |
-| `fiscal_year`        | literal `"2025-26"`                                                                                                  |
-| `source_url`         | the data.gov.au resource page URL                                                                                    |
-| `source_date`        | resource `last_modified` / release date (`2025-03-26`)                                                               |
-| `function_code`      | COFOG-A division only where the portfolio has one defensible functional area (see below)                             |
-| `data_quality_flag`  | `statewide_only` when a COFOG division is mapped; `provisional` when it is not                                       |
-| `location`           | `{ state: "Commonwealth" }` only; PBS is not geographically tagged                                                   |
-| `natural_key`        | `4f025f38-...:<stable row hash>`; exact duplicate rows add an occurrence suffix                                      |
-| `verified`           | `false`                                                                                                              |
-| `notes`              | expense/appropriation/source table, the `$'000` unit rule, the CSV download URL and the caveat                       |
+| Target field         | Source / rule                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source_id`          | literal `"data-gov-au-pbs"`                                                                                                                     |
+| `source_dataset`     | the year's title, e.g. `"2025-26 Portfolio Budget Statements (data.gov.au)"` or `"2022-23 Portfolio Budget Statements (data.gov.au, October)"`  |
+| `measure_type`       | literal `"budget"`                                                                                                                              |
+| `jurisdiction_level` | literal `"federal"`; `jurisdiction` literal `"Commonwealth"`                                                                                    |
+| `project_name`       | `Program` (whitespace/NBSP-normalised)                                                                                                          |
+| `description`        | `Outcome`                                                                                                                                       |
+| `delivery_entity`    | `Department/Agency`                                                                                                                             |
+| `funding_source`     | `Portfolio`                                                                                                                                     |
+| `amount_cents`       | that year's amount column (see table above) × 1,000 (published `$'000`) × 100, safe integer; `nfp`, blank, negative or invalid rows are skipped |
+| `fiscal_year`        | the year's own label (`"2020-21"` … `"2025-26"`)                                                                                                |
+| `source_url`         | the data.gov.au resource page URL                                                                                                               |
+| `source_date`        | resource `last_modified` / release date                                                                                                         |
+| `function_code`      | COFOG-A division only where the portfolio has one defensible functional area (see below)                                                        |
+| `data_quality_flag`  | `statewide_only` when a COFOG division is mapped; `provisional` when it is not                                                                  |
+| `location`           | `{ state: "Commonwealth" }` only; PBS is not geographically tagged                                                                              |
+| `natural_key`        | that year's dataset id + `:` + stable row hash; exact duplicate rows add an occurrence suffix                                                   |
+| `verified`           | `false`                                                                                                                                         |
+| `notes`              | expense/appropriation/source table, the year's `$'000` amount column, the CSV download URL and the caveat                                       |
 
 **Units.** The CSV has bare integers and no unit column. The referenced PBS program tables publish
 `$'000`, so the raw value is thousands of dollars: `2,500` → `$2,500,000` → `250,000,000` cents.
-The mapping is documented in every record's `notes`; other amount columns (`2024-25`, `2026-27`,
-etc.) are ignored and not comparable across years in this ingestion.
+The mapping is documented in every record's `notes`; only the budget-year column is ingested. Other
+amount columns (`2024-25`, `2026-27`, etc.) are ignored and are not comparable across years in this
+ingestion.
 
 **COFOG mapping is conservative.** Only portfolios with a single defensible functional area are
 mapped (for example Health and Aged Care → `07`, Defence → `02`, Education → `09`, Social Services
@@ -177,10 +208,13 @@ never an LGA, SA2 or coordinate.
 
 ### PBS natural key and idempotency
 
-`natural_key = dataset_id + SHA-256 of the canonical source row` (field names sorted; whitespace
-normalised). Exact duplicate source rows in the published file get a stable `-1`, `-2`, … occurrence
-suffix so they are not silently collapsed and re-runs stay byte-identical. The runner upserts on
-`natural_key`, so re-running the PBS connector updates the same documents and never duplicates.
+`natural_key = dataset_id + ':' + SHA-256 of the canonical source row` (field names sorted;
+whitespace normalised). Using the year's own dataset id keeps FY2020-21..FY2025-26 rows distinct and
+leaves the existing FY2025-26 keys unchanged, because that dataset id and its underscore header
+spelling are preserved. Exact duplicate source rows in the published file get a stable `-1`, `-2`, …
+occurrence suffix so they are not silently collapsed and re-runs stay byte-identical. The runner
+upserts on `natural_key`, so re-running the PBS connector updates the same documents and never
+duplicates. A single run fetches all six years; re-running it is idempotent across the whole range.
 
 ### PBS caveat in the app
 
@@ -191,10 +225,12 @@ not a federal total. The coverage API exposes `federal_ingestion.pbs_caveat` and
 
 ### PBS tests and live smoke
 
-`server/test/data-gov-au-pbs.test.ts` covers CKAN resource selection, chunked Windows-1252 parsing,
+`server/test/data-gov-au-pbs.test.ts` covers the six-year package set, per-year resource selection
+(including wrapped/renamed resources and the March/October rule), both header spellings and the
+leading blank rows, per-year amount columns and fiscal-year identity, chunked Windows-1252 parsing,
 mapping/row hash/idempotency, unmappable COFOG → provisional, integer amounts, `nfp`/negative skips,
-duplicate occurrence keys and the connector fetch/transform. The opt-in live smoke runs the real
-CKAN call and CSV stream:
+duplicate occurrence keys and the multi-year connector fetch/transform (including a one-year gap).
+The opt-in live smoke runs the real CKAN calls and all six CSV streams:
 
 ```bash
 PBS_LIVE_TEST=1 npx vitest run server/test/data-gov-au-pbs.test.ts
@@ -211,6 +247,48 @@ npm run ingest:federal
 The runner writes `ingestion_logs`, updates `data_sources` (`active`/`degraded`,
 `last_ingested_at`, `records_ingested`, `errors`) and continues with the next source on failure.
 A PBS failure marks the source `degraded` and logs an `error`; it never aborts the run.
+
+### PBS historical backfill result (2026-11-18)
+
+Run against `ausspend_dev` after the connector/tests were green:
+
+```bash
+INGEST_SOURCES=data-gov-au-pbs \
+MONGO_URL=mongodb://<host>:27017/ausspend_dev \
+npm run ingest:federal
+# [ingest] data-gov-au-pbs: success fetched=10671 upserted=10480
+```
+
+The single PBS run fetched and upserted all six complete years (no year was skipped or zero-filled):
+
+| Fiscal year   | Rows       |
+| ------------- | ---------- |
+| 2020-21       | 1,786      |
+| 2021-22       | 1,788      |
+| 2022-23       | 2,053      |
+| 2023-24       | 1,772      |
+| 2024-25       | 1,850      |
+| 2025-26       | 1,231      |
+| **PBS total** | **10,480** |
+
+Before/after checks:
+
+- `data-gov-au-pbs`: **1,231 → 10,480** rows. The 1,231 existing FY2025-26 rows were preserved, not
+  duplicated, because their natural keys were unchanged (the 2025-26 dataset id and header spelling
+  are preserved). The pre-run sample keys
+  `4f025f38-…:09c9f0ecfb523156bbd62709399b45ad` and `4f025f38-…:80f1267440a0b58b787da9f877889589`
+  still resolve to exactly one row each.
+- Whole database: **989,095 → 998,349** measures; distinct non-null `natural_key` values **998,349**;
+  **0** duplicate natural-key groups; **0** invalid or negative/ fractional `amount_cents`.
+- FY2022-23 rows use only the October dataset (`72594fbc-…`); the March dataset prefix
+  `4c514578…` matches **0** rows.
+- Non-PBS sources: the pre-run total was 987,864. It was 987,869 after the run, and the difference
+  is the concurrently-created `qld-energy-queensland` source (5 rows, written by a different
+  ingestion run at 23:54:41Z/23:55:18Z that this item did not invoke). Every other non-PBS source
+  count is unchanged: this run selected `connectors=1` and logged only `data-gov-au-pbs`, and
+  ingestion is upsert-only (no deletes), so the whole 987,864 baseline remains.
+
+No raw PBS CSV is committed; the connector streams each CSV from data.gov.au.
 
 ## GrantConnect — manual, chunked and cap-safe import (no scraper)
 
@@ -760,8 +838,9 @@ after  total=989095 aus-tender=375497 distinct_natural_keys=989095 duplicate_gro
 
 The historical backfill has now run, but any future re-run must still take a fresh verified
 snapshot first. The pre-backfill baseline was 810 synthetic seed measures plus 861 AusTender
-contract measures (plus 1,231 PBS rows); after the 2026-11-18 FY2020-21..FY2023-24 backfill the
-current baseline is 989,095 measures. The gate below
+contract measures (plus the original 1,231 PBS rows); after the 2026-11-18
+FY2020-21..FY2023-24 AusTender backfill (375,497 contracts) and the FY2020-21..FY2025-26 PBS
+backfill (10,480 budget rows) the current baseline is 998,349 measures. The gate below
 refuses to fetch anything without a recent verified backup.
 
 ### Take and restore a verified backup
