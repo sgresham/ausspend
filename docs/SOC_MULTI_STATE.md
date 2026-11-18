@@ -1,10 +1,13 @@
 # Multi-state SOC inventory — VIC, QLD, WA, SA, TAS, ACT and NT
 
-**Status: planning and research only. No ingestion, no extraction, no schema/API/DB writes, no
-state connector, and no cross-state totals.** All checks below are read-only page/API probes made on
-**2026-11-17** from the item worktree. The app database was **not** written to; it stays at
-**515,449 measures and 105 NSW SOC rows**. The older brief figure of **515,413 is stale** and is not
-used here. No 3001/5173 or production nginx change was made.
+**Status: inventory plus one implemented QLD pilot (Energy Queensland). No other state connector,
+no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
+were read-only page/API probes made on **2026-11-17**. The QLD pilot added on **2026-11-19** is an
+entity-level adapter in the existing SOC framework; it does not create a QLD total and is never
+added to government spending, the PNFC benchmark or another SOC. The local app database was **not**
+written to by this documentation work; the documented baseline is **515,449 measures and 105 NSW
+SOC rows**. The older brief figure of **515,413 is stale** and is not used here. No 3001/5173 or
+production nginx change was made.
 
 This document inventories the _entity-level_ state-owned commercial sector in the seven
 jurisdictions the owner asked about. It deliberately does **not** call every regime "NSW SOC".
@@ -72,7 +75,7 @@ Counts below are the counts of the _named lists at the cited source_, not an est
 
 | State   | Legal/reporting class                                                                                   | Official list found                                                                                                                      | Entities named at source                                                                                 | Latest annual reports                                                        | Entity-level extraction                                                          | Proposed rank |
 | ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------- |
-| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | GOC reports published; not individually verified                             | **High** — one current list, large entities, audited annual reports              | **1**         |
+| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland 2025-26 verified (pilot)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
 | **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified                            | **High for the 12**; medium for tranche 2                                        | **2**         |
 | **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                          | Entity reports published; URLs not individually verified                     | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
 | **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                          | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
@@ -633,6 +636,38 @@ metadata/hashes and quote with attribution.
 4. Do not include government business divisions. Do not add any other entity until its constituting
    Act is verified.
 
+## QLD pilot — Energy Queensland Limited (implemented 2026-11-19)
+
+The first read-only SOC pilot is **Energy Queensland Limited only**, a Queensland Government Owned
+Corporation. It is not a QLD total; no other GOC, statutory body or state is added.
+
+- **Source id / entity:** `qld-energy-queensland` / Energy Queensland.
+- **Report:** Energy Queensland Limited Annual Report 2025-26, for the year ended 30 June 2026.
+- **Discovery page:** <https://www.energyq.com.au/about-us/corporate-reports>. It returns HTTP 403
+  with `cf-mitigated: challenge` to a plain curl fetch from the ingestion host. The official
+  Queensland Parliament tabled-paper copy is the documented fallback:
+  <https://www.parliament.qld.gov.au/Work-of-the-Assembly/Tabled-Papers/docs/5826T1808/5826t1808.pdf>
+  (HTTP 200, `application/pdf`, 2,150,680 bytes, 128 pages).
+- **Archive:** exact PDF archived outside the repo; SHA-256
+  `f0a0286eb6edc7f6473daf071bed880dcfea72150e0ad203410066df0fc50721`.
+- **Unit:** `$m` — the consolidated statement prints **"In millions of dollars"**. No OCR and no
+  unit guess.
+- **Rows:** five entity-level SOC statement lines from the consolidated statement of profit or loss:
+  total revenue **6,698**; total expenses **6,800**; employee expenses **1,354**;
+  depreciation, amortisation and impairments **1,325**; net result **a loss of 67** (`$m`).
+- **Reconciliation (zero tolerance):** the nine printed expense lines sum to **6,800**, which equals
+  the Directors' report printed total expenses; `6,698 − 6,800 = (102)` equals the printed loss
+  before income tax equivalent benefit; `(102) + 35 = (67)` equals the printed loss after income tax
+  equivalent benefit. The statement has no printed Total expenses subtotal, so the derived total is
+  accepted only because both the Directors' report total and the profit bridges agree.
+- **Implementation:** `server/src/connectors/soc/qld/energy-queensland.ts`, registered in the SOC
+  source list, `/api/soc` and the SOC page. Tests:
+  `server/test/qld-energy-queensland.test.ts`.
+- **Caveat:** entity-level only. Never add Energy Queensland to government program spending, the
+  PNFC sector benchmark, another QLD GOC, a QLD total, a national total, or another SOC line. The
+  consolidated parent is the reporting boundary; subsidiaries are not added separately. Rows are
+  provisional and unverified.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -805,9 +840,8 @@ that the page will be stable.
 
 ## Recommended next action
 
-The owner should choose **one state** and **one entity** for a read-only pilot. The recommended first
-pilot is **QLD, Energy Queensland Limited** (or CS Energy), using the existing PDF foundation and the
-NSW SOC reconciliation discipline. No state connector should be built until the owner confirms the
-state, the legal class, the entity list and the reporting unit. For a lower-risk first step, a single
-entity's face statement (total revenue, total expenses, employee expenses, depreciation/amortisation,
-net result) is enough to prove the approach without creating a cross-entity or cross-state total.
+The QLD Energy Queensland pilot described above is now implemented and verified against the
+2025-26 audited annual report. It remains a single-entity, read-only proof: do not add another QLD
+GOC, a QLD total or another state until the owner confirms the legal class, the entity list and the
+intended use. The next entity would need its own unit read and reconciliation; its rows must never
+be summed with Energy Queensland or with government spending.

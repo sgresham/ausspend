@@ -27,6 +27,7 @@ import { createNswTrainlinkConnector } from './soc/nsw/nsw-trainlink.js';
 import { createSydneyWaterConnector } from './soc/nsw/sydney-water.js';
 import { createTaheConnector } from './soc/nsw/tahe.js';
 import { createWaterNswConnector } from './soc/nsw/waternsw.js';
+import { createEnergyQueenslandConnector } from './soc/qld/energy-queensland.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -522,6 +523,13 @@ export const CONNECTORS: readonly Connector[] = [
   // Never added to government program spending, the PNFC benchmark, or any
   // other SOC. Other SOCs are not implemented.
   createNswTrainlinkConnector(),
+  // QLD SOC pilot: first non-NSW entity — Energy Queensland Limited, a
+  // Queensland GOC. The official corporate site is Cloudflare-gated, so the
+  // verified Queensland Parliament tabled-paper copy is the documented
+  // fallback. Entity-level statement lines only; never added to government
+  // program spending, the PNFC benchmark, another QLD GOC, a QLD total, or
+  // any other SOC.
+  createEnergyQueenslandConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending

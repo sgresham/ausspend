@@ -23,6 +23,19 @@ import {
   ESSENTIAL_ENERGY_UNIT,
   ESSENTIAL_ENERGY_UNIT_LABEL,
   ESSENTIAL_ENERGY_UNIT_TO_CENTS,
+  ENERGY_QUEENSLAND_CAVEAT,
+  ENERGY_QUEENSLAND_ENTITY,
+  ENERGY_QUEENSLAND_ID,
+  ENERGY_QUEENSLAND_JURISDICTION,
+  ENERGY_QUEENSLAND_LEGAL_CLASS,
+  ENERGY_QUEENSLAND_LICENSE,
+  ENERGY_QUEENSLAND_NAME,
+  ENERGY_QUEENSLAND_PARLIAMENT_FALLBACK_URL,
+  ENERGY_QUEENSLAND_PUBLISHER,
+  ENERGY_QUEENSLAND_SOURCE_URL,
+  ENERGY_QUEENSLAND_UNIT,
+  ENERGY_QUEENSLAND_UNIT_LABEL,
+  ENERGY_QUEENSLAND_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -175,6 +188,7 @@ export const SOC_SOURCE_IDS = [
   TAHE_ID,
   SYDNEY_TRAINS_ID,
   NSW_TRAINLINK_ID,
+  ENERGY_QUEENSLAND_ID,
 ] as const;
 
 /**
@@ -555,6 +569,42 @@ async function writeNswTrainlinkManifest(): Promise<void> {
   );
 }
 
+async function writeEnergyQueenslandManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: ENERGY_QUEENSLAND_ID });
+  const manifestPath = path.resolve(
+    process.env.ENERGY_QUEENSLAND_MANIFEST ??
+      'docs/source-archive/qld-energy-queensland-annual-report.json',
+  );
+  const manifest = {
+    entity: ENERGY_QUEENSLAND_ENTITY,
+    legal_class: ENERGY_QUEENSLAND_LEGAL_CLASS,
+    jurisdiction: ENERGY_QUEENSLAND_JURISDICTION,
+    dataset: ENERGY_QUEENSLAND_NAME,
+    publisher: ENERGY_QUEENSLAND_PUBLISHER,
+    discovery_page: ENERGY_QUEENSLAND_SOURCE_URL,
+    fallback_page: ENERGY_QUEENSLAND_PARLIAMENT_FALLBACK_URL,
+    license: ENERGY_QUEENSLAND_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${ENERGY_QUEENSLAND_UNIT_LABEL} (${ENERGY_QUEENSLAND_UNIT}; x${ENERGY_QUEENSLAND_UNIT_TO_CENTS} cents per unit)`,
+    caveat: ENERGY_QUEENSLAND_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC pilot: Energy Queensland Limited only. Discovery first tries Energy Queensland's official corporate-reports page; that site returns a Cloudflare HTML challenge (HTTP 403) from the ingestion host, so the verified Queensland Parliament tabled-paper copy is the documented fallback. The consolidated statement of profit or loss prints an explicit $m unit. The statement has no printed Total expenses subtotal, so total expenses is the exact sum of the printed expense lines and is accepted only when it equals the Directors' report printed total and the printed loss-before-tax and net-result bridges reconcile exactly. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Energy Queensland rows to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -602,6 +652,7 @@ async function main(): Promise<void> {
     await writeTaheManifest();
     await writeSydneyTrainsManifest();
     await writeNswTrainlinkManifest();
+    await writeEnergyQueenslandManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -825,8 +876,35 @@ async function main(): Promise<void> {
         `[ingest:soc] ${NSW_TRAINLINK_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
+    const eqRows = await MeasureModel.countDocuments({ source_id: ENERGY_QUEENSLAND_ID });
+    const eqVerified = await MeasureModel.countDocuments({
+      source_id: ENERGY_QUEENSLAND_ID,
+      verified: true,
+    });
+    const eqDoubleCount = await MeasureModel.countDocuments({
+      source_id: ENERGY_QUEENSLAND_ID,
+      potential_double_count: true,
+    });
+    const eqByLine = await MeasureModel.aggregate([
+      { $match: { source_id: ENERGY_QUEENSLAND_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const eqDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: ENERGY_QUEENSLAND_ID,
+      status: 'deferred',
+    });
+    const eqArchived = await listArchivedRecords({ source_id: ENERGY_QUEENSLAND_ID });
     console.log(
-      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW SOC adapters intentionally not implemented)`,
+      `[ingest:soc] ${ENERGY_QUEENSLAND_ID} rows=${eqRows} source_documents=${eqArchived.length} verified=${eqVerified} potential_double_count=${eqDoubleCount} deferred_documents=${eqDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of eqByLine) {
+      console.log(
+        `[ingest:soc] ${ENERGY_QUEENSLAND_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    console.log(
+      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
     );
 
     const failed = result.results.filter((entry) => entry.log_status === 'error').length;
