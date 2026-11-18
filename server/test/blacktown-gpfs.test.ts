@@ -32,6 +32,8 @@ const COMPREHENSIVE_TEXT = `Blacktown City Council and its subsidiary | Consolid
 
 const FUNCTIONS_TEXT = `§Note/Subtotal§ §TocItem§ §TocItem§ §Subnote§  Income, expenses and assets have been directly attributed to the following functions or activities. Details of those functions or activities are provided in Note B1-2.  Income   Expenses   Operating result   Grants and contributions   Carrying amount of assets 2025   2024   2025   2024   2025   2024   2025   2024   2025   2024  $ '000   $ '000   $ '000   $ '000   $ '000   $ '000   $ '000   $ '000   $ '000   $ '000  Functions or activities  A vibrant and inclusive community   38,717   33,445   61,020   58,174   (22,303)   (24,729)   9,569   9,534   159,994   269,791 A clean, sustainable and healthy environment   95,384   93,128   167,347   135,904   (71,963)   (42,776)   2,280   5,073   726,010   633,203 A smart and prosperous economy   6,671   5,744   14,087   13,384   (7,416)   (7,640)   445   217   52,146   39,566 A growing city supported by accessible infrastructure   23,391   20,816   55,243   61,398   (31,852)   (40,582)   8,942   5,787   4,824,105   4,457,774 A sporting and active city   42,691   24,331   43,789   41,985   (1,098)   (17,654)   21,903   5,944   372,973   394,125 A leading city   555,583   521,018   174,484   181,758   381,099   339,260   246,712   217,261   2,785,127   2,539,070  Total functions and activities   762,437   698,482   515,970   492,603   246,467   205,879   289,851   243,816   8,920,355   8,333,529  B   Financial Performance  B1   Functions or activities  B1-1   Functions or activities – income, expenses and assets Page 15 of 98 Blacktown City Council and its subsidiary | Notes to the Financial Statements 30 June 2025`;
 
+const SPECIAL_TEXT = `Blacktown City Council and its subsidiary | Report on infrastructure assets as at 30 June 2025 $ '000 Actual maintenance Required maintenance Buildings 12,853 12,853 29,100 28,900 539,983 717,880 Land Improvements & Parks 6,012 6,012 37,927 36,277 244,517 385,760 Sealed roads 118,000 118,000 21,398 20,472 1,639,729 2,697,268 Unsealed roads 94 94 1,070 1,068 1,593 2,584 Bridges 833 833 302 81 127,440 158,864 Footpaths 5,010 5,010 3,927 3,967 246,417 345,157 Carpark 850 850 198 1 47,154 60,692 Other road assets 852 852 60 2 98,327 139,871 Stormwater drainage & water supply network 8,895 8,895 4,473 3,816 1,216,407 1,640,936 Swimming pools 8,933 8,933 1,055 1,005 12,857 26,595 Total – all assets 162,332 162,332 99,510 95,589 4,174,426 6,175,607 Page 7 of 8`;
+
 function pdfPage(text: string, pageNumber: number): PdfPage {
   return { page_number: pageNumber, text, items: [] };
 }
@@ -45,6 +47,7 @@ function extraction(
       pdfPage(overrides.income ?? INCOME_TEXT, 8),
       pdfPage(overrides.comprehensive ?? COMPREHENSIVE_TEXT, 9),
       pdfPage(overrides.functions ?? FUNCTIONS_TEXT, 17),
+      pdfPage(SPECIAL_TEXT, 125),
     ],
     text: '',
     tables: [],
@@ -131,7 +134,7 @@ describe('Blacktown GPFS unit guard', () => {
 describe('Blacktown GPFS exact reconciliation', () => {
   it('reads the minimum lines and reconciles exactly to the printed totals', () => {
     const parsed = parsedFixture();
-    expect(parsed.records).toHaveLength(17);
+    expect(parsed.records).toHaveLength(33);
     expect(parsed.reconciliation).not.toBeNull();
     const reconciliation = parsed.reconciliation!;
     expect(reconciliation.unit).toBe('thousands');
@@ -172,6 +175,74 @@ describe('Blacktown GPFS exact reconciliation', () => {
     expect(
       records.some((record) => record.gpfs_line_item === 'net_result_before_capital_grants'),
     ).toBe(false);
+  });
+
+  it('emits the six B1-1 function expense rows and reconciles them to the printed total', () => {
+    const { records, reconciliation } = parsedFixture();
+    const functions = records.filter((record) =>
+      record.gpfs_line_item?.startsWith('b1_1_function_expenses_'),
+    );
+    expect(functions).toHaveLength(6);
+    expect(functions.reduce((sum, record) => sum + record.amount_cents, 0)).toBe(51_597_000_000);
+    expect(functions.every((record) => record.function_code === undefined)).toBe(true);
+    expect(functions.every((record) => record.gpfs_component_of === 'b1_1_total_expenses')).toBe(
+      true,
+    );
+    expect(functions.map((record) => record.gpfs_line_label)).toEqual([
+      'A vibrant and inclusive community — expenses',
+      'A clean, sustainable and healthy environment — expenses',
+      'A smart and prosperous economy — expenses',
+      'A growing city supported by accessible infrastructure — expenses',
+      'A sporting and active city — expenses',
+      'A leading city — expenses',
+    ]);
+    expect(reconciliation?.functions).toHaveLength(6);
+    expect(reconciliation?.functions_carrying_amount).toBe(8_920_355);
+  });
+
+  it('emits the ten special-schedule actual-maintenance rows and reconciles the total', () => {
+    const { records, reconciliation } = parsedFixture();
+    const schedule = records.filter((record) =>
+      record.gpfs_line_item?.startsWith('special_schedule_actual_maintenance_'),
+    );
+    expect(schedule).toHaveLength(10);
+    expect(schedule.reduce((sum, record) => sum + record.amount_cents, 0)).toBe(9_558_900_000);
+    expect(
+      schedule.every((record) => record.gpfs_component_of === 'actual_asset_maintenance_total'),
+    ).toBe(true);
+    expect(schedule[0]?.gpfs_statement).toBe('Special Schedule — Report on infrastructure assets');
+    expect(reconciliation?.special_schedule_page).toBe(125);
+    expect(reconciliation?.special_schedule_actual_maintenance_total).toBe(95_589);
+  });
+
+  it('keeps the original 17 GPFS rows byte-identical in key and amount', () => {
+    const { records } = parsedFixture();
+    const existing: Array<[string, number]> = [
+      ['rates_and_annual_charges', 312_869],
+      ['user_charges_and_fees', 51_413],
+      ['other_revenues', 30_945],
+      ['government_grants_operating', 28_952],
+      ['government_grants_capital', 260_899],
+      ['interest_and_investment_income', 47_102],
+      ['other_income', 26_262],
+      ['net_gain_from_disposal_of_assets', 3_995],
+      ['total_revenue', 762_437],
+      ['employee_expenses', 195_736],
+      ['materials_and_services', 187_276],
+      ['borrowing_costs', 1_259],
+      ['other_expenses', 16_794],
+      ['total_expenses_excluding_depreciation', 401_065],
+      ['depreciation_amortisation_impairment', 114_905],
+      ['total_expenses', 515_970],
+      ['net_result', 246_467],
+    ];
+    for (const [key, millions] of existing) {
+      const record = recordByLine(records, key);
+      expect(record.natural_key).toBe(
+        blacktownGpfsNaturalKey(CONTEXT.document.url, key, BLACKTOWN_GPFS_FISCAL_YEAR),
+      );
+      expect(record.amount_cents).toBe(millions * 100_000);
+    }
   });
 
   it('maps provenance and keeps every row non-additive with no region/LGA allocation', () => {
@@ -242,6 +313,25 @@ describe('Blacktown GPFS exact reconciliation', () => {
     // Every output row is agency detail, so neither the API nor an area panel can
     // add it to any other council or state row.
     expect(records.every((record) => record.aggregation_role === 'agency_detail')).toBe(true);
+  });
+
+  it('keeps the function cut and the nature cut as separate non-additive cuts', () => {
+    const { records } = parsedFixture();
+    const total = recordByLine(records, 'total_expenses');
+    const functionCut = records.filter(
+      (record) => record.gpfs_component_of === 'b1_1_total_expenses',
+    );
+    const natureCut = records.filter((record) => record.gpfs_component_of === 'total_expenses');
+    expect(functionCut).toHaveLength(6);
+    expect(natureCut).toHaveLength(2);
+    expect(functionCut.reduce((sum, record) => sum + record.amount_cents, 0)).toBe(
+      total.amount_cents,
+    );
+    expect(natureCut.reduce((sum, record) => sum + record.amount_cents, 0)).toBe(
+      total.amount_cents,
+    );
+    // The two cuts overlap the same total; only the total itself is a total row.
+    expect(records.filter((record) => record.gpfs_line_item === 'total_expenses')).toHaveLength(1);
   });
 
   it('rejects the whole extraction when the printed B1-1 expense total disagrees', () => {
@@ -369,8 +459,8 @@ describe('Blacktown GPFS ingestion is additive-only and idempotent', () => {
     expect(await MeasureModel.countDocuments({ source_id: 'aus-tender' })).toBe(1);
     expect(await MeasureModel.countDocuments({ source_id: 'grantconnect' })).toBe(1);
     expect(await MeasureModel.countDocuments({ source_id: 'city-of-sydney-gpfs' })).toBe(1);
-    expect(await MeasureModel.countDocuments({ source_id: BLACKTOWN_GPFS_ID })).toBe(17);
-    expect(await MeasureModel.countDocuments({})).toBe(20);
+    expect(await MeasureModel.countDocuments({ source_id: BLACKTOWN_GPFS_ID })).toBe(33);
+    expect(await MeasureModel.countDocuments({})).toBe(36);
 
     const existing = await MeasureModel.find({ source_id: { $in: ['aus-tender', 'grantconnect'] } })
       .sort({ natural_key: 1 })
@@ -384,8 +474,8 @@ describe('Blacktown GPFS ingestion is additive-only and idempotent', () => {
     await runIngestion({ connectors: [connector] });
     expect(await MeasureModel.countDocuments({ source_id: 'aus-tender' })).toBe(1);
     expect(await MeasureModel.countDocuments({ source_id: 'grantconnect' })).toBe(1);
-    expect(await MeasureModel.countDocuments({ source_id: BLACKTOWN_GPFS_ID })).toBe(17);
-    expect(await MeasureModel.countDocuments({})).toBe(20);
+    expect(await MeasureModel.countDocuments({ source_id: BLACKTOWN_GPFS_ID })).toBe(33);
+    expect(await MeasureModel.countDocuments({})).toBe(36);
 
     expect(
       await MeasureModel.countDocuments({
@@ -408,6 +498,6 @@ describe('Blacktown GPFS ingestion is additive-only and idempotent', () => {
 
     const source = await DataSourceModel.findOne({ source_id: BLACKTOWN_GPFS_ID }).lean();
     expect(source?.status).toBe('active');
-    expect(source?.records_ingested).toBe(17);
+    expect(source?.records_ingested).toBe(33);
   });
 });

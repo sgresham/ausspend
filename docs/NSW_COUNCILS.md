@@ -710,6 +710,32 @@ still **18**; `data-nsw-ckan` still **3,472**; `data_sources` 28 → **29**. A s
 upserted the same 17 natural keys and left the DB total unchanged (idempotent). No deletes or
 updates to any other source.
 
+**Depth pilot (2026-11-18).** The original **17** rows remain byte-identical
+(same natural keys and amounts). The pilot adds **16** rows, bringing the source to **33**:
+
+- **6 B1-1 function expense rows.** The six printed "Functions or activities" are council-specific
+  strategic directions, **not COFOG**; no `function_code` is set. Each row is an expense component
+  of the printed B1-1 total under `gpfs_component_of: "b1_1_total_expenses"` (a separate function
+  cut, never added to the income-statement nature cut). The six expenses sum exactly to
+  `$515,970` thousand; income, operating result, grants and carrying amount are reconciled to their
+  printed totals (`$762,437` / `$246,467` / `$289,851` / `$8,920,355`) but not emitted as spending.
+- **10 Special Schedule actual-maintenance rows.** Page 125 "Report on infrastructure assets as at
+  30 June 2025" prints required and actual maintenance by asset class. Only the **actual**
+  maintenance is emitted (10 asset classes, total `$95,589` thousand), each
+  `gpfs_component_of: "actual_asset_maintenance_total"` and `gpfs_statement: "Special Schedule —
+Report on infrastructure assets"`. Required maintenance (`$99,510`) and the asset-condition
+  ratios/backlog/renewals indicators are reconciliation evidence only, not additional spending.
+- **Canonical URL.** The existing 17 rows use the archived `/v/1/...pdf.pdf` URL. The live page now
+  links a `/v/3/...pdf` copy with identical SHA-256/bytes; using it would re-key the 17 rows and
+  duplicate them. The connector now preserves the existing canonical URL. The first live run did
+  create 33 duplicate `/v/3/` rows; those pilot-created duplicates were removed and the 16 new rows
+  re-ingested under the canonical URL. No pre-existing row was deleted and the original 17 are
+  unchanged.
+- **Database evidence.** `measures` **693,059 → 693,075** (exactly +16); `blacktown-gpfs`
+  **17 → 33**; all other sources **693,042 → 693,042** (delta 0). Re-running is idempotent on the
+  33 natural keys. No cross-statement or cross-council sums; all rows remain non-additive
+  `agency_detail`.
+
 ### 7.4 Fourth council — City of Parramatta FY2024-25 GPFS (landed 2026-11-17)
 
 **Source.** Discovered from the official financial-statements page
