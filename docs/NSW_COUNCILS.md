@@ -802,6 +802,59 @@ FY2024-25 **18**, FY2025-26 **19**; `data_sources` still **83** (`records_ingest
 `dubbo-council-gpfs`; every other source is unchanged. A second ingest run fetched/upserted the same
 89 natural keys and left the DB total at **693,409** (idempotent).
 
+#### 7.1.5 FY2020-21 historical variant (landed 2026-11-18)
+
+**Scope.** Add Dubbo Regional Council's audited **FY2020-21** GPFS as actual rows under the existing
+source id `dubbo-council-gpfs`, preserving FY2021-22 (18), FY2022-23 (17), FY2023-24 (17),
+FY2024-25 (18) and FY2025-26 (19). No older historical year and no other council is ingested here.
+
+**Source.** The reviewed D2 packet (`docs/source-discovery/dubbo-regional.md` §10) records the
+document
+<https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Annual%20Financial%20Statements%20-2020-2021%20(3).pdf.aspx>
+and SHA-256 `69a7b9cb99774a63b845bdb85950265a870246ce0c1f82a3929c2642244aab9b`. The connector
+re-discovers it from the reporting page (no hard-coded PDF URL) and archives the exact bytes outside
+the repo at
+`~/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2020-21.pdf`: **2,637,455
+bytes**, SHA-256 matching the packet exactly. The D2 archive copy at
+`~/ausspend-source-archive/dubbo-regional/2020-21/gpfs-2020-21.pdf` has the same hash. The printed
+unit is explicit `$'000` on the income statement (PDF p.4) and B1-1 (PDF p.14).
+
+**Layout variant.** FY2020-21 uses inline face rows with one printed
+`Total expenses from continuing operations` line (149,630) and no "excluding depreciation"
+subtotal. It prints the revised labels `Other revenue`, `Net gains from the disposal of assets`,
+`Materials and services`, `Depreciation, amortisation and impairment for non-financial assets` and
+`Net losses from the disposal of assets`; the disposal gain is a printed 3,446 revenue component and
+the disposal loss is printed as a dash for the current year. B1-1 income (186,942) and operating
+result (37,312) are both **188 higher** than the face (186,754 / 37,124). That variance is
+**unexplained**: the parser reconciles to the face statement, records the B1-1 variance, and never
+forces equality, adjusts a component or invents an anchor. No OLG anchor exists for FY2020-21.
+
+| Check                                                                                                                                |                                                                      Printed / derived | Result                                |
+| ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------: | ------------------------------------- |
+| Revenue components sum (rates + user charges + other revenue + operating + capital grants + interest + other income + disposal gain) | `66,845 + 39,776 + 2,628 + 22,054 + 48,265 + 3,703 + 37 + 3,446` = `$186,754` thousand | = printed total income                |
+| Expense components sum (employee + materials + borrowing + depreciation + other + nil disposal loss)                                 |                   `44,932 + 53,696 + 3,095 + 45,551 + 2,356 + 0` = `$149,630` thousand | = printed total expenses              |
+| Total revenue − total expenses                                                                                                       |                                                                    `186,754 − 149,630` | = `$37,124` net result                |
+| B1-1 Total functions and activities                                                                                                  |             income `$186,942`; expenses `$149,630`; result `$37,312`; grants `$70,319` | face retained; income/result **+188** |
+| External anchor                                                                                                                      |                                                             none defined for FY2020-21 | not invented                          |
+
+The printed `(11,141)` net result before capital grants equals `37,124 − 48,265` capital grants and
+is stored as a non-negative magnitude with `gpfs_printed_sign: "negative"`.
+
+**Rows.** **18** rows for FY2020-21: 8 revenue components (including the 3,446 disposal gain) + total
+revenue, 5 expense components + depreciation + the printed-nil disposal loss + total expenses, and
+net result + net result before capital grants. Each row has `fiscal_year: "2020-21"`,
+`source_dataset: "Dubbo Regional Council GPFS 2020-21"`, `measure_type: "actual"`,
+`aggregation_role: "agency_detail"`, no `region_id`/`location`, and a year-scoped natural key. The
+89 earlier rows are unchanged, so the source holds **107** distinct year-scoped rows; no row and no
+API total spans years.
+
+**Database evidence (2026-11-18).** `measures` 693,409 → **693,427** (exactly **+18**);
+`dubbo-council-gpfs` 89 → **107** with FY2020-21 **18**, FY2021-22 **18**, FY2022-23 **17**,
+FY2023-24 **17**, FY2024-25 **18**, FY2025-26 **19**; `data_sources` still **83**
+(`records_ingested` for this source 89 → 107); `dubbo-council` still **245**. The only source whose
+measure count changed is `dubbo-council-gpfs`; every other source is unchanged. A second ingest run
+fetched/upserted the same 107 natural keys and left the DB total at **693,427** (idempotent).
+
 ### 7.2 Second council — City of Sydney FY2024-25 GPFS (landed 2026-11-17)
 
 **Source.** Discovered from the official annual-report page

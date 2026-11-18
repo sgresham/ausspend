@@ -386,6 +386,78 @@ function parsedFixture202122() {
   return parseDubboGpfsExtraction(extraction202122(), CONTEXT_2021_22);
 }
 
+const FY2020_21_INCOME_TEXT = [
+  'Dubbo Regional Council | Income Statement | For the year ended 30 June 2021',
+  "§Statement§ Original unaudited budget Actual Actual 2021 $ '000 Notes 2021 2020",
+  'Income from continuing operations',
+  '67,144 Rates and annual charges B2-1 66,845 64,587',
+  '48,256 User charges and fees B2-2 39,776 42,455',
+  '2,140 Other revenue B2-3 2,628 1,986',
+  '21,370 Grants and contributions provided for operating purposes B2-4 22,054 21,858',
+  '14,945 Grants and contributions provided for capital purposes B2-4 48,265 33,077',
+  '3,174 Interest and investment income B2-5 3,703 5,716',
+  '– Other income B2-6 37 149',
+  '500 Net gains from the disposal of assets B4-1 3,446 –',
+  '157,529 Total income from continuing operations 186,754 169,828',
+  'Expenses from continuing operations',
+  '44,867 Employee benefits and on-costs B3-1 44,932 45,200',
+  '51,791 Materials and services B3-2 53,696 49,018',
+  '3,465 Borrowing costs B3-3 3,095 3,691',
+  '35,396 Depreciation, amortisation and impairment for non-financial assets B3-4 45,551 42,261',
+  '2,543 Other expenses B3-5 2,356 2,421',
+  '– Net losses from the disposal of assets B4-1 – 2,493',
+  '138,062 Total expenses from continuing operations 149,630 145,084',
+  '19,467 Operating result from continuing operations 37,124 24,744',
+  '19,467 Net operating result for the year attributable to Council 37,124 24,744',
+  '4,522 Net operating result for the year before grants and contributions provided for capital purposes (11,141) (8,333)',
+  'The above Income Statement should be read in conjunction with the accompanying notes.',
+  'Dubbo Regional Council Income Statement for the year ended 30 June 2021 Page 4 of 80',
+].join(' ');
+
+const FY2020_21_FUNCTIONS_TEXT = [
+  'B Financial Performance B1 Functions or activities',
+  'B1-1 Functions or activities – income, expenses and assets',
+  "$ '000 2021 2020 2021 2020 2021 2020 2021 2020 2021 2020",
+  'Functions or activities Governance 25 5 604 477 (579) (472) – – – –',
+  'Total functions and activities 186,942 169,828 149,630 145,084 37,312 24,744 70,319 54,935 2,715,495 2,632,382',
+  'Page 14 of 80 Dubbo Regional Council | Notes to the Financial Statements 30 June 2021',
+].join(' ');
+
+function extraction202021(overrides: { income?: string; functions?: string } = {}): PdfExtraction {
+  return {
+    source: { sha256: '1'.repeat(64), bytes: 1 },
+    pages: [
+      pdfPage(overrides.income ?? FY2020_21_INCOME_TEXT, 4),
+      pdfPage(overrides.functions ?? FY2020_21_FUNCTIONS_TEXT, 14),
+    ],
+    text: '',
+    tables: [],
+    warnings: [],
+  };
+}
+
+const CONTEXT_2020_21: DubboGpfsParseContext = {
+  document: {
+    id: 'gpfs-2020-21',
+    title: '2020/2021 Dubbo Regional Council Financial Statements',
+    url: 'https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Annual%20Financial%20Statements%20-2020-2021%20(3).pdf.aspx',
+    fiscal_year: '2020-21',
+  },
+  archive: {
+    local_path:
+      '/tmp/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2020-21.pdf',
+    sha256: '69a7b9cb99774a63b845bdb85950265a870246ce0c1f82a3929c2642244aab9b',
+    bytes: 2_637_455,
+    fetched_at: '2026-11-18T00:00:00.000Z',
+  },
+  sourceDate: '2026-11-18',
+  reporting_url: DUBBO_GPFS_REPORTING_URL,
+};
+
+function parsedFixture202021() {
+  return parseDubboGpfsExtraction(extraction202021(), CONTEXT_2020_21);
+}
+
 function parsedFixture() {
   return parseDubboGpfsExtraction(extraction(), CONTEXT);
 }
@@ -670,15 +742,16 @@ describe('Dubbo GPFS ingestion is additive-only and idempotent', () => {
 });
 
 describe('Dubbo GPFS supported-year guard', () => {
-  it('supports FY2025-26..FY2021-22 and not older historical years', () => {
+  it('supports FY2025-26..FY2020-21 and not older historical years', () => {
     expect([...DUBBO_GPFS_SUPPORTED_FISCAL_YEARS]).toEqual([
       '2025-26',
       '2024-25',
       '2023-24',
       '2022-23',
       '2021-22',
+      '2020-21',
     ]);
-    expect(DUBBO_GPFS_SUPPORTED_FISCAL_YEARS).not.toContain('2020-21');
+    expect(DUBBO_GPFS_SUPPORTED_FISCAL_YEARS).not.toContain('2019-20');
     expect(DUBBO_GPFS_SUPPORTED_FISCAL_YEARS).not.toContain('2016-17');
   });
 });
@@ -1470,5 +1543,263 @@ describe('Dubbo GPFS five-year ingestion adds only FY2021-22 rows', () => {
     const source = await DataSourceModel.findOne({ source_id: DUBBO_GPFS_ID }).lean();
     expect(source?.status).toBe('active');
     expect(source?.records_ingested).toBe(89);
+  });
+});
+
+describe('Dubbo GPFS FY2020-21 historical variant', () => {
+  it('reconciles the FY2020-21 face statement exactly to the packet anchors', () => {
+    const parsed = parsedFixture202021();
+    expect(parsed.records).toHaveLength(18);
+    expect(parsed.reconciliation).not.toBeNull();
+    const reconciliation = parsed.reconciliation!;
+    expect(reconciliation.fiscal_year).toBe('2020-21');
+    expect(reconciliation.unit).toBe('thousands');
+    expect(reconciliation.income_statement_page).toBe(4);
+    expect(reconciliation.functions_page).toBe(14);
+    expect(reconciliation.total_revenue).toBe(186_754);
+    expect(reconciliation.total_expenses).toBe(149_630);
+    expect(reconciliation.net_result).toBe(37_124);
+    expect(reconciliation.employee_expenses).toBe(44_932);
+    expect(reconciliation.depreciation_amortisation_impairment).toBe(45_551);
+    expect(reconciliation.government_grants_operating).toBe(22_054);
+    expect(reconciliation.government_grants_capital).toBe(48_265);
+    expect(reconciliation.functions_grants_and_contributions).toBe(70_319);
+    expect(reconciliation.net_result_before_capital_grants).toBe(-11_141);
+    expect(reconciliation.printed_total_expenses_excluding_depreciation).toBeNull();
+    expect(reconciliation.revenue_components_sum).toBe(186_754);
+    expect(reconciliation.expense_components_sum).toBe(149_630);
+    expect(reconciliation.face_expense_bridge).toBe(149_630);
+    expect(reconciliation.functions_total_expenses).toBe(149_630);
+    expect(reconciliation.olg_expenses_cents).toBeNull();
+    expect(reconciliation.olg_revenue_cents).toBeNull();
+    expect(reconciliation.checks).toContain('no external OLG anchor is defined for FY2020-21');
+  });
+
+  it('records the B1-1 +188 income/result variance as unexplained and never forces equality', () => {
+    const reconciliation = parsedFixture202021().reconciliation!;
+    // B1-1 prints income 186,942 and result 37,312; the face prints 186,754 and 37,124.
+    expect(reconciliation.functions_total_income).toBe(186_942);
+    expect(reconciliation.functions_operating_result).toBe(37_312);
+    expect(reconciliation.functions_total_income - reconciliation.total_revenue).toBe(188);
+    expect(reconciliation.functions_operating_result - reconciliation.net_result).toBe(188);
+    expect(reconciliation.b1_income_variance).toBe(188);
+    expect(reconciliation.b1_expenses_variance).toBe(0);
+    expect(reconciliation.b1_operating_result_variance).toBe(188);
+    expect(reconciliation.b1_variance_note).toMatch(/188/);
+    expect(reconciliation.b1_variance_note).toMatch(/unexplained/);
+    expect(reconciliation.checks).toContain(
+      'B1-1 income and operating result are $188 thousand above the face statement; variance recorded as unexplained and face totals retained',
+    );
+
+    // The face components/totals are kept exactly: nothing is spread across a component.
+    const { records } = parsedFixture202021();
+    expect(recordByLine(records, 'total_revenue').amount_cents).toBe(18_675_400_000);
+    const revenueComponents = records.filter(
+      (record) => record.gpfs_component_of === 'total_revenue',
+    );
+    expect(revenueComponents).toHaveLength(8);
+    expect(revenueComponents.reduce((sum, record) => sum + record.amount_cents, 0)).toBe(
+      18_675_400_000,
+    );
+    expect(recordByLine(records, 'total_expenses').amount_cents).toBe(14_963_000_000);
+  });
+
+  it('stores the 3,446 disposal gain, the printed-nil disposal loss and the negative before-capital result', () => {
+    const { records } = parsedFixture202021();
+    const gain = recordByLine(records, 'net_gain_from_disposal_of_assets');
+    expect(gain.amount_cents).toBe(344_600_000);
+    expect(gain.notes).not.toContain('printed_nil');
+
+    const losses = recordByLine(records, 'net_loss_from_disposal_of_assets');
+    expect(losses.amount_cents).toBe(0);
+    expect(losses.notes).toContain('printed_nil: true');
+
+    const beforeCapital = recordByLine(records, 'net_result_before_capital_grants');
+    expect(beforeCapital.amount_cents).toBe(1_114_100_000);
+    expect(beforeCapital.gpfs_printed_sign).toBe('negative');
+  });
+
+  it('maps FY2020-21 provenance with year-scoped source dataset and natural keys', () => {
+    const { records } = parsedFixture202021();
+    for (const record of records) {
+      expect(record).toMatchObject({
+        source_id: DUBBO_GPFS_ID,
+        measure_type: 'actual',
+        fiscal_year: '2020-21',
+        jurisdiction_level: 'local',
+        jurisdiction: 'NSW',
+        delivery_entity: 'Dubbo Regional Council',
+        source_dataset: 'Dubbo Regional Council GPFS 2020-21',
+        data_quality_flag: 'provisional/local_government',
+        aggregation_role: 'agency_detail',
+        verified: false,
+        source_url: CONTEXT_2020_21.document.url,
+      });
+      expect(record.gpfs_unit).toBe('AUD_thousands');
+      expect(record.region_id).toBeUndefined();
+      expect(record.location).toBeUndefined();
+      expect(record.natural_key).toMatch(/^dubbo-council-gpfs:/);
+    }
+    expect(recordByLine(records, 'total_revenue').natural_key).toBe(
+      dubboGpfsNaturalKey(CONTEXT_2020_21.document.url, 'total_revenue', '2020-21'),
+    );
+  });
+
+  it('never mixes or sums FY2020-21 with the five newer years', () => {
+    const fy2021 = parsedFixture202021().records;
+    const combined = [
+      ...fy2021,
+      ...parsedFixture202122().records,
+      ...parsedFixture202223().records,
+      ...parsedFixture202324().records,
+      ...parsedFixture().records,
+      ...parsedFixture202526().records,
+    ];
+    expect(combined).toHaveLength(107);
+    expect(fy2021).toHaveLength(18);
+    expect(new Set(combined.map((record) => record.natural_key)).size).toBe(107);
+    expect(combined.filter((record) => record.fiscal_year === '2020-21')).toHaveLength(18);
+    expect(combined.filter((record) => record.fiscal_year === '2021-22')).toHaveLength(18);
+    expect(combined.filter((record) => record.fiscal_year === '2022-23')).toHaveLength(17);
+    expect(combined.filter((record) => record.fiscal_year === '2023-24')).toHaveLength(17);
+    expect(combined.filter((record) => record.fiscal_year === '2024-25')).toHaveLength(18);
+    expect(combined.filter((record) => record.fiscal_year === '2025-26')).toHaveLength(19);
+    const revenueTotals = combined
+      .filter((record) => record.gpfs_line_item === 'total_revenue')
+      .map((record) => record.amount_cents)
+      .sort((a, b) => a - b);
+    expect(revenueTotals).toEqual([
+      18_675_400_000, 19_266_600_000, 21_089_600_000, 21_364_000_000, 22_635_800_000,
+      23_492_700_000,
+    ]);
+    // No row is the six-year sum ($1,265,241 thousand = 126,524,100,000 cents).
+    expect(combined.some((record) => record.amount_cents === 126_524_100_000)).toBe(false);
+  });
+
+  it('leaves the five newer Dubbo years unchanged', () => {
+    expect(parsedFixture202122().records).toHaveLength(18);
+    expect(parsedFixture202223().records).toHaveLength(17);
+    expect(parsedFixture202324().records).toHaveLength(17);
+    expect(parsedFixture().records).toHaveLength(18);
+    expect(parsedFixture202526().records).toHaveLength(19);
+    expect(parsedFixture202122().records.every((r) => r.fiscal_year === '2021-22')).toBe(true);
+    expect(parsedFixture202223().records.every((r) => r.fiscal_year === '2022-23')).toBe(true);
+    expect(parsedFixture202324().records.every((r) => r.fiscal_year === '2023-24')).toBe(true);
+    expect(parsedFixture().records.every((r) => r.fiscal_year === '2024-25')).toBe(true);
+    expect(parsedFixture202526().records.every((r) => r.fiscal_year === '2025-26')).toBe(true);
+  });
+
+  it('rejects the whole FY2020-21 extraction when the B1-1 +188 variance is not reproduced', () => {
+    // Income one dollar higher again: variance would be +189, not the declared +188.
+    const broken = FY2020_21_FUNCTIONS_TEXT.replace(
+      '186,942 169,828 149,630 145,084 37,312',
+      '186,943 169,828 149,630 145,084 37,312',
+    );
+    const parsed = parseDubboGpfsExtraction(
+      extraction202021({ functions: broken }),
+      CONTEXT_2020_21,
+    );
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
+  });
+
+  it('rejects the whole FY2020-21 extraction when the face total disagrees', () => {
+    const broken = FY2020_21_INCOME_TEXT.replace('149,630 145,084', '149,631 145,084');
+    const parsed = parseDubboGpfsExtraction(extraction202021({ income: broken }), CONTEXT_2020_21);
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
+  });
+});
+
+describe('Dubbo GPFS six-year ingestion adds only FY2020-21 rows', () => {
+  beforeAll(async () => {
+    await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
+    await mongoose.connection.dropDatabase();
+    await MeasureModel.insertMany([
+      {
+        amount_cents: 123_456,
+        measure_type: 'budget',
+        fiscal_year: '2026-27',
+        source_id: 'dubbo-council',
+        source_url: 'https://www.dubbo.nsw.gov.au/example.pdf',
+        verified: false,
+        natural_key: 'existing-dubbo-1',
+        project_name: 'Existing budget row 1',
+      },
+      {
+        amount_cents: 654_321,
+        measure_type: 'estimate',
+        fiscal_year: '2025-26',
+        source_id: 'dubbo-council',
+        source_url: 'https://www.dubbo.nsw.gov.au/example.pdf',
+        verified: false,
+        natural_key: 'existing-dubbo-2',
+        project_name: 'Existing budget row 2',
+      },
+    ]);
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  });
+
+  it('adds 18 FY2020-21 rows and preserves the 89 earlier rows and every other source', async () => {
+    const records = [
+      ...parsedFixture202021().records,
+      ...parsedFixture202122().records,
+      ...parsedFixture202223().records,
+      ...parsedFixture202324().records,
+      ...parsedFixture().records,
+      ...parsedFixture202526().records,
+    ];
+    const connector = fakeConnector(records);
+
+    await runIngestion({ connectors: [connector] });
+    expect(await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID })).toBe(107);
+    expect(
+      await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID, fiscal_year: '2020-21' }),
+    ).toBe(18);
+    expect(
+      await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID, fiscal_year: '2021-22' }),
+    ).toBe(18);
+    expect(
+      await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID, fiscal_year: '2022-23' }),
+    ).toBe(17);
+    expect(
+      await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID, fiscal_year: '2023-24' }),
+    ).toBe(17);
+    expect(
+      await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID, fiscal_year: '2024-25' }),
+    ).toBe(18);
+    expect(
+      await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID, fiscal_year: '2025-26' }),
+    ).toBe(19);
+    expect(await MeasureModel.countDocuments({ source_id: 'dubbo-council' })).toBe(2);
+    expect(await MeasureModel.countDocuments({})).toBe(109);
+
+    await runIngestion({ connectors: [connector] });
+    expect(await MeasureModel.countDocuments({ source_id: DUBBO_GPFS_ID })).toBe(107);
+    expect(await MeasureModel.countDocuments({ source_id: 'dubbo-council' })).toBe(2);
+    expect(await MeasureModel.countDocuments({})).toBe(109);
+
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: DUBBO_GPFS_ID,
+        aggregation_role: { $ne: 'agency_detail' },
+      }),
+    ).toBe(0);
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: DUBBO_GPFS_ID,
+        $or: [{ region_id: { $exists: true } }, { location: { $exists: true } }],
+      }),
+    ).toBe(0);
+
+    const source = await DataSourceModel.findOne({ source_id: DUBBO_GPFS_ID }).lean();
+    expect(source?.status).toBe('active');
+    expect(source?.records_ingested).toBe(107);
   });
 });
