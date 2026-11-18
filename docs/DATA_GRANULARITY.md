@@ -551,8 +551,8 @@ types. The no-sum rules are listed in §4.
 
 - **In DB:** 20 additive COFOG-A general-government expense rows (10 functions × 2 budget years
   2025-26 and 2026-27) plus 8 non-additive Department of Treasury and Finance statement rows. Units
-  are `$m`, confirmed from the workbook; Transport is stored as `045` and flagged as a provisional
-  mapping that must not be rolled into `04`.
+  are `$m`, confirmed from the workbook; Transport maps by human decision to shared subdivision
+  `045` and must not be rolled into `04`.
 - **Available at source:** the DataVic CKAN datasets
   `state-budget-2026-27-aggregate-financial-statements`
   (`https://discover.data.vic.gov.au/dataset/state-budget-2026-27-aggregate-financial-statements`)
@@ -571,8 +571,8 @@ types. The no-sum rules are listed in §4.
   actual/revised columns as separate measure types after deciding how to present them; never sum them
   with budget columns.
 - **Licence / ambiguity:** CC BY 4.0; attribution “© State of Victoria (Department of Treasury and
-  Finance), 2026”. Transport mapping is unconfirmed and must remain flagged. **Priority P4** (see
-  Priority list).
+  Finance), 2026”. Transport maps by human decision to shared subdivision `045` and must never be
+  rolled into `04`. **Priority P4** (see Priority list).
 
 #### `qld-budget` — 1,051 rows
 
@@ -824,7 +824,7 @@ read from a workbook/PDF header, a CSV data dictionary or an explicit column/cel
 | `dubbo-council`                              | © Dubbo Regional Council; public-interest research              | Income lines are stored as measures; separate income from spending before any total.                                             |
 | `dubbo-council-gpfs`                         | © Dubbo Regional Council; public-interest research              | Audited GPFS line items only; non-additive agency detail; no region/LGA; never summed with the 245 budget/summary rows.          |
 | `city-of-sydney-gpfs`                        | © City of Sydney; public-interest research                      | Audited GPFS line items only; non-additive agency detail; no region/LGA; never summed with any other council or state rows.      |
-| `vic-budget`                                 | CC BY 4.0                                                       | Transport `045` mapping unconfirmed; do not roll into `04`. Only one department ingested.                                        |
+| `vic-budget`                                 | CC BY 4.0                                                       | Transport maps to `045` by human decision (not a child of `04`); never roll into `04`. Only one department ingested.             |
 | `qld-budget`                                 | CC BY 4.0                                                       | Project SA4 text can be multi-valued and is not an LGA. BP4 overlaps BP3.                                                        |
 | `qld-qgip`                                   | CC BY 4.0                                                       | Recipient details may be privacy-aggregated; program names change across years.                                                  |
 | `acnc-charity`                               | CC BY 3.0 Australia                                             | Charity expenses are not government spending; location is approximate program location.                                          |
