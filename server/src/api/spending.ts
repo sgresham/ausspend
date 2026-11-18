@@ -216,6 +216,15 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.sa_unit ? { sa_unit: measure.sa_unit } : {}),
     ...(measure.sa_printed_sign ? { sa_printed_sign: measure.sa_printed_sign } : {}),
     ...(measure.sa_year_basis ? { sa_year_basis: measure.sa_year_basis } : {}),
+    ...(measure.act_dataset_id ? { act_dataset_id: measure.act_dataset_id } : {}),
+    ...(measure.act_project_classification
+      ? { act_project_classification: measure.act_project_classification }
+      : {}),
+    ...(measure.act_project_type ? { act_project_type: measure.act_project_type } : {}),
+    ...(measure.act_wellbeing_domain ? { act_wellbeing_domain: measure.act_wellbeing_domain } : {}),
+    ...(measure.act_region ? { act_region: measure.act_region } : {}),
+    ...(measure.act_unit ? { act_unit: measure.act_unit } : {}),
+    ...(measure.act_printed_sign ? { act_printed_sign: measure.act_printed_sign } : {}),
     ...(measure.performance_value !== undefined
       ? { performance_value: measure.performance_value }
       : {}),

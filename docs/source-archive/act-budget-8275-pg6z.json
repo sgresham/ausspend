@@ -1,0 +1,51 @@
+{
+  "dataset": "Budget 2021-2022 Infrastructure Investment Program",
+  "dataset_id": "8275-pg6z",
+  "source_url": "https://www.data.act.gov.au/d/Budget-2021-2022-Infrastructure-Investment-Program/8275-pg6z",
+  "resource_url": "https://www.data.act.gov.au/resource/8275-pg6z.json",
+  "metadata_url": "https://www.data.act.gov.au/api/views/8275-pg6z.json",
+  "source_date": "2021-02-09",
+  "license": "Creative Commons Attribution 3.0 Australia",
+  "attribution": "ACT Government — Budget 2021-2022 Infrastructure Investment Program, licensed CC BY 3.0 Australia.",
+  "caveat": "ACT Government budgeted capital-works financing, by project and fiscal year. Budget measure type, not actual expenditure; the project-level printed Total Budgeted Financing is used only for reconciliation and is never emitted. Statewide/territory-wide only; no LGA/postcode allocation. No cross-source total and no summing of the total column with its year components.",
+  "unit": "AUD_thousands",
+  "unit_label": "$'000",
+  "measure_type": "budget",
+  "jurisdiction": "ACT",
+  "jurisdiction_level": "territory",
+  "year_columns": [
+    {
+      "field": "_2021_2022_budgeted_financing",
+      "fiscal_year": "2021-22",
+      "header": "2021-2022 Budgeted Financing ($'000)"
+    },
+    {
+      "field": "_2022_2023_budgeted_financing",
+      "fiscal_year": "2022-23",
+      "header": "2022-2023 Budgeted Financing ($'000)"
+    },
+    {
+      "field": "_2023_2024_budgeted_financing",
+      "fiscal_year": "2023-24",
+      "header": "2023-2024 Budgeted Financing ($'000)"
+    },
+    {
+      "field": "_2024_2025_budgeted_financing",
+      "fiscal_year": "2024-25",
+      "header": "2024-2025 Budgeted Financing ($'000)"
+    },
+    {
+      "field": "_2025_2026_budgeted_financing",
+      "fiscal_year": "2025-26",
+      "header": "2025-2026 Budgeted Financing ($'000)"
+    }
+  ],
+  "pages": 1,
+  "rows_fetched": 424,
+  "rows_emitted": 2120,
+  "reconciled_projects": 424,
+  "reconciliation_mismatches": 0,
+  "sha256": "3c56f70422dadcac11dee10429f0c44bdbe87caba684a86689214e650c907529",
+  "bytes": 286895,
+  "notes": "Derived budget rows only; the JSON Socrata extract is not redistributed. One row per project x fiscal year; the printed Total Budgeted Financing column is used only for reconciliation and is never emitted. No cross-source total."
+}

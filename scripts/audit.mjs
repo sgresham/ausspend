@@ -62,6 +62,7 @@ const KNOWN_SOURCE_IDS = [
   'vic-lgprf',
   'aihw-health-expenditure',
   'sa-budget-gfs',
+  'act-budget',
   'qld-budget',
   'qld-qgip',
   'acnc-charity',
