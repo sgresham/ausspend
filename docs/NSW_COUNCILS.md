@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Forty-two council GPFS sources have landed
+**Status:** the inventory and plan below are unchanged. Forty-three council GPFS sources have landed
 as separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -48,9 +48,7 @@ GPFS (**§7.33**) then added exactly **18** `mosman-gpfs` rows (**693,113** → 
 concurrent Lane Cove rows later took the live total to **693,148**. On the shared dev DB (after
 concurrent rows reached **693,177**), Hawkesbury City Council FY2024-25 GPFS (**§7.34**) then added
 exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**). Woollahra Municipal Council FY2024-25 GPFS (**§7.35**) was ingested against the earlier shared-dev snapshot: it added exactly **29** `woollahra-gpfs` rows (**693,148** → **693,177**), and the concurrent Hawkesbury landing later took the live total to **693,196**.
-Blue Mountains City Council FY2024-25 GPFS (**§7.36**) also landed as a connector; its 23 rows are in the shared DB, and the live total **693,237** also includes the concurrent Wollondilly Shire Council FY2024-25 GPFS ingest (**§7.37**, 18 `wollondilly-gpfs` rows). At Camden claim time the shared dev DB held **693,259** measures; Camden Council FY2024-25 GPFS (**§7.38**) then added exactly **23** `camden-gpfs` rows (**693,259** → **693,282**), with every other per-source count unchanged; a second ingest was a no-op. The next claim-time snapshot for Central Coast Council FY2024-25 GPFS (**§7.40**) was **693,282** (already including Campbelltown City Council FY2024-25 GPFS, §7.39, 22 `campbelltown-gpfs` rows); Central Coast then added exactly **17** `central-coast-gpfs` rows (**693,282** → **693,299**), with every other per-source count unchanged and a no-op second ingest.
-Blue Mountains City Council FY2024-25 GPFS (**§7.36**) also landed as a connector; its 23 rows are in the shared DB, and the live total **693,237** also includes the concurrent Wollondilly Shire Council FY2024-25 GPFS ingest (**§7.37**, 18 `wollondilly-gpfs` rows). At Camden claim time the shared dev DB held **693,259** measures; Camden Council FY2024-25 GPFS (**§7.38**) then added exactly **23** `camden-gpfs` rows (**693,259** → **693,282**), with every other per-source count unchanged; a second ingest was a no-op.
-At Hornsby claim time the shared dev DB held **693,316** measures and **763** GPFS rows across **41** sources; Hornsby Shire Council FY2025-26 GPFS (**§7.41**) then added exactly **22** `hornsby-gpfs` rows (**693,316** → **693,338**) and **763** → **785** GPFS rows across **42** sources, with every other per-source count unchanged; a second ingest was a no-op.
+Blue Mountains City Council FY2024-25 GPFS (**§7.36**) also landed as a connector; its 23 rows are in the shared DB, and the live total **693,237** also includes the concurrent Wollondilly Shire Council FY2024-25 GPFS ingest (**§7.37**, 18 `wollondilly-gpfs` rows). At Camden claim time the shared dev DB held **693,259** measures; Camden Council FY2024-25 GPFS (**§7.38**) then added exactly **23** `camden-gpfs` rows (**693,259** → **693,282**), with every other per-source count unchanged; a second ingest was a no-op. The next claim-time snapshot for Central Coast Council FY2024-25 GPFS (**§7.40**) was **693,282** (already including Campbelltown City Council FY2024-25 GPFS, §7.39, 22 `campbelltown-gpfs` rows); Central Coast then added exactly **17** `central-coast-gpfs` rows (**693,282** → **693,299**), with every other per-source count unchanged and a no-op second ingest. The claim-time snapshot for Penrith City Council FY2024-25 GPFS (**§7.42**) was **693,299** with **746** GPFS rows across **41** sources; a concurrent unrelated council added 39 rows before the pre-ingest snapshot (**693,338**), after which Penrith added exactly **17** `penrith-gpfs` rows (**693,338** → **693,355**, GPFS **802** across **43** sources), with every other per-source count unchanged and a no-op second ingest.
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -3955,6 +3953,94 @@ aggregate (after a concurrent `penrith-gpfs` ingest of 17 rows) is **693,355 tot
 across 43 sources**, with `hornsby-gpfs` still exactly **22**; the later change is entirely the
 concurrent Penrith landing, not this source.
 
+### 7.42 Forty-second council — Penrith City Council FY2024-25 GPFS (landed 2026-11-18)
+
+> Section numbering note: the §7.41 slot is reserved for the pending Hornsby Shire Council
+> connector; this Penrith section uses §7.42 so the two land independently without renumbering.
+> All prior sections are preserved unchanged.
+
+**Source.** Discovered from Penrith City Council's official Organisational Performance page
+<https://www.penrithcity.nsw.gov.au/resources-documents/documents/organisational-performance>, which
+links the standalone audited statements PDF
+<https://www.penrithcity.nsw.gov.au/images/documents/resources-documents/documents/2025_financial_statements_audited.pdf>.
+The connector parses the page's own "2024-25 Financial Statements" link (no hard-coded document URL)
+and SHA-256 re-verifies the exact bytes. The page and PDF answer a plain HTTP client with HTTP 200;
+no browser challenge or browser fallback is involved.
+
+The 122-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p6
+(printed page 4), Statement of Comprehensive Income p7 (printed page 5), B1-1 "Functions or
+activities" p15 (printed page 13) and note B3-4 depreciation p30 (printed page 28) — plus the
+independent auditor's reports on the general purpose financial statements (PDF p89) and the special
+purpose statements for the declared business activity. The printed unit is explicit `$ '000` on the
+Income Statement, Statement of Comprehensive Income, B1-1 and note B3-4; a missing or conflicting unit
+rejects the whole extraction. The Income Statement prints the Original unaudited budget column before
+each line label, so the FY2024-25 actual is the first printed amount after the label (then the
+restated FY2023-24).
+
+Exact bytes archived outside the repo at
+`/home/steve/ausspend-source-archive/penrith-gpfs/penrith-city-council-financial-statements-2024-25.pdf`:
+**4,155,530 bytes**, SHA-256
+`eefb5f3f3f09d53cb6b674a2238016c91edf58f04fd53068f4d8629c55ac42f1` (`hash_verified: true`). The
+archive also holds the `.meta.json` sidecar and the `records/` metadata.
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                                               | Printed / derived                                                                                                  | Result                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                                          | `$390,526` thousand                                                                                                | = `$390,526,000`                                 |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income + net gain on disposal) | `$212,763` + `$50,566` + `$5,852` + `$26,250` + `$62,032` + `$15,322` + `$13,775` + `$3,966` = `$390,526` thousand | = printed total                                  |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses)                                                          | `$148,610` + `$101,751` + `$1,077` + `$16,645` = `$268,083` thousand                                               | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$71,376`)                                                  | `$268,083` + `$71,376` = `$339,459` thousand                                                                       | = printed face-statement total expenses          |
+| Operating result from continuing operations                                                                                                         | `$390,526` − `$339,459` = `$51,067` thousand                                                                       | = printed operating result                       |
+| Net operating result for the year attributable to Council                                                                                           | `$51,067` thousand                                                                                                 | = printed net result (no discontinued operation) |
+| Net operating result before capital grants                                                                                                          | `$51,067` − `$62,032` = `−$10,965` thousand                                                                        | = printed before-capital deficit (evidence only) |
+| B1-1 Total functions or activities — income                                                                                                         | `$390,526` thousand                                                                                                | = face statement                                 |
+| B1-1 Total functions or activities — expenses                                                                                                       | `$339,459` thousand                                                                                                | = face statement                                 |
+| B1-1 Total functions or activities — operating result                                                                                               | `$51,067` thousand                                                                                                 | = face statement                                 |
+| B1-1 grants and contributions                                                                                                                       | `$88,282` thousand                                                                                                 | = operating `$26,250` + capital `$62,032`        |
+| Statement of Comprehensive Income total (`$51,067` + `$626,846` other comprehensive income)                                                         | `$677,913` thousand                                                                                                | = printed total comprehensive income             |
+| Note B3-4 "Total depreciation and amortisation costs"                                                                                               | `$71,376` thousand                                                                                                 | = face depreciation/amortisation/impairment line |
+
+Total expenses is the printed face-statement bridge: the printed expenses-excluding-depreciation line
+(`$268,083` thousand) plus the printed depreciation/amortisation/impairment line (`$71,376`
+thousand), i.e. `$339,459` thousand, which equals printed total income (`$390,526` thousand) less the
+printed operating result (`$51,067` thousand). It is **not** a sum of the nature components on its
+own. Unlike Central Coast (§7.40), Penrith's audited B1-1 "Total functions or activities from
+continuing operations" row prints the same expense total (`$339,459` thousand) and operating result
+(`$51,067` thousand), so there is no function-allocation discrepancy; B1-1 is a second cut of the same
+total and is not added to the nature rows. There is no discontinued operation in FY2024-25, so the
+continuing operating result and the net result repeated at the top of the Statement of Comprehensive
+Income are the same printed figure. The printed before-capital deficit (`−$10,965` thousand) is
+reconciliation evidence only and is not emitted.
+
+**Rows.** 17 rows, source id `penrith-gpfs`, `source_dataset` "Penrith City Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Penrith City Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. The minimum lines are total revenue
+`$390,526,000`, total expenses `$339,459,000`, employee expenses `$148,610,000`,
+depreciation/amortisation/impairment `$71,376,000`, operating government grants `$26,250,000`,
+capital government grants `$62,032,000`, borrowing costs `$1,077,000`, net gain on disposal of assets
+`$3,966,000`, net result `$51,067,000` and rates and annual charges `$212,763,000`; the printed
+face-statement revenue and expense components are included for provenance.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government program
+data; they are not added to expenditure. The pre-existing same-entity rows are preserved untouched and
+never summed.
+
+**Database evidence (2026-11-18, shared dev DB).** Fresh aggregate at claim time: total measures
+**693,299**, of which **746** GPFS rows across **41** sources and **0** `penrith-gpfs` rows. A
+concurrent unrelated council source landed 39 rows before the immediate pre-ingest snapshot
+(**693,338**); the per-source diff around this ingest is therefore measured against that snapshot.
+After ingesting only this source: total **693,355** (+17), GPFS **802** across **43** sources (+17 and
++1 source), `penrith-gpfs` **17**; the per-source diff changed **only** `penrith-gpfs` (0 → 17), no
+source count decreased and no rows were deleted. A second ingest run upserts the same 17 SHA-anchored
+natural keys and leaves the total at **693,355** (idempotent). `data_sources` records `penrith-gpfs`
+as `active` with `records_ingested: 17`. Targeted connector tests passed (13/13).
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -4015,7 +4101,7 @@ concurrent Penrith landing, not this source.
    **Thirty-eighth expansion landed 2026-11-18:** Camden Council FY2024-25 GPFS, 23 non-additive
    rows (§7.38). **Thirty-ninth expansion landed 2026-11-18:** Campbelltown City Council FY2024-25
    GPFS, 22 non-additive rows (§7.39). **Fortieth expansion landed 2026-11-18:** Central Coast
-   Council FY2024-25 GPFS, 17 non-additive rows (§7.40). **Forty-first expansion landed 2026-11-18:** Hornsby Shire Council FY2025-26 GPFS, 22 non-additive rows (§7.41).
+   Council FY2024-25 GPFS, 17 non-additive rows (§7.40). **Forty-first expansion landed 2026-11-18:** Hornsby Shire Council FY2025-26 GPFS, 22 non-additive rows (§7.41). **Forty-second expansion landed 2026-11-18:** Penrith City Council FY2024-25 GPFS, 17 non-additive rows (§7.42).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -4407,6 +4493,6 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.40 GPFS sources: forty councils, one audited year each,
-non-additive rows with no region/LGA allocation, and the existing budget/estimate and
+The only ingestions are the §7.1–§7.40 and §7.42 GPFS sources: forty-two councils, one audited year
+each, non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
