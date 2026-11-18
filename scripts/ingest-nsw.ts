@@ -12,7 +12,9 @@ import {
   WAVERLEY_GPFS_ID,
   WILLOUGHBY_GPFS_ID,
   WOLLONGONG_GPFS_ID,
+  HORNSBY_GPFS_ID,
   createCoffsHarbourGpfsConnector,
+  createHornsbyGpfsConnector,
   createLakeMacquarieGpfsConnector,
   createLiverpoolGpfsConnector,
   createKuRingGaiGpfsConnector,
@@ -29,6 +31,7 @@ import {
 } from '../server/src/connectors/index.js';
 import type { Connector } from '../server/src/connectors/types.js';
 import { fetchCoffsHarbourGpfsViaBrowser } from './coffs-harbour-gpfs-browser.js';
+import { fetchHornsbyGpfsViaBrowser } from '../server/src/connectors/hornsby-gpfs/browser.js';
 import { fetchLakeMacquarieGpfsViaBrowser } from './lake-macquarie-gpfs-browser.js';
 import { fetchLiverpoolGpfsViaBrowser } from './liverpool-gpfs-browser.js';
 import { fetchKuRingGaiGpfsViaBrowser } from './ku-ring-gai-gpfs-browser.js';
@@ -86,6 +89,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - mosman-gpfs  GPFS expansion: Mosman Council's audited FY2024-25 GPFS
  *   - wollondilly-gpfs  GPFS expansion: Wollondilly Shire Council's audited FY2024-25 GPFS
  *   - camden-gpfs  GPFS expansion: Camden Council's audited FY2024-25 GPFS
+ *   - hornsby-gpfs  GPFS expansion: Hornsby Shire Council's audited FY2025-26 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -146,6 +150,7 @@ export const NSW_SOURCE_IDS = [
   'camden-gpfs',
   'campbelltown-gpfs',
   'central-coast-gpfs',
+  'hornsby-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -164,6 +169,22 @@ async function main(): Promise<void> {
   const sourceIds = requested ? [requested] : [...NSW_SOURCE_IDS];
   const connectors: Connector[] = [];
   for (const id of sourceIds) {
+    if (id === HORNSBY_GPFS_ID) {
+      // Hornsby's Financial Statements page and file endpoints return HTTP 403
+      // to plain HTTP clients. The documented headless Chromium path loads the
+      // page, the connector still discovers the FY2025-26 link from the cleared
+      // HTML and re-verifies the exact bytes.
+      console.log('[ingest:nsw] hornsby-gpfs: browser discovery/download starting');
+      const fetched = await fetchHornsbyGpfsViaBrowser();
+      console.log(`[ingest:nsw] hornsby-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createHornsbyGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
     if (id === WOLLONGONG_GPFS_ID) {
       // Wollongong's site enforces a Cloudflare managed challenge that returns
       // HTTP 403 to non-browser clients; the documented headless Chromium path
