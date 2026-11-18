@@ -736,6 +736,16 @@ Report on infrastructure assets"`. Required maintenance (`$99,510`) and the asse
   33 natural keys. No cross-statement or cross-council sums; all rows remain non-additive
   `agency_detail`.
 
+**Burwood Council — DEFERRED (Phase 6.9 council item, 2026-11-18).** The official
+Burwood site and sitemap list only Annual Report 2023-24, Annual Report 2024-25 and State of Our
+City 2021-24. No separate audited General Purpose Financial Statements/financial-statements PDF is
+published; candidate financial-statement URLs return 404. The 2024-25 annual-report PDF (38 pages,
+SHA-256 `66a268845ccf33cea9567c878ce3aa65f69aead32970a7ff122fb55d6bec176b`) contains only a
+“Financial performance” summary, not audited GPFS, and that summary's revenue components sum to
+78,855 versus the printed 78,885 (30 short), while 78,885 − 65,236 does not equal its printed
+operating result 13,619. No rows were invented or ingested; the DB stayed at 693,075. See
+`BURWOOD_GPFS_DEFERRED.md`.
+
 ### 7.4 Fourth council — City of Parramatta FY2024-25 GPFS (landed 2026-11-17)
 
 **Source.** Discovered from the official financial-statements page
