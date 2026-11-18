@@ -8,6 +8,21 @@ only** (no council financial data; Parse host no longer resolves), so SA local f
 deferred. NT has a **three-council GPFS pilot** (`nt-lg-pilot`: Darwin, Palmerston, Alice Springs)
 only; it is not statewide NT coverage.
 
+## Final coverage and boundary summary
+
+| Jurisdiction | Source id              | Coverage                                             | Status / boundary                                                                                                               |
+| ------------ | ---------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| QLD          | `qld-local-government` | FY2010-11–FY2015-16; 77/78 councils; **11,321 rows** | Statewide comparative actuals (Financial Inputs + Road Data); newer years not published in the package                          |
+| WA           | `wa-mycouncil`         | FY2010-11–FY2024-25; 139 councils; **27,561 rows**   | MyCouncil actual expenditure + finance snapshot; controlled public snapshot, not audited GPFS                                   |
+| TAS          | `tas-lg-cdc`           | FY2022-23–FY2024-25; all 29 councils; **684 rows**   | CDC Financial Data, latest 3 complete years; older years/other CDC sheets not ingested                                          |
+| VIC          | `vic-lgprf`            | FY2020-21–FY2024-25; 79 councils; **23,068 rows**    | **Performance indicators only**; no total-dollar income/expense; not a spending source                                          |
+| SA           | —                      | statewide package                                    | **Non-financial / deferred**: governance/services (elected members, events, libraries, parks, council names) only               |
+| NT           | `nt-lg-pilot`          | FY2025-26; **3 councils**; **37 rows**               | **Three-council GPFS pilot**, not statewide NT coverage                                                                         |
+| ACT          | —                      | **not applicable**                                   | No separate local-government councils; ACT Government performs local functions, covered by `act-budget`; no ACT local connector |
+
+All local rows are non-additive `agency_detail`; no cross-council/state total. State budgets
+(`wa-budget`, `tas-budget`, `nt-budget`, `act-budget`, etc.) remain separate.
+
 ## QLD — source and package
 
 - source id: `qld-local-government` (existing; not duplicated)
@@ -385,6 +400,15 @@ All in printed `$'000`; any mismatch rejects the council document.
 - Second run: source still 37, all measures still 731,492.
 - `LOCAL_GOV_DRY_RUN=1 npm run ingest:local-gov` → `qld-local-government -> wa-mycouncil -> tas-lg-cdc -> nt-lg-pilot`.
 
+## ACT — not applicable
+
+- The ACT has **no separate local-government councils**. The ACT Government performs local
+  functions directly.
+- Those functions are covered by the territory budget source `act-budget`, not by a local
+  council connector.
+- **No ACT local-government connector or `act-lg-*` source exists or is queued.** Council names,
+  local services or territory budget rows must not be relabelled as an ACT local-government layer.
+
 ## Ingestion
 
 ```bash
@@ -395,10 +419,10 @@ MONGO_URL=... npx tsx scripts/ingest-local-gov.ts --source=qld-local-government
 LOCAL_GOV_DRY_RUN=1 npm run ingest:local-gov
 ```
 
-The runner order is `qld-local-government` → `wa-mycouncil` → `tas-lg-cdc`. The extension point for
-VIC/SA/NT is `LOCAL_GOVERNMENT_SOURCES` in `scripts/ingest-local-gov.ts`; each future source
-must also be registered in the connector registry and must have its own source id and non-additive
-rules.
+The current runner order is **`qld-local-government` → `wa-mycouncil` → `tas-lg-cdc` → `nt-lg-pilot`**.
+VIC and SA are **decision-only** in this phase (no builder). `ACT` is not applicable (see below).
+Future builders must be added to `LOCAL_GOVERNMENT_SOURCES` in `scripts/ingest-local-gov.ts`, the
+connector registry, and their own source id/non-additive rules.
 
 ## Verification (2026-11-18)
 
