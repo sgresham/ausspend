@@ -58,7 +58,7 @@ root.
 
 ```bash
 npm ci
-npm run deploy:client    # build shared+client, validate, publish to $AUSSPEND_DEPLOY_ROOT
+AUSSPEND_DEPLOY_ROOT="${AUSSPEND_DEPLOY_ROOT:?set to the deployed client root}" npm run deploy:client  # build, validate, publish
 npm run deploy:verify    # read-only live check (public hostname)
 ```
 
