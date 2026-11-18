@@ -2,6 +2,7 @@ import { createAbsGfsConnector } from './abs-gfs.js';
 import { createWaBudgetConnector } from './wa-budget.js';
 import { createTasBudgetConnector } from './tas-budget.js';
 import { createQldLocalGovernmentConnector } from './qld-local-government.js';
+import { createWaMyCouncilConnector } from './wa-mycouncil.js';
 import { createAihwHealthExpenditureConnector } from './aihw-health-expenditure.js';
 import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
@@ -537,6 +538,10 @@ export const CONNECTORS: readonly Connector[] = [
   // inputs, separate from QGIP project grants/procurement; every row is
   // agency_detail and non-additive.
   createQldLocalGovernmentConnector(),
+  // Phase 2 local government: WA MyCouncil OData actual council expenditure by
+  // program/year plus the controlled finance-actual snapshot. Never queries the
+  // MyCouncil budget or grant entity sets; wa-budget remains separate.
+  createWaMyCouncilConnector(),
   // Module-style connectors discovered by scripts/generate-connector-manifest.mjs.
   ...MODULAR_CONNECTORS,
 ];
