@@ -124,7 +124,9 @@ describe('VIC units and COFOG mapping', () => {
     expect(cofogMappingForLabel('Social protection')?.code).toBe('10');
     const transport = cofogMappingForLabel('Transport (n)(r)');
     expect(transport?.code).toBe('045');
+    expect(transport?.code).not.toBe('04');
     expect(transport?.note).toMatch(/must not be rolled into/i);
+    expect(transport?.note).toMatch(/04.*excludes transport/i);
     expect(cofogMappingForLabel('Total expenses from transactions')).toBeNull();
     expect(cofogMappingForLabel('Not allocated by function')).toBeNull();
   });
@@ -234,8 +236,13 @@ describe('VIC record mapping and idempotency', () => {
     expect(cofogRecords.every((record) => record.aggregation_role === 'additive')).toBe(true);
     for (const record of cofogRecords) {
       if (record.function_code === '045') {
-        expect(record.data_quality_flag).toBe('statewide_only; transport_mapping_unconfirmed');
-        expect(record.notes).toMatch(/MAPPING UNCONFIRMED/);
+        expect(record.data_quality_flag).toBe('statewide_only');
+        expect(record.notes).toMatch(/MAPPING CONFIRMED/);
+        expect(record.notes).toMatch(/04 excludes transport/i);
+        expect(record.notes).toMatch(/must never be rolled into/i);
+        expect(record.notes).not.toMatch(/MAPPING UNCONFIRMED|transport_mapping_unconfirmed/);
+        expect(record.notes).not.toMatch(/pending human confirmation|human confirmation required/i);
+        expect(record.aggregation_role).toBe('additive');
       } else {
         expect(record.data_quality_flag).toBe('statewide_only');
       }
@@ -252,6 +259,31 @@ describe('VIC record mapping and idempotency', () => {
     ).toBe(true);
     expect(departmentRecords.every((record) => record.notes?.includes('NON-ADDITIVE'))).toBe(true);
     expect(first.skipped).toHaveLength(0);
+  });
+
+  it('keeps the two Transport 045 rows separate from 04 with unchanged amounts and keys', async () => {
+    const cofogPath = path.join(dir, 'cofog-transport.xlsx');
+    await buildCofogWorkbook(cofogPath);
+    const raw = parseCofogWorkbook(await readVicWorkbookStreaming(cofogPath), meta());
+    const first = transformVicRaw(raw);
+    const second = transformVicRaw(raw);
+
+    const transport = first.records.filter((record) => record.function_code === '045');
+    expect(transport.map((record) => record.fiscal_year)).toEqual(['2025-26', '2026-27']);
+    // Synthetic workbook: 50 $m and 60 $m at 100,000,000 cents per $m.
+    expect(transport.map((record) => record.amount_cents)).toEqual([5_000_000_000, 6_000_000_000]);
+    // The decision is metadata-only: natural keys are the same on a second run.
+    expect(second.records.map((record) => record.natural_key)).toEqual(
+      first.records.map((record) => record.natural_key),
+    );
+    expect(new Set(transport.map((record) => record.natural_key)).size).toBe(2);
+    // Transport stays on 045 and is never re-coded into Economic affairs 04.
+    expect(first.records.some((record) => record.function_code === '04')).toBe(false);
+    expect(
+      first.records
+        .filter((record) => record.project_name === 'Transport')
+        .every((record) => record.function_code === '045'),
+    ).toBe(true);
   });
 
   it('deduplicates repeated raw rows on natural_key', async () => {
@@ -346,5 +378,8 @@ describe('VIC connector registration', () => {
     expect(connector.source_url).toContain('discover.data.vic.gov.au');
     expect(connector.notes).toMatch(/Budgeted figures only/);
     expect(connector.notes).toMatch(/Transport is tagged 045/);
+    expect(connector.notes).toMatch(/human decision/i);
+    expect(connector.notes).toMatch(/never be rolled into 04/i);
+    expect(connector.notes).not.toMatch(/provisionally|human confirmation required/i);
   });
 });

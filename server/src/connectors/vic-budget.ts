@@ -23,11 +23,12 @@ import type { Connector, RawRecord } from './types.js';
  * integer cents at 100,000,000 cents per million dollars. No unit is inferred
  * from magnitude.
  *
- * COFOG caveat: Victoria's COFOG disclosure lists 10 major groups but omits
+ * COFOG decision: Victoria's COFOG disclosure lists 10 major groups but omits
  * Defence and reports Transport as a separate major group. The shared taxonomy
- * has no division code for Transport, so the Transport row is tagged with the
- * standard subdivision code 045 and a note saying VIC's Economic affairs (04)
- * excludes transport; 045 must not be rolled into 04 for, or added to, that row.
+ * has no division code for Transport, only subdivision 045. By human decision
+ * (2026-11-18) the Transport row maps to the shared subdivision 045; it is not
+ * a child of VIC's Economic affairs 04 row, which excludes transport, and 045
+ * must never be rolled into, or added to, 04.
  *
  * Only the `budget` columns for 2025-26 and 2026-27 are ingested. Actual,
  * revised and forward-estimate columns are deliberately skipped, and measure
@@ -600,7 +601,7 @@ function cofogRecord(raw: VicCofogRaw): SpendingRecord | null {
     raw.fiscal_year,
     raw.measure_type,
   ]);
-  const transportUnconfirmed = raw.function_code === '045';
+  const transportDecided = raw.function_code === '045';
   const note = [
     `Workbook: ${raw.filename}`,
     `CKAN resource: ${raw.resource_name} (${raw.resource_id})`,
@@ -609,9 +610,9 @@ function cofogRecord(raw: VicCofogRaw): SpendingRecord | null {
     `Unit: ${VIC_UNIT} (($ million) stated on the workbook sheet) converted at ${VIC_UNIT_TO_CENTS} cents per $m`,
     `VIC COFOG group: ${raw.label} -> ${raw.function_code} ${raw.function_name}`,
     raw.function_note,
-    ...(transportUnconfirmed
+    ...(transportDecided
       ? [
-          'MAPPING UNCONFIRMED: VIC reports Transport as a separate COFOG major group and its Economic affairs (04) row excludes transport; stored as 045 (shared subdivision) pending human confirmation. Do not roll 045 into 04.',
+          'MAPPING CONFIRMED (human decision, 2026-11-18): VIC reports Transport as a separate COFOG major group and its Economic affairs (04) row excludes transport; stored as 045 (shared subdivision) by human decision. 04 excludes transport; 045 must never be rolled into, or added to, 04.',
         ]
       : []),
     'Budget column only; actual/revised/forward-estimate columns are not ingested and measure types are never summed',
@@ -632,9 +633,7 @@ function cofogRecord(raw: VicCofogRaw): SpendingRecord | null {
     jurisdiction: 'VIC',
     source_dataset: VIC_DATASET,
     source_date: raw.source_date,
-    data_quality_flag: transportUnconfirmed
-      ? 'statewide_only; transport_mapping_unconfirmed'
-      : 'statewide_only',
+    data_quality_flag: 'statewide_only',
     aggregation_role: 'additive',
     project_name: raw.label,
     description: `COFOG ${raw.function_code} — ${raw.function_name} (General government sector expenses)`,
@@ -1066,7 +1065,7 @@ export async function buildVicArchive(
       unit: '$ million (x100,000,000 cents)',
       files,
       notes:
-        'Only 2025-26 and 2026-27 budget columns are ingested. Transport is a VIC COFOG major group tagged 045 provisionally; do not roll 045 into 04; human confirmation required. The departmental workbook is ingested as non-additive agency detail (aggregation_role=agency_detail) and excluded from additive totals.',
+        'Only 2025-26 and 2026-27 budget columns are ingested. Transport is a VIC COFOG major group tagged 045 by human decision; it is not a child of Economic affairs 04 and must never be rolled into 04. The departmental workbook is ingested as non-additive agency detail (aggregation_role=agency_detail) and excluded from additive totals.',
     },
     raw: loaded.raw,
     warnings: loaded.warnings,
@@ -1090,7 +1089,7 @@ export function createVicBudgetConnector(options: VicConnectorOptions = {}): Con
     status: 'active',
     jurisdiction_level: 'state',
     license: VIC_LICENSE,
-    notes: `${VIC_ATTRIBUTION} 2026-27 COFOG expenses XLSX from DataVic CKAN, plus the DTF departmental statement as non-additive agency detail (aggregation_role=agency_detail, excluded from totals). Units are ($ million) stated by the workbooks. Budgeted figures only (2025-26 and 2026-27 budget columns); not audited actuals; unverified. Transport is tagged 045 provisionally and must not be rolled into Economic affairs 04; human confirmation required.`,
+    notes: `${VIC_ATTRIBUTION} 2026-27 COFOG expenses XLSX from DataVic CKAN, plus the DTF departmental statement as non-additive agency detail (aggregation_role=agency_detail, excluded from totals). Units are ($ million) stated by the workbooks. Budgeted figures only (2025-26 and 2026-27 budget columns); not audited actuals; unverified. Transport is tagged 045 by human decision; it is not a child of Economic affairs 04 and must never be rolled into 04.`,
     async fetch(): Promise<RawRecord[]> {
       metadata.errors = [];
       const loaded = await loadVicWorkbooks(options);

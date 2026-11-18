@@ -104,7 +104,7 @@ Totals, revenue lines, the balance sheet, cash flow, changes in equity and the A
 statement are excluded from parsing. Administered items are transfers/payments on behalf of the
 State and would themselves double count.
 
-## COFOG mapping and the Transport caveat
+## COFOG mapping and the Transport decision
 
 VIC's COFOG disclosure (per the 1.6 definitions DOCX shipped in the same dataset) lists ten major
 groups but **omits Defence and reports Transport as a separate major group**. The shared taxonomy
@@ -129,12 +129,11 @@ Every COFOG row has `data_quality_flag: "statewide_only"`, `jurisdiction_level: 
 `jurisdiction: "VIC"`, `location.state: "VIC"` and `verified: false`. No region, LGA or coordinate is
 invented.
 
-**Transport is not resolved.** The row is stored as `045` because that is the only shared code
-whose name matches Transport, but VIC's disclosure treats Transport as a separate major group and
-its `04` row excludes transport. The exact question for a human is: _should VIC's Transport major
-group map to the shared subdivision 045, and should 045 never be rolled into 04?_ Until confirmed,
-both Transport rows carry `data_quality_flag: "statewide_only; transport_mapping_unconfirmed"` and a
-`MAPPING UNCONFIRMED` note. If the ruling differs, change only `COFOG_ROW_MAP` in
+**Transport is decided.** By human decision (2026-11-18) VIC's Transport major group maps to the
+shared subdivision `045`. VIC's disclosure treats Transport as a separate major group and its `04`
+row excludes transport, so `045` is **not** a child of `04`; it must never be rolled into, or added
+to, `04`. Both Transport rows carry `data_quality_flag: "statewide_only"` and a `MAPPING CONFIRMED`
+note recording the decision. The mapping lives in `COFOG_ROW_MAP` in
 `server/src/connectors/vic-budget.ts`; re-ingestion upserts the same natural keys. The budget-only
 scope (2025-26 and 2026-27 budget columns) is settled.
 
@@ -215,10 +214,10 @@ db.measures.findOne({ source_id: 'vic-budget', function_code: '07', fiscal_year:
   VIC departments are discoverable in the same CKAN package but out of scope for this item.
 - The VIC State Capital Program (Budget Paper No. 4) and VIC infrastructure pipeline are **not**
   ingested.
-- **Transport mapping is unconfirmed.** VIC reports Transport as a separate COFOG major group and its
-  Economic affairs (`04`) row excludes transport. The row is stored as `045` (the shared subdivision
-  code) and flagged `data_quality_flag: "statewide_only; transport_mapping_unconfirmed"`, with the
-  question recorded in the row notes. Do not roll `045` into `04`; a human must confirm the mapping.
+- **Transport mapping is decided.** VIC reports Transport as a separate COFOG major group and its
+  Economic affairs (`04`) row excludes transport. By human decision (2026-11-18) the row maps to the
+  shared subdivision `045`, carries `data_quality_flag: "statewide_only"`, and records the decision
+  in its notes. `045` is not a child of `04` and must never be rolled into or added to `04`.
 - Nothing is human-verified: every VIC row is `verified: false`.
 - No cross-level or cross-measure-type summing is performed or implied.
 
