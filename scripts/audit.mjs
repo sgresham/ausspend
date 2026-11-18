@@ -58,6 +58,7 @@ const KNOWN_SOURCE_IDS = [
   'mosman-gpfs',
   'hawkesbury-gpfs',
   'woollahra-gpfs',
+  'blue-mountains-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
