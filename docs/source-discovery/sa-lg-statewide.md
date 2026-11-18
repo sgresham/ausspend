@@ -20,7 +20,7 @@ liabilities or financial statements.
 | Parse API Instruction Document          | data.sa PDF download | 9 pages; downloaded **641,914 B**, SHA-256 `21450189c5c5b39c4c4907990edaa9fefa6b22ba5ba66ac467f2ef8142173114` (CKAN lists 73,986 B) |
 | Local Council Names                     | data.sa CSV download | **1,807 B**, 67 council names; SHA-256 `2e5eecfdb4a55a3715a278165bfa5a26b065a1a54c02ecb95f1db90572fb1b2e`                           |
 
-Archived outside the repo at `/home/steve/ausspend-source-archive/sa-lg-statewide/` (PDF, CSV,
+Archived outside the repo at `~/ausspend-source-archive/sa-lg-statewide/` (PDF, CSV,
 SHA256SUMS).
 
 ## Parse classes in the instruction PDF
