@@ -1453,6 +1453,13 @@ async function uiChecks(page, regionId, populatedRegionId) {
       'PBS caveat is not visible on /data-sources',
     );
 
+    const limitationsLink = page.getByRole('link', { name: 'coverage limitations page' });
+    await limitationsLink.waitFor({ state: 'visible', timeout: 20_000 });
+    assert(
+      (await limitationsLink.getAttribute('href')) === '/coverage-limitations',
+      'the data-sources limitations link does not point at /coverage-limitations',
+    );
+    await page.goto(`${WEB_URL}/coverage-limitations`, { waitUntil: 'domcontentloaded' });
     const limitations = page.getByTestId('coverage-limitations');
     await limitations.waitFor({ state: 'visible', timeout: 20_000 });
     const limitationText = (await limitations.innerText()).replace(/\s+/g, ' ');
@@ -1466,8 +1473,12 @@ async function uiChecks(page, regionId, populatedRegionId) {
       /GrantConnect is a manual/.test(limitationText),
       'coverage limitations do not mention the manual GrantConnect export',
     );
+    assert(
+      (await page.getByTestId('coverage-limitations').count()) === 1,
+      'the coverage limitations list is duplicated on /coverage-limitations',
+    );
     assert(pageErrors.length === 0, `pageErrors: ${pageErrors.join(' | ')}`);
-    return `source Unverified, ${expectedStubs} stubs, ${expectedActive} active (incl. Dubbo), PBS caveat, limitations present`;
+    return `source Unverified, ${expectedStubs} stubs, ${expectedActive} active (incl. Dubbo), PBS caveat, limitations on /coverage-limitations`;
   });
 
   await check('/benchmark labels ABS GFS as a benchmark and never sums', async () => {

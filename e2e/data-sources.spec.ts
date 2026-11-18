@@ -72,10 +72,11 @@ test('data sources lists live connectors, open stubs and coverage limitations', 
     grantconnect.getByRole('link', { name: /Browse ingested grant awards/ }),
   ).toBeVisible();
 
-  await expect(page.getByTestId('coverage-limitations')).toContainText(
-    'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live',
+  await expect(page.getByTestId('coverage-limitations')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'coverage limitations page' })).toHaveAttribute(
+    'href',
+    '/coverage-limitations',
   );
-  await expect(page.getByTestId('coverage-limitations')).toContainText('GrantConnect');
 
   const qgipCaveat = page.getByTestId('qgip-coverage-caveat');
   await expect(qgipCaveat).toBeVisible();

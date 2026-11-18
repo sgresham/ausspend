@@ -230,23 +230,13 @@ export function HomePage() {
         </Card>
       ) : null}
 
-      {coverage.data ? (
-        <Card variant="outlined" sx={{ mb: 4 }} data-testid="coverage-limitations">
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Coverage limitations
-            </Typography>
-            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 2.5 }}>
-              {coverage.data.limitations.map((limitation) => (
-                <Typography component="li" variant="body2" key={limitation}>
-                  {limitation}
-                </Typography>
-              ))}
-            </Box>
-            <ProvenanceFooter sources={[]} note={coverage.data.note} />
-          </CardContent>
-        </Card>
-      ) : null}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+        Coverage limitations and provenance caveats are listed on the{' '}
+        <Link component={RouterLink} to="/coverage-limitations">
+          coverage limitations page
+        </Link>
+        .
+      </Typography>
 
       <Typography variant="h5" component="h2" gutterBottom>
         Ingestion connectors

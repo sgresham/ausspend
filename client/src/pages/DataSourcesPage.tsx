@@ -506,23 +506,13 @@ export function DataSourcesPage() {
         </Card>
       ) : null}
 
-      <Typography variant="h5" component="h2" sx={{ mt: 4 }} gutterBottom>
-        Coverage limitations
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
+        The full coverage limitations and provenance caveats are listed on the{' '}
+        <Link component={RouterLink} to="/coverage-limitations">
+          coverage limitations page
+        </Link>
+        .
       </Typography>
-      {coverage.data ? (
-        <Card variant="outlined" data-testid="coverage-limitations">
-          <CardContent>
-            <Box component="ul" sx={{ mt: 0, mb: 2, pl: 2.5 }}>
-              {coverage.data.limitations.map((limitation) => (
-                <Typography component="li" variant="body2" key={limitation}>
-                  {limitation}
-                </Typography>
-              ))}
-            </Box>
-            <ProvenanceFooter sources={[]} note={coverage.data.note} />
-          </CardContent>
-        </Card>
-      ) : null}
 
       <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
         Licence, copyright and attribution rules — including sources that are not CC BY — are

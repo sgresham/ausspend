@@ -16,6 +16,7 @@ import {
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DatasetIcon from '@mui/icons-material/Dataset';
 import InfoIcon from '@mui/icons-material/Info';
+import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import { CoverageBanner } from './CoverageBanner';
 import { Footer } from './Footer';
 import { QuickSearch } from './QuickSearch';
@@ -45,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'GFS benchmark', to: '/benchmark', icon: <AssessmentIcon /> },
   { label: 'NSW SOC', to: '/soc', icon: <CorporateFareIcon /> },
   { label: 'Data sources', to: '/data-sources', icon: <DatasetIcon /> },
+  { label: 'Coverage limitations', to: '/coverage-limitations', icon: <ReportProblemIcon /> },
   { label: 'About', to: '/about', icon: <InfoIcon /> },
 ];
 
