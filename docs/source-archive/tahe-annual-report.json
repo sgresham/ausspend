@@ -5,7 +5,7 @@
   "publisher": "Transport Asset Holding Entity of NSW (published by Transport Asset Manager of NSW)",
   "discovery_page": "https://www.tam.nsw.gov.au/publications",
   "license": "© Transport Asset Holding Entity of NSW / Transport Asset Manager of NSW. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
-  "retrieved_at": "2026-11-17T09:18:46.578Z",
+  "retrieved_at": "2026-11-18T23:54:43.824Z",
   "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
   "caveat": "Entity-level SOC statement lines for TAHE (Transport Asset Holding Entity of New South Wales) only. Never add to government program spending, to the PNFC sector benchmark, or to each other: the statement prints an explicit Total revenue and Total expenses; total revenue already includes the separately shown Grants and contributions line, total expenses already includes employee-related expenses, other operating expenses, other expenses, depreciation/amortisation/de-recognition and finance costs; the net result is a surplus. The FY2023-24 result is materially affected by a $17.8bn valuation increment and a change in grants recognition, so it is not comparable to prior years. Provisional and unverified.",
   "files": [

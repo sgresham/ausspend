@@ -5,7 +5,7 @@
   "publisher": "Sydney Trains (Transport for NSW)",
   "discovery_page": "https://www.transport.nsw.gov.au/news-and-events/reports-and-publications/sydney-trains-annual-reports",
   "license": "© Transport for NSW. Published Sydney Trains annual-report PDF used here for public-interest research; not an open-data licence grant.",
-  "retrieved_at": "2026-11-17T09:37:28.394Z",
+  "retrieved_at": "2026-11-18T23:54:43.825Z",
   "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
   "caveat": "Entity-level SOC statement lines for Sydney Trains only. Never add to government program spending, to the PNFC sector benchmark, or to each other: Total revenue (1,759,052 thousand) excludes the separately presented Grants and contributions line (3,500,212 thousand); Total expenses excluding losses (5,376,430 thousand) excludes the below-the-line Gains/(losses) on disposal, Other gains/(losses) and Impairment reversals/(losses) that are included in the printed net-result bridge; the net result is a deficit of 128,277 thousand. The published Volume 2 PDF carries a 'Draft for year end June 2025' footer alongside the signed Chief Executive statement and signed independent auditor's report, so the rows are provisional and unverified and are flagged for human spot-check.",
   "files": [

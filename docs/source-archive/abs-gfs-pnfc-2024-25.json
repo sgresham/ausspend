@@ -3,7 +3,7 @@
   "fiscal_year": "2024-25",
   "source_url": "https://www.abs.gov.au/statistics/economy/government/government-finance-statistics-annual/2024-25",
   "license": "CC BY 4.0",
-  "retrieved_at": "2026-11-17T03:58:30.158Z",
+  "retrieved_at": "2026-11-18T23:54:43.816Z",
   "unit": "$m (x100000000 cents per unit)",
   "sdmx_status": "ABS SDMX API (https://data.api.abs.gov.au/rest/v1) has no PNFC/GFS dataflow: the full ABS dataflow catalogue (1,228 dataflows) contains zero PNFC, Public Non-Financial, GFS, COFOG or Government Finance dataflows, and every plausible PNFC dataflow id returns HTTP 404. No SDMX query is used.",
   "tables": [

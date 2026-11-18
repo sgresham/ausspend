@@ -6,7 +6,7 @@
   "publisher": "NSW TrainLink (Transport for NSW)",
   "discovery_page": "https://www.transport.nsw.gov.au/news-and-events/reports-and-publications/nsw-trainlink-annual-reports",
   "license": "© Transport for NSW. Published NSW TrainLink annual-report PDF used here for public-interest research; not an open-data licence grant.",
-  "retrieved_at": "2026-11-17T09:51:21.187Z",
+  "retrieved_at": "2026-11-18T23:54:43.825Z",
   "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
   "caveat": "Entity-level SOC statement lines for NSW TrainLink only. Never add to government program spending, to the PNFC sector benchmark, or to each other: Total revenue (97,080 thousand) excludes the separately presented Grants and contributions line (395,366 thousand); Total expenses excluding losses (377,742 thousand) excludes the below-the-line Gains/(losses) on disposal and Impairment reversals/(losses) that are included in the printed net-result bridge; the net result is a surplus of 113,817 thousand. The annual report is branded NSW TrainLink but the audited statement is for the legal entity NSW Trains, so every row records legal_name NSW Trains and is provisional and unverified, flagged for human spot-check.",
   "files": [

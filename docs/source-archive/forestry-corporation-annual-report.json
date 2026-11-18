@@ -5,13 +5,13 @@
   "publisher": "Forestry Corporation of NSW",
   "discovery_page": "https://www.forestrycorporation.com.au/about/pubs/corporate/annual-report",
   "license": "© Forestry Corporation of New South Wales. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
-  "retrieved_at": "2026-11-17T08:24:03.284Z",
+  "retrieved_at": "2026-11-18T23:54:43.821Z",
   "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
   "caveat": "Entity-level SOC statement lines for Forestry Corporation of NSW only. Never add to government program spending, to the PNFC sector benchmark, or to each other: total revenue includes the separately shown government grant lines; total expenses is the printed subtotal and is the exact sum of the four printed expense lines; the net result is a profit. Provisional and unverified.",
   "files": [
     {
       "title": "Annual Report 2024–25",
-      "filename": "annual-report-2024-25.pdf",
+      "filename": "forestry-corporation-nsw-annual-report-2024-25.pdf",
       "url": "https://www.forestrycorporation.com.au/__data/assets/pdf_file/0009/1650285/annual-report-2024-25.pdf",
       "sha256": "18f9fa57718cd6177d505298d0fd214f897028b2db76e8a3e257376aa392be10",
       "bytes": 6448775,

@@ -5,7 +5,7 @@
   "publisher": "Sydney Water Corporation",
   "discovery_page": "https://www.sydneywater.com.au/about/policies-publications/reports-publications/annual-report.html",
   "license": "© Sydney Water Corporation. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
-  "retrieved_at": "2026-11-17T04:37:28.694Z",
+  "retrieved_at": "2026-11-18T23:54:43.817Z",
   "unit": "$’000 (AUD_thousands; x100000 cents per unit)",
   "caveat": "Entity-level SOC statement lines. Never add to government program spending, to the PNFC sector benchmark, or to each other: total revenue includes the separately shown government grants; total expenses includes employee, depreciation/amortisation and transfer lines. Provisional and unverified.",
   "files": [

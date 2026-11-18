@@ -5,7 +5,7 @@
   "publisher": "Port Authority of NSW",
   "discovery_page": "https://www.portauthoritynsw.com.au/corporate/corporate-governance/port-authority-nsw-annual-reports/",
   "license": "© Port Authority of NSW. Published annual-report PDF used here for public-interest research; not an open-data licence grant.",
-  "retrieved_at": "2026-11-17T09:00:27.484Z",
+  "retrieved_at": "2026-11-18T23:54:43.823Z",
   "unit": "$'000 (AUD_thousands; x100000 cents per unit)",
   "caveat": "Entity-level SOC statement lines for Port Authority of NSW only. Never add to government program spending, to the PNFC sector benchmark, or to each other: the statement prints an explicit Total revenue and Total expenses; total revenue already includes all revenue lines, total expenses already includes employee, depreciation/amortisation, other expenses and finance costs; the net result is a profit. No government grants/contributions are separately disclosed in this statement or its notes, so no grants row is emitted. Provisional and unverified.",
   "files": [
