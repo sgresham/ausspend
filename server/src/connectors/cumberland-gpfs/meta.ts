@@ -1,0 +1,15 @@
+import {
+  CUMBERLAND_GPFS_ID,
+  CUMBERLAND_GPFS_PUBLISHER,
+  CUMBERLAND_GPFS_FISCAL_YEAR,
+  CUMBERLAND_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: CUMBERLAND_GPFS_ID,
+  publisher: CUMBERLAND_GPFS_PUBLISHER,
+  fiscalYear: CUMBERLAND_GPFS_FISCAL_YEAR,
+  dataQualityFlag: CUMBERLAND_GPFS_DATA_QUALITY_FLAG,
+} as const;

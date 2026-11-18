@@ -16,7 +16,7 @@ import {
   parseMaitlandGpfsReportLinks,
   selectMaitlandGpfsDocument,
   type MaitlandGpfsParseContext,
-} from '../src/connectors/maitland-gpfs.js';
+} from '../src/connectors/maitland-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

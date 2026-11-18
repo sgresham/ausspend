@@ -15,7 +15,7 @@ import {
   parseNorthernBeachesGpfsReportLinks,
   selectNorthernBeachesGpfsDocument,
   type NorthernBeachesGpfsParseContext,
-} from '../src/connectors/northern-beaches-gpfs.js';
+} from '../src/connectors/northern-beaches-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

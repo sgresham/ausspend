@@ -1,0 +1,15 @@
+import {
+  WILLOUGHBY_GPFS_ID,
+  WILLOUGHBY_GPFS_PUBLISHER,
+  WILLOUGHBY_GPFS_FISCAL_YEAR,
+  WILLOUGHBY_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: WILLOUGHBY_GPFS_ID,
+  publisher: WILLOUGHBY_GPFS_PUBLISHER,
+  fiscalYear: WILLOUGHBY_GPFS_FISCAL_YEAR,
+  dataQualityFlag: WILLOUGHBY_GPFS_DATA_QUALITY_FLAG,
+} as const;

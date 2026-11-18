@@ -1,0 +1,17 @@
+import {
+  TWEED_SHIRE_GPFS_ID,
+  TWEED_SHIRE_GPFS_NAME,
+  TWEED_SHIRE_GPFS_PUBLISHER,
+  TWEED_SHIRE_GPFS_FISCAL_YEAR,
+  TWEED_SHIRE_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: TWEED_SHIRE_GPFS_ID,
+  name: TWEED_SHIRE_GPFS_NAME,
+  publisher: TWEED_SHIRE_GPFS_PUBLISHER,
+  fiscalYear: TWEED_SHIRE_GPFS_FISCAL_YEAR,
+  dataQualityFlag: TWEED_SHIRE_GPFS_DATA_QUALITY_FLAG,
+} as const;

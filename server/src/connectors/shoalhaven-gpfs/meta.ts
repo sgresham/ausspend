@@ -1,0 +1,15 @@
+import {
+  SHOALHAVEN_GPFS_ID,
+  SHOALHAVEN_GPFS_PUBLISHER,
+  SHOALHAVEN_GPFS_FISCAL_YEAR,
+  SHOALHAVEN_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: SHOALHAVEN_GPFS_ID,
+  publisher: SHOALHAVEN_GPFS_PUBLISHER,
+  fiscalYear: SHOALHAVEN_GPFS_FISCAL_YEAR,
+  dataQualityFlag: SHOALHAVEN_GPFS_DATA_QUALITY_FLAG,
+} as const;

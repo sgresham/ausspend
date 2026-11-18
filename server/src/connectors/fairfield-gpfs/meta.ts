@@ -1,0 +1,17 @@
+import {
+  FAIRFIELD_GPFS_ID,
+  FAIRFIELD_GPFS_NAME,
+  FAIRFIELD_GPFS_PUBLISHER,
+  FAIRFIELD_GPFS_FISCAL_YEAR,
+  FAIRFIELD_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: FAIRFIELD_GPFS_ID,
+  name: FAIRFIELD_GPFS_NAME,
+  publisher: FAIRFIELD_GPFS_PUBLISHER,
+  fiscalYear: FAIRFIELD_GPFS_FISCAL_YEAR,
+  dataQualityFlag: FAIRFIELD_GPFS_DATA_QUALITY_FLAG,
+} as const;

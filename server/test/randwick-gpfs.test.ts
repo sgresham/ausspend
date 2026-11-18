@@ -16,7 +16,7 @@ import {
   parseRandwickGpfsExtraction,
   parseRandwickGpfsReportPage,
   type RandwickGpfsParseContext,
-} from '../src/connectors/randwick-gpfs.js';
+} from '../src/connectors/randwick-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

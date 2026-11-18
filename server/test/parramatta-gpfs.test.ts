@@ -17,7 +17,7 @@ import {
   selectParramattaGpfsDocument,
   selectParramattaGpfsYearPage,
   type ParramattaGpfsParseContext,
-} from '../src/connectors/parramatta-gpfs.js';
+} from '../src/connectors/parramatta-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

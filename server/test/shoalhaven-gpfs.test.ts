@@ -19,7 +19,7 @@ import {
   selectShoalhavenGpfsGridRecord,
   shoalhavenGpfsNaturalKey,
   type ShoalhavenGpfsParseContext,
-} from '../src/connectors/shoalhaven-gpfs.js';
+} from '../src/connectors/shoalhaven-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

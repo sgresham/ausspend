@@ -16,7 +16,7 @@ import {
   portMacquarieHastingsGpfsNaturalKey,
   selectPortMacquarieHastingsGpfsDocument,
   type PortMacquarieHastingsGpfsParseContext,
-} from '../src/connectors/port-macquarie-hastings-gpfs.js';
+} from '../src/connectors/port-macquarie-hastings-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

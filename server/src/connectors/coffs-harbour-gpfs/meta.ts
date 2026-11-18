@@ -1,0 +1,15 @@
+import {
+  COFFS_HARBOUR_GPFS_ID,
+  COFFS_HARBOUR_GPFS_PUBLISHER,
+  COFFS_HARBOUR_GPFS_FISCAL_YEAR,
+  COFFS_HARBOUR_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: COFFS_HARBOUR_GPFS_ID,
+  publisher: COFFS_HARBOUR_GPFS_PUBLISHER,
+  fiscalYear: COFFS_HARBOUR_GPFS_FISCAL_YEAR,
+  dataQualityFlag: COFFS_HARBOUR_GPFS_DATA_QUALITY_FLAG,
+} as const;

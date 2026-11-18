@@ -443,7 +443,7 @@ export {
   type DubboGpfsReconciliation,
   type DubboGpfsRejection,
   type DubboGpfsSection,
-} from './dubbo-gpfs.js';
+} from './dubbo-council-gpfs/index.js';
 export {
   CITY_OF_SYDNEY_GPFS_DATA_QUALITY_FLAG,
   CITY_OF_SYDNEY_GPFS_FISCAL_YEAR,
@@ -474,7 +474,7 @@ export {
   type CityOfSydneyGpfsReconciliation,
   type CityOfSydneyGpfsRejection,
   type CityOfSydneyGpfsSection,
-} from './city-of-sydney-gpfs.js';
+} from './city-of-sydney-gpfs/index.js';
 export {
   BLACKTOWN_GPFS_DATA_QUALITY_FLAG,
   BLACKTOWN_GPFS_FISCAL_YEAR,
@@ -539,7 +539,7 @@ export {
   type ParramattaGpfsRejection,
   type ParramattaGpfsSection,
   type ParramattaGpfsYearPage,
-} from './parramatta-gpfs.js';
+} from './parramatta-gpfs/index.js';
 export {
   NORTHERN_BEACHES_GPFS_DATA_QUALITY_FLAG,
   NORTHERN_BEACHES_GPFS_FISCAL_YEAR,
@@ -570,7 +570,7 @@ export {
   type NorthernBeachesGpfsReconciliation,
   type NorthernBeachesGpfsRejection,
   type NorthernBeachesGpfsSection,
-} from './northern-beaches-gpfs.js';
+} from './northern-beaches-gpfs/index.js';
 export {
   CANTERBURY_BANKSTOWN_GPFS_BEFORE_CAPITAL_LABEL,
   CANTERBURY_BANKSTOWN_GPFS_DATA_QUALITY_FLAG,
@@ -603,7 +603,7 @@ export {
   type CanterburyBankstownGpfsReconciliation,
   type CanterburyBankstownGpfsRejection,
   type CanterburyBankstownGpfsSection,
-} from './canterbury-bankstown-gpfs.js';
+} from './canterbury-bankstown-gpfs/index.js';
 export {
   SUTHERLAND_SHIRE_GPFS_BEFORE_CAPITAL_LABEL,
   SUTHERLAND_SHIRE_GPFS_DATA_QUALITY_FLAG,
@@ -636,7 +636,7 @@ export {
   type SutherlandShireGpfsReconciliation,
   type SutherlandShireGpfsRejection,
   type SutherlandShireGpfsSection,
-} from './sutherland-shire-gpfs.js';
+} from './sutherland-shire-gpfs/index.js';
 export {
   WOLLONGONG_GPFS_BEFORE_CAPITAL_LABEL,
   WOLLONGONG_GPFS_DATA_QUALITY_FLAG,
@@ -669,7 +669,7 @@ export {
   type WollongongGpfsReconciliation,
   type WollongongGpfsRejection,
   type WollongongGpfsSection,
-} from './wollongong-gpfs.js';
+} from './wollongong-gpfs/index.js';
 export {
   NEWCASTLE_GPFS_BEFORE_CAPITAL_LABEL,
   NEWCASTLE_GPFS_DATA_QUALITY_FLAG,
@@ -702,7 +702,7 @@ export {
   type NewcastleGpfsReconciliation,
   type NewcastleGpfsRejection,
   type NewcastleGpfsSection,
-} from './newcastle-gpfs.js';
+} from './newcastle-gpfs/index.js';
 export {
   LAKE_MACQUARIE_GPFS_BEFORE_CAPITAL_LABEL,
   LAKE_MACQUARIE_GPFS_DATA_QUALITY_FLAG,
@@ -735,7 +735,7 @@ export {
   type LakeMacquarieGpfsReconciliation,
   type LakeMacquarieGpfsRejection,
   type LakeMacquarieGpfsSection,
-} from './lake-macquarie-gpfs.js';
+} from './lake-macquarie-gpfs/index.js';
 export {
   MAITLAND_GPFS_DATA_QUALITY_FLAG,
   MAITLAND_GPFS_DELIVERY_ENTITY,
@@ -767,7 +767,7 @@ export {
   type MaitlandGpfsReconciliation,
   type MaitlandGpfsRejection,
   type MaitlandGpfsSection,
-} from './maitland-gpfs.js';
+} from './maitland-gpfs/index.js';
 export {
   COFFS_HARBOUR_GPFS_BEFORE_CAPITAL_LABEL,
   COFFS_HARBOUR_GPFS_CONTINUING_OPERATING_RESULT_LABEL,
@@ -802,7 +802,7 @@ export {
   type CoffsHarbourGpfsReconciliation,
   type CoffsHarbourGpfsRejection,
   type CoffsHarbourGpfsSection,
-} from './coffs-harbour-gpfs.js';
+} from './coffs-harbour-gpfs/index.js';
 export {
   MID_COAST_GPFS_BEFORE_CAPITAL_LABEL,
   MID_COAST_GPFS_DATA_QUALITY_FLAG,
@@ -835,7 +835,7 @@ export {
   type MidCoastGpfsReconciliation,
   type MidCoastGpfsRejection,
   type MidCoastGpfsSection,
-} from './mid-coast-gpfs.js';
+} from './mid-coast-gpfs/index.js';
 export {
   PORT_MACQUARIE_HASTINGS_GPFS_BEFORE_CAPITAL_LABEL,
   PORT_MACQUARIE_HASTINGS_GPFS_DATA_QUALITY_FLAG,
@@ -868,7 +868,7 @@ export {
   type PortMacquarieHastingsGpfsReconciliation,
   type PortMacquarieHastingsGpfsRejection,
   type PortMacquarieHastingsGpfsSection,
-} from './port-macquarie-hastings-gpfs.js';
+} from './port-macquarie-hastings-gpfs/index.js';
 export {
   TWEED_SHIRE_GPFS_BEFORE_CAPITAL_LABEL,
   TWEED_SHIRE_GPFS_DATA_QUALITY_FLAG,
@@ -902,7 +902,7 @@ export {
   type TweedShireGpfsReconciliation,
   type TweedShireGpfsRejection,
   type TweedShireGpfsSection,
-} from './tweed-shire-gpfs.js';
+} from './tweed-shire-gpfs/index.js';
 export {
   SHOALHAVEN_GPFS_BEFORE_CAPITAL_LABEL,
   SHOALHAVEN_GPFS_DATA_QUALITY_FLAG,
@@ -943,7 +943,7 @@ export {
   type ShoalhavenGpfsReconciliation,
   type ShoalhavenGpfsRejection,
   type ShoalhavenGpfsSection,
-} from './shoalhaven-gpfs.js';
+} from './shoalhaven-gpfs/index.js';
 export {
   SHELLHARBOUR_GPFS_AUDITED_STATEMENTS_TEXT,
   SHELLHARBOUR_GPFS_BEFORE_CAPITAL_LABEL,
@@ -980,7 +980,7 @@ export {
   type ShellharbourGpfsRejection,
   type ShellharbourGpfsReportPage,
   type ShellharbourGpfsSection,
-} from './shellharbour-gpfs.js';
+} from './shellharbour-gpfs/index.js';
 export {
   WAVERLEY_GPFS_BEFORE_CAPITAL_LABEL,
   WAVERLEY_GPFS_DATA_QUALITY_FLAG,
@@ -1015,7 +1015,7 @@ export {
   type WaverleyGpfsRejection,
   type WaverleyGpfsReportPage,
   type WaverleyGpfsSection,
-} from './waverley-gpfs.js';
+} from './waverley-gpfs/index.js';
 export {
   WILLOUGHBY_GPFS_BEFORE_CAPITAL_LABEL,
   WILLOUGHBY_GPFS_DATA_QUALITY_FLAG,
@@ -1050,7 +1050,7 @@ export {
   type WilloughbyGpfsRejection,
   type WilloughbyGpfsReportPage,
   type WilloughbyGpfsSection,
-} from './willoughby-gpfs.js';
+} from './willoughby-gpfs/index.js';
 export {
   INNER_WEST_GPFS_BEFORE_CAPITAL_LABEL,
   INNER_WEST_GPFS_DATA_QUALITY_FLAG,
@@ -1085,7 +1085,7 @@ export {
   type InnerWestGpfsRejection,
   type InnerWestGpfsReportPage,
   type InnerWestGpfsSection,
-} from './inner-west-gpfs.js';
+} from './inner-west-gpfs/index.js';
 export {
   BAYSIDE_GPFS_BEFORE_CAPITAL_LABEL,
   BAYSIDE_GPFS_DATA_QUALITY_FLAG,
@@ -1120,7 +1120,7 @@ export {
   type BaysideGpfsRejection,
   type BaysideGpfsReportPage,
   type BaysideGpfsSection,
-} from './bayside-gpfs.js';
+} from './bayside-gpfs/index.js';
 export {
   RANDWICK_GPFS_BEFORE_CAPITAL_LABEL,
   RANDWICK_GPFS_DATA_QUALITY_FLAG,
@@ -1155,7 +1155,7 @@ export {
   type RandwickGpfsRejection,
   type RandwickGpfsReportPage,
   type RandwickGpfsSection,
-} from './randwick-gpfs.js';
+} from './randwick-gpfs/index.js';
 export {
   RYDE_GPFS_BEFORE_CAPITAL_LABEL,
   RYDE_GPFS_DATA_QUALITY_FLAG,
@@ -1190,7 +1190,7 @@ export {
   type RydeGpfsRejection,
   type RydeGpfsReportPage,
   type RydeGpfsSection,
-} from './ryde-gpfs.js';
+} from './ryde-gpfs/index.js';
 export {
   NORTH_SYDNEY_GPFS_BEFORE_CAPITAL_LABEL,
   NORTH_SYDNEY_GPFS_DATA_QUALITY_FLAG,
@@ -1226,7 +1226,7 @@ export {
   type NorthSydneyGpfsRejection,
   type NorthSydneyGpfsReportPage,
   type NorthSydneyGpfsSection,
-} from './north-sydney-gpfs.js';
+} from './north-sydney-gpfs/index.js';
 export {
   CANADA_BAY_GPFS_BEFORE_CAPITAL_LABEL,
   CANADA_BAY_GPFS_DATA_QUALITY_FLAG,
@@ -1262,7 +1262,7 @@ export {
   type CanadaBayGpfsRejection,
   type CanadaBayGpfsReportPage,
   type CanadaBayGpfsSection,
-} from './canada-bay-gpfs.js';
+} from './canada-bay-gpfs/index.js';
 export {
   CUMBERLAND_GPFS_DATA_QUALITY_FLAG,
   CUMBERLAND_GPFS_DELIVERY_ENTITY,
@@ -1297,7 +1297,7 @@ export {
   type CumberlandGpfsRejection,
   type CumberlandGpfsReportPage,
   type CumberlandGpfsSection,
-} from './cumberland-gpfs.js';
+} from './cumberland-gpfs/index.js';
 export {
   GEORGES_RIVER_GPFS_BEFORE_CAPITAL_LABEL,
   GEORGES_RIVER_GPFS_COMPREHENSIVE_TOTAL_LABEL,
@@ -1337,7 +1337,7 @@ export {
   type GeorgesRiverGpfsRejection,
   type GeorgesRiverGpfsReportPage,
   type GeorgesRiverGpfsSection,
-} from './georges-river-gpfs.js';
+} from './georges-river-gpfs/index.js';
 export {
   FAIRFIELD_GPFS_BEFORE_CAPITAL_LABEL,
   FAIRFIELD_GPFS_COMPREHENSIVE_NET_RESULT_LABEL,
@@ -1380,7 +1380,7 @@ export {
   type FairfieldGpfsRejection,
   type FairfieldGpfsReportPage,
   type FairfieldGpfsSection,
-} from './fairfield-gpfs.js';
+} from './fairfield-gpfs/index.js';
 export {
   LIVERPOOL_GPFS_BEFORE_CAPITAL_LABEL,
   LIVERPOOL_GPFS_COMPREHENSIVE_NET_RESULT_LABEL,
@@ -1423,7 +1423,7 @@ export {
   type LiverpoolGpfsRejection,
   type LiverpoolGpfsReportPage,
   type LiverpoolGpfsSection,
-} from './liverpool-gpfs.js';
+} from './liverpool-gpfs/index.js';
 export {
   KU_RING_GAI_GPFS_BEFORE_CAPITAL_LABEL,
   KU_RING_GAI_GPFS_COMPREHENSIVE_NET_RESULT_LABEL,
@@ -1466,7 +1466,7 @@ export {
   type KuRingGaiGpfsRejection,
   type KuRingGaiGpfsReportPage,
   type KuRingGaiGpfsSection,
-} from './ku-ring-gai-gpfs.js';
+} from './ku-ring-gai-gpfs/index.js';
 export {
   PBS_AMOUNT_COLUMN,
   PBS_CAVEAT,

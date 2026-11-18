@@ -1,0 +1,17 @@
+import {
+  WAVERLEY_GPFS_ID,
+  WAVERLEY_GPFS_NAME,
+  WAVERLEY_GPFS_PUBLISHER,
+  WAVERLEY_GPFS_FISCAL_YEAR,
+  WAVERLEY_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: WAVERLEY_GPFS_ID,
+  name: WAVERLEY_GPFS_NAME,
+  publisher: WAVERLEY_GPFS_PUBLISHER,
+  fiscalYear: WAVERLEY_GPFS_FISCAL_YEAR,
+  dataQualityFlag: WAVERLEY_GPFS_DATA_QUALITY_FLAG,
+} as const;

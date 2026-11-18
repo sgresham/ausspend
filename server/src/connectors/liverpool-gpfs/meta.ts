@@ -1,0 +1,17 @@
+import {
+  LIVERPOOL_GPFS_ID,
+  LIVERPOOL_GPFS_NAME,
+  LIVERPOOL_GPFS_PUBLISHER,
+  LIVERPOOL_GPFS_FISCAL_YEAR,
+  LIVERPOOL_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: LIVERPOOL_GPFS_ID,
+  name: LIVERPOOL_GPFS_NAME,
+  publisher: LIVERPOOL_GPFS_PUBLISHER,
+  fiscalYear: LIVERPOOL_GPFS_FISCAL_YEAR,
+  dataQualityFlag: LIVERPOOL_GPFS_DATA_QUALITY_FLAG,
+} as const;

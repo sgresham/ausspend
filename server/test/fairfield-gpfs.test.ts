@@ -16,7 +16,7 @@ import {
   parseFairfieldGpfsExtraction,
   parseFairfieldGpfsReportPage,
   type FairfieldGpfsParseContext,
-} from '../src/connectors/fairfield-gpfs.js';
+} from '../src/connectors/fairfield-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';

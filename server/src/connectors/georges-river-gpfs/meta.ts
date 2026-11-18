@@ -1,0 +1,15 @@
+import {
+  GEORGES_RIVER_GPFS_ID,
+  GEORGES_RIVER_GPFS_PUBLISHER,
+  GEORGES_RIVER_GPFS_FISCAL_YEAR,
+  GEORGES_RIVER_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: GEORGES_RIVER_GPFS_ID,
+  publisher: GEORGES_RIVER_GPFS_PUBLISHER,
+  fiscalYear: GEORGES_RIVER_GPFS_FISCAL_YEAR,
+  dataQualityFlag: GEORGES_RIVER_GPFS_DATA_QUALITY_FLAG,
+} as const;

@@ -16,7 +16,7 @@ import {
   selectWollongongGpfsDocument,
   wollongongGpfsNaturalKey,
   type WollongongGpfsParseContext,
-} from '../src/connectors/wollongong-gpfs.js';
+} from '../src/connectors/wollongong-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';
