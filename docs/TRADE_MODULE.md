@@ -1,7 +1,8 @@
-# Trade module — foundation
+# Trade module — ABS live, foundation UI
 
-**Status:** foundation only. There is no live trade connector and no frontend route in this item.
-The `/trade` page lands after the ABS end-to-end ingest is working.
+**Status:** ABS International Trade is live through the keyless ABS Data API Beta. The
+`trade_records` model, read-only `/api/v1/trade` endpoints and separation guards remain separate from
+spending. The `/trade` frontend route is still deferred.
 
 ## Why a separate domain
 
@@ -23,9 +24,13 @@ border) and is labelled as a cost. No margin is invented from a missing publishe
 
 The ingest skeleton runs in this fixed priority order:
 
-1. **ABS International Trade** — the official Australian trade statistics source. The ABS Indicator
-   API is key-gated: the API root returns HTTP 403 `Missing Authentication Token` and no ABS key is
-   present in the application environment. Live ingest is a later, key-gated step.
+1. **ABS International Trade** — **live**. Uses the keyless Data API Beta at
+   <https://data.api.abs.gov.au/rest/> (not the old `/rest/v1` base and not the key-gated Indicator
+   API). Goods: `ITGS` 1.2.0 (`MEASURE=M1` current prices, `TSEST=10` original, `REGION=AUS`,
+   `FREQ=M`), including total goods credits/debits (`DATA_ITEM` 1000/2000) and every printed
+   commodity category. Services: `TRADE_SERV_CNTRY_FY` 1.0.0 (`EBOPS=TOTAL`, `COUNTRY=TOT`,
+   `FREQ=A`), total credits/debits by financial year. Both carry `UNIT_MEASURE=AUD` and
+   `UNIT_MULT=6` (millions), converted to integer cents. No `x-api-key` header is sent.
 2. **OECD ITIC** — the OECD International Trade in Goods and Services dataflow, useful for
    cross-country partner comparisons. The dataflow is reachable (HTTP 200); no connector is
    implemented yet.
@@ -37,6 +42,20 @@ The ingest skeleton runs in this fixed priority order:
 
 Each source keeps its own `source_dataset`, `source_url`, `source_date` and `data_quality_flag`.
 Rows from different sources are never mixed into one total.
+
+## ABS live ingestion
+
+- Goods are monthly, financial year derived from the ABS July–June year (`2024-07` → `2024-25`).
+- Services `TIME_PERIOD` is the start year of the ABS financial year (`2024` → `2024-25`, with the
+  dataflow's `REPORTING_YEAR_START_DAY` `--07-01`).
+- The connector ingests 12 months of goods observations (`2024-07` to `2025-06`) and the services
+  `2024` financial year, satisfying the one-full-financial-year requirement.
+- It never derives a goods+services total: goods and services rows remain separate `trade_value`
+  observations, and commodity categories are the source's own `DATA_ITEM` hierarchy (parents and
+  children are not summed by the connector).
+- Ingestion is idempotent: each observation is upserted by its published dimensions
+  (`source_dataset`, flow, measure, `commodity_code`, `time_period`, `financial_year`, location).
+- No profit field exists. A CIF/FOB margin remains the only cost proxy.
 
 ## Observed vs estimated (OECD)
 

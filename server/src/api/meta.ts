@@ -11,18 +11,18 @@ export interface PlannedTradeSource {
   name: string;
   publisher: string;
   priority: number;
-  status: 'planned';
+  status: 'planned' | 'active';
   note: string;
 }
 
 export const TRADE_PLANNED_SOURCES: readonly PlannedTradeSource[] = [
   {
     source_id: 'abs-international-trade',
-    name: 'ABS International Trade',
+    name: 'ABS International Trade (Data API Beta)',
     publisher: 'Australian Bureau of Statistics',
     priority: 1,
-    status: 'planned',
-    note: 'ABS Indicator API is key-gated: the root returns HTTP 403 "Missing Authentication Token" and no ABS key is present in the app environment. Live ingestion is a later step.',
+    status: 'active',
+    note: 'Keyless ABS Data API Beta: ITGS 1.2.0 monthly goods (totals plus printed DATA_ITEM commodity rows) and TRADE_SERV_CNTRY_FY 1.0.0 total services by financial year. Observed AUD millions are stored as integer cents; no goods+services total is derived.',
   },
   {
     source_id: 'oecd-itic',
@@ -67,10 +67,10 @@ export const TRADE_LIMITATIONS = [
 ] as const;
 
 export const TRADE_COVERAGE = {
-  status: 'planned',
-  live: false,
-  implemented: false,
+  status: 'active',
+  live: true,
+  implemented: true,
   planned_sources: TRADE_PLANNED_SOURCES,
   limitations: TRADE_LIMITATIONS,
-  note: 'Trade is a separate analytical domain. The foundation ships the trade_records model, read-only trade API, separation guards and an ingest skeleton only; no live trade connector runs yet.',
+  note: 'Trade is a separate analytical domain. ABS International Trade is live from the keyless Data API Beta; the other sources remain planned. No goods+services total is derived and trade rows are never joined to spending measures.',
 } as const;
