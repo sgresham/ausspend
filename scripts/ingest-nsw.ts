@@ -132,6 +132,7 @@ export const NSW_SOURCE_IDS = [
   'liverpool-gpfs',
   'ku-ring-gai-gpfs',
   'strathfield-gpfs',
+  'lane-cove-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {

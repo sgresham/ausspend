@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Thirty-one council GPFS sources have landed
+**Status:** the inventory and plan below are unchanged. Thirty-two council GPFS sources have landed
 as separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -41,7 +41,9 @@ FY2024-25 GPFS (**§7.25**) then added exactly **17** `canada-bay-gpfs` rows (**
 Fairfield City Council FY2024-25 GPFS (**§7.28**) then added exactly **17** `fairfield-gpfs` rows
 (**515,904** → **515,921**). Liverpool City Council FY2024-25 GPFS (**§7.29**) then added exactly
 **17** `liverpool-gpfs` rows (**515,921** → **515,938**). Ku-ring-gai Council FY2024-25 GPFS
-(**§7.30**) then added exactly **17** `ku-ring-gai-gpfs` rows (**515,938** → **515,955**).
+(**§7.30**) then added exactly **17** `ku-ring-gai-gpfs` rows (**515,938** → **515,955**). On the
+shared dev DB, Lane Cove Council FY2024-25 GPFS (**§7.31**) then added exactly **17**
+`lane-cove-gpfs` rows (**693,096** → **693,113**).
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -292,7 +294,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 506 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 523 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -314,7 +316,8 @@ for the City of Canada Bay Council FY2024-25 (`canada-bay-gpfs`, §7.25) and 17 
 Council FY2024-25 (`cumberland-gpfs`, §7.26) and 16 for Georges River Council FY2024-25
 (`georges-river-gpfs`, §7.27) and 17 for Fairfield City Council FY2024-25 (`fairfield-gpfs`,
 §7.28) and 17 for Liverpool City Council FY2024-25 (`liverpool-gpfs`, §7.29) and 17 for Ku-ring-gai
-Council FY2024-25 (`ku-ring-gai-gpfs`, §7.30) — all separate source
+Council FY2024-25 (`ku-ring-gai-gpfs`, §7.30) and 17 for Lane Cove Council FY2024-25
+(`lane-cove-gpfs`, §7.31) — all separate source
 ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
@@ -3087,6 +3090,95 @@ Lane Cove's 17 rows, taking the total to **693,113**; after this ingest it is **
 sources have delta 0 apart from those two concurrent council ingests; `data_sources` 67 → **68**.
 A second run upserted the same 17 natural keys and left the DB total unchanged (idempotent). No
 deletes or updates to any other source.
+### 7.32 Thirty-second council — Lane Cove Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Lane Cove publishes no standalone GPFS PDF. The audited FY2024-25 General Purpose
+Financial Statements are Section 3 of the official **Annual Report 2024-25** PDF, linked from the
+official Community Strategic Plan page
+<https://www.lanecove.nsw.gov.au/Council/Plans-and-Publications/Community-Strategic-Plan> under the
+printed link text **"Annual Report"**. That link is a council TRIM document link,
+<http://ecouncil.lanecove.nsw.gov.au/trim/DocumentLink.asp?RecId=84401/25>, which returns a small HTML
+page whose JavaScript redirect resolves to the exact PDF. The connector discovers the document-link
+URL from the page HTML (never a hard-coded PDF URL), resolves the PDF URL from the TRIM redirect, and
+SHA-256 re-verifies the exact bytes. The TRIM path segment is a volatile internal document id, so the
+natural key binds to the archived SHA-256, not the URL; re-running is idempotent even when the id
+changes.
+
+The 218-page Annual Report contains the signed GPFS — Income Statement PDF p89 (printed p4), Statement
+of Comprehensive Income p90 (printed p5), B1-1 "Functions or activities" p99 (printed p14) and note
+B3-3 depreciation p110 (printed p25) — plus the independent auditor's reports. The printed unit is
+explicit `$ '000` on the Income Statement, Statement of Comprehensive Income, B1-1 and note B3-3; a
+missing or conflicting unit rejects the whole extraction.
+
+Exact bytes archived outside the repo at
+`$AUSSPEND_SOURCE_ARCHIVE/lane-cove-gpfs/lane-cove-council-annual-report-2024-25.pdf` (pool run:
+`/home/steve/.pool-worktrees/ausspend/_source-archive/lane-cove-gpfs/...`): **12,880,333 bytes**,
+SHA-256 `460b964d9f8fe85aa7c3e98b80b5a56c01fe6b2401f723ecbd8fd4b31f8c7206` (`hash_verified: true`).
+The `source_documents` metadata JSON is stored alongside it.
+
+**Layout note.** Lane Cove prints each row's Original unaudited budget amount to the left of the
+printed label and the Actual 2025 / Actual 2024 columns to its right; the adapter groups text items by
+y and reads the Actual 2025 column by its x band. The B1-1 note is **transposed** relative to the
+usual OLG layout: functions run across columns and the categories (Income, Expenses, Operating result,
+Grants and contributions) are rows, with a "Total functions and activities" total column at x≈273.
+The adapter reads each category's 2025 total from that column (nearest the row label) and never sums
+the function columns.
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                                           | Printed / derived                                                                                         | Result                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| Total income from continuing operations (Income Statement)                                                                                      | `$97,804` thousand                                                                                        | = `$97,804,000`                                      |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income + net share of JVs) | `$41,575` + `$6,013` + `$4,844` + `$4,716` + `$21,921` + `$4,344` + `$14,383` + `$8` = `$97,804` thousand | = printed total                                      |
+| Expense-by-nature components sum (employee + materials + other expenses + net loss on disposal)                                                 | `$22,773` + `$29,413` + `$2,043` + `$3,826` = `$58,055` thousand                                          | = printed expenses excluding depreciation            |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$10,924`)                                              | `$58,055` + `$10,924` = `$68,979` thousand                                                                | = printed B1-1 total expenses                        |
+| B1-1 Total functions and activities — income                                                                                                    | `$97,804` thousand                                                                                        | = face statement                                     |
+| B1-1 Total functions and activities — expenses                                                                                                  | `$68,979` thousand                                                                                        | = `$68,979,000` (printed total)                      |
+| B1-1 Total functions and activities — operating result                                                                                          | `$28,825` thousand                                                                                        | = face net result                                    |
+| B1-1 grants and contributions                                                                                                                   | `$26,637` thousand                                                                                        | = operating `$4,716` + capital `$21,921`             |
+| Operating result / net operating result                                                                                                         | `$97,804` − `$68,979` = `$28,825` thousand                                                                | = printed operating result                           |
+| Operating result before depreciation                                                                                                            | `$97,804` − `$58,055` = `$39,749` thousand                                                                | = printed before-depreciation result (evidence only) |
+| Net operating result before capital grants                                                                                                      | `$28,825` − `$21,921` = `$6,904` thousand                                                                 | = printed before-capital surplus (evidence only)     |
+| Statement of Comprehensive Income net result                                                                                                    | `$28,825` thousand                                                                                        | = Income Statement net result                        |
+| Statement of Comprehensive Income total (`$28,825` + `$1,329` other comprehensive income)                                                       | `$30,154` thousand                                                                                        | = printed total comprehensive income                 |
+| Note B3-3 "Total depreciation, amortisation and impairment of non-financial assets"                                                             | `$10,924` thousand                                                                                        | = face depreciation/amortisation/impairment line     |
+
+Total expenses is the printed B1-1 "Total functions and activities" expense total (`$68,979`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$58,055` thousand) plus printed
+depreciation/amortisation/impairment (`$10,924` thousand), and equals printed total income
+(`$97,804` thousand) less the printed operating result (`$28,825` thousand). The B1-1 income,
+expenses, operating result and grants reconcile exactly to the face statement — there is **no
+face-vs-B1-1 discrepancy**.
+
+**Rows.** 17 rows, source id `lane-cove-gpfs`, `source_dataset` "Lane Cove Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Lane Cove Council"` (the exact published entity name),
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$97,804,000`, total expenses `$68,979,000`, employee expenses `$22,773,000`,
+depreciation/amortisation/impairment `$10,924,000`, operating government grants `$4,716,000`,
+capital government grants `$21,921,000`, net share of joint-venture revenue `$8,000`, net loss on
+disposal of assets `$3,826,000` and net result `$28,825,000`; the printed face-statement revenue and
+expense components are included for provenance. The printed before-capital surplus and the nil 2025
+net-share-of-JV expense line are not emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+After the ingest the only rows whose `delivery_entity` is exactly "Lane Cove Council" are these 17 GPFS
+rows; the 100 pre-existing ACNC/GrantConnect/data.nsw rows whose `delivery_entity` merely mentions
+Lane Cove under other strings are preserved untouched and never summed. Government grant rows carry
+`potential_double_count: true` because they may overlap government program data; they are not added to
+expenditure.
+
+**Database evidence (2026-11-18, shared dev DB snapshot at ingest).** `measures` 693,096 → **693,113**
+(exactly +17); `lane-cove-gpfs` **17**; the per-source count diff showed **no other source increased or
+decreased** and no rows were deleted; `data_sources` records the source `active` with
+`records_ingested: 17`. A second ingest run upserted the same 17 SHA-anchored natural keys and left the
+DB total unchanged (idempotent). The shared dev DB continued to move afterwards because other council
+GPFS sources are ingested concurrently; that movement is outside this source and does not affect the
+`lane-cove-gpfs` count.
 
 ---
 
@@ -3136,7 +3228,8 @@ deletes or updates to any other source.
    non-additive rows (§7.27). **Twenty-eighth expansion landed 2026-11-18:** Fairfield City Council
    FY2024-25 GPFS, 17 non-additive rows (§7.28). **Twenty-ninth expansion landed 2026-11-18:**
    Liverpool City Council FY2024-25 GPFS, 17 non-additive rows (§7.29). **Thirtieth expansion landed
-   2026-11-18:** Ku-ring-gai Council FY2024-25 GPFS, 17 non-additive rows (§7.30).
+   2026-11-18:** Ku-ring-gai Council FY2024-25 GPFS, 17 non-additive rows (§7.30). **Thirty-first
+   expansion landed 2026-11-18:** Lane Cove Council FY2024-25 GPFS, 17 non-additive rows (§7.31).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -3405,6 +3498,7 @@ migration were performed.
   `data-nsw-ckan` still 3,472; `data_sources` 55 → 56; a second run upserted the same 17 natural keys
   with no count change.
 
+<<<<<<< HEAD
 **GPFS thirty-first-council checks (2026-11-18):**
 
 - Strathfield Council official Reports and Registers page fetched directly; the FY2024-25
@@ -3425,6 +3519,25 @@ migration were performed.
   +17); after this ingest 693,148 (Strathfield +17 and concurrent Mosman +18); all other sources
   delta 0; `data_sources` 67 → 68; a second run upserted the same 17 natural keys with no count
   change.
+=======
+**Lane Cove Council FY2024-25 GPFS (§7.31), 2026-11-18:**
+
+- Community Strategic Plan page fetched HTTP 200; the printed **"Annual Report"** link resolved to the
+  council TRIM document link `http://ecouncil.lanecove.nsw.gov.au/trim/DocumentLink.asp?RecId=84401/25`,
+  whose JavaScript redirect resolved to the exact Annual Report 2024-25 PDF. No hard-coded PDF URL.
+- Annual Report PDF downloaded (12,880,333 bytes) and SHA-256 archived outside the repo; SHA-256
+  `460b964d9f8fe85aa7c3e98b80b5a56c01fe6b2401f723ecbd8fd4b31f8c7206` (`hash_verified: true`).
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1 and
+  note B3-3; the connector rejects a missing or conflicting unit.
+- Income statement, transposed B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$97,804,000`, expenses `$68,979,000` (printed bridge of expenses excluding depreciation `$58,055,000`
+  plus depreciation `$10,924,000`), net result `$28,825,000`; B1-1 grants `$26,637,000` = operating
+  `$4,716,000` + capital `$21,921,000`.
+- `lane-cove-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB (shared dev snapshot at ingest): measures 693,096 → 693,113 (+17 only); per-source diff showed no
+  other source increased or decreased and no rows deleted; a second run upserted the same 17
+  SHA-anchored natural keys with no count change.
+>>>>>>> d07369f (Add Lane Cove Council FY2024-25 GPFS connector (lane-cove-gpfs))
 
 ---
 

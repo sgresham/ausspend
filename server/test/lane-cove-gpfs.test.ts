@@ -1,0 +1,513 @@
+import mongoose from 'mongoose';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import type { SpendingRecord } from '@ausspend/shared';
+import type { PdfExtraction, PdfPage } from '../src/connectors/pdf-extract.js';
+import {
+  LANE_COVE_GPFS_DELIVERY_ENTITY,
+  LANE_COVE_GPFS_FISCAL_YEAR,
+  LANE_COVE_GPFS_ID,
+  LANE_COVE_GPFS_LICENSE,
+  LANE_COVE_GPFS_NAME,
+  LANE_COVE_GPFS_PUBLISHER,
+  LANE_COVE_GPFS_REPORTING_URL,
+  detectLaneCoveGpfsUnit,
+  discoverLaneCoveGpfsDocument,
+  fiscalYearFromLaneCoveGpfsLink,
+  laneCoveGpfsNaturalKey,
+  parseLaneCoveGpfsExtraction,
+  parseLaneCoveGpfsReportPage,
+  resolveLaneCoveGpfsPdfUrl,
+  type LaneCoveGpfsParseContext,
+} from '../src/connectors/lane-cove-gpfs/index.js';
+import { runIngestion } from '../src/connectors/runner.js';
+import type { Connector } from '../src/connectors/types.js';
+import { DataSourceModel, MeasureModel } from '../src/models/index.js';
+import {
+  LANE_COVE_PDF_BYTES,
+  LANE_COVE_PDF_SHA256,
+  LANE_COVE_PDF_URL,
+  laneCoveExtraction,
+  laneCovePage89,
+} from '../src/connectors/lane-cove-gpfs/fixture-data.js';
+import { LANE_COVE_GPFS_ROW_COUNT } from '../src/connectors/lane-cove-gpfs/fixture.js';
+
+// Lane Cove publishes no standalone GPFS PDF: the audited FY2024-25 General
+// Purpose Financial Statements are Section 3 of the official Annual Report
+// 2024-25 PDF linked from the council Community Strategic Plan page under the
+// printed link text "Annual Report". Its Income Statement prints the Original
+// unaudited budget column first, the FY2024-25 Actual column second and the
+// FY2023-24 column third, each row's label and amounts on the same printed
+// line. The Income Statement prints the net share of joint-venture revenue
+// non-nil, so it is emitted.
+
+const DOCUMENT_LINK_URL =
+  'http://ecouncil.lanecove.nsw.gov.au/trim/DocumentLink.asp?RecId=84401/25';
+
+const CONTEXT: LaneCoveGpfsParseContext = {
+  document: {
+    id: 'gpfs-2024-25',
+    title: 'Lane Cove Council Annual Report 2024-25 (containing the audited GPFS)',
+    url: LANE_COVE_PDF_URL,
+    fiscal_year: LANE_COVE_GPFS_FISCAL_YEAR,
+    listing_url: LANE_COVE_GPFS_REPORTING_URL,
+    document_link_url: DOCUMENT_LINK_URL,
+  },
+  archive: {
+    local_path:
+      '/home/steve/.pool-worktrees/ausspend/_source-archive/lane-cove-gpfs/lane-cove-council-annual-report-2024-25.pdf',
+    sha256: LANE_COVE_PDF_SHA256,
+    bytes: LANE_COVE_PDF_BYTES,
+    fetched_at: '2026-11-18T00:00:00.000Z',
+  },
+  sourceDate: '2026-11-18',
+  reporting_url: LANE_COVE_GPFS_REPORTING_URL,
+};
+
+function parsedFixture() {
+  return parseLaneCoveGpfsExtraction(laneCoveExtraction(), CONTEXT);
+}
+
+function recordByLine(records: SpendingRecord[], lineItem: string): SpendingRecord {
+  const record = records.find((entry) => entry.gpfs_line_item === lineItem);
+  if (!record) throw new Error(`missing ${lineItem}`);
+  return record;
+}
+
+function mutatePage(page: PdfPage, from: string, to: string): PdfPage {
+  return {
+    ...page,
+    text: page.text.split(from).join(to),
+    items: page.items.map((entry) => (entry.str === from ? { ...entry, str: to } : entry)),
+  };
+}
+
+function extractionWith(pageNumber: number, mutate: (page: PdfPage) => PdfPage): PdfExtraction {
+  const base = laneCoveExtraction();
+  const pages = base.pages.map((page) => (page.page_number === pageNumber ? mutate(page) : page));
+  return { ...base, pages, text: pages.map((page) => page.text).join('\n') };
+}
+
+describe('Lane Cove Council GPFS source discovery', () => {
+  const pageHtml = `
+    <p>The Annual Report 2024/25 summarises the performance of Lane Cove Council for 2024/25.</p>
+    <a href="http://ecouncil.lanecove.nsw.gov.au/trim/DocumentLink.asp?RecId=84401/25" target="_blank">Annual Report</a>
+    <a href="http://ecouncil.lanecove.nsw.gov.au/trim/DocumentLink.asp?RecId=50373/24" target="_blank">End of Term Report</a>
+  `;
+  const documentLinkHtml = `<HTML><BODY>True<script language ="JavaScript">location.replace('${LANE_COVE_PDF_URL}') ;</script></BODY></HTML>`;
+
+  it('discovers the FY2024-25 annual report from the official page, not a hard-coded PDF URL', () => {
+    expect(parseLaneCoveGpfsReportPage(pageHtml, LANE_COVE_GPFS_REPORTING_URL, '2024-25')).toEqual({
+      documentUrl: DOCUMENT_LINK_URL,
+      title:
+        'Lane Cove Council Annual Report 2024-25 (containing the audited General Purpose Financial Statements)',
+    });
+    expect(fiscalYearFromLaneCoveGpfsLink('Annual Report 2024/25')).toBe('2024-25');
+    expect(fiscalYearFromLaneCoveGpfsLink('Annual Report 2023/24')).toBe('2023-24');
+    expect(fiscalYearFromLaneCoveGpfsLink('year ending 30 June 2025')).toBe('2024-25');
+  });
+
+  it('resolves the TRIM document link to the exact PDF URL', () => {
+    expect(resolveLaneCoveGpfsPdfUrl(documentLinkHtml)).toBe(LANE_COVE_PDF_URL);
+    expect(resolveLaneCoveGpfsPdfUrl('<html>no redirect</html>')).toBeNull();
+  });
+
+  it('resolves the PDF through the official listing HTML', async () => {
+    const discovered = await discoverLaneCoveGpfsDocument(globalThis.fetch, '2024-25', {
+      listingHtml: pageHtml,
+      documentLinkHtml,
+    });
+    expect(discovered.title).toBe(
+      'Lane Cove Council Annual Report 2024-25 (containing the audited General Purpose Financial Statements)',
+    );
+    expect(discovered.url).toBe(LANE_COVE_PDF_URL);
+    expect(discovered.resolved_url).toBe(LANE_COVE_PDF_URL);
+    expect(discovered.document_link_url).toBe(DOCUMENT_LINK_URL);
+    expect(discovered.fiscal_year).toBe('2024-25');
+    expect(discovered.listing_url).toBe(LANE_COVE_GPFS_REPORTING_URL);
+  });
+
+  it('does not select a prior-year report', () => {
+    expect(
+      parseLaneCoveGpfsReportPage(
+        `<p>Annual Report 2023/24</p><a href="http://ecouncil.lanecove.nsw.gov.au/trim/DocumentLink.asp?RecId=1/24">Annual Report</a>`,
+        LANE_COVE_GPFS_REPORTING_URL,
+        '2024-25',
+      ),
+    ).toBeNull();
+  });
+
+  it('rejects an annual-report link on a non-council host', () => {
+    expect(
+      parseLaneCoveGpfsReportPage(
+        `<p>Annual Report 2024/25</p><a href="https://example.com/trim/DocumentLink.asp?RecId=1/25">Annual Report</a>`,
+        LANE_COVE_GPFS_REPORTING_URL,
+        '2024-25',
+      ),
+    ).toBeNull();
+  });
+});
+
+describe('Lane Cove Council GPFS unit guard', () => {
+  it("reads $ '000 as thousands and never defaults a missing unit to dollars", () => {
+    const unit = detectLaneCoveGpfsUnit(["$ '000"]);
+    expect(unit.kind).toBe('thousands');
+    expect(unit.ambiguous).toBe(false);
+    expect(unit.multiplier_to_cents).toBe(100_000);
+
+    const missing = detectLaneCoveGpfsUnit(['Income Statement 2025 2024']);
+    expect(missing.kind).toBeNull();
+    expect(missing.ambiguous).toBe(true);
+  });
+
+  it('rejects the whole extraction when the printed unit is missing', () => {
+    const withoutUnit = mutatePage(laneCovePage89(), "$ '000", '');
+    const base = laneCoveExtraction();
+    const pages = base.pages.map((page) => (page.page_number === 89 ? withoutUnit : page));
+    const parsed = parseLaneCoveGpfsExtraction(
+      { ...base, pages, text: pages.map((page) => page.text).join('\n') },
+      CONTEXT,
+    );
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toMatch(/no unambiguous printed currency unit/);
+  });
+});
+
+describe('Lane Cove Council GPFS exact reconciliation', () => {
+  it('reads the printed top-level lines and reconciles the face statement, B1-1, comprehensive income and note B3-3 exactly', () => {
+    const parsed = parsedFixture();
+    expect(parsed.records).toHaveLength(LANE_COVE_GPFS_ROW_COUNT);
+    const reconciliation = parsed.reconciliation!;
+    expect(reconciliation.unit).toBe('thousands');
+    expect(reconciliation.total_revenue).toBe(97_804);
+    expect(reconciliation.total_expenses).toBe(68_979);
+    expect(reconciliation.employee_expenses).toBe(22_773);
+    expect(reconciliation.depreciation_amortisation_impairment).toBe(10_924);
+    expect(reconciliation.government_grants_operating).toBe(4_716);
+    expect(reconciliation.government_grants_capital).toBe(21_921);
+    expect(reconciliation.net_share_jv_revenue).toBe(8);
+    expect(reconciliation.net_loss_from_disposal_of_assets).toBe(3_826);
+    expect(reconciliation.net_result).toBe(28_825);
+    expect(reconciliation.operating_result).toBe(28_825);
+    expect(reconciliation.operating_result_excluding_depreciation).toBe(39_749);
+    expect(reconciliation.net_result_before_capital_grants).toBe(6_904);
+    expect(reconciliation.printed_total_expenses_excluding_depreciation).toBe(58_055);
+    expect(reconciliation.revenue_components_sum).toBe(97_804);
+    expect(reconciliation.expense_components_sum).toBe(58_055);
+    expect(reconciliation.face_expense_bridge).toBe(68_979);
+    expect(reconciliation.functions_total_income).toBe(97_804);
+    expect(reconciliation.functions_total_expenses).toBe(68_979);
+    expect(reconciliation.functions_operating_result).toBe(28_825);
+    expect(reconciliation.functions_grants_and_contributions).toBe(26_637);
+    expect(reconciliation.comprehensive_income_net_result).toBe(28_825);
+    expect(reconciliation.comprehensive_income_other).toBe(1_329);
+    expect(reconciliation.comprehensive_income_total).toBe(30_154);
+    expect(reconciliation.depreciation_impairment_note_total).toBe(10_924);
+    expect(reconciliation.income_statement_page).toBe(89);
+    expect(reconciliation.functions_page).toBe(99);
+    expect(reconciliation.comprehensive_income_page).toBe(90);
+    expect(reconciliation.depreciation_note_page).toBe(110);
+    expect(reconciliation.checks.length).toBeGreaterThan(10);
+
+    const records = parsed.records;
+    expect(recordByLine(records, 'total_revenue').amount_cents).toBe(9_780_400_000);
+    expect(recordByLine(records, 'total_expenses').amount_cents).toBe(6_897_900_000);
+    expect(recordByLine(records, 'employee_expenses').amount_cents).toBe(2_277_300_000);
+    expect(recordByLine(records, 'depreciation_amortisation_impairment').amount_cents).toBe(
+      1_092_400_000,
+    );
+    expect(recordByLine(records, 'government_grants_operating').amount_cents).toBe(471_600_000);
+    expect(recordByLine(records, 'government_grants_capital').amount_cents).toBe(2_192_100_000);
+    expect(recordByLine(records, 'net_share_jv_revenue').amount_cents).toBe(800_000);
+    expect(recordByLine(records, 'net_loss_from_disposal_of_assets').amount_cents).toBe(
+      382_600_000,
+    );
+    expect(recordByLine(records, 'net_result').amount_cents).toBe(2_882_500_000);
+    expect(recordByLine(records, 'total_expenses_excluding_depreciation').amount_cents).toBe(
+      5_805_500_000,
+    );
+    expect(recordByLine(records, 'rates_and_annual_charges').amount_cents).toBe(4_157_500_000);
+    expect(recordByLine(records, 'net_result').gpfs_printed_sign).toBeUndefined();
+    expect(
+      records.some((record) => record.gpfs_line_item === 'net_result_before_capital_grants'),
+    ).toBe(false);
+  });
+
+  it('emits only printed categories: components point at their printed subtotal and there is no region/LGA allocation', () => {
+    const { records } = parsedFixture();
+    const keys = records.map((record) => record.gpfs_line_item).sort();
+    expect(keys).toEqual(
+      [
+        'depreciation_amortisation_impairment',
+        'employee_expenses',
+        'government_grants_capital',
+        'government_grants_operating',
+        'interest_and_investment_income',
+        'materials_and_services',
+        'net_loss_from_disposal_of_assets',
+        'net_result',
+        'net_share_jv_revenue',
+        'other_expenses',
+        'other_income',
+        'other_revenues',
+        'rates_and_annual_charges',
+        'total_expenses',
+        'total_expenses_excluding_depreciation',
+        'total_revenue',
+        'user_charges_and_fees',
+      ].sort(),
+    );
+    for (const record of records) {
+      expect(record).toMatchObject({
+        source_id: LANE_COVE_GPFS_ID,
+        measure_type: 'actual',
+        fiscal_year: '2024-25',
+        jurisdiction_level: 'local',
+        jurisdiction: 'NSW',
+        delivery_entity: LANE_COVE_GPFS_DELIVERY_ENTITY,
+        source_dataset: 'Lane Cove Council GPFS 2024-25',
+        data_quality_flag: 'provisional/local_government',
+        aggregation_role: 'agency_detail',
+        verified: false,
+        source_url: CONTEXT.document.url,
+      });
+      expect(record.delivery_entity).toBe('Lane Cove Council');
+      expect(record.gpfs_unit).toBe('AUD_thousands');
+      expect(record.region_id).toBeUndefined();
+      expect(record.location).toBeUndefined();
+      expect(record.natural_key).toMatch(/^lane-cove-gpfs:[a-f0-9]{40}$/);
+    }
+    expect(recordByLine(records, 'government_grants_operating').potential_double_count).toBe(true);
+    expect(recordByLine(records, 'government_grants_capital').potential_double_count).toBe(true);
+    expect(recordByLine(records, 'rates_and_annual_charges').gpfs_component_of).toBe(
+      'total_revenue',
+    );
+    expect(recordByLine(records, 'employee_expenses').gpfs_component_of).toBe(
+      'total_expenses_excluding_depreciation',
+    );
+    expect(recordByLine(records, 'depreciation_amortisation_impairment').gpfs_component_of).toBe(
+      'total_expenses',
+    );
+    expect(recordByLine(records, 'total_expenses').potential_double_count).toBeUndefined();
+    expect(recordByLine(records, 'total_revenue').potential_double_count).toBeUndefined();
+    expect(recordByLine(records, 'net_result').potential_double_count).toBeUndefined();
+    expect(records.every((record) => record.aggregation_role === 'agency_detail')).toBe(true);
+  });
+
+  it('rejects the whole extraction when the B1-1 total column disagrees with the face statement', () => {
+    const parsed = parseLaneCoveGpfsExtraction(
+      extractionWith(99, (page) => mutatePage(page, '68,979', '68,989')),
+      CONTEXT,
+    );
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
+  });
+
+  it('rejects the whole extraction when a face revenue component is altered', () => {
+    const parsed = parseLaneCoveGpfsExtraction(
+      extractionWith(89, (page) => mutatePage(page, '41,575', '41,475')),
+      CONTEXT,
+    );
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
+  });
+
+  it('rejects the whole extraction when the comprehensive-income net result disagrees', () => {
+    const parsed = parseLaneCoveGpfsExtraction(
+      extractionWith(90, (page) => mutatePage(page, '28,825', '28,900')),
+      CONTEXT,
+    );
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toMatch(/failed/);
+  });
+
+  it('rejects the whole extraction when note B3-3 depreciation no longer bridges', () => {
+    const parsed = parseLaneCoveGpfsExtraction(
+      extractionWith(110, (page) => mutatePage(page, '10,924', '11,024')),
+      CONTEXT,
+    );
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
+  });
+
+  it('is deterministic and derives stable, line-specific natural keys', () => {
+    const first = parsedFixture();
+    const second = parsedFixture();
+    expect(first.records.map((record) => record.natural_key)).toEqual(
+      second.records.map((record) => record.natural_key),
+    );
+    expect(first.records.map((record) => record.amount_cents)).toEqual(
+      second.records.map((record) => record.amount_cents),
+    );
+    const url = CONTEXT.document.url;
+    const revenue = laneCoveGpfsNaturalKey(url, 'total_revenue', '2024-25');
+    const expenses = laneCoveGpfsNaturalKey(url, 'total_expenses', '2024-25');
+    expect(revenue).toMatch(/^lane-cove-gpfs:[a-f0-9]{40}$/);
+    expect(revenue).not.toBe(expenses);
+    expect(revenue).toBe(laneCoveGpfsNaturalKey(url, 'total_revenue', '2024-25'));
+    expect(revenue).not.toBe(laneCoveGpfsNaturalKey(url, 'total_revenue', '2025-26'));
+  });
+});
+
+const TEST_DB_URL =
+  process.env.TEST_MONGO_URL ??
+  `mongodb://localhost:27017/ausspend_test_${process.pid}_lanecovegpfs`;
+
+function fakeConnector(records: SpendingRecord[]): Connector {
+  return {
+    id: LANE_COVE_GPFS_ID,
+    name: LANE_COVE_GPFS_NAME,
+    publisher: LANE_COVE_GPFS_PUBLISHER,
+    source_url: LANE_COVE_GPFS_REPORTING_URL,
+    status: 'active',
+    jurisdiction_level: 'local',
+    license: LANE_COVE_GPFS_LICENSE,
+    notes: 'test fixture',
+    async fetch() {
+      return records.map((record) => ({ kind: 'lane-cove-gpfs-measure', record }));
+    },
+    transform(raw) {
+      return raw.map((entry) => entry.record as SpendingRecord);
+    },
+    metadata: { lastFetchedAt: null, recordsIngested: 0, errors: [], warnings: [] },
+  };
+}
+
+describe('Lane Cove Council GPFS ingestion is additive-only and idempotent', () => {
+  beforeAll(async () => {
+    await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
+    await mongoose.connection.dropDatabase();
+    expect(await MeasureModel.countDocuments({ source_id: LANE_COVE_GPFS_ID })).toBe(0);
+    await MeasureModel.insertMany([
+      {
+        amount_cents: 52_000_000,
+        measure_type: 'grant_award',
+        fiscal_year: '2024-25',
+        source_id: 'grantconnect',
+        source_url: 'https://www.grants.gov.au/example1',
+        verified: false,
+        natural_key: 'grantconnect-lane-cove-council-existing-1',
+        project_name: 'Existing GrantConnect grant under the exact string Lane Cove Council',
+        delivery_entity: 'Lane Cove Council',
+      },
+      {
+        amount_cents: 128_500,
+        measure_type: 'contract',
+        fiscal_year: '2024-25',
+        source_id: 'aus-tender',
+        source_url: 'https://www.tenders.gov.au/example',
+        verified: false,
+        natural_key: 'aus-tender-LANE-COVE-COUNCIL-existing',
+        project_name: 'Existing AusTender contract under the uppercase LANE COVE COUNCIL',
+        delivery_entity: 'LANE COVE COUNCIL',
+      },
+      {
+        amount_cents: 654_321,
+        measure_type: 'actual',
+        fiscal_year: '2024-25',
+        source_id: 'acnc-charity',
+        source_url: 'https://www.acnc.gov.au/example',
+        verified: false,
+        natural_key: 'acnc-existing-lane-cove-charity',
+        project_name: 'Existing ACNC charity row (not the council)',
+        delivery_entity: 'Lane Cove Neighbourhood Centre Incorporated',
+      },
+      {
+        amount_cents: 777_000,
+        measure_type: 'actual',
+        fiscal_year: '2024-25',
+        source_id: 'ku-ring-gai-gpfs',
+        source_url: 'https://www.krg.nsw.gov.au/example.pdf',
+        verified: false,
+        natural_key: 'existing-ku-ring-gai-gpfs-1',
+        project_name: 'Existing Ku-ring-gai Council GPFS row',
+        delivery_entity: 'Ku-ring-gai Council',
+      },
+      {
+        amount_cents: 999_000,
+        measure_type: 'actual',
+        fiscal_year: '2024-25',
+        source_id: 'nsw-budget',
+        source_url: 'https://www.nsw.gov.au/example',
+        verified: false,
+        natural_key: 'existing-nsw-budget-lane-cove-project',
+        project_name: 'Existing NSW Budget project whose name mentions Lane Cove',
+      },
+    ]);
+  });
+
+  afterAll(async () => {
+    await mongoose.connection.dropDatabase();
+    await mongoose.disconnect();
+  });
+
+  it('preserves existing rows and never double counts on re-run', async () => {
+    const { records } = parsedFixture();
+    const connector = fakeConnector(records);
+
+    await runIngestion({ connectors: [connector] });
+    expect(await MeasureModel.countDocuments({ source_id: 'grantconnect' })).toBe(1);
+    expect(await MeasureModel.countDocuments({ source_id: 'aus-tender' })).toBe(1);
+    expect(await MeasureModel.countDocuments({ source_id: 'acnc-charity' })).toBe(1);
+    expect(await MeasureModel.countDocuments({ source_id: 'ku-ring-gai-gpfs' })).toBe(1);
+    expect(await MeasureModel.countDocuments({ source_id: 'nsw-budget' })).toBe(1);
+    expect(await MeasureModel.countDocuments({ source_id: LANE_COVE_GPFS_ID })).toBe(
+      LANE_COVE_GPFS_ROW_COUNT,
+    );
+    expect(await MeasureModel.countDocuments({})).toBe(LANE_COVE_GPFS_ROW_COUNT + 5);
+
+    await runIngestion({ connectors: [connector] });
+    expect(await MeasureModel.countDocuments({ source_id: LANE_COVE_GPFS_ID })).toBe(
+      LANE_COVE_GPFS_ROW_COUNT,
+    );
+    expect(await MeasureModel.countDocuments({})).toBe(LANE_COVE_GPFS_ROW_COUNT + 5);
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: 'grantconnect',
+        delivery_entity: 'Lane Cove Council',
+      }),
+    ).toBe(1);
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: 'aus-tender',
+        delivery_entity: 'LANE COVE COUNCIL',
+      }),
+    ).toBe(1);
+    expect(await MeasureModel.countDocuments({ delivery_entity: 'Lane Cove Council' })).toBe(
+      LANE_COVE_GPFS_ROW_COUNT + 1,
+    );
+    expect(await MeasureModel.countDocuments({ delivery_entity: /^lane cove council$/i })).toBe(
+      LANE_COVE_GPFS_ROW_COUNT + 2,
+    );
+    expect(await MeasureModel.countDocuments({ delivery_entity: /lane cove/i })).toBe(
+      LANE_COVE_GPFS_ROW_COUNT + 3,
+    );
+
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: LANE_COVE_GPFS_ID,
+        aggregation_role: { $ne: 'agency_detail' },
+      }),
+    ).toBe(0);
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: LANE_COVE_GPFS_ID,
+        $or: [{ region_id: { $exists: true } }, { location: { $exists: true } }],
+      }),
+    ).toBe(0);
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: LANE_COVE_GPFS_ID,
+        delivery_entity: { $ne: 'Lane Cove Council' },
+      }),
+    ).toBe(0);
+
+    const source = await DataSourceModel.findOne({ source_id: LANE_COVE_GPFS_ID }).lean();
+    expect(source?.status).toBe('active');
+    expect(source?.records_ingested).toBe(LANE_COVE_GPFS_ROW_COUNT);
+  });
+});
