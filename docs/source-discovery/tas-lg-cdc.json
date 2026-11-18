@@ -1,0 +1,67 @@
+{
+  "schema": "ausspend.source-discovery.v1",
+  "source_id": "tas-lg-cdc",
+  "title": "Tasmanian local government Consolidated Data Collection",
+  "generated_at": "2026-11-18T18:00:00Z",
+  "state": "buildable; latest 3 complete years ingested",
+  "jurisdiction": "local",
+  "geography": "Tasmania statewide; 29 councils",
+  "discovery_page": "https://listdata.thelist.tas.gov.au/opendata/",
+  "files": [
+    {
+      "name": "LGA_CDC_Data_Repository_2015-2025.zip",
+      "url": "https://listdata.thelist.tas.gov.au/opendata/data/LGA_CDC_Data_Repository_2015-2025.zip",
+      "bytes": 13432951,
+      "sha256": "007679502515e36e0f72783020ad59f7873416e42c2f231c15adb5242a4fe69f",
+      "workbook": "LISTData Repository - MASTER - 2015-2025.xlsx",
+      "years": [
+        "2015-2016",
+        "2016-2017",
+        "2017-2018",
+        "2018-2019",
+        "2019-2020",
+        "2020-2021",
+        "2021-2022",
+        "2022-2023",
+        "2023-2024",
+        "2024-2025"
+      ],
+      "councils": 29,
+      "ingested": true
+    },
+    {
+      "name": "LGA_CDC_Data_Repository_2000-2015.zip",
+      "url": "https://listdata.thelist.tas.gov.au/opendata/data/LGA_CDC_Data_Repository_2000-2015.zip",
+      "bytes": 16835015,
+      "sha256": "91a1418941150169a3155a3ff171b1977aa3dc2de1362316c3dfa374b6f7a641",
+      "workbook": "Data Repository - MASTER - 2000-2015.XLSX",
+      "years": "2000-2001..2014-2015",
+      "councils": 29,
+      "ingested": false,
+      "reason": "documented archive evidence; this phase ingests the latest three complete years"
+    }
+  ],
+  "unit": {
+    "detected": "AUD",
+    "guard": "median total assets > $10m distinguishes whole dollars from $'000; ambiguity rejects the workbook",
+    "reconciliation": "revenue - expenses = printed operational surplus/deficit within $1.50; assets - liabilities = net assets within $1.50"
+  },
+  "ingested": {
+    "sheet": "Financial Data",
+    "years": ["2022-23", "2023-24", "2024-25"],
+    "councils_per_year": 29,
+    "measures": [
+      "total_operating_revenue",
+      "total_operating_expenses",
+      "capital_expenditure_existing_assets",
+      "capital_expenditure_new_assets",
+      "total_assets",
+      "total_liabilities",
+      "net_assets",
+      "working_capital"
+    ],
+    "rows": 684,
+    "caveat": "council-supplied LIST CDC snapshot, not audited GPFS; no cross-council/year total; never mixed with tas-budget"
+  },
+  "premise_falsifier": "TRUE: accessible actual CDC bulk XLSX with all 29 councils and explicit/reconcilable financial values for at least three recent years."
+}

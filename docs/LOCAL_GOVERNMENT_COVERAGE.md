@@ -1,8 +1,8 @@
 # Local government coverage
 
 **Status as at 2026-11-18.** Phase 1 covers **Queensland** (`qld-local-government`); Phase 2 adds
-**Western Australia** (`wa-mycouncil`). TAS/VIC/SA/NT are not added; the runner has an explicit
-priority-order extension point for them.
+**Western Australia** (`wa-mycouncil`); Phase 3 adds **Tasmania** (`tas-lg-cdc`). VIC/SA/NT are not
+added; the runner has an explicit priority-order extension point for them.
 
 ## QLD — source and package
 
@@ -180,6 +180,72 @@ areas, not COFOG, so `function_code` is left blank and rows are `provisional`.
   `records.json` SHA-256
   `3ad0bc966797938a3131b73c6f9391aec714c2177d9bc870487f0997cfd10dbe`.
 
+## TAS — CDC Financial Data (latest 3 years, all 29 councils)
+
+- source id: `tas-lg-cdc`
+- discovery page: <https://listdata.thelist.tas.gov.au/opendata/>
+- actual bulk files (LIST `resources/opendata.js`):
+  - `LGA_CDC_Data_Repository_2000-2015.zip` — **16,835,015 B**, SHA-256
+    `91a1418941150169a3155a3ff171b1977aa3dc2de1362316c3dfa374b6f7a641` (one XLSX, FY2000-01–FY2014-15)
+  - `LGA_CDC_Data_Repository_2015-2025.zip` — **13,432,951 B**, SHA-256
+    `007679502515e36e0f72783020ad59f7873416e42c2f231c15adb5242a4fe69f` (one `LISTData Repository - MASTER - 2015-2025.xlsx`, 29 councils × 10 years)
+- archive root: `/home/steve/ausspend-source-archive/tas-lg-cdc` (outside the repo; both ZIPs and SHA256SUMS)
+
+### What is ingested
+
+The latest ZIP `Financial Data` sheet contains 29 councils for each of FY2015-16–FY2024-25. This
+phase ingests the **three most recent complete years**: FY2022-23, FY2023-24, FY2024-25.
+
+Eight printed measures per council-year:
+
+- total operating revenue
+- total operating expenses
+- capital expenditure on existing assets
+- capital expenditure on new assets
+- total assets
+- total liabilities
+- net assets
+- working capital
+
+All 29 councils appear in every accepted year. Missing/blank individual cells are not emitted; the
+year is accepted only when all 29 councils are present. Source rows 291 → **684** non-additive
+actual rows (225 + 230 + 229; the difference from 29×3×8 is blank cells in a few working-capital /
+capital-expenditure fields).
+
+### Unit and total guards
+
+- The workbook has no `$'000` header. Magnitude detection on total assets gives a median well above
+  $10m → **whole AUD**, not thousands; a $'000 reading would be 1,000× implausible. The connector
+  rejects an ambiguous unit.
+- Printed reconciliation enforced per council-year:
+  - total operating revenue − total operating expenses = printed annual operational surplus/deficit
+    (`Annual Operational Surplus/(Deficit)` column), within $1.50;
+  - total assets − total liabilities = net assets, within $1.50.
+- Whole AUD → integer cents at ×100. No `$'000` table is ingested as dollars.
+- `measure_type: "actual"`, `data_quality_flag: "provisional"`, `aggregation_role: "agency_detail"`,
+  `verified: false`, `jurisdiction_level: "local"`, `jurisdiction: "TAS"`,
+  `delivery_entity`/`location.lga_name` = council name, `location.state: "TAS"`. COFOG is blank.
+
+### Not ingested / separation
+
+- The 2000-2015 repository and FY2015-16..FY2021-22 are documented archive evidence, not ingested
+  this phase.
+- Other CDC sheets (Total Capital Expenditure, Function Detail, SPP Details, Infrastructure) are
+  not ingested this phase; `Infrastructure` asset-management values are documented as future work.
+- `tas-budget` remains the separate TAS state budget; it is not duplicated or summed with CDC
+  council actuals. No cross-council/year total is produced.
+- The CDC is a council-supplied / LIST snapshot, not an audited GPFS.
+
+### Verification (2026-11-18)
+
+- Live run: `LGA_CDC_Data_Repository_2015-2025.zip` archived; Financial Data parsed 684 rows;
+  each year has **29 councils**.
+- Shared DB: all `measures` **730,771 → 731,455** (+684); `tas-lg-cdc` 0 → 684; `qld-local-government`
+  11,321, `wa-mycouncil` 27,561, `wa-budget` 855 and `tas-budget` 66 unchanged. Only new source:
+  `tas-lg-cdc`.
+- Second run: no new rows; source still 684, all measures still 731,455.
+- `LOCAL_GOV_DRY_RUN=1 npm run ingest:local-gov` → `qld-local-government -> wa-mycouncil -> tas-lg-cdc`.
+
 ## Ingestion
 
 ```bash
@@ -190,8 +256,8 @@ MONGO_URL=... npx tsx scripts/ingest-local-gov.ts --source=qld-local-government
 LOCAL_GOV_DRY_RUN=1 npm run ingest:local-gov
 ```
 
-The runner order is `qld-local-government` → `wa-mycouncil`. The extension point for
-TAS/VIC/SA/NT is `LOCAL_GOVERNMENT_SOURCES` in `scripts/ingest-local-gov.ts`; each future source
+The runner order is `qld-local-government` → `wa-mycouncil` → `tas-lg-cdc`. The extension point for
+VIC/SA/NT is `LOCAL_GOVERNMENT_SOURCES` in `scripts/ingest-local-gov.ts`; each future source
 must also be registered in the connector registry and must have its own source id and non-additive
 rules.
 
