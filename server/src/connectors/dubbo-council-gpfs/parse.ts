@@ -48,7 +48,12 @@ export const DUBBO_GPFS_SOURCE_DATASET = 'Dubbo Regional Council GPFS 2024-25';
  * historical FY2015-16..FY2022-23 series are deliberately excluded: they are
  * separate builders and must not be ingested here.
  */
-export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = ['2025-26', '2024-25', '2023-24'] as const;
+export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = [
+  '2025-26',
+  '2024-25',
+  '2023-24',
+  '2022-23',
+] as const;
 export const DUBBO_GPFS_LICENSE = DUBBO_LICENSE;
 export const DUBBO_GPFS_DATA_QUALITY_FLAG = 'provisional/local_government';
 
@@ -519,6 +524,14 @@ export interface DubboGpfsYearLayout {
 }
 
 export const DUBBO_GPFS_YEAR_LAYOUTS: Readonly<Record<string, DubboGpfsYearLayout>> = {
+  '2022-23': {
+    fiscalYear: '2022-23',
+    sourceDataset: 'Dubbo Regional Council GPFS 2022-23',
+    // FY2022-23 has the same inline single-total face shape as FY2023-24.
+    lines: DUBBO_GPFS_FY2023_24_LINES,
+    totalExpensesStatement: 'Income Statement',
+    expenseBridge: 'single-total',
+  },
   '2025-26': {
     fiscalYear: '2025-26',
     sourceDataset: 'Dubbo Regional Council GPFS 2025-26',
@@ -1212,7 +1225,7 @@ export function createDubboGpfsConnector(options: DubboGpfsConnectorOptions = {}
     jurisdiction_level: 'local',
     license: DUBBO_GPFS_LICENSE,
     notes:
-      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25 and FY2023-24 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and B1-1 Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
+      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25, FY2023-24 and FY2022-23 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and B1-1 Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
