@@ -1,6 +1,6 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Thirty-four council GPFS sources have landed
+**Status:** the inventory and plan below are unchanged. Thirty-five council GPFS sources have landed
 as separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
@@ -47,7 +47,7 @@ shared dev DB, Lane Cove Council FY2024-25 GPFS (**§7.32**) then added exactly 
 GPFS (**§7.33**) then added exactly **18** `mosman-gpfs` rows (**693,113** → **693,131**); the
 concurrent Lane Cove rows later took the live total to **693,148**. On the shared dev DB (after
 concurrent rows reached **693,177**), Hawkesbury City Council FY2024-25 GPFS (**§7.34**) then added
-exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**).
+exactly **19** `hawkesbury-gpfs` rows (**693,177** → **693,196**). Woollahra Municipal Council FY2024-25 GPFS (**§7.35**) was ingested against the earlier shared-dev snapshot: it added exactly **29** `woollahra-gpfs` rows (**693,148** → **693,177**), and the concurrent Hawkesbury landing later took the live total to **693,196**.
 The existing 245 `dubbo-council`
 budget/estimate rows, the 2 pre-existing AusTender federal contract rows whose `delivery_entity`
 happens to be "City of Sydney", the 2 AusTender + 1 GrantConnect rows whose `delivery_entity`
@@ -298,7 +298,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 577 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 606 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -322,8 +322,9 @@ Council FY2024-25 (`cumberland-gpfs`, §7.26) and 16 for Georges River Council F
 §7.28) and 17 for Liverpool City Council FY2024-25 (`liverpool-gpfs`, §7.29) and 17 for Ku-ring-gai
 Council FY2024-25 (`ku-ring-gai-gpfs`, §7.30) and 17 for Strathfield Council FY2024-25
 (`strathfield-gpfs`, §7.31) and 17 for Lane Cove Council FY2024-25 (`lane-cove-gpfs`, §7.32) and 18
-for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33) and 19 for Hawkesbury City Council FY2024-25
-(`hawkesbury-gpfs`, §7.34) — all separate source ids. The
+for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Council FY2024-25
+(`hawkesbury-gpfs`, §7.34) and 29 for Woollahra Municipal Council FY2024-25 (`woollahra-gpfs`,
+§7.35) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows.
@@ -3364,6 +3365,48 @@ or decreased** and no rows were deleted; `data_sources` records the source `acti
 `records_ingested: 19`. A second ingest run upserted the same 19 SHA-anchored natural keys and left the
 DB total unchanged (idempotent).
 
+### 7.35 Thirty-fifth council — Woollahra Municipal Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from Woollahra Municipal Council's official Annual Report page
+<https://www.woollahra.nsw.gov.au/Council/Vision-structure-and-financial-sustainability/Integrated-planning-and-reporting/Annual-Report>.
+The FY2024-25 audited statements are published as Annual Report Part 3:
+<https://www.woollahra.nsw.gov.au/files/assets/public/v/2/council/documents/annual-report-fy24-25-part-3.pdf>.
+The 83-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p6 /
+printed p4; Statement of Comprehensive Income PDF p7 / printed p5; B1-1 "Total functions and
+activities" PDF p15 / printed p13 — plus the independent auditor's reports. The printed unit is
+explicit `$ '000`; a missing or conflicting unit rejects the whole extraction.
+
+Exact bytes archived outside the repo at
+`~/ausspend-source-archive/woollahra-gpfs/woollahra-annual-report-2024-25-part-3-general-purpose-financial-statements.pdf`
+for this run: **5,812,977 bytes**, SHA-256
+`f92a0e41248573b4a71b417229d74b6c652039716fb1d4f216a7c316779f738b` (`hash_verified: true`). The
+source archive is outside the repository and the bytes are not redistributed.
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree: revenue components
+sum to the printed `$139,592` thousand total income; expense components sum to the printed
+`$113,216` thousand expenses excluding depreciation; `$113,216` + printed
+depreciation/amortisation/impairment `$16,413` = printed B1-1 total expenses `$129,629` thousand;
+B1-1 total income `$139,592`, operating result `$9,963` and the comprehensive-income net result
+`$9,963` all equal the face statement. The 11 printed B1-1 function expense lines sum exactly to
+`$129,629` thousand. Total expenses is the printed B1-1 total, never a sum of components on its own.
+
+**Rows.** 29 rows, source id `woollahra-gpfs`, `source_dataset` "Woollahra Municipal Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Woollahra Municipal Council"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. Printed lines include total
+revenue `$139,592,000`, total expenses `$129,629,000`, employee expenses `$52,968,000`,
+depreciation/amortisation/impairment `$16,413,000`, operating government grants `$4,615,000`,
+capital government grants `$8,612,000`, net result `$9,963,000`, and the 11 B1-1 expense/service
+functions. Government grant rows carry `potential_double_count: true`.
+
+**No double count.** Every row is `aggregation_role: "agency_detail"`, has no `region_id`/LGA
+allocation and is never summed with another council or with state rows. Other sources were preserved
+untouched: the claim-time and immediate pre-ingest `measures` baseline was **693,148**, rising to
+**693,177** after this ingest — exactly **+29** `woollahra-gpfs` rows — with every other per-source
+count identical and no deletions. The concurrent Hawkesbury landing later took the live total to
+**693,196**. A second ingest run upserted the same 29 natural keys and left the DB total unchanged
+(idempotent).
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -3417,7 +3460,8 @@ DB total unchanged (idempotent).
    **Thirty-second expansion landed 2026-11-18:** Lane Cove Council FY2024-25 GPFS, 17 non-additive
    rows (§7.32). **Thirty-third expansion landed 2026-11-18:** Mosman Council FY2024-25 GPFS, 18
    non-additive rows (§7.33). **Thirty-fourth expansion landed 2026-11-18:** Hawkesbury City Council
-   FY2024-25 GPFS, 19 non-additive rows (§7.34).
+   FY2024-25 GPFS, 19 non-additive rows (§7.34). **Thirty-fifth expansion landed 2026-11-18:** Woollahra Municipal Council FY2024-25 GPFS, 29
+   non-additive rows (§7.35).
 5. **P4 — data.nsw sweep per council.** Check each council's CKAN organisation for machine-readable
    financial data; most will not have it; do not infer. **Done 2026-11-17:** no machine-readable
    council financial dataset exists; see [NSW_COUNCIL_DATA_NSW_SWEEP.md](./NSW_COUNCIL_DATA_NSW_SWEEP.md).
@@ -3744,6 +3788,24 @@ migration were performed.
   `data-nsw-ckan` still 3,472; `data_sources` 67 → 68; a second run upserted the same 18 natural keys
   with no count change. A concurrent Lane Cove GPFS then added 17 rows (693,148 / 69 sources); no
   source count decreased.
+
+**GPFS thirty-fifth-council checks (Woollahra), 2026-11-18:**
+
+- Woollahra Municipal Council's official Annual Report page exposes the FY2024-25 **Annual Report
+  Part 3** audited General Purpose Financial Statements as the exact council PDF; the connector uses
+  that URL and SHA-256 archives the bytes outside the repo.
+- GPFS PDF downloaded (5,812,977 bytes); SHA-256
+  `f92a0e41248573b4a71b417229d74b6c652039716fb1d4f216a7c316779f738b` (`hash_verified: true`).
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income and
+  B1-1; the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$139,592,000`, expenses `$129,629,000` (printed B1-1 total, equal to expenses excluding
+  depreciation `$113,216,000` plus depreciation/amortisation/impairment `$16,413,000`), net result
+  `$9,963,000`; B1-1 grants `$13,227,000` = operating `$4,615,000` + capital `$8,612,000`; the 11
+  printed function expense lines sum to `$129,629,000`.
+- `woollahra-gpfs` rows: 29, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: claim-time and immediate pre-ingest 693,148 → 693,177 (+29 only); every other per-source count
+  unchanged and no rows deleted; a second run upserted the same 29 natural keys with no count change.
 
 ---
 

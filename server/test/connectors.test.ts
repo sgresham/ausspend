@@ -24,6 +24,7 @@ const LIVE_IDS = [
   'city-of-sydney-gpfs',
   'blacktown-gpfs',
   'hunters-hill-gpfs',
+  'woollahra-gpfs',
   'parramatta-gpfs',
   'northern-beaches-gpfs',
   'canterbury-bankstown-gpfs',
