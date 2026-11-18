@@ -184,13 +184,14 @@ describe('GET /api/meta/coverage', () => {
         'state/territory actual / estimate with COFOG and region',
       ]),
     );
-    expect(response.body.connectors).toHaveLength(62);
+    expect(response.body.connectors).toHaveLength(63);
     for (const connector of response.body.connectors) {
       expect(connector.status).toBe(
         connector.id === 'abs-gfs' ||
           connector.id === 'abs-gfs-pnfc' ||
           connector.id === 'aihw-health-expenditure' ||
           connector.id === 'wa-budget' ||
+          connector.id === 'tas-budget' ||
           connector.id === 'aus-tender' ||
           connector.id === 'data-gov-au-pbs' ||
           connector.id === 'grantconnect' ||
@@ -264,6 +265,7 @@ describe('GET /api/meta/coverage', () => {
       'qld-budget',
       'qld-qgip',
       'wa-budget',
+      'tas-budget',
     ]);
     expect(response.body.state_ingestion.stubs).not.toContain('wa-budget');
     expect(response.body.federal_ingestion.pending).toEqual([]);

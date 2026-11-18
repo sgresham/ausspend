@@ -280,6 +280,9 @@ export interface MeasureRow {
   wa_budget_measure?: 'asset_investment' | 'major_spending_change';
   wa_budget_table?: string;
   wa_printed_sign?: 'positive' | 'negative';
+  tas_budget_table?: string;
+  tas_budget_column?: string;
+  tas_budget_unit?: string;
 }
 
 /** Per-measure-type count and sum. The API never sums across types. */

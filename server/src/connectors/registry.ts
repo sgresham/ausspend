@@ -1,5 +1,6 @@
 import { createAbsGfsConnector } from './abs-gfs.js';
 import { createWaBudgetConnector } from './wa-budget.js';
+import { createTasBudgetConnector } from './tas-budget.js';
 import { createAihwHealthExpenditureConnector } from './aihw-health-expenditure.js';
 import { createAbsGfsPnfcConnector } from './abs-gfs-pnfc.js';
 import { createAcncCharityConnector } from './acnc-charity.js';
@@ -584,6 +585,12 @@ export const CONNECTORS: readonly Connector[] = [
   // asset investment by agency reconciled to its printed Total). Unit guard
   // requires $m; no COFOG mapping is invented.
   createWaBudgetConnector(),
+  // Phase 6.7: TAS Budget Paper No. 1 (2026-27) digital PDF, Table 9.16
+  // General Government Expenses from Transactions by Purpose. COFOG-A
+  // categories, six $m columns and a printed total reconciled for every year.
+  // Agency-level tables are in BP2 and are not part of this item. Rows are
+  // provisional benchmark aggregates; no COFOG mapping is invented.
+  createTasBudgetConnector(),
 ];
 
 export const CONNECTOR_IDS = CONNECTORS.map((connector) => connector.id);

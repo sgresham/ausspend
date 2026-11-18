@@ -1,5 +1,31 @@
 export { CONNECTORS, CONNECTOR_IDS, getConnector } from './registry.js';
 export {
+  TAS_BP1_PDF_URL,
+  TAS_CAVEAT,
+  TAS_COFOG,
+  TAS_COLUMNS,
+  TAS_DATASET,
+  TAS_ID,
+  TAS_LICENSE,
+  TAS_NAME,
+  TAS_PUBLISHER,
+  TAS_SOURCE_URL,
+  TAS_TABLE,
+  TAS_UNIT,
+  TAS_UNIT_LABEL,
+  TAS_UNIT_TO_CENTS,
+  createTasBudgetConnector,
+  discoverTasBp1,
+  parseTasBp1,
+  parseTasCofogTable,
+  tasMoneyToCents,
+  tasNaturalKey,
+  type TasBudgetConnectorOptions,
+  type TasCofogParseResult,
+  type TasColumn,
+} from './tas-budget.js';
+
+export {
   WA_CAVEAT,
   WA_CKAN_BASE,
   WA_DATASET,
