@@ -63,6 +63,7 @@ const KNOWN_SOURCE_IDS = [
   'camden-gpfs',
   'campbelltown-gpfs',
   'central-coast-gpfs',
+  'hornsby-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
