@@ -1,7 +1,7 @@
 # NSW local councils — source inventory, double-count review and pilot plan
 
-**Status:** the inventory and plan below are unchanged. Thirty council GPFS sources have landed as
-separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
+**Status:** the inventory and plan below are unchanged. Thirty-one council GPFS sources have landed
+as separate non-additive sources. The Dubbo FY2024-25 pilot (§7.1) added exactly **18**
 `dubbo-council-gpfs` rows (baseline **515,449** → **515,467**); the City of Sydney FY2024-25 GPFS
 (**§7.2**) then added exactly **18** `city-of-sydney-gpfs` rows (**515,467** → **515,485**); the
 Blacktown City Council FY2024-25 GPFS (**§7.3**) then added exactly **17** `blacktown-gpfs` rows
@@ -181,7 +181,7 @@ category is the 128.
 | Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                   In DB now |
 | --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------------------: |
 | OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                           0 |
-| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **506** (30 council GPFS sources, FY2024-25; separate non-additive sources) |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **523** (31 council GPFS sources, FY2024-25; separate non-additive sources) |
 | LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                           0 |
 | data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                          3,472 rows, none council financial |
 | Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                           0 |
@@ -3017,6 +3017,77 @@ case-insensitive exact rows 2 → **19**; rows whose `delivery_entity` mentions 
 `data_sources` 55 → **56**. A second ingest run upserted the same 17 natural keys and left the DB
 total unchanged (idempotent). No deletes or updates to any other source.
 
+### 7.31 Thirty-first council — Strathfield Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from Strathfield Council's official Reports and Registers page
+<https://www.strathfield.nsw.gov.au/Council/Reports-and-Registers>. The page lists the audited
+document under the printed link text **"Annual Financial Statement 2024 - 2025 (PDF, 5MB)"**; the
+FY2024-25 link is
+<https://www.strathfield.nsw.gov.au/files/assets/public/v/1/council/reports-and-registers/strathfield-municipal-council-financial-statements-2024-25-final.pdf>.
+The connector discovers that link from the page HTML (no hard-coded document URL) and SHA-256
+re-verifies the bytes. The printed unit is explicit `$ '000` on the Income Statement (PDF p6 /
+printed p4), Statement of Comprehensive Income (PDF p7 / printed p5) and B1-1 (PDF p15 / printed
+p13); a missing or conflicting unit rejects the whole extraction.
+
+Exact bytes archived outside the repo at
+`~/ausspend-source-archive/strathfield-gpfs/strathfield-municipal-council-financial-statements-2024-25-final.pdf`:
+**5,070,919 bytes**, SHA-256
+`90295cd968382d7b8249b7a1a01829526a39f00262ad3f5bc7d56cf58a5a67ee` (`hash_verified: true`).
+
+**Exact reconciliation.** The income statement prints the Original unaudited budget column before
+the line label and the Actual 2025 / Actual 2024 columns after it; the adapter reads the first amount
+after each printed label as the FY2024-25 actual. It emits nothing unless all of these agree:
+
+| Check                                                                                                                       |                                                         Printed / derived | Result                                                        |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------: | ------------------------------------------------------------- |
+| Total income from continuing operations (Income Statement)                                                                  |                                                        `$73,908` thousand | = `$73,908,000`                                               |
+| Revenue components sum (rates + user charges + other revenue + operating grants + capital grants + interest + other income) |                                                        `$73,908` thousand | = printed total                                               |
+| Expense-by-nature components sum (employee + materials + borrowing + other + net loss on disposal)                          | `$30,090` + `$24,085` + `$504` + `$1,346` + `$2,939` = `$58,964` thousand | = printed expenses excluding depreciation                     |
+| Printed expenses excluding depreciation + printed depreciation/amortisation (`$10,906`)                                     |                                `$58,964` + `$10,906` = `$69,870` thousand | = printed B1-1 total expenses                                 |
+| B1-1 Total functions and activities — income / expenses / operating result                                                  |                                 `$73,908` / `$69,870` / `$4,038` thousand | = face statement                                              |
+| B1-1 grants and contributions                                                                                               |                                                        `$17,674` thousand | = operating `$3,163` + capital `$14,511`                      |
+| Operating result / net operating result                                                                                     |                                 `$73,908` − `$69,870` = `$4,038` thousand | = printed operating result and net result                     |
+| Net operating result before capital grants                                                                                  |                               `$4,038` − `$14,511` = `($10,473)` thousand | = printed before-capital deficit (evidence only; not emitted) |
+| Statement of Comprehensive Income net result / other comprehensive income / total                                           |                                 `$4,038` + `$26,195` = `$30,233` thousand | = printed totals                                              |
+| Notes B3-1 employee / B3-2 materials / B3-3 borrowing / B3-4 depreciation / B3-5 other                                      |            `$30,090` / `$24,085` / `$504` / `$10,906` / `$1,346` thousand | = face lines                                                  |
+| Note B2-4 operating / capital grants                                                                                        |                                             `$3,163` / `$14,511` thousand | = face grants lines                                           |
+
+Total expenses is the printed B1-1 "Total functions and activities" expense total (`$69,870`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$58,964` thousand) plus printed
+depreciation/amortisation (`$10,906` thousand), and equals printed total income (`$73,908`
+thousand) less the printed operating result (`$4,038` thousand). There is no face-vs-B1-1
+discrepancy. The printed negative before-capital result (`($10,473)` thousand) is reconciliation
+evidence only because the measure model stores a non-negative net-result magnitude.
+
+**Rows.** 17 rows, source id `strathfield-gpfs`, `source_dataset` "Strathfield Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Strathfield Council"`,
+`data_quality_flag: "provisional/local_government"`, `verified: false`. The minimum lines are total
+revenue `$73,908,000`, total expenses `$69,870,000`, employee expenses `$30,090,000`,
+depreciation/amortisation `$10,906,000`, operating government grants `$3,163,000`, capital
+government grants `$14,511,000`, net loss on disposal `$2,939,000` and net result `$4,038,000`; the
+printed face-statement revenue and expense components are included for provenance. B1-1's function
+split is not emitted.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed
+into any other council or state rows. The pre-existing same-entity rows are preserved untouched:
+before this ingest there were **2 rows** whose `delivery_entity` case-insensitively equals
+"Strathfield Council" (1 exact-case GrantConnect grant and 1 uppercase AusTender contract), plus 1
+ACNC charity row and 1 NSW Budget project that merely mention Strathfield under other strings. All
+other GPFS sources are unchanged. Government grant rows carry `potential_double_count: true`
+because they may overlap government program data; they are not added to expenditure.
+
+**Database evidence (2026-11-18).** Claim-time `measures` **693,096** (`strathfield-gpfs` 0,
+`mosman-gpfs` 0, `lane-cove-gpfs` 0). Immediately before this ingest, concurrent workers had added
+Lane Cove's 17 rows, taking the total to **693,113**; after this ingest it is **693,148**
+(**+35** = Strathfield **+17** + concurrent Mosman **+18**). `strathfield-gpfs` **17**; all other
+sources have delta 0 apart from those two concurrent council ingests; `data_sources` 67 → **68**.
+A second run upserted the same 17 natural keys and left the DB total unchanged (idempotent). No
+deletes or updates to any other source.
+
 ---
 
 ## 8. Prioritised rollout (after the pilot)
@@ -3334,6 +3405,27 @@ migration were performed.
   `data-nsw-ckan` still 3,472; `data_sources` 55 → 56; a second run upserted the same 17 natural keys
   with no count change.
 
+**GPFS thirty-first-council checks (2026-11-18):**
+
+- Strathfield Council official Reports and Registers page fetched directly; the FY2024-25
+  **"Annual Financial Statement 2024 - 2025"** link was discovered from the page HTML, not a
+  hard-coded document URL.
+- GPFS PDF downloaded from the official link (5,070,919 bytes) and SHA-256 archived outside the repo;
+  SHA-256 `90295cd968382d7b8249b7a1a01829526a39f00262ad3f5bc7d56cf58a5a67ee`.
+- Printed `$ '000` unit detected on the income statement, comprehensive-income statement, B1-1 and
+  notes B2/B3; the connector rejects a missing or conflicting unit.
+- Income statement, B1-1 and comprehensive-income totals reconcile exactly: revenue
+  `$73,908,000`, expenses `$69,870,000` (printed bridge of expenses excluding depreciation
+  `$58,964,000` plus depreciation/amortisation `$10,906,000`), net result `$4,038,000`; B1-1 grants
+  `$17,674,000` = operating `$3,163,000` + capital `$14,511,000`.
+- The printed before-capital result is `($10,473,000)`; it is reconciliation evidence only because
+  measures store a non-negative net-result magnitude.
+- `strathfield-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- DB: claim-time measures 693,096; immediately before this ingest 693,113 (concurrent Lane Cove
+  +17); after this ingest 693,148 (Strathfield +17 and concurrent Mosman +18); all other sources
+  delta 0; `data_sources` 67 → 68; a second run upserted the same 17 natural keys with no count
+  change.
+
 ---
 
 ## 10. Ambiguities / open questions (verbatim where possible)
@@ -3380,6 +3472,6 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.30 GPFS sources: thirty councils, one audited year each,
+The only ingestions are the §7.1–§7.31 GPFS sources: thirty-one councils, one audited year each,
 non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
