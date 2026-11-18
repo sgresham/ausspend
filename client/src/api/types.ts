@@ -120,7 +120,18 @@ export interface CoverageResponse {
     qld_budget_last_ingested_at?: string | null;
     qld_qgip_last_ingested_at?: string | null;
     qld_qgip_records?: number;
+    wa_budget_last_ingested_at?: string | null;
+    sa_gfs_last_ingested_at?: string | null;
+    tas_budget_last_ingested_at?: string | null;
     deferred_resources?: DeferredResource[];
+    note: string;
+  };
+  territory_ingestion?: {
+    live: string[];
+    degraded: string[];
+    stubs: string[];
+    act_budget_last_ingested_at?: string | null;
+    nt_budget_last_ingested_at?: string | null;
     note: string;
   };
   charity_ingestion?: {
@@ -170,6 +181,7 @@ export interface CoverageResponse {
     degraded: string[];
     stubs: string[];
     dubbo_last_ingested_at?: string | null;
+    qld_local_last_ingested_at?: string | null;
     note: string;
     not_covered?: { councils: string[]; states: string[] };
   };

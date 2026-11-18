@@ -195,7 +195,7 @@ covering eight states/territories × 16 leaf areas × seven detailed funding sou
 `agency_detail` and no total is computed. METEOR remains metadata-only; the current series comes
 from the report data tables, not METEOR. Only `aihw-health-expenditure` rows are replaced; every
 other source is unchanged. The live DB is the authority for the current count (it also contains the
-VIC LGPRF rows landed concurrently); the latest verified snapshot is 691,469 measures.
+VIC LGPRF rows landed concurrently); the latest verified snapshot is 693,059 measures.
 Phase 6.3 adds **855 WA Budget EFO rows** from catalogue.data.wa.gov.au CKAN: no machine-readable
 BP2 agency-expense dataset is published, so Chapter 5 major spending changes are provisional,
 non-additive policy measures and Chapter 6 Table 1 asset investment is reconciled to its printed
@@ -225,6 +225,11 @@ operating expenses, employee, depreciation/amortisation and interest, 2010-11..2
 Components are components of the printed total, every row is `agency_detail`, and the
 source is separate from QGIP project grants/procurement. The latest verified snapshot is
 693,059 measures.
+Phase 6.10 adds `npm run ingest:phase6`, which runs the Phase 6 sources in priority order with
+per-source logs/status transitions, and updates `/api/meta/coverage` to report active state,
+territory and local registers (WA/SA/TAS active, ACT/NT territory active, QLD local active, SA
+local explicitly deferred). See [PHASE6_INGESTION.md](PHASE6_INGESTION.md) for the register, unit
+decisions, degraded-SOC recovery and limitations.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future

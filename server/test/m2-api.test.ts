@@ -270,6 +270,10 @@ describe('GET /api/meta/coverage', () => {
       'tas-budget',
     ]);
     expect(response.body.state_ingestion.stubs).not.toContain('wa-budget');
+    expect(response.body.state_ingestion.stubs).toEqual([]);
+    expect(response.body.territory_ingestion.live).toEqual(['act-budget', 'nt-budget']);
+    expect(response.body.territory_ingestion.stubs).toEqual([]);
+    expect(response.body.local_ingestion.live).toContain('qld-local-government');
     expect(response.body.federal_ingestion.pending).toEqual([]);
     expect(response.body.limitations.join(' ')).toMatch(/synthetic/i);
     expect(response.body.limitations.join(' ')).toMatch(/verified/i);

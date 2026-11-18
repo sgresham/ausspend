@@ -38,6 +38,7 @@
     "ingest:sa-gfs": "npm run build -w shared && tsx scripts/ingest-sa-budget-gfs.ts",
     "ingest:act-budget": "npm run build -w shared && tsx scripts/ingest-act-budget.ts",
     "ingest:nt-budget": "npm run build -w shared && tsx scripts/ingest-nt-budget.ts",
+    "ingest:phase6": "npm run build -w shared && tsx scripts/ingest-phase6.ts",
     "archive:vic": "npm run build -w shared && tsx scripts/vic-source-archive.ts",
     "ingest:vic-vlgc": "npm run build -w shared && tsx scripts/ingest-vic-vlgc.ts",
     "ingest:vic-vlgc-abs": "npm run build -w shared && tsx scripts/ingest-vic-vlgc-abs.ts",

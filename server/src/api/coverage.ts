@@ -102,7 +102,7 @@ export const COVERAGE_GAPS = [
     dimension: 'state/territory coverage',
     status: 'partial',
     detail:
-      'NSW (NSW Budget, targeted data.nsw.gov.au CKAN and Dubbo), VIC (VIC Budget 2026-27 COFOG-A additive expenses plus non-additive DTF agency detail) and QLD (BP3 capital projects additive; BP4 policy measures non-additive; QGIP actual grant awards plus procured frontline services, kept as separate measure types and never summed; no COFOG, provisional). WA, SA, TAS, ACT and NT have no real state spending feed.',
+      'NSW (NSW Budget, targeted data.nsw.gov.au CKAN and Dubbo), VIC (VIC Budget 2026-27 COFOG-A additive expenses plus non-additive DTF agency detail), QLD (BP3 capital projects additive; BP4 policy measures non-additive; QGIP actual grant awards plus procured frontline services, kept as separate measure types and never summed; no COFOG, provisional), WA (2016-17 EFO policy/asset tables, provisional, custom licence), SA (GFS expenses by GPC/economic type, COFOG-mapped, 2012-13..2015-16), ACT (Socrata capital-works budget, project x year), TAS (2026-27 BP1 Table 9.16 COFOG-A, budget/estimate columns), and NT (2026-27 BP4 COFOG-A capital works). TAS/NT are document-extracted and provisional. No state/territory source provides COFOG and a curated sub-state region together.',
   },
   {
     dimension: 'sub-state region coverage',
@@ -146,7 +146,7 @@ function coverageLimitations(
     syntheticLine,
     'Synthetic and ingested project rows are unverified: seeded measures, AusTender contracts, PBS budget rows, state budget/project rows and charity rows carry verified: false. The only verified rows are the official ABS GFS COFOG-A aggregates (aggregation_role "benchmark"), which are top-down benchmarks and are never added to project data.',
     liveFederal
-      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. AIHW health expenditure is live from the official data.gov.au CSV because METEOR is metadata-only; its rows are real/constant-price, government/non-government, non-additive agency detail. The three other registered connectors are stubs and make no network call.'
+      ? 'AusTender OCDS contractPublished ingestion and data.gov.au PBS program-expense ingestion are live. GrantConnect is a manual, SHA-256-archived DownloadResult export import (no API and no scraper): a wide export above the 50,000-result cap is rejected and partial chunk coverage is reported honestly. AIHW health expenditure is live from the current 2024-25 supplementary tables (2022-23..2024-25, 1,747 COFOG-07 rows) because METEOR is metadata-only; government (federal/state) and non-government funding are separate, non-additive agency detail. The two remaining registered federal connectors (federal-budget-portal and aofm) are stubs and make no network call.'
       : 'No live ingestion has run yet: aus-tender, data-gov-au-pbs and grantconnect plus the eight other registered connectors are stubs; no request leaves the API until the runner runs.',
     pbsLive
       ? `${PBS_CAVEAT} PBS rows are programme/entity line items, not a single federal expense total.`
@@ -272,7 +272,28 @@ export function createCoverageHandler(
     const vicBudget = dataSourceById.get('vic-budget');
     const qldBudget = dataSourceById.get('qld-budget');
     const qldQgip = dataSourceById.get('qld-qgip');
+    const waBudget = dataSourceById.get('wa-budget');
+    const saGfs = dataSourceById.get('sa-budget-gfs');
+    const tasBudget = dataSourceById.get('tas-budget');
+    const actBudget = dataSourceById.get('act-budget');
+    const ntBudget = dataSourceById.get('nt-budget');
+    const qldLocal = dataSourceById.get('qld-local-government');
     const stateLive = stateConnectors.some((connector) => connector.status === 'active');
+    const territoryConnectors = connectors.filter(
+      (connector) => connector.jurisdiction_level === 'territory',
+    );
+    const phase6Live = [
+      'aihw-health-expenditure',
+      'wa-budget',
+      'sa-budget-gfs',
+      'act-budget',
+      'tas-budget',
+      'nt-budget',
+      'qld-local-government',
+    ].some((id) => {
+      const source = dataSourceById.get(id);
+      return source?.status === 'active' || source?.status === 'degraded';
+    });
     const localConnectors = connectors.filter(
       (connector) => connector.jurisdiction_level === 'local',
     );
@@ -344,6 +365,7 @@ export function createCoverageHandler(
         benchmarkLive ? '+ ABS GFS benchmark' : null,
         pnfcBenchmarkLive ? '+ ABS GFS PNFC benchmark' : null,
         aihwLive ? '+ AIHW health expenditure' : null,
+        phase6Live ? '+ Phase 6 (WA/SA/ACT/TAS/NT + QLD local)' : null,
         socLive
           ? `+ NSW SOC (${[
               socLiveIds.includes(SYDNEY_WATER_ID) ? 'Sydney Water' : null,
@@ -411,7 +433,7 @@ export function createCoverageHandler(
         grantconnect_caveat: GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
         grantconnect_note: grantconnect?.notes ?? GRANTCONNECT_MANUAL_EXPORT_CAVEAT,
         note: liveIngestion
-          ? 'AusTender OCDS contracts, data.gov.au PBS budget line items, the ABS GFS COFOG-A benchmark and AIHW health expenditure are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. AIHW health expenditure uses the official data.gov.au state x area x funding-source CSV because METEOR is metadata-only; government and non-government are separate, non-additive series and its 1997-98..2011-12 coverage is documented as a superseded snapshot. Every other source is a stub. PBS line items do not sum to the Budget Paper 1 total general government expense, and ABS GFS is a top-down benchmark that is never added to project data.'
+          ? 'AusTender OCDS contracts, data.gov.au PBS budget line items, the ABS GFS COFOG-A benchmark and AIHW health expenditure are live. GrantConnect is a manual, capped DownloadResult export import (SHA-256 archived; no API/scraper) and is partial until complete date-range chunks cover the period. AIHW health expenditure uses the current 2024-25 supplementary tables (2022-23..2024-25, 1,747 COFOG-07 rows) because METEOR is metadata-only; its 1997-98..2011-12 data.gov.au CSV is superseded and is not shipped as current. Government (federal/state) and non-government funding are separate, non-additive series. The two remaining registered federal connectors (federal-budget-portal and aofm) are stubs. PBS line items do not sum to the Budget Paper 1 total general government expense, and ABS GFS is a top-down benchmark that is never added to project data.'
           : 'No federal source is live yet. AusTender, PBS and GrantConnect are pending.',
       },
       state_ingestion: {
@@ -437,8 +459,35 @@ export function createCoverageHandler(
           ? new Date(qldQgip.last_ingested_at).toISOString()
           : null,
         qld_qgip_records: qldQgip?.records_ingested ?? 0,
+        wa_budget_last_ingested_at: waBudget?.last_ingested_at
+          ? new Date(waBudget.last_ingested_at).toISOString()
+          : null,
+        sa_gfs_last_ingested_at: saGfs?.last_ingested_at
+          ? new Date(saGfs.last_ingested_at).toISOString()
+          : null,
+        tas_budget_last_ingested_at: tasBudget?.last_ingested_at
+          ? new Date(tasBudget.last_ingested_at).toISOString()
+          : null,
         deferred_resources: nswCkan?.deferred_resources ?? [],
-        note: "NSW Budget 2025-26 Open Data (official Wayback XLSX copy + ArcGIS capital projects), targeted data.nsw.gov.au CKAN datasets, VIC Budget 2026-27 DataVic CKAN workbooks, QLD Budget 2026-27 BP3/BP4 CSVs and the QLD QGIP 2018-19..2024-25 consolidated expenditure CSVs are live. Downloads are archived with SHA-256; PDF/DOCX resources are deferred and listed here, not ingested. Western Australia remains a stub. NSW, VIC and QLD budget rows are Budgeted/estimate/actual statement line items or budget measures, never spent amounts; VIC is budget-column only with non-additive DTF detail and unconfirmed Transport 045; QLD BP3/BP4 is $'000 BP3 additive capital plus non-additive BP4 policy measures with no COFOG; QGIP is actual whole-dollar grant awards and procured frontline services, one CSV per fiscal year, with funding_source the QLD agency and no COFOG; grants and contracts are separate measure types that are never summed and years are never merged. 2019-20 QGIP is partial and flagged because the publisher left the annual payment blank on 82% of rows. Measure types are never summed.",
+        note: 'NSW Budget 2025-26 Open Data, targeted data.nsw.gov.au CKAN datasets, VIC Budget 2026-27 DataVic workbooks, QLD Budget 2026-27 BP3/BP4 CSVs, the QLD QGIP consolidated expenditure CSVs, the 2016-17 WA Economic and Fiscal Outlook tables (custom Personal & Academic Use licence, provisional), the SA GFS expenses-by-GPC/economic-type workbook (COFOG-mapped, 2012-13..2015-16), and the 2026-27 TAS Budget Paper No. 1 Table 9.16 COFOG-A expense table (provisional) are active. There are no state-level stubs. ACT and NT are territory-level connectors and are reported separately under territory_ingestion. WA Chapter 5 rows are non-additive major spending changes and Chapter 6 is asset investment, so they are never summed; SA rows are one GPC function x economic-type component and the printed TOTAL row is never emitted; TAS Table 9.16 rows are provisional COFOG-A benchmark aggregates with the nominal-superannuation reconciliation line not mapped to COFOG. Downloads are archived with SHA-256; PDF/DOCX resources are deferred and listed here, not ingested. Measure types are never summed.',
+      },
+      territory_ingestion: {
+        live: territoryConnectors
+          .filter((connector) => connector.status === 'active')
+          .map((connector) => connector.id),
+        degraded: territoryConnectors
+          .filter((connector) => connector.status === 'degraded')
+          .map((connector) => connector.id),
+        stubs: territoryConnectors
+          .filter((connector) => connector.status === 'stub')
+          .map((connector) => connector.id),
+        act_budget_last_ingested_at: actBudget?.last_ingested_at
+          ? new Date(actBudget.last_ingested_at).toISOString()
+          : null,
+        nt_budget_last_ingested_at: ntBudget?.last_ingested_at
+          ? new Date(ntBudget.last_ingested_at).toISOString()
+          : null,
+        note: "ACT and NT are territory-level connectors. ACT Budget 2021-2022 Infrastructure Investment Program is a paged Socrata resource: 424 projects x five budgeted-financing years ($'000, budget measure, project-total column reconciliation-only). NT Budget 2026-27 Budget Paper No. 4 Table 3 is a Cloudflare-gated PDF: ten COFOG-A capital-works categories in $m, budget measure, provisional/medium-confidence extraction, with the printed $4,253.6m total reconciliation-only. Neither source has a state row or a sub-state region, and neither is summed with state or local data.",
       },
       charity_ingestion: {
         live: charityConnectors
@@ -646,7 +695,10 @@ export function createCoverageHandler(
         dubbo_last_ingested_at: dubbo?.last_ingested_at
           ? new Date(dubbo.last_ingested_at).toISOString()
           : null,
-        note: "S3 and the GPFS expansion cover eleven NSW local councils (Dubbo Regional Council, the City of Sydney, Blacktown City Council, City of Parramatta, Northern Beaches Council, Canterbury-Bankstown Council, Sutherland Shire Council, Wollongong City Council, Newcastle City Council, Lake Macquarie City Council and Maitland City Council) as separate non-additive sources, and VIC council pilot A adds the VLGGC 2024-25 VGC1 questionnaire for all 79 Victorian councils (5,401 non-additive questionnaire rows; provisional/local_government; VLGGC attribution/permission, not CC BY; source Totals row suppressed; no cross-council total; never mixed with NSW councils or any state row), and VIC council pilot B adds the VLGGC 2024-25 ABS1/ABS2-3 workbooks for the same 79 councils (9,059 non-additive capital/balance/cash-flow/income rows; four source Totals rows suppressed; Bendigo balances reconciled exactly and the $473,353.20 capital bridge documented; never mixed with VGC1, NSW councils or any state row). Source dubbo-council is Dubbo's adopted budget/capital PDF (245 budget/estimate rows); source dubbo-council-gpfs is Dubbo's audited FY2024-25 General Purpose Financial Statements; source city-of-sydney-gpfs is the City of Sydney's audited FY2024-25 General Purpose Financial Statements; source blacktown-gpfs is Blacktown City Council's audited FY2024-25 General Purpose Financial Statements; source parramatta-gpfs is the City of Parramatta's audited FY2024-25 General Purpose Financial Statements; source northern-beaches-gpfs is Northern Beaches Council's audited FY2024-25 General Purpose Financial Statements; source canterbury-bankstown-gpfs is Canterbury-Bankstown Council's audited FY2024-25 General Purpose Financial Statements; source sutherland-shire-gpfs is Sutherland Shire Council's audited FY2024-25 General Purpose Financial Statements; source wollongong-gpfs is Wollongong City Council's audited FY2024-25 General Purpose Financial Statements; source newcastle-gpfs is Newcastle City Council's audited FY2024-25 General Purpose Financial Statements; source lake-macquarie-gpfs is Lake Macquarie City Council's audited FY2024-25 General Purpose Financial Statements; source maitland-gpfs is Maitland City Council's audited FY2024-25 General Purpose Financial Statements. Each GPFS PDF is discovered from the council's official reporting page (no hard-coded URL), SHA-256 archived, and emitted only when the printed $'000 unit and the income statement/B1-1 reconciliations are exact (Dubbo also reconciles to OLG FY2024-25 totals; the City of Sydney, Blacktown, Parramatta, Northern Beaches, Canterbury-Bankstown, Sutherland Shire, Wollongong, Newcastle, Lake Macquarie and Maitland also reconcile to their Statement of Comprehensive Income). GPFS rows are non-additive agency detail with no region/LGA allocation, so they are never summed with the 245 summary rows, another council, another council GPFS source or any state row. Every local row is provisional and unverified. Area panels are local, NSW-wide state, NSW-tagged federal AusTender and Commonwealth-wide PBS; they are not additive. No other council is covered.",
+        qld_local_last_ingested_at: qldLocal?.last_ingested_at
+          ? new Date(qldLocal.last_ingested_at).toISOString()
+          : null,
+        note: "NSW local: Dubbo's adopted budget/capital PDF and eleven audited GPFS sources (Dubbo, City of Sydney, Blacktown, Parramatta, Northern Beaches, Canterbury-Bankstown, Sutherland Shire, Wollongong, Newcastle, Lake Macquarie and Maitland), all non-additive agency detail with no region/LGA allocation. VIC local: VLGGC VGC1 and ABS1/ABS2-3 for all 79 councils, including the FY2015-16..FY2023-24 historical series; every source Totals row is suppressed and no cross-council total is created; VLGGC is attribution/permission, not CC BY. QLD local: the local government comparative-information Financial Inputs CSV is active as `qld-local-government` (council-level actual $'000 operating expenses/employee/depreciation/interest, agency_detail, never summed with QGIP grants/procurement). SA local government is deferred (Phase 6.5 closed deferred); no SA council source is registered. ACT and NT are territory-level and reported under territory_ingestion. No other council or state/territory local source is covered.",
         not_covered: AREA_NOT_COVERED,
       },
       ingestion: {
