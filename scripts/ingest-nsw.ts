@@ -84,6 +84,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - strathfield-gpfs  GPFS expansion: Strathfield Council's audited FY2024-25 GPFS
  *   - lane-cove-gpfs  GPFS expansion: Lane Cove Council's audited FY2024-25 GPFS
  *   - mosman-gpfs  GPFS expansion: Mosman Council's audited FY2024-25 GPFS
+ *   - wollondilly-gpfs  GPFS expansion: Wollondilly Shire Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -96,7 +97,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Council of the City of Ryde, North Sydney Council, the City of Canada Bay
  * Council, Cumberland City Council, Georges River Council, Fairfield City
  * Council, Liverpool City Council, Ku-ring-gai Council, Strathfield Council,
- * Lane Cove Council and Mosman Council. No other councils, states/territories, SOC/charity or live state
+ * Lane Cove Council, Mosman Council and Wollondilly Shire Council. No other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -140,6 +141,7 @@ export const NSW_SOURCE_IDS = [
   'hawkesbury-gpfs',
   'woollahra-gpfs',
   'blue-mountains-gpfs',
+  'wollondilly-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
