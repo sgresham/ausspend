@@ -56,6 +56,8 @@ const KNOWN_SOURCE_IDS = [
   'ku-ring-gai-gpfs',
   'lane-cove-gpfs',
   'mosman-gpfs',
+  'hawkesbury-gpfs',
+  'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
   'vic-vlgc-vgc1',

@@ -9,30 +9,31 @@ import { connectorModule as module6 } from './cumberland-gpfs/index.js';
 import { connectorModule as module7 } from './dubbo-council-gpfs/index.js';
 import { connectorModule as module8 } from './fairfield-gpfs/index.js';
 import { connectorModule as module9 } from './georges-river-gpfs/index.js';
-import { connectorModule as module10 } from './hunters-hill-gpfs/index.js';
-import { connectorModule as module11 } from './inner-west-gpfs/index.js';
-import { connectorModule as module12 } from './ku-ring-gai-gpfs/index.js';
-import { connectorModule as module13 } from './lake-macquarie-gpfs/index.js';
-import { connectorModule as module14 } from './lane-cove-gpfs/index.js';
-import { connectorModule as module15 } from './liverpool-gpfs/index.js';
-import { connectorModule as module16 } from './maitland-gpfs/index.js';
-import { connectorModule as module17 } from './mid-coast-gpfs/index.js';
-import { connectorModule as module18 } from './mosman-gpfs/index.js';
-import { connectorModule as module19 } from './newcastle-gpfs/index.js';
-import { connectorModule as module20 } from './north-sydney-gpfs/index.js';
-import { connectorModule as module21 } from './northern-beaches-gpfs/index.js';
-import { connectorModule as module22 } from './parramatta-gpfs/index.js';
-import { connectorModule as module23 } from './port-macquarie-hastings-gpfs/index.js';
-import { connectorModule as module24 } from './randwick-gpfs/index.js';
-import { connectorModule as module25 } from './ryde-gpfs/index.js';
-import { connectorModule as module26 } from './shellharbour-gpfs/index.js';
-import { connectorModule as module27 } from './shoalhaven-gpfs/index.js';
-import { connectorModule as module28 } from './strathfield-gpfs/index.js';
-import { connectorModule as module29 } from './sutherland-shire-gpfs/index.js';
-import { connectorModule as module30 } from './tweed-shire-gpfs/index.js';
-import { connectorModule as module31 } from './waverley-gpfs/index.js';
-import { connectorModule as module32 } from './willoughby-gpfs/index.js';
-import { connectorModule as module33 } from './wollongong-gpfs/index.js';
+import { connectorModule as module10 } from './hawkesbury-gpfs/index.js';
+import { connectorModule as module11 } from './hunters-hill-gpfs/index.js';
+import { connectorModule as module12 } from './inner-west-gpfs/index.js';
+import { connectorModule as module13 } from './ku-ring-gai-gpfs/index.js';
+import { connectorModule as module14 } from './lake-macquarie-gpfs/index.js';
+import { connectorModule as module15 } from './lane-cove-gpfs/index.js';
+import { connectorModule as module16 } from './liverpool-gpfs/index.js';
+import { connectorModule as module17 } from './maitland-gpfs/index.js';
+import { connectorModule as module18 } from './mid-coast-gpfs/index.js';
+import { connectorModule as module19 } from './mosman-gpfs/index.js';
+import { connectorModule as module20 } from './newcastle-gpfs/index.js';
+import { connectorModule as module21 } from './north-sydney-gpfs/index.js';
+import { connectorModule as module22 } from './northern-beaches-gpfs/index.js';
+import { connectorModule as module23 } from './parramatta-gpfs/index.js';
+import { connectorModule as module24 } from './port-macquarie-hastings-gpfs/index.js';
+import { connectorModule as module25 } from './randwick-gpfs/index.js';
+import { connectorModule as module26 } from './ryde-gpfs/index.js';
+import { connectorModule as module27 } from './shellharbour-gpfs/index.js';
+import { connectorModule as module28 } from './shoalhaven-gpfs/index.js';
+import { connectorModule as module29 } from './strathfield-gpfs/index.js';
+import { connectorModule as module30 } from './sutherland-shire-gpfs/index.js';
+import { connectorModule as module31 } from './tweed-shire-gpfs/index.js';
+import { connectorModule as module32 } from './waverley-gpfs/index.js';
+import { connectorModule as module33 } from './willoughby-gpfs/index.js';
+import { connectorModule as module34 } from './wollongong-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -69,6 +70,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module31,
   module32,
   module33,
+  module34,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);
