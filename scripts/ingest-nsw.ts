@@ -82,6 +82,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - liverpool-gpfs  GPFS expansion: Liverpool City Council's audited FY2024-25 GPFS
  *   - ku-ring-gai-gpfs  GPFS expansion: Ku-ring-gai Council's audited FY2024-25 GPFS
  *   - strathfield-gpfs  GPFS expansion: Strathfield Council's audited FY2024-25 GPFS
+ *   - lane-cove-gpfs  GPFS expansion: Lane Cove Council's audited FY2024-25 GPFS
+ *   - mosman-gpfs  GPFS expansion: Mosman Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -93,7 +95,8 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Council, Inner West Council, Bayside Council, Randwick City Council, the
  * Council of the City of Ryde, North Sydney Council, the City of Canada Bay
  * Council, Cumberland City Council, Georges River Council, Fairfield City
- * Council, Liverpool City Council, Ku-ring-gai Council and Strathfield Council. No other councils, states/territories, SOC/charity or live state
+ * Council, Liverpool City Council, Ku-ring-gai Council, Strathfield Council,
+ * Lane Cove Council and Mosman Council. No other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -133,6 +136,7 @@ export const NSW_SOURCE_IDS = [
   'ku-ring-gai-gpfs',
   'strathfield-gpfs',
   'lane-cove-gpfs',
+  'mosman-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {

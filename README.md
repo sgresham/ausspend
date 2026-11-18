@@ -11,12 +11,12 @@ client, an Express API and shared TypeScript/Zod contracts.
 > at `/api/coverage`). Real sources include
 > **AusTender federal contracts**, **data.gov.au PBS budget line items**, **GrantConnect** grant
 > awards (a human-downloaded, SHA-256-archived XLSX export; no API and no scraper), NSW/VIC/QLD
-> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus thirty
+> budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus thirty-one
 > audited council GPFS sources (Dubbo, City of Sydney, Blacktown, City of Parramatta, Northern
 > Beaches, Canterbury-Bankstown, Sutherland Shire, Wollongong, Newcastle, Lake Macquarie, Maitland,
 > Coffs Harbour, MidCoast, Port Macquarie-Hastings, Tweed, Shoalhaven, Shellharbour, Waverley,
 > Willoughby, Inner West, Bayside, Randwick, Ryde, North Sydney, Canada Bay, Cumberland, Georges
-> River, Fairfield, Liverpool and Ku-ring-gai), ACNC
+> River, Fairfield, Liverpool, Ku-ring-gai, Strathfield, Lane Cove and Mosman), ACNC
 > charity expenses and the official ABS GFS COFOG-A benchmark. Project and charity rows are real
 > published records but remain unverified (`verified: false`); only the ABS GFS benchmark rows are
 > `verified: true` and they are never summed with project data. The app never sums across measure
@@ -217,9 +217,9 @@ nonzero before it changes anything.
 
 The live baseline after the QGIP earlier-years, Essential Energy, Forestry Corporation of NSW,
 Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink ingests plus the Dubbo GPFS
-pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai / Strathfield GPFS expansion, plus VIC council pilots B, C and D (VLGGC historical), is **659,086 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
+pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai / Strathfield / Lane Cove / Mosman GPFS expansion, plus VIC council pilots B, C and D (VLGGC historical), is **659,086 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
 AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115,
-QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, Strathfield GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401 + 48,815 historical, VIC VLGGC ABS1/ABS2-3 9,059 + 82,857 historical, ABS GFS PNFC
+QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, Strathfield GPFS 17, Lane Cove GPFS 17, Mosman GPFS 18, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401 + 48,815 historical, VIC VLGGC ABS1/ABS2-3 9,059 + 82,857 historical, ABS GFS PNFC
 18, Sydney Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5,
 Sydney Trains 6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
 Phase 6.2b replaces the superseded AIHW 1997-98..2011-12 CSV with the current AIHW 2024-25
@@ -456,7 +456,7 @@ carries the function/region reference, `count`, `measure_types`, `mixed`, `total
 
 ### Ingestion connectors and runner (F2 AusTender + F3 PBS + S1 NSW Budget + S2 data.nsw.gov.au CKAN live)
 
-`server/src/connectors` registers fifty Australian public-spending sources, including the thirty separate council GPFS sources (`dubbo-council-gpfs`, `city-of-sydney-gpfs`, `blacktown-gpfs`, `parramatta-gpfs`, `northern-beaches-gpfs`, `canterbury-bankstown-gpfs`, `sutherland-shire-gpfs`, `wollongong-gpfs`, `newcastle-gpfs`, `lake-macquarie-gpfs`, `maitland-gpfs`, `coffs-harbour-gpfs`, `mid-coast-gpfs`, `port-macquarie-hastings-gpfs`, `tweed-shire-gpfs`, `shoalhaven-gpfs`, `shellharbour-gpfs`, `waverley-gpfs`, `willoughby-gpfs`, `inner-west-gpfs`, `bayside-gpfs`, `randwick-gpfs`, `ryde-gpfs`, `north-sydney-gpfs`, `canada-bay-gpfs`, `cumberland-gpfs`, `georges-river-gpfs`, `fairfield-gpfs`, `liverpool-gpfs` and `ku-ring-gai-gpfs`). **AusTender
+`server/src/connectors` registers fifty-one Australian public-spending sources, including the thirty-one separate council GPFS sources (`dubbo-council-gpfs`, `city-of-sydney-gpfs`, `blacktown-gpfs`, `parramatta-gpfs`, `northern-beaches-gpfs`, `canterbury-bankstown-gpfs`, `sutherland-shire-gpfs`, `wollongong-gpfs`, `newcastle-gpfs`, `lake-macquarie-gpfs`, `maitland-gpfs`, `coffs-harbour-gpfs`, `mid-coast-gpfs`, `port-macquarie-hastings-gpfs`, `tweed-shire-gpfs`, `shoalhaven-gpfs`, `shellharbour-gpfs`, `waverley-gpfs`, `willoughby-gpfs`, `inner-west-gpfs`, `bayside-gpfs`, `randwick-gpfs`, `ryde-gpfs`, `north-sydney-gpfs`, `canada-bay-gpfs`, `cumberland-gpfs`, `georges-river-gpfs`, `fairfield-gpfs`, `liverpool-gpfs`, `ku-ring-gai-gpfs`, `strathfield-gpfs`, `lane-cove-gpfs` and `mosman-gpfs`). **AusTender
 (`aus-tender`) is live** from the public [AusTender OCDS API](https://api.tenders.gov.au/ocds):
 `GET /ocds/findByDates/contractPublished/{startDate}/{endDate}`. **data.gov.au PBS
 (`data-gov-au-pbs`) is live** from the CKAN dataset
