@@ -4,7 +4,7 @@ import {
   MID_COAST_GPFS_REPORTING_URL,
   parseMidCoastGpfsReportLinks,
   selectMidCoastGpfsDocument,
-} from '../server/src/connectors/mid-coast-gpfs.js';
+} from '../server/src/connectors/mid-coast-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official reporting page HTML. */

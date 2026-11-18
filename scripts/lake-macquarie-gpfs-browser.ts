@@ -5,7 +5,7 @@ import {
   LAKE_MACQUARIE_GPFS_REPORTING_URL,
   parseLakeMacquarieGpfsReportLinks,
   selectLakeMacquarieGpfsDocument,
-} from '../server/src/connectors/lake-macquarie-gpfs.js';
+} from '../server/src/connectors/lake-macquarie-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official Annual Report page HTML. */

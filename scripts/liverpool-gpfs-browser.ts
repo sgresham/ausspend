@@ -4,7 +4,7 @@ import {
   LIVERPOOL_GPFS_FISCAL_YEAR,
   LIVERPOOL_GPFS_REPORTING_URL,
   parseLiverpoolGpfsReportPage,
-} from '../server/src/connectors/liverpool-gpfs.js';
+} from '../server/src/connectors/liverpool-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official listing page HTML (Cloudflare challenge solved). */
