@@ -49,9 +49,9 @@ the working-tree copy is not sufficient.
 ## Source-document licensing
 
 Downloaded government and council documents remain the property of their publishers and are not
-licensed by this repository. Each connector records the publisher's terms. The code's own licence
-is whatever the repository owner adds; without a `LICENSE` file, no licence is granted for the code
-either.
+licensed by this repository. Each connector records the publisher's terms. The code is
+MIT-licensed (see [LICENSE](./LICENSE)); that licence does not cover downloaded source documents
+or the quoted excerpts in test fixtures.
 
 ## Pre-publish checks
 

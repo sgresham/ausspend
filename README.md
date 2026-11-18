@@ -806,6 +806,12 @@ a plain `up`. It requires `MONGO_URL` from the host environment and deliberately
 service**. Dependency/build directories are named
 volumes under the bind mount, so `docker compose down -v` leaves the host checkout clean.
 
+## License
+
+The code is MIT-licensed — see [LICENSE](./LICENSE). Downloaded source documents and the short
+excerpts used as parser fixtures remain the property of their publishers and are not relicensed;
+see [DATA_POLICY.md](./DATA_POLICY.md).
+
 ## Repository rule
 
 This is the application repository. Pool/otto files (`.opencode`, `opencode.jsonc`, `plugin/`,
