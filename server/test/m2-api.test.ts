@@ -234,6 +234,7 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'lane-cove-gpfs' ||
           connector.id === 'hawkesbury-gpfs' ||
           connector.id === 'mosman-gpfs' ||
+          connector.id === 'strathfield-gpfs' ||
           connector.id === 'vic-budget' ||
           connector.id === 'vic-vlgc-vgc1' ||
           connector.id === 'vic-vlgc-abs' ||
