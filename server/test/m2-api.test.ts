@@ -204,6 +204,7 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'city-of-sydney-gpfs' ||
           connector.id === 'blacktown-gpfs' ||
           connector.id === 'hunters-hill-gpfs' ||
+          connector.id === 'woollahra-gpfs' ||
           connector.id === 'parramatta-gpfs' ||
           connector.id === 'northern-beaches-gpfs' ||
           connector.id === 'canterbury-bankstown-gpfs' ||
@@ -231,6 +232,7 @@ describe('GET /api/meta/coverage', () => {
           connector.id === 'fairfield-gpfs' ||
           connector.id === 'liverpool-gpfs' ||
           connector.id === 'ku-ring-gai-gpfs' ||
+          connector.id === 'strathfield-gpfs' ||
           connector.id === 'lane-cove-gpfs' ||
           connector.id === 'hawkesbury-gpfs' ||
           connector.id === 'mosman-gpfs' ||

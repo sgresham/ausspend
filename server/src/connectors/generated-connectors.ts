@@ -34,6 +34,7 @@ import { connectorModule as module31 } from './tweed-shire-gpfs/index.js';
 import { connectorModule as module32 } from './waverley-gpfs/index.js';
 import { connectorModule as module33 } from './willoughby-gpfs/index.js';
 import { connectorModule as module34 } from './wollongong-gpfs/index.js';
+import { connectorModule as module35 } from './woollahra-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -71,6 +72,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module32,
   module33,
   module34,
+  module35,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);
