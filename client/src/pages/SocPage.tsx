@@ -38,9 +38,10 @@ import {
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 
 /**
- * NSW SOC entity view. These are state-owned corporations' own published
- * financial-statement lines, not project spending and not the PNFC sector
- * benchmark. Sydney Water and WaterNSW are separate entities and are never
+ * Entity-level SOC view (NSW SOCs and the QLD Energy Queensland pilot). These
+ * are state-owned corporations' own published financial-statement lines, not
+ * project spending and not the PNFC sector benchmark. Every entity is separate
+ * and NSW and QLD entities are different legal populations; they are never
  * combined. The page deliberately computes no total: statement lines overlap
  * each other and government program spending.
  */
@@ -100,18 +101,20 @@ export function SocPage() {
   return (
     <Box>
       <Typography variant="h1" gutterBottom>
-        NSW SOC entities
+        SOC entities
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        Entity-level financial-statement lines for New South Wales State Owned Corporations. This is
-        a <strong>separate layer</strong> from Australian government program spending and from the
-        ABS GFS Public Non-Financial Corporations (PNFC) sector benchmark. Sydney Water, WaterNSW,
-        Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW,
-        TAHE, Sydney Trains and NSW TrainLink are <strong>separate entities</strong>: their rows are
-        never added together. Coverage is entity-level only: no project, LGA, SA2 or coordinate is
-        present. WaterNSW is shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8
-        and cash-flow capital expenditure), grouped and expandable; each component reconciles to its
-        printed note subtotal and is never added to the entity total.
+        Entity-level financial-statement lines for Australian state-owned corporations. The layer
+        currently covers New South Wales SOCs and the Queensland pilot entity Energy Queensland (a
+        QLD Government Owned Corporation). This is a <strong>separate layer</strong> from Australian
+        government program spending and from the ABS GFS Public Non-Financial Corporations (PNFC)
+        sector benchmark. Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry
+        Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink and
+        Energy Queensland are <strong>separate entities</strong>: their rows are never added together,
+        and NSW and QLD entities are never combined. Coverage is entity-level only: no project, LGA,
+        SA2 or coordinate is present. WaterNSW is shown with its published note-level breakdown
+        (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure), grouped and expandable; each
+        component reconciles to its printed note subtotal and is never added to the entity total.
       </Typography>
 
       <Alert severity="warning" data-testid="soc-caveat" sx={{ mb: 3 }}>
@@ -204,7 +207,7 @@ export function SocPage() {
         ) : null}
       </Stack>
 
-      {state.loading ? <LoadingState label="Loading NSW SOC statement lines…" /> : null}
+      {state.loading ? <LoadingState label="Loading SOC statement lines…" /> : null}
       {state.error ? (
         <ApiErrorState
           error={state.error}
@@ -215,8 +218,8 @@ export function SocPage() {
       {!state.loading && !state.error ? (
         rows.length === 0 ? (
           <EmptyState
-            title="No NSW SOC rows"
-            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink)."
+            title="No SOC rows"
+            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink and the QLD Energy Queensland pilot)."
           />
         ) : (
           <Card variant="outlined" sx={{ mb: 3 }}>
@@ -279,7 +282,7 @@ export function SocPage() {
                         <TableContainer>
                           <Table
                             size="small"
-                            aria-label={`NSW SOC entity statement lines — ${groupName}`}
+                            aria-label={`SOC entity statement lines — ${groupName}`}
                           >
                             <TableHead>
                               <TableRow>
