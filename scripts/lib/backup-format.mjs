@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { promises as fs } from 'node:fs';
+import { createReadStream, promises as fs } from 'node:fs';
 import path from 'node:path';
 import { backupRoot } from './env.mjs';
 
@@ -81,6 +81,57 @@ export function countLines(content) {
   if (content.length === 0) return 0;
   const normalised = content.endsWith('\n') ? content.slice(0, -1) : content;
   return normalised.length === 0 ? 0 : normalised.split('\n').length;
+}
+
+/**
+ * Count lines in a file without materialising it as one string.
+ *
+ * Backups can hold collection files larger than V8's maximum string length
+ * (~512 MiB), where `fs.readFile(file, 'utf8')` throws
+ * "RangeError: Invalid string length". This walks the file in fixed-size
+ * chunks and applies exactly the same rule as `countLines`: an empty file has
+ * zero lines, a trailing newline terminates the final line and does not add an
+ * empty one, and a lone newline is zero lines.
+ */
+export async function countFileLines(filePath) {
+  let bytes = 0;
+  let newlines = 0;
+  let lastByte = -1;
+
+  for await (const chunk of createReadStream(filePath)) {
+    bytes += chunk.length;
+    for (let i = 0; i < chunk.length; i += 1) {
+      if (chunk[i] === 0x0a) newlines += 1;
+    }
+    lastByte = chunk[chunk.length - 1];
+  }
+
+  if (bytes === 0) return 0;
+  if (lastByte === 0x0a) return newlines === 1 && bytes === 1 ? 0 : newlines;
+  return newlines + 1;
+}
+
+/**
+ * Yield the lines of a file with the same semantics as
+ * `(await fs.readFile(filePath, 'utf8')).split('\n')`, but streaming.
+ * Callers that want to ignore one trailing newline can drop a final empty
+ * entry, exactly as before. Throws if the file cannot be read.
+ */
+export async function* readFileLines(filePath) {
+  let remainder = '';
+  let sawBytes = false;
+
+  for await (const chunk of createReadStream(filePath, { encoding: 'utf8' })) {
+    sawBytes = true;
+    remainder += chunk;
+    let index;
+    while ((index = remainder.indexOf('\n')) !== -1) {
+      yield remainder.slice(0, index);
+      remainder = remainder.slice(index + 1);
+    }
+  }
+
+  if (sawBytes) yield remainder;
 }
 
 export async function pathExists(target) {
@@ -178,13 +229,12 @@ export async function verifyBackupIntegrity(
       throw new Error(`Backup ${backupDir} collection file escapes the backup directory`);
     }
     const filePath = path.join(backupDir, entry.file);
-    let content;
+    let lines;
     try {
-      content = await fs.readFile(filePath, 'utf8');
+      lines = await countFileLines(filePath);
     } catch {
       throw new Error(`Backup ${backupDir} is missing collection file ${entry.file}`);
     }
-    const lines = countLines(content);
     if (lines !== entry.count) {
       throw new Error(
         `Backup ${backupDir} collection ${entry.name} has ${lines} lines but manifest says ${entry.count}`,
@@ -208,13 +258,16 @@ export async function verifyBackupIntegrity(
   if (path.basename(nk.file) !== nk.file) {
     throw new Error(`Backup ${backupDir} natural-key file escapes the backup directory`);
   }
-  let keyContent;
+  const keys = [];
   try {
-    keyContent = await fs.readFile(path.join(backupDir, nk.file), 'utf8');
+    for await (const line of readFileLines(path.join(backupDir, nk.file))) {
+      keys.push(line);
+    }
   } catch {
     throw new Error(`Backup ${backupDir} is missing natural-key file ${nk.file}`);
   }
-  const keys = keyContent.length === 0 ? [] : keyContent.replace(/\n$/, '').split('\n');
+  // A single trailing newline terminates the last key; it is not an empty key.
+  if (keys.length > 0 && keys[keys.length - 1] === '') keys.pop();
   const distinct = new Set(keys).size;
   if (keys.length !== nk.count) {
     throw new Error(
