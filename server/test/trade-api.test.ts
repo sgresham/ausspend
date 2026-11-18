@@ -21,7 +21,7 @@ const BASE_TRADE: TradeRecordDocument = {
   amount_cents: 100_000,
   financial_year: '2024-25',
   time_period: '2024-25',
-  source_dataset: 'ABS International Trade',
+  source_dataset: 'ABS International Trade (Data API Beta)',
   source_url: 'https://www.abs.gov.au/statistics/economy/international-trade',
   source_date: '2026-11-18',
   data_quality_flag: 'observed',
@@ -190,11 +190,11 @@ describe('Trade API', () => {
   it('exposes the trade coverage section with planned sources and limitations', async () => {
     const response = await request(app).get('/api/meta/coverage');
     expect(response.status).toBe(200);
-    expect(response.body.trade_ingestion.live).toBe(false);
+    expect(response.body.trade_ingestion.live).toBe(true);
     expect(
       response.body.trade_ingestion.planned_sources.map((source: { name: string }) => source.name),
     ).toEqual([
-      'ABS International Trade',
+      'ABS International Trade (Data API Beta)',
       'OECD ITIC',
       'BITRE Waterline',
       'DISR Resources and Energy Quarterly',

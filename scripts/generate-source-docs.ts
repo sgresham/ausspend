@@ -1,6 +1,8 @@
+import { existsSync, readdirSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { format } from 'prettier';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { MODULAR_CONNECTOR_MODULES } from '../server/src/connectors/generated-connectors.js';
 
 const outDir = path.resolve('docs/sources');
@@ -28,6 +30,57 @@ for (const module of MODULAR_CONNECTOR_MODULES) {
     ),
   );
 }
+
+// Trade connectors live under a separate subtree and are not part of the
+// spending MODULAR_CONNECTOR_MODULES registry. They still publish source docs.
+const tradeRoot = path.resolve('server/src/connectors/trade');
+const tradeDirs = existsSync(tradeRoot)
+  ? readdirSync(tradeRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .filter((name) => existsSync(path.join(tradeRoot, name, 'index.ts')))
+      .sort()
+  : [];
+for (const dir of tradeDirs) {
+  const moduleUrl = pathToFileURL(path.join(tradeRoot, dir, 'index.ts')).href;
+  const loaded = (await import(moduleUrl)) as {
+    connectorModule?: {
+      create: () => {
+        id: string;
+        doc_id?: string;
+        name: string;
+        publisher: string;
+        source_url: string;
+        jurisdiction_level: string;
+        status: string;
+        license?: string;
+        notes?: string;
+      };
+    };
+  };
+  if (!loaded.connectorModule) continue;
+  const connector = loaded.connectorModule.create();
+  const docId = connector.doc_id ?? connector.id;
+  const filename = `${docId}.md`;
+  rows.push(
+    `| [\`${connector.id}\`](${filename}) | ${connector.publisher} | ${connector.jurisdiction_level} | ${connector.status} |`,
+  );
+  await writeFile(
+    path.join(outDir, filename),
+    await format(
+      `# ${connector.name}\n\n` +
+        `- id: \`${connector.id}\`\n` +
+        `- publisher: ${connector.publisher}\n` +
+        `- source: <${connector.source_url}>\n` +
+        `- jurisdiction: ${connector.jurisdiction_level}\n` +
+        `- status: ${connector.status}\n` +
+        `- licence: ${connector.license ?? 'not stated'}\n\n` +
+        `${connector.notes ?? ''}\n`,
+      { parser: 'markdown' },
+    ),
+  );
+}
+
 await writeFile(
   path.join(outDir, 'README.md'),
   await format(
@@ -36,4 +89,6 @@ await writeFile(
     { parser: 'markdown' },
   ),
 );
-console.log(`[generate-sources] wrote ${MODULAR_CONNECTOR_MODULES.length} module doc(s)`);
+console.log(
+  `[generate-sources] wrote ${MODULAR_CONNECTOR_MODULES.length + tradeDirs.length} module doc(s)`,
+);
