@@ -217,9 +217,9 @@ nonzero before it changes anything.
 
 The live baseline after the QGIP earlier-years, Essential Energy, Forestry Corporation of NSW,
 Landcom, Port Authority of NSW, TAHE, Sydney Trains and NSW TrainLink ingests plus the Dubbo GPFS
-pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai GPFS expansion, plus VIC council pilots B, C and D (VLGGC historical), is **659,086 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
+pilot and the City of Sydney / Blacktown / City of Parramatta / Northern Beaches / Canterbury-Bankstown / Sutherland Shire / Wollongong / Newcastle / Lake Macquarie / Maitland / Coffs Harbour / MidCoast / Port Macquarie-Hastings / Tweed / Shoalhaven / Shellharbour / Waverley / Willoughby / Inner West / Bayside / Randwick / Ryde / North Sydney / Canada Bay / Cumberland / Georges River / Fairfield / Liverpool / Ku-ring-gai / Strathfield GPFS expansion, plus VIC council pilots B, C and D (VLGGC historical), is **659,086 real measures and 0 synthetic rows**: QLD QGIP 200,387, ACNC charity 127,606,
 AusTender 117,894, GrantConnect 62,128, data.nsw.gov.au CKAN 3,472, PBS 1,231, NSW Budget 1,115,
-QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401 + 48,815 historical, VIC VLGGC ABS1/ABS2-3 9,059 + 82,857 historical, ABS GFS PNFC
+QLD Budget 1,051, Dubbo 245, Dubbo GPFS 18, City of Sydney GPFS 18, Blacktown GPFS 17, Parramatta GPFS 17, Northern Beaches GPFS 18, Canterbury-Bankstown GPFS 17, Sutherland Shire GPFS 17, Wollongong GPFS 17, Newcastle GPFS 17, Lake Macquarie GPFS 17, Maitland GPFS 7, Coffs Harbour GPFS 17, MidCoast GPFS 17, Port Macquarie-Hastings GPFS 17, Tweed GPFS 17, Shoalhaven GPFS 17, Shellharbour GPFS 17, Waverley GPFS 17, Willoughby GPFS 18, Inner West GPFS 18, Bayside GPFS 18, Randwick GPFS 17, Ryde GPFS 17, North Sydney GPFS 18, Canada Bay GPFS 17, Cumberland GPFS 17, Georges River GPFS 16, Fairfield GPFS 17, Liverpool GPFS 17, Ku-ring-gai GPFS 17, Strathfield GPFS 17, ABS GFS 169, WaterNSW 47, VIC Budget 28, VIC VLGGC VGC1 5,401 + 48,815 historical, VIC VLGGC ABS1/ABS2-3 9,059 + 82,857 historical, ABS GFS PNFC
 18, Sydney Water 10, Forestry Corporation of NSW 7, TAHE 6, Landcom 6, Port Authority of NSW 5,
 Sydney Trains 6, NSW TrainLink 6, Hunter Water 6 and Essential Energy 6.
 Phase 6.2b replaces the superseded AIHW 1997-98..2011-12 CSV with the current AIHW 2024-25
@@ -229,7 +229,7 @@ covering eight states/territories × 16 leaf areas × seven detailed funding sou
 `agency_detail` and no total is computed. METEOR remains metadata-only; the current series comes
 from the report data tables, not METEOR. Only `aihw-health-expenditure` rows are replaced; every
 other source is unchanged. The live DB is the authority for the current count (it also contains the
-VIC LGPRF rows landed concurrently); the latest verified snapshot is 693,075 measures.
+VIC LGPRF rows landed concurrently); the latest verified snapshot is 693,148 measures.
 Phase 6.3 adds **855 WA Budget EFO rows** from catalogue.data.wa.gov.au CKAN: no machine-readable
 BP2 agency-expense dataset is published, so Chapter 5 major spending changes are provisional,
 non-additive policy measures and Chapter 6 Table 1 asset investment is reconciled to its printed
@@ -259,7 +259,7 @@ report Financial Inputs CSV (data.qld.gov.au CKAN): council-level actual `$’00
 operating expenses, employee, depreciation/amortisation and interest, 2010-11..2015-16.
 Components are components of the printed total, every row is `agency_detail`, and the
 source is separate from QGIP project grants/procurement. The latest verified snapshot is
-693,075 measures.
+693,148 measures.
 Phase 6.10 adds `npm run ingest:phase6`, which runs the Phase 6 sources in priority order with
 per-source logs/status transitions, and updates `/api/meta/coverage` to report active state,
 territory and local registers (WA/SA/TAS active, ACT/NT territory active, QLD local active, SA

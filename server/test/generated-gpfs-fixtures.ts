@@ -24,11 +24,12 @@ import * as fixture21 from '../src/connectors/randwick-gpfs/fixture.js';
 import * as fixture22 from '../src/connectors/ryde-gpfs/fixture.js';
 import * as fixture23 from '../src/connectors/shellharbour-gpfs/fixture.js';
 import * as fixture24 from '../src/connectors/shoalhaven-gpfs/fixture.js';
-import * as fixture25 from '../src/connectors/sutherland-shire-gpfs/fixture.js';
-import * as fixture26 from '../src/connectors/tweed-shire-gpfs/fixture.js';
-import * as fixture27 from '../src/connectors/waverley-gpfs/fixture.js';
-import * as fixture28 from '../src/connectors/willoughby-gpfs/fixture.js';
-import * as fixture29 from '../src/connectors/wollongong-gpfs/fixture.js';
+import * as fixture25 from '../src/connectors/strathfield-gpfs/fixture.js';
+import * as fixture26 from '../src/connectors/sutherland-shire-gpfs/fixture.js';
+import * as fixture27 from '../src/connectors/tweed-shire-gpfs/fixture.js';
+import * as fixture28 from '../src/connectors/waverley-gpfs/fixture.js';
+import * as fixture29 from '../src/connectors/willoughby-gpfs/fixture.js';
+import * as fixture30 from '../src/connectors/wollongong-gpfs/fixture.js';
 
 export const GPFS_FIXTURES = [
   { id: 'bayside-gpfs', fixture: fixture0 },
@@ -56,9 +57,10 @@ export const GPFS_FIXTURES = [
   { id: 'ryde-gpfs', fixture: fixture22 },
   { id: 'shellharbour-gpfs', fixture: fixture23 },
   { id: 'shoalhaven-gpfs', fixture: fixture24 },
-  { id: 'sutherland-shire-gpfs', fixture: fixture25 },
-  { id: 'tweed-shire-gpfs', fixture: fixture26 },
-  { id: 'waverley-gpfs', fixture: fixture27 },
-  { id: 'willoughby-gpfs', fixture: fixture28 },
-  { id: 'wollongong-gpfs', fixture: fixture29 },
+  { id: 'strathfield-gpfs', fixture: fixture25 },
+  { id: 'sutherland-shire-gpfs', fixture: fixture26 },
+  { id: 'tweed-shire-gpfs', fixture: fixture27 },
+  { id: 'waverley-gpfs', fixture: fixture28 },
+  { id: 'willoughby-gpfs', fixture: fixture29 },
+  { id: 'wollongong-gpfs', fixture: fixture30 },
 ] as const;
