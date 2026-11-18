@@ -195,7 +195,7 @@ covering eight states/territories × 16 leaf areas × seven detailed funding sou
 `agency_detail` and no total is computed. METEOR remains metadata-only; the current series comes
 from the report data tables, not METEOR. Only `aihw-health-expenditure` rows are replaced; every
 other source is unchanged. The live DB is the authority for the current count (it also contains the
-VIC LGPRF rows landed concurrently); the latest verified snapshot is 693,059 measures.
+VIC LGPRF rows landed concurrently); the latest verified snapshot is 693,075 measures.
 Phase 6.3 adds **855 WA Budget EFO rows** from catalogue.data.wa.gov.au CKAN: no machine-readable
 BP2 agency-expense dataset is published, so Chapter 5 major spending changes are provisional,
 non-additive policy measures and Chapter 6 Table 1 asset investment is reconciled to its printed
@@ -219,12 +219,13 @@ General Government Expenses from Transactions by Purpose, COFOG-A categories × 
 `$m` columns, with all six years reconciled to the printed total. Rows are
 provisional non-additive benchmark aggregates; nominal interest on superannuation
 is a non-COFOG reconciliation line.
+Phase 6.10 adds Blacktown GPFS depth: **6 B1-1 function-expense rows + 10 Special Schedule actual-maintenance rows**, taking `blacktown-gpfs` from 17 to **33** rows. The original 17 keys/amounts are unchanged; function labels are not COFOG, and the two cuts are never summed. DB 693,059 → 693,075 (+16; all other sources delta 0).
 Phase 6.9 adds **1,590 QLD local government rows** from the QLD comparative-information
 report Financial Inputs CSV (data.qld.gov.au CKAN): council-level actual `$’000` total
 operating expenses, employee, depreciation/amortisation and interest, 2010-11..2015-16.
 Components are components of the printed total, every row is `agency_detail`, and the
 source is separate from QGIP project grants/procurement. The latest verified snapshot is
-693,059 measures.
+693,075 measures.
 Phase 6.10 adds `npm run ingest:phase6`, which runs the Phase 6 sources in priority order with
 per-source logs/status transitions, and updates `/api/meta/coverage` to report active state,
 territory and local registers (WA/SA/TAS active, ACT/NT territory active, QLD local active, SA

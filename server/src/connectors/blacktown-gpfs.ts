@@ -12,9 +12,11 @@ import {
 } from './pdf-extract.js';
 import {
   archiveSourceDocument,
+  listArchivedRecords,
   verifySourceDocument,
   type ArchivedSourceRecord,
 } from './source-archive.js';
+import { MeasureModel } from '../models/index.js';
 import type { Connector, RawRecord } from './types.js';
 
 /**
@@ -236,6 +238,60 @@ export const BLACKTOWN_GPFS_LINES: ReadonlyArray<BlacktownGpfsLineSpec> = [
   },
 ];
 
+/**
+ * The six printed B1-1 "Functions or activities". These are council-specific
+ * strategic directions, NOT COFOG functions, so no function_code is set.
+ */
+export const BLACKTOWN_GPFS_FUNCTION_LABELS: readonly string[] = [
+  'A vibrant and inclusive community',
+  'A clean, sustainable and healthy environment',
+  'A smart and prosperous economy',
+  'A growing city supported by accessible infrastructure',
+  'A sporting and active city',
+  'A leading city',
+];
+
+/** Printed infrastructure asset classes in the Special Schedule (p125). */
+export const BLACKTOWN_GPFS_ASSET_LABELS: readonly string[] = [
+  'Buildings',
+  'Land Improvements & Parks',
+  'Sealed roads',
+  'Unsealed roads',
+  'Bridges',
+  'Footpaths',
+  'Carpark',
+  'Other road assets',
+  'Stormwater drainage & water supply network',
+  'Swimming pools',
+];
+
+export interface BlacktownGpfsFunctionRow {
+  label: string;
+  income: number;
+  expenses: number;
+  operating_result: number;
+  grants_and_contributions: number;
+  carrying_amount: number;
+}
+
+export interface BlacktownGpfsFunctionsSplit {
+  rows: BlacktownGpfsFunctionRow[];
+  totals: BlacktownGpfsFunctionsTotals;
+}
+
+export interface BlacktownGpfsScheduleRow {
+  asset: string;
+  required_maintenance: number;
+  actual_maintenance: number;
+}
+
+export interface BlacktownGpfsSpecialSchedule {
+  page_number: number;
+  rows: BlacktownGpfsScheduleRow[];
+  required_maintenance_total: number;
+  actual_maintenance_total: number;
+}
+
 interface BlacktownGpfsLineValue {
   spec: BlacktownGpfsLineSpec;
   value: number;
@@ -263,6 +319,11 @@ export interface BlacktownGpfsReconciliation {
   functions_total_expenses: number;
   functions_operating_result: number;
   functions_grants_and_contributions: number;
+  functions_carrying_amount: number;
+  functions: BlacktownGpfsFunctionRow[];
+  special_schedule_page: number | null;
+  special_schedule_actual_maintenance_total: number | null;
+  special_schedule_rows: BlacktownGpfsScheduleRow[];
   comprehensive_income_net_result: number;
   revenue_components_sum: number;
   expense_components_sum: number;
@@ -462,6 +523,7 @@ export interface BlacktownGpfsFunctionsTotals {
   expenses: number;
   operating_result: number;
   grants_and_contributions: number;
+  carrying_amount: number;
 }
 
 /**
@@ -477,9 +539,9 @@ export function parseBlacktownGpfsFunctionsTotals(
   const label = 'Total functions and activities';
   if (!text.includes(label)) return null;
   const values = allAmountsAfter(text, label);
-  if (values.length < 8) {
+  if (values.length < 10) {
     throw new Error(
-      `p${page.page_number}: B1-1 total row has ${values.length} numeric values, expected at least 8`,
+      `p${page.page_number}: B1-1 total row has ${values.length} numeric values, expected at least 10`,
     );
   }
   return {
@@ -488,7 +550,212 @@ export function parseBlacktownGpfsFunctionsTotals(
     expenses: values[2]!,
     operating_result: values[4]!,
     grants_and_contributions: values[6]!,
+    carrying_amount: values[8]!,
   };
+}
+
+function slug(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+/**
+ * Parse the six B1-1 function rows and reconcile each of the five printed cuts
+ * (income, expenses, operating result, grants, carrying amount) to the printed
+ * total row. Only the expense cut is emitted, but all five are checked.
+ */
+export function parseBlacktownGpfsFunctionsSplit(
+  page: PdfPage,
+  totals: BlacktownGpfsFunctionsTotals,
+): BlacktownGpfsFunctionsSplit {
+  const text = normalizeText(page.text);
+  const rows: BlacktownGpfsFunctionRow[] = [];
+  for (const label of BLACKTOWN_GPFS_FUNCTION_LABELS) {
+    const values = allAmountsAfter(text, label).slice(0, 10);
+    if (values.length < 10) {
+      throw new Error(
+        `p${page.page_number}: B1-1 function "${label}" has ${values.length} numeric values, expected 10`,
+      );
+    }
+    rows.push({
+      label,
+      income: values[0]!,
+      expenses: values[2]!,
+      operating_result: values[4]!,
+      grants_and_contributions: values[6]!,
+      carrying_amount: values[8]!,
+    });
+  }
+
+  const sum = (key: keyof Omit<BlacktownGpfsFunctionRow, 'label'>) =>
+    rows.reduce((accumulator, row) => accumulator + row[key], 0);
+  const checks: Array<[string, number, number]> = [
+    ['income', totals.income, sum('income')],
+    ['expenses', totals.expenses, sum('expenses')],
+    ['operating result', totals.operating_result, sum('operating_result')],
+    ['grants and contributions', totals.grants_and_contributions, sum('grants_and_contributions')],
+    ['carrying amount', totals.carrying_amount, sum('carrying_amount')],
+  ];
+  const failures = checks.filter(([, expected, actual]) => expected !== actual);
+  if (failures.length > 0) {
+    throw new Error(
+      `B1-1 function cut(s) do not reconcile: ${failures
+        .map(([label, expected, actual]) => `${label} ${actual} != printed total ${expected}`)
+        .join('; ')}`,
+    );
+  }
+  return { rows, totals };
+}
+
+/**
+ * Parse the Special Schedule "Report on infrastructure assets" actual
+ * maintenance columns by asset class (p125). Only the printed actual
+ * maintenance is emitted; required maintenance is retained for the printed
+ * total reconciliation.
+ */
+export function parseBlacktownGpfsSpecialSchedule(page: PdfPage): BlacktownGpfsSpecialSchedule {
+  const text = normalizeText(page.text);
+  const rows: BlacktownGpfsScheduleRow[] = [];
+  for (const asset of BLACKTOWN_GPFS_ASSET_LABELS) {
+    const values = allAmountsAfter(text, asset).slice(0, 6);
+    if (values.length < 6) {
+      throw new Error(
+        `p${page.page_number}: Special Schedule asset "${asset}" has ${values.length} numeric values, expected 6`,
+      );
+    }
+    rows.push({
+      asset,
+      required_maintenance: values[2]!,
+      actual_maintenance: values[3]!,
+    });
+  }
+  const totalValues = allAmountsAfter(text, 'Total – all assets').slice(0, 6);
+  if (totalValues.length < 6) {
+    throw new Error(`p${page.page_number}: Special Schedule has no printed total row`);
+  }
+  const requiredMaintenanceTotal = totalValues[2]!;
+  const actualMaintenanceTotal = totalValues[3]!;
+  const requiredSum = rows.reduce((sum, row) => sum + row.required_maintenance, 0);
+  const actualSum = rows.reduce((sum, row) => sum + row.actual_maintenance, 0);
+  if (requiredSum !== requiredMaintenanceTotal || actualSum !== actualMaintenanceTotal) {
+    throw new Error(
+      `Special Schedule maintenance does not reconcile: required ${requiredSum} vs ${requiredMaintenanceTotal}, actual ${actualSum} vs ${actualMaintenanceTotal}`,
+    );
+  }
+  return {
+    page_number: page.page_number,
+    rows,
+    required_maintenance_total: requiredMaintenanceTotal,
+    actual_maintenance_total: actualMaintenanceTotal,
+  };
+}
+
+function extraRecordBase(
+  context: BlacktownGpfsParseContext,
+  unit: MoneyUnitKind,
+  unitReason: string,
+  pageNumber: number,
+  lineItem: string,
+  lineLabel: string,
+  projectName: string,
+  statement: string,
+  componentOf: string,
+  amount: number,
+  note: string,
+): SpendingRecord {
+  return {
+    amount_cents: moneyToCents(amount, unit),
+    measure_type: 'actual',
+    fiscal_year: BLACKTOWN_GPFS_FISCAL_YEAR,
+    source_id: BLACKTOWN_GPFS_ID,
+    source_url: context.document.url,
+    verified: false,
+    natural_key: blacktownGpfsNaturalKey(
+      context.document.url,
+      lineItem,
+      BLACKTOWN_GPFS_FISCAL_YEAR,
+    ),
+    project_name: `Blacktown City Council GPFS 2024-25 — ${projectName}`,
+    description: `Expense line item — ${statement}`,
+    jurisdiction_level: 'local',
+    jurisdiction: 'NSW',
+    delivery_entity: 'Blacktown City Council',
+    funding_source: 'Council expenditure',
+    source_dataset: BLACKTOWN_GPFS_SOURCE_DATASET,
+    source_date: context.sourceDate,
+    data_quality_flag: BLACKTOWN_GPFS_DATA_QUALITY_FLAG,
+    aggregation_role: 'agency_detail',
+    extraction_confidence: 'high',
+    gpfs_line_item: lineItem,
+    gpfs_line_label: lineLabel,
+    gpfs_unit: gpfsUnitLabel(unit),
+    gpfs_section: 'expenses',
+    gpfs_statement: statement,
+    gpfs_component_of: componentOf,
+    notes: notesFor(
+      context,
+      {
+        key: lineItem,
+        label: lineLabel,
+        section: 'expenses',
+        statement: statement as BlacktownGpfsLineSpec['statement'],
+      },
+      unit,
+      unitReason,
+      pageNumber,
+      note,
+    ),
+  };
+}
+
+function mapFunctionExpense(
+  row: BlacktownGpfsFunctionRow,
+  context: BlacktownGpfsParseContext,
+  unit: MoneyUnitKind,
+  unitReason: string,
+  pageNumber: number,
+): SpendingRecord {
+  const key = `b1_1_function_expenses_${slug(row.label)}`;
+  return extraRecordBase(
+    context,
+    unit,
+    unitReason,
+    pageNumber,
+    key,
+    `${row.label} — expenses`,
+    `${row.label} (expenses)`,
+    'B1-1 Functions or activities',
+    'b1_1_total_expenses',
+    row.expenses,
+    'Council-specific strategic direction, not a COFOG function; expenses are one of two cuts (function vs nature) of the same printed total expenses; never added to the nature cut.',
+  );
+}
+
+function mapScheduleExpense(
+  row: BlacktownGpfsScheduleRow,
+  context: BlacktownGpfsParseContext,
+  unit: MoneyUnitKind,
+  unitReason: string,
+  pageNumber: number,
+  actualTotal: number,
+): SpendingRecord {
+  const key = `special_schedule_actual_maintenance_${slug(row.asset)}`;
+  return extraRecordBase(
+    context,
+    unit,
+    unitReason,
+    pageNumber,
+    key,
+    `Actual maintenance — ${row.asset}`,
+    `${row.asset} actual maintenance`,
+    'Special Schedule — Report on infrastructure assets',
+    'actual_asset_maintenance_total',
+    row.actual_maintenance,
+    `Printed special-schedule actual maintenance for the asset class; all classes sum to the printed actual maintenance total ${actualTotal} $'000; not part of the income statement and never added to it.`,
+  );
 }
 
 function gpfsFundingSource(spec: BlacktownGpfsLineSpec): string {
@@ -811,6 +1078,11 @@ export function parseBlacktownGpfsExtraction(
     functions_total_expenses: functionsTotals.expenses,
     functions_operating_result: functionsTotals.operating_result,
     functions_grants_and_contributions: functionsTotals.grants_and_contributions,
+    functions_carrying_amount: functionsTotals.carrying_amount,
+    functions: [],
+    special_schedule_page: null,
+    special_schedule_actual_maintenance_total: null,
+    special_schedule_rows: [],
     comprehensive_income_net_result: comprehensiveNetResult!,
     revenue_components_sum: revenueComponentsSum,
     expense_components_sum: expenseComponentsSum,
@@ -823,6 +1095,42 @@ export function parseBlacktownGpfsExtraction(
     ],
   };
 
+  let functionSplit: BlacktownGpfsFunctionsSplit;
+  try {
+    functionSplit = parseBlacktownGpfsFunctionsSplit(functionsPage, functionsTotals);
+  } catch (error) {
+    return reject(error instanceof Error ? error.message : String(error));
+  }
+  reconciliation.functions = functionSplit.rows;
+  reconciliation.functions_carrying_amount = functionsTotals.carrying_amount;
+
+  // Special Schedule "Report on infrastructure assets" — optional per the
+  // brief: if absent or ambiguous, emit B1-1 only and document the deferral.
+  const schedulePage = findPage(
+    extraction.pages,
+    (_page, text) =>
+      text.includes('Report on infrastructure assets as at 30 June 2025') &&
+      text.includes('Actual maintenance'),
+  );
+  let specialSchedule: BlacktownGpfsSpecialSchedule | null = null;
+  if (schedulePage) {
+    try {
+      specialSchedule = parseBlacktownGpfsSpecialSchedule(schedulePage);
+      reconciliation.special_schedule_page = specialSchedule.page_number;
+      reconciliation.special_schedule_actual_maintenance_total =
+        specialSchedule.actual_maintenance_total;
+      reconciliation.special_schedule_rows = specialSchedule.rows;
+    } catch (error) {
+      warnings.push(
+        `Special Schedule skipped (B1-1 only): ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  } else {
+    warnings.push(
+      'Special Schedule "Report on infrastructure assets" page not found; B1-1 function rows emitted only',
+    );
+  }
+
   const reconciliationNote =
     'printed total expenses from B1-1, not a component sum; face-statement bridge, B1-1 totals and comprehensive-income net result reconcile exactly';
   // The printed "before grants and contributions provided for capital
@@ -833,11 +1141,34 @@ export function parseBlacktownGpfsExtraction(
   const emittedValues = values.filter(
     (value) => value.spec.key !== 'net_result_before_capital_grants',
   );
-  const records = emittedValues.map((line) =>
-    mapLine(line, context, unit, incomeUnit.reason, reconciliationNote),
-  );
+  const extraRecords: SpendingRecord[] = [
+    ...functionSplit.rows.map((row) =>
+      mapFunctionExpense(row, context, unit, incomeUnit.reason, functionsPage.page_number),
+    ),
+    ...(specialSchedule
+      ? specialSchedule.rows.map((row) =>
+          mapScheduleExpense(
+            row,
+            context,
+            unit,
+            incomeUnit.reason,
+            specialSchedule!.page_number,
+            specialSchedule!.actual_maintenance_total,
+          ),
+        )
+      : []),
+  ];
+  const records = [
+    ...emittedValues.map((line) =>
+      mapLine(line, context, unit, incomeUnit.reason, reconciliationNote),
+    ),
+    ...extraRecords,
+  ];
   warnings.push(
-    `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000) to the printed totals`,
+    `reconciled exactly: revenue ${totalRevenue} and expenses ${totalExpenses} ($'000) to the printed totals; B1-1 function expenses ${functionSplit.rows.length} rows (sum ${functionSplit.rows.reduce(
+      (sum, row) => sum + row.expenses,
+      0,
+    )}); special-schedule actual maintenance ${specialSchedule ? `${specialSchedule.rows.length} rows (sum ${specialSchedule.actual_maintenance_total})` : 'not emitted (page absent/ambiguous)'}`,
   );
   return { records, reconciliation, warnings, rejections };
 }
@@ -885,29 +1216,67 @@ export function createBlacktownGpfsConnector(
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
-      const document =
+      const discovered =
         options.document ??
         (await discoverBlacktownGpfsDocument(fetchImpl, BLACKTOWN_GPFS_FISCAL_YEAR));
-      const response = await fetchImpl(document.url, { redirect: 'follow' });
-      if (!response.ok) {
-        throw new Error(`Blacktown GPFS fetch HTTP ${response.status} for ${document.url}`);
-      }
-      const bytes = Buffer.from(await response.arrayBuffer());
-      const archived: ArchivedSourceRecord = await archiveSourceDocument({
+      // Preserve the canonical document URL established by the existing 17
+      // rows. The council page now links a /v/3/ copy of the same PDF, but the
+      // natural keys of the pre-existing rows are based on the archived /v/1/
+      // URL. Re-keying them would create duplicate rows and violate the pilot's
+      // unchanged-existing-rows rule.
+      const existing = await MeasureModel.findOne({
         source_id: BLACKTOWN_GPFS_ID,
-        title: document.title,
-        original_url: document.url,
-        retrieved_from: document.url,
-        archived_from: 'direct',
-        filename: documentFilename(document.url),
-        content_type: 'application/pdf',
-        data: bytes,
-        root: options.archiveRoot,
-        notes:
-          'Audited Blacktown City Council FY2024-25 General Purpose Financial Statements; archived for the GPFS reconciliation.',
-      });
-      await verifySourceDocument(archived);
-      const extraction = await extractArchivedPdf(archived);
+        gpfs_line_item: 'total_revenue',
+      }).lean();
+      const document = { ...discovered, url: existing?.source_url ?? discovered.url };
+
+      let archived: ArchivedSourceRecord | null = null;
+      let extraction: PdfExtraction | null = null;
+
+      // The brief's source is the already-archived FY2024-25 GPFS PDF. Use the
+      // verified archive copy when present (same SHA-256), which also avoids a
+      // transient council-site WAF challenge on re-ingest.
+      if (!options.document) {
+        const archivedRecords = await listArchivedRecords({ source_id: BLACKTOWN_GPFS_ID });
+        const archivedRecord =
+          archivedRecords.find((record) =>
+            /2024[-_ ]?(to[-_ ]?)?25|2024 to 2025|2024-2025/i.test(
+              `${record.title} ${record.original_url}`,
+            ),
+          ) ?? archivedRecords[0];
+        if (archivedRecord) {
+          archived = archivedRecord;
+          extraction = await extractArchivedPdf(archivedRecord);
+          metadata.warnings.push(
+            'used the already-archived FY2024-25 GPFS PDF (SHA-256 verified) as the source document',
+          );
+        }
+      }
+
+      if (!extraction) {
+        const downloadUrl = options.document?.url ?? discovered.url;
+        const response = await fetchImpl(downloadUrl, { redirect: 'follow' });
+        if (!response.ok) {
+          throw new Error(`Blacktown GPFS fetch HTTP ${response.status} for ${downloadUrl}`);
+        }
+        const bytes = Buffer.from(await response.arrayBuffer());
+        archived = await archiveSourceDocument({
+          source_id: BLACKTOWN_GPFS_ID,
+          title: document.title,
+          original_url: document.url,
+          retrieved_from: downloadUrl,
+          archived_from: downloadUrl === document.url ? 'direct' : 'other',
+          filename: documentFilename(downloadUrl),
+          content_type: 'application/pdf',
+          data: bytes,
+          root: options.archiveRoot,
+          notes:
+            'Audited Blacktown City Council FY2024-25 General Purpose Financial Statements; archived for the GPFS reconciliation.',
+        });
+        await verifySourceDocument(archived);
+        extraction = await extractArchivedPdf(archived);
+      }
+      if (!archived) throw new Error('Blacktown GPFS archive record unavailable');
       const context: BlacktownGpfsParseContext = {
         document,
         archive: {
