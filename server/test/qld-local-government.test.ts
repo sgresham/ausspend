@@ -3,14 +3,17 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SpendingRecord } from '@ausspend/shared';
 import {
   QLD_LG_ID,
+  QLD_LG_ROAD_DATASET,
   QLD_LG_UNIT,
   QLD_LG_UNIT_TO_CENTS,
   createQldLocalGovernmentConnector,
   discoverQldLocalGovernment,
   parseQldLocalGovernmentCsv,
+  parseQldLocalGovernmentRoadDataCsv,
   qldLgNaturalKey,
   qldLgThousandsToCents,
   selectFinancialInputsResource,
+  selectRoadDataResource,
   type QldCkanPackage,
 } from '../src/connectors/qld-local-government.js';
 import { isAdditiveMeasure } from '../src/api/measure-summary.js';
@@ -40,6 +43,29 @@ Bad Year Council,not_a_year,100,,50,40,10,200
 ,2010_11,100,,10,10,10,100
 `;
 
+const ROAD_HEADER = [
+  'Council Name',
+  'Year',
+  'Linear kilometres of council-managed Road - RURAL - TOTAL',
+  "Capital Renewal Expenditure on EXISTING roads (excl depn) - $'000",
+  "Capital Upgrade Expenditure on EXISTING roads (excl depn) - $'000",
+  "Capital Expansion Expenditure on NEW roads (excl depn) - $'000",
+  "Total Capital Expenditure on roads (excl depn) - $'000",
+  "Total Maintenance Expenditure on roads (excl depn) - $'000",
+  "Expenditure on EXISTING bridges and major culverts - $'000",
+  "Capital expenditure on NEW bridges and major culverts - $'000",
+  "Total Expenditure - Bridges and Culverts - $'000",
+  "Depreciation expense for roads - $'000",
+  "Total expenditure - roads, bridges, major culverts - $'000",
+]
+  .map((field) => `"${field}"`)
+  .join(',');
+
+const ROAD_CSV = `${ROAD_HEADER}
+Alpha Shire Council,2010_11,999,100,50,25,175,200,30,20,50,10,425
+Beta Shire Council,2011_12,888,110,60,30,200,220,40,25,65,12,477
+`;
+
 function qgipGuard(): SpendingRecord {
   return {
     amount_cents: 1_000,
@@ -64,11 +90,22 @@ describe('QLD local-government CKAN discovery', () => {
         url: 'https://example/financial-inputs.csv',
       },
       { name: 'Personnel data', format: 'CSV', url: 'https://example/personnel.csv' },
+      { name: 'Road Data', format: 'CSV', url: 'https://example/road-data.csv' },
     ],
   };
 
   it('selects the Financial Inputs CSV, not another resource', () => {
     expect(selectFinancialInputsResource(pkg).url).toBe('https://example/financial-inputs.csv');
+  });
+
+  it('selects the Road Data CSV separately', () => {
+    expect(selectRoadDataResource(pkg).url).toBe('https://example/road-data.csv');
+    expect(() =>
+      selectRoadDataResource({
+        ...pkg,
+        resources: [{ name: 'Financial Inputs', format: 'CSV', url: 'x' }],
+      }),
+    ).toThrow(/no Road Data CSV/);
   });
 
   it('rejects a package without a Financial Inputs CSV', () => {
@@ -89,6 +126,7 @@ describe('QLD local-government CKAN discovery', () => {
     const discovered = await discoverQldLocalGovernment(fetchImpl);
     expect(discovered.pkg.name).toBe(pkg.name);
     expect(discovered.resource.name).toBe('Financial Inputs');
+    expect(discovered.roadData.name).toBe('Road Data');
   });
 });
 
@@ -96,7 +134,7 @@ describe('QLD local-government Financial Inputs parsing', () => {
   const parsed = parseQldLocalGovernmentCsv(CSV);
 
   it('emits council × year × measure rows and skips invalid years/blank councils', () => {
-    expect(parsed.records).toHaveLength(16);
+    expect(parsed.records).toHaveLength(20);
     expect(parsed.councils).toBe(2);
     expect(parsed.years).toBe(3);
     expect(parsed.skipped.map((skip) => skip.reason).join(' | ')).toMatch(/invalid Financial Year/);
@@ -128,6 +166,17 @@ describe('QLD local-government Financial Inputs parsing', () => {
     expect(total?.qld_lg_component_of).toBeUndefined();
     expect(employee?.qld_lg_component_of).toBe('total_operating_expenses');
     expect(employee?.amount_cents).toBe(1000 * QLD_LG_UNIT_TO_CENTS);
+  });
+
+  it('never emits a cross-council total row', () => {
+    expect(
+      parsed.records.every((record) => record.project_name && record.project_name !== 'Total'),
+    ).toBe(true);
+    expect(
+      parsed.records.some((record) =>
+        /all councils|total councils/i.test(record.project_name ?? ''),
+      ),
+    ).toBe(false);
   });
 
   it('converts $’000 to integer cents', () => {
@@ -164,6 +213,43 @@ describe('QLD local-government Financial Inputs parsing', () => {
   });
 });
 
+describe('QLD local-government Road Data financial measures', () => {
+  const parsed = parseQldLocalGovernmentRoadDataCsv(ROAD_CSV);
+
+  it('ingests only printed $’000 expenditure rows, never road kilometres or counts', () => {
+    expect(parsed.records).toHaveLength(20);
+    expect(parsed.councils).toBe(2);
+    expect(parsed.years).toBe(2);
+    const renewal = parsed.records.find(
+      (record) => record.category === 'road_capital_renewal_expenditure',
+    )!;
+    expect(renewal.source_dataset).toBe(QLD_LG_ROAD_DATASET);
+    expect(renewal.qld_lg_unit).toBe(QLD_LG_UNIT);
+    expect(renewal.qld_lg_component_of).toBe('road_total_capital_expenditure');
+    expect(renewal.amount_cents).toBe(100 * QLD_LG_UNIT_TO_CENTS);
+    expect(renewal.location).toMatchObject({ state: 'QLD', lga_name: 'Alpha Shire Council' });
+    expect(parsed.records.some((record) => record.description.includes('Linear kilometres'))).toBe(
+      false,
+    );
+    expect(parsed.records.every((record) => record.measure_type === 'actual')).toBe(true);
+    expect(parsed.records.every((record) => record.aggregation_role === 'agency_detail')).toBe(
+      true,
+    );
+  });
+
+  it('skips blank or invalid road rows without inventing a value', () => {
+    const sparse = parseQldLocalGovernmentRoadDataCsv(
+      `${ROAD_HEADER}
+,2010_11,1,100,50,25,175,200,30,20,50,10,425
+Alpha Shire Council,not_a_year,1,100,50,25,175,200,30,20,50,10,425
+`,
+    );
+    expect(sparse.records).toHaveLength(0);
+    expect(sparse.skipped.map((skip) => skip.reason).join(' | ')).toMatch(/missing Council Name/);
+    expect(sparse.skipped.map((skip) => skip.reason).join(' | ')).toMatch(/invalid Year/);
+  });
+});
+
 describe('QLD local-government ingestion is idempotent and separate from QGIP', () => {
   beforeAll(async () => {
     await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
@@ -181,21 +267,48 @@ describe('QLD local-government ingestion is idempotent and separate from QGIP', 
     await runIngestion({ connectors: [connector] });
     await runIngestion({ connectors: [connector] });
 
-    expect(await MeasureModel.countDocuments({ source_id: QLD_LG_ID })).toBe(16);
+    expect(await MeasureModel.countDocuments({ source_id: QLD_LG_ID })).toBe(20);
     expect(await MeasureModel.countDocuments({ source_id: 'qld-qgip' })).toBe(1);
     const source = await DataSourceModel.findOne({ source_id: QLD_LG_ID }).lean();
     expect(source?.status).toBe('active');
-    expect(source?.records_ingested).toBe(16);
+    expect(source?.records_ingested).toBe(20);
     expect(source?.fetch_strategy).toBe('direct');
   });
 
   it('labels every row with a QLD-local measure and never a QGIP measure', async () => {
     const local = await MeasureModel.find({ source_id: QLD_LG_ID }).lean();
-    expect(local.every((row) => row.qld_lg_measure !== undefined)).toBe(true);
+    expect(local.every((row) => row.category !== undefined)).toBe(true);
     expect(local.every((row) => row.measure_type === 'actual')).toBe(true);
     expect(local.every((row) => row.aggregation_role === 'agency_detail')).toBe(true);
     const qgip = await MeasureModel.findOne({ source_id: 'qld-qgip' }).lean();
     expect(qgip?.measure_type).toBe('grant_award');
     expect(qgip?.qld_lg_measure).toBeUndefined();
+  });
+
+  it('adds Road Data rows idempotently without changing financial-input rows', async () => {
+    await MeasureModel.deleteMany({ source_id: QLD_LG_ID });
+    const connector = createQldLocalGovernmentConnector({
+      financialInputsCsvText: CSV,
+      roadDataCsvText: ROAD_CSV,
+    });
+    await runIngestion({ connectors: [connector] });
+    await runIngestion({ connectors: [connector] });
+
+    expect(await MeasureModel.countDocuments({ source_id: QLD_LG_ID })).toBe(40);
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: QLD_LG_ID,
+        source_dataset: QLD_LG_ROAD_DATASET,
+      }),
+    ).toBe(20);
+    expect(await MeasureModel.countDocuments({ source_id: 'qld-qgip' })).toBe(1);
+    expect(
+      await MeasureModel.countDocuments({
+        source_id: QLD_LG_ID,
+        source_dataset: QLD_LG_ROAD_DATASET,
+      }),
+    ).toBe(20);
+    const source = await DataSourceModel.findOne({ source_id: QLD_LG_ID }).lean();
+    expect(source?.records_ingested).toBe(40);
   });
 });

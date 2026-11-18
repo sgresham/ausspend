@@ -40,6 +40,7 @@
     "clean:synthetic": "npm run build -w shared && tsx scripts/clean-synthetic.ts",
     "ingest:federal": "npm run build -w shared && tsx scripts/ingest-federal.ts",
     "ingest:nsw": "npm run build -w shared && tsx scripts/ingest-nsw.ts",
+    "ingest:local-gov": "npm run build -w shared && tsx scripts/ingest-local-gov.ts",
     "ingest:phase4": "npm run build -w shared && tsx scripts/ingest-phase4.ts",
     "ingest:soc": "npm run build -w shared && tsx scripts/ingest-soc.ts",
     "ingest:qld": "npm run build -w shared && tsx scripts/ingest-qld.ts",
