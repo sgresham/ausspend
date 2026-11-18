@@ -4,7 +4,7 @@ import {
   KU_RING_GAI_GPFS_FISCAL_YEAR,
   KU_RING_GAI_GPFS_REPORTING_URL,
   parseKuRingGaiGpfsReportPage,
-} from '../server/src/connectors/ku-ring-gai-gpfs.js';
+} from '../server/src/connectors/ku-ring-gai-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official Finance page HTML. */

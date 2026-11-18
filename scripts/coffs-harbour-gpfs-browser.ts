@@ -5,7 +5,7 @@ import {
   COFFS_HARBOUR_GPFS_REPORTING_URL,
   parseCoffsHarbourGpfsReportLinks,
   selectCoffsHarbourGpfsDocument,
-} from '../server/src/connectors/coffs-harbour-gpfs.js';
+} from '../server/src/connectors/coffs-harbour-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official Annual Report page HTML. */

@@ -5,7 +5,7 @@ import {
   WOLLONGONG_GPFS_REPORTING_URL,
   parseWollongongGpfsReportLinks,
   selectWollongongGpfsDocument,
-} from '../server/src/connectors/wollongong-gpfs.js';
+} from '../server/src/connectors/wollongong-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official listing page HTML (Cloudflare challenge solved). */

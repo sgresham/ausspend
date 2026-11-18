@@ -4,7 +4,7 @@ import {
   WAVERLEY_GPFS_FISCAL_YEAR,
   WAVERLEY_GPFS_REPORTING_URL,
   parseWaverleyGpfsReportPage,
-} from '../server/src/connectors/waverley-gpfs.js';
+} from '../server/src/connectors/waverley-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official Annual Statement of Accounts page HTML. */

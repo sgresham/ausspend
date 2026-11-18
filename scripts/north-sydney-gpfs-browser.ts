@@ -2,7 +2,7 @@ import {
   NORTH_SYDNEY_GPFS_FISCAL_YEAR,
   NORTH_SYDNEY_GPFS_REPORTING_URL,
   parseNorthSydneyGpfsReportPage,
-} from '../server/src/connectors/north-sydney-gpfs.js';
+} from '../server/src/connectors/north-sydney-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official Financial Statements listing HTML. */
