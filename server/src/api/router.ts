@@ -13,6 +13,7 @@ import { getArea, getRegion, getState } from './region-detail.js';
 import { search } from './search.js';
 import { getSoc } from './soc.js';
 import { getSpending, listSpending } from './spending.js';
+import { getTradeSummary, listTrade, listTradeCommodities, listTradePartners } from './trade.js';
 
 export interface ApiRouterOptions {
   pingDb?: () => Promise<DbStatus>;
@@ -38,6 +39,10 @@ export function createApiRouter(options: ApiRouterOptions = {}): Router {
   router.get('/states/:code', getState);
   router.get('/spending', listSpending);
   router.get('/spending/:id', getSpending);
+  router.get('/trade/summary', getTradeSummary);
+  router.get('/trade/commodities', listTradeCommodities);
+  router.get('/trade/partners', listTradePartners);
+  router.get('/trade', listTrade);
   router.get('/search', search);
 
   return router;

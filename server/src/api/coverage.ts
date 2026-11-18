@@ -80,6 +80,7 @@ import {
 } from '../models/index.js';
 import { HttpError } from './errors.js';
 import { AREA_NOT_COVERED } from './area-profile.js';
+import { TRADE_COVERAGE } from './meta.js';
 
 /** Federal sources that are registered but still waiting on a live connector. */
 export const PENDING_FEDERAL_SOURCES = [] as const;
@@ -701,6 +702,7 @@ export function createCoverageHandler(
         note: "NSW local: Dubbo's adopted budget/capital PDF and eleven audited GPFS sources (Dubbo, City of Sydney, Blacktown, Parramatta, Northern Beaches, Canterbury-Bankstown, Sutherland Shire, Wollongong, Newcastle, Lake Macquarie and Maitland), all non-additive agency detail with no region/LGA allocation. VIC local: VLGGC VGC1 and ABS1/ABS2-3 for all 79 councils, including the FY2015-16..FY2023-24 historical series; every source Totals row is suppressed and no cross-council total is created; VLGGC is attribution/permission, not CC BY. QLD local: the local government comparative-information Financial Inputs CSV is active as `qld-local-government` (council-level actual $'000 operating expenses/employee/depreciation/interest, agency_detail, never summed with QGIP grants/procurement). SA local government is deferred (Phase 6.5 closed deferred); no SA council source is registered. ACT and NT are territory-level and reported under territory_ingestion. No other council or state/territory local source is covered.",
         not_covered: AREA_NOT_COVERED,
       },
+      trade_ingestion: TRADE_COVERAGE,
       ingestion: {
         latest_logs: latestLogs.map((log) => ({
           source_id: log.source_id,
