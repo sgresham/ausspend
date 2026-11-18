@@ -33,7 +33,8 @@ test('how it was built page states the human/AI process, source and licence', as
   const attributions = page.getByTestId('how-built-attributions');
   await expect(attributions).toContainText('AusTender');
   await expect(attributions).toContainText('Australian Bureau of Statistics');
-  await expect(attributions).toContainText('Dubbo Regional Council');
+  await expect(attributions).not.toContainText('Dubbo Regional Council');
+  await expect(attributions).toContainText('general-purpose financial statement publishers');
   await expect(attributions).toContainText('not an official government publication');
 
   // The page is not a tenth top-nav item.

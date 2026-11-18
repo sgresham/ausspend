@@ -133,8 +133,8 @@ export function HowBuiltPage() {
           Australia; Tasmania; the Northern Territory; and the Australian Capital Territory.
         </Typography>
         <Typography variant="body2">
-          <strong>Local government.</strong> Dubbo Regional Council; the individual NSW council
-          general-purpose financial statement publishers listed on the{' '}
+          <strong>Local government.</strong> The individual NSW council general-purpose financial
+          statement publishers listed on the{' '}
           <Link component={RouterLink} to="/data-sources">
             Data sources
           </Link>{' '}
