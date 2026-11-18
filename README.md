@@ -5,7 +5,8 @@ and state. This repository is the Phase 1 application: an npm-workspace monorepo
 client, an Express API and shared TypeScript/Zod contracts.
 
 > The app runs on **real published feeds only**. The synthetic development seed has been retired:
-> the database holds **515,955 real measures** and **0 synthetic rows**. Real sources include
+> the database holds real published measures only and **0 synthetic rows** (live counts are exposed
+> at `/api/coverage`). Real sources include
 > **AusTender federal contracts**, **data.gov.au PBS budget line items**, **GrantConnect** grant
 > awards (a human-downloaded, SHA-256-archived XLSX export; no API and no scraper), NSW/VIC/QLD
 > budget and project data, targeted data.nsw.gov.au CKAN rows, one Dubbo council budget plus thirty
@@ -48,18 +49,19 @@ client, an Express API and shared TypeScript/Zod contracts.
 
 ## Environment
 
-The application database is the host `q` Mongo, never a container:
+The application database is an external MongoDB, never the pool Mongo. Point `MONGO_URL` at your
+own instance:
 
 ```
-MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
+MONGO_URL=mongodb://localhost:27017/ausspend_dev
 PORT=3001
 CLIENT_ORIGIN=http://localhost:5173
 VITE_API_PROXY_TARGET=http://localhost:3001
 ```
 
-A host or shell `MONGO_URL` overrides the compose default. Never point local development at the pool
-Mongo (`127.0.0.1:27018`). The dev compose file deliberately has **no `mongo` service**; the
-application creates only the `ausspend_dev` database it is allowed to seed.
+`MONGO_URL` is required by the dev compose file (it deliberately has **no `mongo` service**). Keep
+credentials in your shell or an untracked `.env`, never in the repository. The application creates
+only the `ausspend_dev` database it is allowed to seed.
 
 ## One-command dev stack (Docker Compose)
 
@@ -779,13 +781,29 @@ they are exposed only at `/api/soc` and are never added to government program sp
 benchmark or each other.
 The seed asserts it produces no verified measures before reporting success.
 
+## Data, secrets and forking
+
+This repository contains **code and configuration only**. It deliberately does not contain:
+
+- source PDFs, XLSX/CSV files or other downloaded documents;
+- database dumps, backups or extracted datasets;
+- API keys, tokens, private keys or `.env` files with credentials.
+
+Connectors discover and fetch their sources at run time. Documents are archived outside the
+checkout (default: `~/ausspend-source-archive`, override with `AUSSPEND_SOURCE_ARCHIVE`); the
+archive is not committed. Test files under `server/test/` contain only short excerpts of public
+documents, sufficient to exercise a parser — not datasets.
+
+A fork can reproduce the data by running the documented ingest commands; it will fetch the same
+official sources. See [DATA_POLICY.md](./DATA_POLICY.md) for the full rule and the checks used.
+
 ## Docker Compose (development)
 
 `docker-compose.yml` is the authoritative one-command development flow documented above: a
 one-shot, non-destructive `seed` service, then `server` and `client`, all from `node:24-alpine`.
 The opt-in `ingest` profile re-runs federal ingestion after that safe seed and is never started by
-a plain `up`. It passes `MONGO_URL` from the host environment (defaulting to host `q`'s
-`ausspend_dev`) and deliberately has **no mongo service**. Dependency/build directories are named
+a plain `up`. It requires `MONGO_URL` from the host environment and deliberately has **no mongo
+service**. Dependency/build directories are named
 volumes under the bind mount, so `docker compose down -v` leaves the host checkout clean.
 
 ## Repository rule

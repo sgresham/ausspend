@@ -15,3 +15,25 @@ blob-report/
 
 npm-debug.log*
 .DS_Store
+
+# Runtime scratch (pid files, audit logs) — never commit
+.tmp-*
+
+# Source documents and extracted datasets are fetched at runtime and kept
+# outside the repository. See DATA_POLICY.md. Use `git add -f` only for a
+# hand-written synthetic fixture, never for downloaded data.
+*.pdf
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.zip
+*.gz
+*.tar
+*.db
+*.sqlite
+*.sqlite3
+*.bson
+*.parquet
+source-archive/
+backups/

@@ -1,7 +1,9 @@
 # Development stack for ausspend.
 #
-# The application database is the host `q` Mongo (mongodb://10.10.10.30:27017/ausspend_dev),
-# never a container and never the pool Mongo. The one-shot `seed` service installs dependencies,
+# The application database is an external MongoDB — never the pool Mongo.
+# Set MONGO_URL (for example mongodb://host:27017/ausspend_dev); credentials belong
+# in your shell or an untracked .env file, never in this file.
+# The one-shot `seed` service installs dependencies,
 # builds the shared package and runs the guarded, non-destructive seed (real-only by default:
 # the taxonomy and real source register are written, and no synthetic rows are created); the API
 # and client only start after it succeeds. Live ingestion survives a restart. `SEED_MODE=synthetic`
@@ -15,7 +17,7 @@ services:
     working_dir: /app
     command: sh -c "npm ci && npm run seed"
     environment:
-      MONGO_URL: ${MONGO_URL:-mongodb://10.10.10.30:27017/ausspend_dev}
+      MONGO_URL: ${MONGO_URL:?set MONGO_URL to your MongoDB (e.g. mongodb://host:27017/ausspend_dev)}
       SEED_MODE: ${SEED_MODE:-real}
     volumes:
       - .:/app
@@ -32,7 +34,7 @@ services:
     working_dir: /app
     command: sh -c "npm ci && npm run ingest:federal"
     environment:
-      MONGO_URL: ${MONGO_URL:-mongodb://10.10.10.30:27017/ausspend_dev}
+      MONGO_URL: ${MONGO_URL:?set MONGO_URL to your MongoDB (e.g. mongodb://host:27017/ausspend_dev)}
       AUSTENDER_START_DATE: ${AUSTENDER_START_DATE:-}
       AUSTENDER_END_DATE: ${AUSTENDER_END_DATE:-}
       INGEST_SOURCES: ${INGEST_SOURCES:-aus-tender}
@@ -57,7 +59,7 @@ services:
       # publish 3001/5173 on 0.0.0.0.
       - '127.0.0.1:${SERVER_PORT:-3001}:3001'
     environment:
-      MONGO_URL: ${MONGO_URL:-mongodb://10.10.10.30:27017/ausspend_dev}
+      MONGO_URL: ${MONGO_URL:?set MONGO_URL to your MongoDB (e.g. mongodb://host:27017/ausspend_dev)}
       PORT: '3001'
       # Production same-origin origin; local dev may override CLIENT_ORIGIN.
       CLIENT_ORIGIN: ${CLIENT_ORIGIN:-https://ausspend.com.au}
