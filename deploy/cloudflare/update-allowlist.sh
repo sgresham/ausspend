@@ -14,7 +14,9 @@ API=https://api.cloudflare.com/client/v4/ips
 
 tmpjson=$(mktemp)
 tmpconf=$(mktemp)
-trap 'rm -f "$tmpjson" "$tmpconf"' EXIT
+tmpold=$(mktemp)
+tmpnew=$(mktemp)
+trap 'rm -f "$tmpjson" "$tmpconf" "$tmpold" "$tmpnew"' EXIT
 
 curl -fsS --max-time 20 "$API" -o "$tmpjson"
 
@@ -33,8 +35,14 @@ jq -e '(.result.ipv4_cidrs | type == "array" and length >= 10) and
   echo "deny all;"
 } >"$tmpconf"
 
-if [ -f "$SNIPPET" ] && cmp -s "$tmpconf" "$SNIPPET"; then
-  exit 0
+# Compare the rules only, not the generated timestamp, so an unchanged list
+# does not reload nginx every day.
+grep -E '^(allow|deny) ' "$tmpconf" >"$tmpnew" || true
+if [ -f "$SNIPPET" ]; then
+  grep -E '^(allow|deny) ' "$SNIPPET" >"$tmpold" || true
+  if cmp -s "$tmpold" "$tmpnew"; then
+    exit 0
+  fi
 fi
 
 [ -f "$SNIPPET" ] && cp -p "$SNIPPET" "$BACKUP"
