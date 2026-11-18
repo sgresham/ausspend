@@ -1,8 +1,10 @@
 # Local government coverage
 
 **Status as at 2026-11-18.** Phase 1 covers **Queensland** (`qld-local-government`); Phase 2 adds
-**Western Australia** (`wa-mycouncil`); Phase 3 adds **Tasmania** (`tas-lg-cdc`). VIC/SA/NT are not
-added; the runner has an explicit priority-order extension point for them.
+**Western Australia** (`wa-mycouncil`); Phase 3 adds **Tasmania** (`tas-lg-cdc`). VIC has an existing
+**performance-indicator-only** layer (`vic-lgprf`, 23,068 rows); it is not a financial-spending
+source and is not added to the spending layer. SA/NT are not added; the runner has an explicit
+priority-order extension point for them.
 
 ## QLD — source and package
 
@@ -245,6 +247,47 @@ capital-expenditure fields).
   `tas-lg-cdc`.
 - Second run: no new rows; source still 684, all measures still 731,455.
 - `LOCAL_GOV_DRY_RUN=1 npm run ingest:local-gov` → `qld-local-government -> wa-mycouncil -> tas-lg-cdc`.
+
+## VIC — performance indicators present, financial spending not available
+
+- source id: `vic-lgprf` (existing; not duplicated)
+- DataVic package: `local-government-performance-reporting` —
+  <https://discover.data.vic.gov.au/dataset/local-government-performance-reporting>
+- licence: CC BY 4.0; publisher Local Government Victoria
+- resource: `LGPRF-2020-2025-Full-Council-Data-Set-Nov25-Final-Release.xlsx`
+  (3,241,185 B; SHA-256 `d88f7ede3a154f1beb6359850dc25a68159d08e23478fec8f138d67d1b787376`)
+
+### Boundary decision
+
+The existing layer is **23,068 non-additive performance-indicator rows**, 79 councils,
+FY2020-21–FY2024-25. Every row has `amount_cents: 0` and a `performance_value`; there is no
+total-dollar council income or expense measure.
+
+Published units in the source are:
+
+- percentages (`percentage (0-1 fraction)`) and ratios;
+- days, counts, visits per person, loans per person, requests per 100 km, bins per 10,000 lifts,
+  inspections per facility, persons per km;
+- scores out of 10/100;
+- **AUD per person, AUD per property assessment, AUD per square metre, AUD per councillor,
+  AUD per visit, AUD per hour, AUD per food premises, AUD per planning application,
+  AUD per kerbside bin** — per-unit rates, never a total dollar amount.
+
+The DataVic package has one XLSX resource and no general-purpose financial statements. It is a
+performance-reporting layer, not a council income/expense source.
+
+**Decision: VIC council financial spending remains not available from this source.** No indicator is
+mapped to `spending_records`, no performance row is converted to dollars, and the existing 23,068
+rows are unchanged. A VIC financial layer requires a separate VGC1/ABS/GPFS or other
+general-purpose financial source; it must not be manufactured from LGPRF ratios or per-capita
+values. `vic-lgprf` is not a duplicate VIC spending source.
+
+### Non-additivity
+
+- Never sum or average across councils, indicators or years.
+- The source disclaimer forbids „overly simplistic league tables of councils“; every row carries
+  the CC BY 4.0 attribution and non-additive caveat.
+- No cross-council and no performance-to-dollar total is created.
 
 ## Ingestion
 
