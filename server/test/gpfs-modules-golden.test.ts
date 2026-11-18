@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { MODULAR_CONNECTOR_IDS } from '../src/connectors/generated-connectors.js';
 import { GPFS_FIXTURES } from './generated-gpfs-fixtures.js';
 
 interface GoldenFixture {
@@ -22,9 +23,10 @@ function digest(records: Array<{ natural_key?: string; amount_cents: number }>):
 }
 
 describe('GPFS module migration golden proofs', () => {
-  it('matches the pre-migration row count and key/amount digest for all 29 legacy modules', () => {
+  it("matches each GPFS module's row count and key/amount digest", () => {
+    const gpfsModuleIds = MODULAR_CONNECTOR_IDS.filter((id) => id.endsWith('-gpfs'));
     const legacy = GPFS_FIXTURES.filter((entry) => entry.id !== 'blacktown-gpfs');
-    expect(legacy).toHaveLength(29);
+    expect(legacy).toHaveLength(gpfsModuleIds.length - 1);
     for (const entry of legacy) {
       const fixture = entry.fixture as unknown as GoldenFixture;
       expect(typeof fixture.goldenRecords, entry.id).toBe('function');
