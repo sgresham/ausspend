@@ -7,6 +7,7 @@ import { BenchmarkPage } from './pages/BenchmarkPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
 import { FunctionsPage } from './pages/FunctionsPage';
 import { HomePage } from './pages/HomePage';
+import { HowBuiltPage } from './pages/HowBuiltPage';
 import { LegalPage } from './pages/LegalPage';
 import { RegionsPage } from './pages/RegionsPage';
 import { SearchPage } from './pages/SearchPage';
@@ -35,6 +36,7 @@ export function App() {
             <Route path="/data-sources" element={<DataSourcesPage />} />
             <Route path="/legal" element={<LegalPage />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/how-it-was-built" element={<HowBuiltPage />} />
           </Route>
         </Routes>
       </DiscoveryProvider>
