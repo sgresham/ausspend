@@ -144,6 +144,7 @@ export const NSW_SOURCE_IDS = [
   'blue-mountains-gpfs',
   'wollondilly-gpfs',
   'camden-gpfs',
+  'campbelltown-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {

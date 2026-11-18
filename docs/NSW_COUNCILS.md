@@ -3642,6 +3642,92 @@ the same 23 SHA-anchored natural keys and left the DB total at **693,282** (idem
 
 ---
 
+### 7.39 Thirty-ninth council — Campbelltown City Council FY2024-25 GPFS (landed 2026-11-18)
+
+**Source.** Discovered from Campbelltown City Council's official page
+<https://www.campbelltown.nsw.gov.au/Council-and-Councillors/Financial-information>, which links the
+published audited statements PDF
+<https://www.campbelltown.nsw.gov.au/files/sharedassets/public/v/1/council-and-councillors/documents/2024-25-financial-statements_final.pdf>.
+The connector parses that page's own PDF link (no hard-coded document URL) and SHA-256 re-verifies the
+exact bytes. The page and PDF are served directly to a normal HTTP client (HTTP 200); no browser
+challenge was needed.
+
+The 100-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p8,
+Statement of Comprehensive Income p9, B1-1 "Functions or activities" p19 and note B3-3 depreciation
+p28 — plus the independent auditor's report on PDF p71–p73, signed 28 October 2025 by the Delegate of
+the Auditor-General for New South Wales. The cover page carries a leftover typesetting banner reading
+"DRAFT VERSION"; the body is the signed and audited final document named in the council's
+`...-final.pdf` link, so the banner is recorded here rather than treated as a different version. The
+printed unit is explicit `$'000` on the Income Statement, Statement of Comprehensive Income, B1-1 and
+note B3-3; a missing or conflicting unit rejects the whole extraction.
+
+Exact bytes archived outside the repo at
+`$AUSSPEND_SOURCE_ARCHIVE/campbelltown-gpfs/campbelltown-city-council-financial-statements-2024-25.pdf`:
+**26,061,429 bytes**, SHA-256
+`98bf395e8f6fba33ab9505c052eb0333350da739c1db54b4c80126917cb1dfdf` (`hash_verified: true`).
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check                                                                                                                                                                                                | Printed / derived                                                                                        | Result                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                                                                                           | `$306,751` thousand                                                                                      | = `$306,751,000`                                 |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income)                                                                         | `$155,396` + `$18,050` + `$10,568` + `$30,952` + `$67,872` + `$13,237` + `$10,676` = `$306,751` thousand | = printed total                                  |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses + net loss on disposal)                                                                                    | `$101,228` + `$92,728` + `$280` + `$7,390` + `$2,748` = `$204,374` thousand                              | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$39,290`)                                                                                                   | `$204,374` + `$39,290` = `$243,664` thousand                                                             | = printed B1-1 total expenses                    |
+| B1-1 Total functions or activities — income                                                                                                                                                          | `$306,751` thousand                                                                                      | = face statement                                 |
+| B1-1 Total functions or activities — expenses                                                                                                                                                        | `$243,664` thousand                                                                                      | = `$243,664,000` (printed total)                 |
+| B1-1 Total functions or activities — operating result                                                                                                                                                | `$63,087` thousand                                                                                       | = face operating result                          |
+| B1-1 grants and contributions                                                                                                                                                                        | `$98,824` thousand                                                                                       | = operating `$30,952` + capital `$67,872`        |
+| B1-1 objective expense split (Community and belonging `$42,840` + Places for people `$92,333` + Enriched natural environment `$45,675` + Economic prosperity `$8,247` + Strong leadership `$54,569`) | `$243,664` thousand                                                                                      | = printed B1-1 total expenses                    |
+| Operating result from continuing operations                                                                                                                                                          | `$306,751` − `$243,664` = `$63,087` thousand                                                             | = printed operating result                       |
+| Net operating result for the year from Income Statement                                                                                                                                              | `$63,087` thousand                                                                                       | = printed net result (no discontinued operation) |
+| Statement of Comprehensive Income total (`$63,087` + `$263` other comprehensive income)                                                                                                              | `$63,350` thousand                                                                                       | = printed total comprehensive income             |
+| Note B3-3 "Total depreciation and amortisation costs"                                                                                                                                                | `$39,290` thousand                                                                                       | = face depreciation/amortisation/impairment line |
+
+Total expenses is the printed B1-1 "Total functions or activities" expense total (`$243,664`
+thousand), **not** a sum of the nature components on its own. It equals the printed face-statement
+bridge of expenses-excluding-depreciation (`$204,374` thousand) plus printed
+depreciation/amortisation/impairment (`$39,290` thousand), and equals printed total income
+(`$306,751` thousand) less the printed continuing operating result (`$63,087` thousand). B1-1 income,
+expenses, operating result and grants reconcile exactly to the face statement — there is **no
+face-vs-B1-1 discrepancy**. There is no discontinued operation, so the continuing operating result and
+the net result repeated at the top of the Statement of Comprehensive Income are the same printed
+figure.
+
+**Rows.** 22 rows, source id `campbelltown-gpfs`, `source_dataset` "Campbelltown City Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Campbelltown City Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. The minimum lines are total revenue
+`$306,751,000`, total expenses `$243,664,000`, employee expenses `$101,228,000`,
+depreciation/amortisation/impairment `$39,290,000`, operating government grants `$30,952,000`,
+capital government grants `$67,872,000`, borrowing costs `$280,000`, net loss on disposal of assets
+`$2,748,000` and net result `$63,087,000`. The five printed B1-1 objective expenses (Community and
+belonging, Places for people, Enriched natural environment, Economic prosperity, Strong leadership)
+are emitted as a separate `b1_1_function_expenses_*` cut of the same printed total.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government program
+data; they are not added to expenditure. The five B1-1 objective rows are a second cut of the same
+total expenses and are never added to the nature-of-expense rows. The pre-existing same-entity rows are
+preserved untouched and never summed.
+
+**Database evidence (2026-11-18, shared dev DB).** Fresh aggregate at claim time: total measures
+**693,237**, of which **684** GPFS rows across **38** sources and **0** `campbelltown-gpfs` rows.
+After ingesting only this source: total **693,259** (+22), GPFS **706** across **39** sources
+(+22 and +1 source), `campbelltown-gpfs` **22**; the per-source diff changed **only**
+`campbelltown-gpfs` (0 → 22), no source count decreased and no rows were deleted. A later fresh
+aggregate (after a concurrent Camden ingest of 23 rows) is **693,282 total / 729 GPFS rows across 40
+sources**, with `campbelltown-gpfs` still exactly **22**; the later change is entirely the concurrent
+`camden-gpfs` landing, not this source. `data_sources` records `campbelltown-gpfs` as `active` with
+`records_ingested: 22`. A second ingest run upserts the same 22 SHA-anchored natural keys
+(idempotent). Targeted connector tests passed (15/15).
+
+---
+
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).

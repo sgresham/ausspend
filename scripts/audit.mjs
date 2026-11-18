@@ -61,6 +61,7 @@ const KNOWN_SOURCE_IDS = [
   'blue-mountains-gpfs',
   'wollondilly-gpfs',
   'camden-gpfs',
+  'campbelltown-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
