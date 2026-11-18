@@ -10,7 +10,7 @@ import { createNswCkanConnector } from './data-nsw-ckan.js';
 import { createDubboConnector } from './dubbo-council.js';
 import { createDubboGpfsConnector } from './dubbo-gpfs.js';
 import { createCityOfSydneyGpfsConnector } from './city-of-sydney-gpfs.js';
-import { createBlacktownGpfsConnector } from './blacktown-gpfs.js';
+import { MODULAR_CONNECTORS } from './generated-connectors.js';
 import { createParramattaGpfsConnector } from './parramatta-gpfs.js';
 import { createNorthernBeachesGpfsConnector } from './northern-beaches-gpfs.js';
 import { createCanterburyBankstownGpfsConnector } from './canterbury-bankstown-gpfs.js';
@@ -174,13 +174,6 @@ export const CONNECTORS: readonly Connector[] = [
   // exactly to the printed Income Statement, B1-1 and comprehensive-income
   // totals. Never summed with any other council, the Dubbo rows or state rows.
   createCityOfSydneyGpfsConnector(),
-  // GPFS expansion: third council only (Blacktown City Council). Its audited
-  // FY2024-25 General Purpose Financial Statements are a separate source id:
-  // every row is non-additive agency_detail, has no region/LGA allocation, and
-  // reconciles exactly to the printed Income Statement, B1-1 and
-  // comprehensive-income totals. Never summed with any other council, the
-  // Dubbo budget rows, the existing council GPFS rows or State rows.
-  createBlacktownGpfsConnector(),
   // GPFS expansion: fourth council only (City of Parramatta). Its audited
   // FY2024-25 General Purpose Financial Statements are a separate source id:
   // every row is non-additive agency_detail, has no region/LGA allocation, and
@@ -602,6 +595,8 @@ export const CONNECTORS: readonly Connector[] = [
   // inputs, separate from QGIP project grants/procurement; every row is
   // agency_detail and non-additive.
   createQldLocalGovernmentConnector(),
+  // Module-style connectors discovered by scripts/generate-connector-manifest.mjs.
+  ...MODULAR_CONNECTORS,
 ];
 
 export const CONNECTOR_IDS = CONNECTORS.map((connector) => connector.id);

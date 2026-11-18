@@ -39,6 +39,17 @@ client, an Express API and shared TypeScript/Zod contracts.
 /e2e        Playwright smoke tests
 ```
 
+## Connector modules
+
+Council GPFS connectors can be added as `server/src/connectors/<id>/` modules with `meta.ts`,
+`config.ts`/`parse.ts`, `index.ts` and an optional fixture. The shared
+`server/src/connectors/gpfs/engine.ts` provides unit detection, natural-key, unit-label and
+non-additive rules. `npm run generate:connectors` discovers `connectors/*/index.ts` and writes
+`generated-connectors.ts`; the registry and `npm run build` consume it, so adding a module needs no
+manual registry/index/package edit. `npm run generate:sources` writes `docs/sources/<id>.md` and the
+generated register. `server/test/connector-modules.test.ts` enforces the contract. The reference
+migration is Blacktown: 33 rows with an unchanged natural-key/amount golden digest.
+
 ## Requirements
 
 - **One-command flow** — Docker Engine with Compose v2 (v5.3.1 used here), plus network access to

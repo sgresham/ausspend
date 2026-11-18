@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import mongoose from 'mongoose';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SpendingRecord } from '@ausspend/shared';
@@ -15,7 +16,11 @@ import {
   parseBlacktownGpfsReportLinks,
   selectBlacktownGpfsDocument,
   type BlacktownGpfsParseContext,
-} from '../src/connectors/blacktown-gpfs.js';
+} from '../src/connectors/blacktown-gpfs/index.js';
+import {
+  BLACKTOWN_GPFS_GOLDEN_DIGEST,
+  BLACKTOWN_GPFS_ROW_COUNT,
+} from '../src/connectors/blacktown-gpfs/fixture.js';
 import { runIngestion } from '../src/connectors/runner.js';
 import type { Connector } from '../src/connectors/types.js';
 import { DataSourceModel, MeasureModel } from '../src/models/index.js';
@@ -76,6 +81,22 @@ const CONTEXT: BlacktownGpfsParseContext = {
 function parsedFixture() {
   return parseBlacktownGpfsExtraction(extraction(), CONTEXT);
 }
+
+it('matches the golden 33-row natural-key and amount digest', () => {
+  const { records } = parsedFixture();
+  expect(records).toHaveLength(BLACKTOWN_GPFS_ROW_COUNT);
+  const digest = createHash('sha256')
+    .update(
+      JSON.stringify(
+        records.map((record) => ({
+          natural_key: record.natural_key,
+          amount_cents: record.amount_cents,
+        })),
+      ),
+    )
+    .digest('hex');
+  expect(digest).toBe(BLACKTOWN_GPFS_GOLDEN_DIGEST);
+});
 
 function recordByLine(records: SpendingRecord[], lineItem: string): SpendingRecord {
   const record = records.find((entry) => entry.gpfs_line_item === lineItem);
