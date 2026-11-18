@@ -4,7 +4,7 @@ import {
   PORT_MACQUARIE_HASTINGS_GPFS_REPORTING_URL,
   parsePortMacquarieHastingsGpfsReportLinks,
   selectPortMacquarieHastingsGpfsDocument,
-} from '../server/src/connectors/port-macquarie-hastings-gpfs.js';
+} from '../server/src/connectors/port-macquarie-hastings-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official reporting page HTML. */

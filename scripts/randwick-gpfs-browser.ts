@@ -2,7 +2,7 @@ import {
   RANDWICK_GPFS_FISCAL_YEAR,
   RANDWICK_GPFS_REPORTING_URL,
   parseRandwickGpfsReportPage,
-} from '../server/src/connectors/randwick-gpfs.js';
+} from '../server/src/connectors/randwick-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official Our reports page HTML. */

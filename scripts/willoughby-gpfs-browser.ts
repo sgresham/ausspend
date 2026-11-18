@@ -2,7 +2,7 @@ import {
   WILLOUGHBY_GPFS_FISCAL_YEAR,
   WILLOUGHBY_GPFS_REPORTING_URL,
   parseWilloughbyGpfsReportPage,
-} from '../server/src/connectors/willoughby-gpfs.js';
+} from '../server/src/connectors/willoughby-gpfs/index.js';
 
 export interface BrowserGpfsFetch {
   /** The browser-cleared official Annual Financial Statements page HTML. */
