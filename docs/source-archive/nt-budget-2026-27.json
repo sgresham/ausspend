@@ -1,0 +1,85 @@
+{
+  "dataset": "2026-27 Budget Paper No. 4 — The Infrastructure Program",
+  "source_url": "https://budget.nt.gov.au/__data/assets/pdf_file/0004/1609249/2026-27-budget-bp4.pdf",
+  "papers_url": "https://budget.nt.gov.au/budget-papers",
+  "source_date": "2026-06",
+  "fiscal_year": "2026-27",
+  "license": "Northern Territory Government budget papers — Crown copyright; derived rows only, PDF not redistributed.",
+  "attribution": "Northern Territory Government — 2026-27 Budget Paper No. 4, The Infrastructure Program.",
+  "caveat": "NT Government 2026-27 budget capital works by COFOG-A category, in $ million. Budget measure, not actual expenditure; statewide/territory-wide only. The published TOTAL GENERAL GOVERNMENT row is used only for reconciliation and is never emitted. No cross-source total; the ten category rows are the published table components.",
+  "unit": "AUD_millions",
+  "unit_label": "$ million",
+  "table": "Table 3: Capital works by COFOG-A category 2026-27",
+  "rows_emitted": 10,
+  "amount_sum_millions": 4253.6,
+  "printed_total_millions": 4253.6,
+  "amount_difference": 0,
+  "percent_sum": 100.00000000000001,
+  "printed_percent": 100,
+  "percent_difference": 1.4210854715202004e-14,
+  "categories": [
+    {
+      "label": "Transport",
+      "cofog": "04",
+      "amount_millions": 2041.1,
+      "percent": 48
+    },
+    {
+      "label": "Housing and community amenities",
+      "cofog": "06",
+      "amount_millions": 782.1,
+      "percent": 18.4
+    },
+    {
+      "label": "Economic affairs",
+      "cofog": "04",
+      "amount_millions": 496.3,
+      "percent": 11.7
+    },
+    {
+      "label": "Public order and safety",
+      "cofog": "03",
+      "amount_millions": 426.3,
+      "percent": 10
+    },
+    {
+      "label": "Education",
+      "cofog": "09",
+      "amount_millions": 158,
+      "percent": 3.7
+    },
+    {
+      "label": "Social protection",
+      "cofog": "10",
+      "amount_millions": 112.1,
+      "percent": 2.7
+    },
+    {
+      "label": "Health",
+      "cofog": "07",
+      "amount_millions": 102.5,
+      "percent": 2.4
+    },
+    {
+      "label": "Recreation, culture and religion",
+      "cofog": "08",
+      "amount_millions": 99.3,
+      "percent": 2.3
+    },
+    {
+      "label": "Environmental protection",
+      "cofog": "05",
+      "amount_millions": 26.3,
+      "percent": 0.6
+    },
+    {
+      "label": "General public services",
+      "cofog": "01",
+      "amount_millions": 9.6,
+      "percent": 0.2
+    }
+  ],
+  "sha256": "d128f1d8077ed04df1ca5458d31aa59d9fcb2072135d0c73b95f902b515efacd",
+  "bytes": 493573,
+  "notes": "Derived COFOG-A rows only; the PDF is not redistributed. The printed TOTAL GENERAL GOVERNMENT row is reconciliation-only and never emitted. No cross-source total."
+}

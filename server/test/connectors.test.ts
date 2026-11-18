@@ -56,6 +56,7 @@ const LIVE_IDS = [
   'vic-lgprf',
   'sa-budget-gfs',
   'act-budget',
+  'nt-budget',
   'qld-budget',
   'qld-qgip',
   'acnc-charity',
@@ -73,9 +74,9 @@ const LIVE_IDS = [
 const STUB_IDS = CONNECTOR_IDS.filter((id) => !LIVE_IDS.includes(id));
 
 describe('federal connector registry', () => {
-  it('ships sixty-three connectors with unique ids including the federal source ids', () => {
-    expect(CONNECTORS).toHaveLength(63);
-    expect(new Set(CONNECTOR_IDS).size).toBe(63);
+  it('ships sixty-four connectors with unique ids including the federal source ids', () => {
+    expect(CONNECTORS).toHaveLength(64);
+    expect(new Set(CONNECTOR_IDS).size).toBe(64);
     expect(CONNECTOR_IDS).toEqual(CONNECTOR_IDS.map((id) => id.toLowerCase()));
     expect(CONNECTOR_IDS).toEqual(
       expect.arrayContaining(['aus-tender', 'data-gov-au-pbs', 'grantconnect']),

@@ -186,6 +186,11 @@ export interface MeasureDocument {
   /** ACT published unit ($'000) and printed sign. */
   act_unit?: string;
   act_printed_sign?: 'positive' | 'negative';
+  /** NT Budget COFOG-A category, unit, percentage share and table. */
+  nt_cofog_category?: string;
+  nt_unit?: string;
+  nt_percent_share?: number;
+  nt_table?: string;
   /** VIC LGPRF performance value (non-monetary; may be negative or fractional). */
   performance_value?: number;
   /** Published textual result when the source result is not numeric. */
@@ -368,6 +373,10 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     act_region: { type: String },
     act_unit: { type: String },
     act_printed_sign: { type: String, enum: ['positive', 'negative'] },
+    nt_cofog_category: { type: String, index: true },
+    nt_unit: { type: String },
+    nt_percent_share: { type: Number },
+    nt_table: { type: String },
     performance_value: { type: Number, required: false },
     performance_value_text: { type: String },
     performance_unit: { type: String, index: true },
