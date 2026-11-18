@@ -52,6 +52,8 @@ const LIVE_IDS = [
   'liverpool-gpfs',
   'ku-ring-gai-gpfs',
   'lane-cove-gpfs',
+  'hawkesbury-gpfs',
+  'strathfield-gpfs',
   'vic-budget',
   'vic-vlgc-vgc1',
   'vic-vlgc-abs',
