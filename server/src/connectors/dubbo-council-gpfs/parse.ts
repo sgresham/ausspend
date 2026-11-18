@@ -45,7 +45,7 @@ export const DUBBO_GPFS_TARGET_YEAR_LABEL = '2024/2025';
 export const DUBBO_GPFS_SOURCE_DATASET = 'Dubbo Regional Council GPFS 2024-25';
 /**
  * Years this connector ingests from their own audited GPFS. The FY2015-16
- * predecessor statements and FY2016-17..FY2018-19 remain deliberately excluded:
+ * predecessor statements and FY2016-17..FY2017-18 remain deliberately excluded:
  * they are separate builders and must not be ingested here.
  */
 export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = [
@@ -56,6 +56,7 @@ export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = [
   '2021-22',
   '2020-21',
   '2019-20',
+  '2018-19',
 ] as const;
 export const DUBBO_GPFS_LICENSE = DUBBO_LICENSE;
 export const DUBBO_GPFS_DATA_QUALITY_FLAG = 'provisional/local_government';
@@ -837,6 +838,150 @@ export const DUBBO_GPFS_FY2019_20_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
   },
 ];
 
+/**
+ * FY2018-19 prints inline face rows in three columns (Original unaudited budget,
+ * Actual current year, Restated prior year) with a numeric note reference after
+ * each label (`3a`, `3b`, `3e,3f`, `5`, `14`, `4a` …). The budget amount is
+ * printed *before* the label and the two actual columns after it, so reading the
+ * first amount after the label plus note reference selects the Actual current
+ * year (2019), never the budget or the restated 2018 comparative. There is no
+ * disposal-loss expense line this year; the disposal gain (703) is a revenue
+ * component and the joint-venture share (49) is a revenue component.
+ */
+export const DUBBO_GPFS_FY2018_19_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
+  {
+    key: 'rates_and_annual_charges',
+    label: 'Rates and annual charges',
+    printed_note: '3a',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'user_charges_and_fees',
+    label: 'User charges and fees',
+    printed_note: '3b',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'interest_and_investment_income',
+    label: 'Interest and investment revenue',
+    printed_note: '3c',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_revenues',
+    label: 'Other revenues',
+    printed_note: '3d',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_operating',
+    label: 'Grants and contributions provided for operating purposes',
+    printed_note: '3e,3f',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_capital',
+    label: 'Grants and contributions provided for capital purposes',
+    printed_note: '3e,3f',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_gain_from_disposal_of_assets',
+    label: 'Net gains from the disposal of assets',
+    printed_note: '5',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_share_of_interests_in_joint_ventures_and_associates',
+    label: 'Net share of interests in joint ventures and associates using the equity method',
+    printed_note: '14',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_revenue',
+    label: 'Total income from continuing operations',
+    section: 'revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'employee_expenses',
+    label: 'Employee benefits and on-costs',
+    printed_note: '4a',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'borrowing_costs',
+    label: 'Borrowing costs',
+    printed_note: '4b',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'materials_and_services',
+    label: 'Materials and contracts',
+    printed_note: '4c',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'depreciation_amortisation_impairment',
+    label: 'Depreciation and amortisation',
+    printed_note: '4d',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_expenses',
+    label: 'Other expenses',
+    printed_note: '4e',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_expenses',
+    label: 'Total expenses from continuing operations',
+    section: 'expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_result',
+    label: 'Net operating result for the year',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_result_before_capital_grants',
+    label:
+      'Net operating result for the year before grants and contributions provided for capital purposes',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+];
+
 export interface DubboGpfsYearLayout {
   fiscalYear: string;
   sourceDataset: string;
@@ -877,6 +1022,16 @@ export const DUBBO_GPFS_YEAR_LAYOUTS: Readonly<Record<string, DubboGpfsYearLayou
     functionsGrantsAnchor: 35_142,
     functionsGrantsNote:
       'the functions note prints grants included in income of 35,142, which differs from the face operating and capital grant lines (21,858 + 33,077 = 54,935); the printed functions-note total is retained as an independent anchor and the face grant lines are not adjusted',
+  },
+  '2018-19': {
+    fiscalYear: '2018-19',
+    sourceDataset: 'Dubbo Regional Council GPFS 2018-19',
+    lines: DUBBO_GPFS_FY2018_19_LINES,
+    totalExpensesStatement: 'Income Statement',
+    expenseBridge: 'single-total',
+    functionsGrantsAnchor: 44_452,
+    functionsGrantsNote:
+      'the functions note prints grants included in income of 44,452, which differs from the face operating and capital grant lines (18,610 + 47,179 = 65,789); the printed functions-note total is retained as an independent anchor and the face grant lines are not adjusted',
   },
   '2020-21': {
     fiscalYear: '2020-21',
@@ -1665,7 +1820,7 @@ export function createDubboGpfsConnector(options: DubboGpfsConnectorOptions = {}
     jurisdiction_level: 'local',
     license: DUBBO_GPFS_LICENSE,
     notes:
-      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25, FY2023-24, FY2022-23, FY2021-22, FY2020-21 and FY2019-20 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and the functions-note Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). FY2020-21 reconciles to its face statement; its functions note prints income and operating result $188 thousand higher, and that variance is recorded as unexplained rather than forced to equality or spread across components. FY2019-20 reconciles to its face statement on income, expenses and result; the functions note prints grants included in income of $35,142 thousand, which differs from the face operating plus capital grant lines ($54,935 thousand), so that printed grant total is retained as an independent anchor and the grant lines are not adjusted. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
+      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25, FY2023-24, FY2022-23, FY2021-22, FY2020-21, FY2019-20 and FY2018-19 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and the functions-note Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). FY2020-21 reconciles to its face statement; its functions note prints income and operating result $188 thousand higher, and that variance is recorded as unexplained rather than forced to equality or spread across components. FY2019-20 reconciles to its face statement on income, expenses and result; the functions note prints grants included in income of $35,142 thousand, which differs from the face operating plus capital grant lines ($54,935 thousand), so that printed grant total is retained as an independent anchor and the grant lines are not adjusted. FY2018-19 reconciles to its face statement on income, expenses and result from the Actual current-year column of its three-column (budget, actual, restated prior) face; its functions note prints grants included in income of $44,452 thousand, which differs from the face operating plus capital grant lines ($65,789 thousand), so that printed grant total is retained as an independent anchor and the grant lines are not adjusted. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
