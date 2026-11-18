@@ -92,6 +92,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - hornsby-gpfs  GPFS expansion: Hornsby Shire Council's audited FY2025-26 GPFS
  *   - central-coast-gpfs  GPFS expansion: Central Coast Council's audited FY2024-25 GPFS
  *   - penrith-gpfs  GPFS expansion: Penrith City Council's audited FY2024-25 GPFS
+ *   - the-hills-gpfs  GPFS expansion: The Hills Shire Council's audited FY2024-25 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -154,6 +155,7 @@ export const NSW_SOURCE_IDS = [
   'central-coast-gpfs',
   'hornsby-gpfs',
   'penrith-gpfs',
+  'the-hills-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {

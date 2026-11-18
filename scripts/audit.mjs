@@ -65,6 +65,7 @@ const KNOWN_SOURCE_IDS = [
   'central-coast-gpfs',
   'hornsby-gpfs',
   'penrith-gpfs',
+  'the-hills-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
