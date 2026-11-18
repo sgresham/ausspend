@@ -38,8 +38,11 @@ The ingest skeleton runs in this fixed priority order:
    is the exporter, `MEASURE=C_F`, `PRODUCT_TYPE=C` and `UNIT_MEASURE=PT_IM_CIF` (percentage of CIF
    import value). It provides partner-total and HS 2017 4-digit product margins, preserving the
    published `OBS_STATUS` and `METHODOLOGY_TYPE`.
-3. **BITRE Waterline** — port-level Australian trade statistics, the best fit for
-   `location.granularity: "port"` and port interface costs.
+3. **BITRE Waterline** — **discovery only; deferred**. The source packet
+   ([`docs/source-discovery/bitre-waterline.md`](source-discovery/bitre-waterline.md)) finds
+   accessible five-container-port throughput, performance and indicative port-interface-cost data
+   under CC BY 4.0, but no trade values, CIF/FOB margins or national port total. A `trade_records`
+   builder needs a schema/unit review first; no connector is implemented.
 4. **DISR Resources and Energy Quarterly (REQ)** — quarterly resources and energy trade values,
    volumes and prices.
 5. **ABARES** — agricultural commodity trade values and volumes.
@@ -198,6 +201,8 @@ is allowed to create a cross-source or cross-measure total.
 - Trade values, CIF/FOB margins, port interface costs, trade volumes and trade prices are different
   measures and are not additive.
 - Port costs are not national totals.
+- BITRE Waterline is discovery-only and deferred: it covers five container ports and publishes
+  volumes and indicative port interface costs, not trade values or CIF/FOB margins.
 - OECD ITIC margins are calendar-year percentages, not Australian financial-year dollars, and no
   margin is summed into a national total.
 - OECD modelled, derived, interpolated and adjusted observations are never relabelled observed.

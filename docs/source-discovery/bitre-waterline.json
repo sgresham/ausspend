@@ -1,0 +1,671 @@
+{
+  "schema": "ausspend.source-discovery.v1",
+  "source_id": "bitre-waterline",
+  "title": "BITRE Waterline — five-container-port throughput, performance and port interface costs",
+  "publisher": "Bureau of Infrastructure and Transport Research Economics (BITRE)",
+  "parent_department": "Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts",
+  "generated_at": "2026-11-18T04:18:47Z",
+  "state": "discovery-only; no connector, no database write, no trade_records rows",
+  "jurisdiction": "federal",
+  "geography": "Five major Australian container ports: Brisbane, Sydney, Melbourne, Adelaide and Fremantle. Not all Australian ports and not bulk/non-container ports.",
+  "official_urls": {
+    "series_landing": "https://www.bitre.gov.au/resource/freight/waterline",
+    "latest_issue": "https://www.bitre.gov.au/resource/maritime/waterline-71",
+    "prior_issue": "https://www.bitre.gov.au/resource/maritime/waterline-70",
+    "old_stub_url": "https://www.bitre.gov.au/statistics/waterline",
+    "old_stub_http_status": 404,
+    "files": {
+      "pdf": "https://www.bitre.gov.au/sites/default/files/documents/water_071_0.pdf",
+      "throughput_xlsx": "https://www.bitre.gov.au/sites/default/files/documents/water_071_throughput.xlsx",
+      "performance_xlsx": "https://www.bitre.gov.au/sites/default/files/documents/water_071_performance.xlsx",
+      "vbs_xlsx": "https://www.bitre.gov.au/sites/default/files/documents/water_071_vbs.xlsx",
+      "pici_xlsx": "https://www.bitre.gov.au/sites/default/files/documents/water_071_pici.xlsx",
+      "time_series_zip": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip"
+    }
+  },
+  "access": {
+    "login_required": false,
+    "api": false,
+    "api_note": "No API or JSON endpoint found; the release page exposes direct PDF/XLSX/ZIP downloads only.",
+    "http_status": 200,
+    "user_agent_used": "Mozilla/5.0 (browser-like); plain curl without a UA may be challenged by the site.",
+    "old_stub": "The old plan URL https://www.bitre.gov.au/statistics/waterline returns HTTP 404; use /resource/freight/waterline and /resource/maritime/waterline-71."
+  },
+  "release": {
+    "latest_issue": "71",
+    "title": "Waterline 71 Statistical Report",
+    "release_date": "2026-09-25",
+    "period_covered": "Activity up to June quarter 2025",
+    "isbn": "978-1-923111-29-5",
+    "issn": "2208-9101",
+    "bitre_ref": "2026-102",
+    "status": "current",
+    "prior_issues": [
+      {
+        "issue": "70",
+        "release_date": "2024-12-02",
+        "period_covered": "June quarter 2023"
+      },
+      {
+        "issue": "69",
+        "release_date": "2023-07-21",
+        "period_covered": "June quarter 2022"
+      },
+      {
+        "issue": "68",
+        "release_date": "2022-10-04",
+        "period_covered": "June quarter 2021"
+      },
+      {
+        "issue": "67",
+        "release_date": "2021-12-22",
+        "period_covered": "December quarter 2020"
+      },
+      {
+        "issue": "66",
+        "release_date": "2021-06-11",
+        "period_covered": "June quarter 2020"
+      },
+      {
+        "issue": "65",
+        "release_date": "2019-12-17",
+        "period_covered": "June quarter 2019"
+      },
+      {
+        "issue": "64",
+        "release_date": "2019-11-02",
+        "period_covered": "December quarter 2018"
+      },
+      {
+        "issue": "63",
+        "release_date": "2019-10-02",
+        "period_covered": "June quarter 2018"
+      },
+      {
+        "issue": "62",
+        "release_date": "2018-10-02",
+        "period_covered": "December quarter 2017"
+      },
+      {
+        "issue": "61",
+        "release_date": "2017-12-02",
+        "period_covered": "June quarter 2017"
+      }
+    ]
+  },
+  "cadence": {
+    "type": "issue-based; irregular annual/biennial in recent releases",
+    "evidence": "Issue 71 released 2026-09-25, issue 70 released 2024-12-02 and issue 69 released 2023-07-21; earlier issues were more frequent.",
+    "note": "This is not a fixed quarterly feed. Do not assume quarterly updates or a live API."
+  },
+  "formats": [
+    {
+      "format": "PDF",
+      "file": "water_071_0.pdf",
+      "bytes": 4064757,
+      "notes": "110-page statistical report; authoritative definitions, units, PICI method, licence and release metadata."
+    },
+    {
+      "format": "XLSX",
+      "file": "water_071_throughput.xlsx",
+      "bytes": 43136,
+      "notes": "Sheets 1.1-1.6: container terminal throughput by port and Five ports, 2023Q1-2025Q2."
+    },
+    {
+      "format": "XLSX",
+      "file": "water_071_performance.xlsx",
+      "bytes": 57410,
+      "notes": "Sheets 2.1-2.6: container terminal performance/congestion by port and Five ports, 2023Q1-2025Q2."
+    },
+    {
+      "format": "XLSX",
+      "file": "water_071_vbs.xlsx",
+      "bytes": 34835,
+      "notes": "Sheets 3.1-3.6: vehicle booking system timeslots available/used, 2023Q1-2025Q2."
+    },
+    {
+      "format": "XLSX",
+      "file": "water_071_pici.xlsx",
+      "bytes": 55002,
+      "notes": "Sheets 4.1-4.5: per-port port interface cost parameters and estimates, 2023H1-2025H1."
+    },
+    {
+      "format": "ZIP of CSV",
+      "file": "water_071_timeSeries.zip",
+      "bytes": 182057,
+      "notes": "7 CSVs: quarterly/half-yearly throughput/performance 2011Q1-2025Q2 and TEU capacity/exchange 2014H2-2025Q2."
+    }
+  ],
+  "coverage": {
+    "ports": ["Brisbane", "Sydney", "Melbourne", "Adelaide", "Fremantle"],
+    "not_covered": [
+      "All other Australian ports",
+      "Bulk/commodity ports (e.g. Port Hedland, Dampier, Gladstone, Newcastle, Hay Point)",
+      "Non-containerised port trade values",
+      "Customs/CIF/FOB values"
+    ],
+    "time_series": {
+      "quarterly": "2011Q1 .. 2025Q2 (58 quarters)",
+      "half_yearly": "2011H1 .. 2025H1 (29 half-years)",
+      "teu_capacity_exchange": "2014H2 .. 2025Q2 (66 periods)",
+      "pici_xlsx": "2023H1 .. 2025H1 (5 half-years; 3 of 7 national ship-size classes)",
+      "throughput_xlsx": "2023Q1 .. 2025Q2",
+      "vbs_xlsx": "2023Q1 .. 2025Q2"
+    }
+  },
+  "measures": [
+    {
+      "id": "container_throughput",
+      "trade_measure": "trade_volume",
+      "published": true,
+      "description": "Wharfside and landside container/TEU throughput, ship visits, truck/rail splits and total port cargo throughput.",
+      "examples": [
+        "Total containers handled ('000)",
+        "Total TEUs handled ('000)",
+        "Total cargo throughput (million tonnes)",
+        "TEU full/empty import/export ('000)"
+      ],
+      "units": "containers and TEUs in thousands in the XLSX; raw counts in some CSVs; total cargo in million tonnes; ships/trucks as counts or thousands.",
+      "additive": false,
+      "notes": "Volume measure, not a dollar value. Different ports and containers/TEUs/tonnes are not interchangeable."
+    },
+    {
+      "id": "container_performance",
+      "trade_measure": "none (operational performance)",
+      "published": true,
+      "description": "Crane/labour/ship rates, truck and container turnaround, anchorage waiting, berth availability/occupancy, lifts per berth visit.",
+      "units": "containers or TEUs per hour; minutes/hours; percentages; counts.",
+      "additive": false,
+      "notes": "Performance indicators are not trade values, volumes or costs; the current trade_records model has no performance measure type."
+    },
+    {
+      "id": "port_interface_cost",
+      "trade_measure": "port_interface_cost",
+      "published": true,
+      "description": "PICI: shore-based shipping charges that approximate the cost of carting containers through the five ports. Includes ship-based charges (conservancy, tonnage, pilotage, towage, mooring), cargo-based charges (wharfage, harbour dues, other), stevedoring, terminal access, road transport and customs broker fees.",
+      "units": "AUD per TEU and AUD per ship visit; per-port tables in current-price indicative dollars; national PICI in current and constant prices (ABS non-farm GDP deflator, Jan-Jun 2025 = 100.0).",
+      "data_quality": "estimated (indicative, rounded, some components BITRE estimates)",
+      "additive": false,
+      "notes": "PICI is a shore-based port cost, not a CIF/FOB margin, not ocean freight and not profit. The national 'index' is a weighted average cost per TEU in dollars, not a unitless base-100 index. Never multiply a rate by throughput to invent a port cost total."
+    },
+    {
+      "id": "trade_value",
+      "trade_measure": "trade_value",
+      "published": false,
+      "description": "No customs, FOB, CIF or other trade value series is published in Waterline."
+    },
+    {
+      "id": "cif_fob_margin",
+      "trade_measure": "cif_fob_margin",
+      "published": false,
+      "description": "No CIF/FOB margin is published; OECD ITIC remains the only CIF/FOB margin source."
+    },
+    {
+      "id": "customs_value",
+      "trade_measure": "none",
+      "published": false,
+      "description": "No customs value, duty or tariff data."
+    },
+    {
+      "id": "profit",
+      "trade_measure": "none",
+      "published": false,
+      "description": "No profit data; PICI is a cost, not a profit margin."
+    }
+  ],
+  "units": {
+    "throughput": {
+      "containers": "XLSX tables use thousands ('000); CSV t1qtr/t1str use raw counts for cont_stev and teu_stev. Per-table unit detection is mandatory.",
+      "teu": "XLSX tables use thousands ('000); CSV t1qtr/t1str use raw counts for teu_stev; teu_total_port is raw/unspecified in early CSV rows.",
+      "total_cargo": "million tonnes (XLSX table 1.6/1.1-1.5 header 'Total cargo throughput (million tonnes)'); CSV all_mt_port/bb_mt_port unit is not printed in the CSV header and must be confirmed before use.",
+      "trucks": "XLSX uses thousands ('000); CSV vbs_trucks uses raw counts."
+    },
+    "performance": {
+      "rates": "containers/hour or TEUs/hour; minutes; hours; percentages; counts.",
+      "note": "No monetary conversion; never treat as dollars."
+    },
+    "pici": {
+      "per_teu": "AUD per TEU, rounded to the nearest whole dollar in the per-port XLSX; a zero means less than fifty cents.",
+      "per_ship_visit": "AUD per ship visit.",
+      "national": "National PICI is reported in dollars per TEU in current and constant prices (Tables 4.6/4.7 of the PDF); constant prices use the ABS non-farm GDP deflator with Jan-Jun 2025 = 100.0.",
+      "not_index_points": "Despite the name 'Port Interface Cost Index', the national table is dollars per TEU (values around $1,000-$1,156/TEU), not a unitless base-100 index."
+    }
+  },
+  "licence": {
+    "name": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "copyright": "© Commonwealth of Australia, 2026",
+    "verbatim": "With the exception of (a) the Coat of Arms; (b) the Department of Infrastructure, Transport, Regional Development, Communications, Sport and the Arts photos and graphics; (c) content supplied by third parties; (d) content otherwise labelled, copyright in this publication is licensed under Creative Commons Attribution 4.0 International.",
+    "attribution_verbatim": "An appropriate citation for this report is: Bureau of Infrastructure and Transport Research Economics 2026, Waterline 71, Statistical Report, Canberra, ACT.",
+    "site_terms_url": "https://www.infrastructure.gov.au/copyright",
+    "site_terms_quote": "Material obtained from all websites owned and administered by the department is to be attributed to this department as: © Commonwealth of Australia. Where identified by a CC logo, the material is licensed under Creative Commons (CC) Attribution 4.0 International.",
+    "exceptions": "Coat of Arms, departmental photos/graphics, third-party content and content otherwise labelled are excluded. The data tables are BITRE publication material; underlying data supplied by stevedores, port authorities and other third parties may carry separate rights.",
+    "reuse_note": "Attribution required; do not imply Commonwealth endorsement. Do not redistribute third-party photos/graphics."
+  },
+  "overlap": {
+    "abs_international_trade": {
+      "relationship": "No shared measure. ABS publishes national goods/services trade values in AUD by commodity and financial year. Waterline publishes five-port container volumes and port interface cost rates. They are not additive and cannot be reconciled to an ABS total because Waterline covers only five container ports and no dollar trade values.",
+      "action": "Keep separate; never sum or derive a port share of ABS values."
+    },
+    "oecd_itic": {
+      "relationship": "No shared measure. OECD ITIC publishes CIF/FOB margins as a percentage of CIF import value. Waterline PICI publishes shore-based port charges in AUD per TEU. PICI is not a CIF/FOB margin and must never be converted into one.",
+      "action": "Keep separate measure_type groups; never add or convert."
+    },
+    "five_ports_aggregate": {
+      "relationship": "The XLSX 'Five ports' sheets are a published sum of the five container ports, not a national all-ports total. They must not be presented as Australia-wide.",
+      "action": "Do not map to location.granularity='national' unless clearly labelled as five-port aggregate; current schema has no such granularity."
+    },
+    "non_additive": [
+      "PICI rates ($/TEU, $/ship visit) are not totals and must not be summed.",
+      "Throughput (containers, TEUs, tonnes) is not a dollar value and must not be added to ABS or OECD measures.",
+      "PICI components (ship-based, cargo-based, stevedoring, terminal access, road transport, customs broker) are alternative cost components; summing them may double-count depending on the table. Only the published 'Total fees and charges' row is a total.",
+      "Ports are separate; the five-port aggregate is not a national total.",
+      "Current-price and constant-price PICI series are different bases; never mix them in one total."
+    ]
+  },
+  "mapping_proposal": {
+    "target_collection": "trade_records",
+    "candidate_rows": [
+      {
+        "measure_type": "trade_volume",
+        "source_table": "timeSeries wl71_t1qtr/wl71_t1str and throughput XLSX",
+        "fields": {
+          "trade_flow": "import/export for teu_full_im/teu_empty_im/teu_full_ex/teu_empty_ex; total rows have no flow and are a blocker",
+          "port_name": "Brisbane|Sydney|Melbourne|Adelaide|Fremantle",
+          "location": "{ granularity: 'port', port: <port> }",
+          "commodity_name": "Containerised cargo (TEU) or Total cargo (million tonnes)",
+          "volume": "number in the published unit (TEU/containers/tonnes); never converted to cents",
+          "amount_cents": "0",
+          "financial_year": "calendar year (e.g. 2025); Waterline periods are calendar quarters/half-years, not Australian financial years",
+          "time_period": "e.g. 2025Q2 or 2025H1",
+          "source_dataset": "BITRE Waterline",
+          "data_quality_flag": "provisional (reported by stevedores/port authorities; not audited)"
+        }
+      },
+      {
+        "measure_type": "port_interface_cost",
+        "source_table": "PICI XLSX sheets 4.1-4.5; optionally PDF Tables 4.6/4.7",
+        "fields": {
+          "trade_flow": "import|export",
+          "port_name": "Brisbane|Sydney|Melbourne|Adelaide|Fremantle",
+          "location": "{ granularity: 'port', port: <port> }",
+          "commodity_name": "Port interface cost — Total fees and charges (or a named component after schema extension)",
+          "price": "AUD per TEU (number in dollars); national PICI current/constant also dollars per TEU",
+          "amount_cents": "0 (a rate, not a total)",
+          "financial_year": "calendar year (e.g. 2025)",
+          "time_period": "e.g. 2025H1",
+          "source_dataset": "BITRE Waterline",
+          "data_quality_flag": "estimated (indicative; rounded; some components BITRE estimates)"
+        }
+      }
+    ],
+    "blockers": [
+      "No cost_component field in trade_records: PICI has many components (conservancy, tonnage, pilotage, towage, mooring, wharfage, harbour dues, stevedoring, terminal access, road transport, customs broker) that cannot be represented cleanly.",
+      "No unit/rate_basis field: price is ambiguous between $/TEU, $/ship visit and index points; amount_cents is a total-money field and must not hold a per-TEU rate.",
+      "trade_flow has no 'total': total throughput rows cannot be represented; only import/export splits are safe.",
+      "location.granularity has no 'five_ports' or aggregate value: the published Five ports rows cannot be stored without mislabelling them national or port.",
+      "PICI national current/constant series are in the PDF (Tables 4.6/4.7), not the XLSX; extracting them needs PDF table extraction.",
+      "PICI XLSX covers only 2023H1-2025H1 and 3 of the 7 national ship-size classes; no long PICI series is machine-readable.",
+      "Five container ports only; no bulk ports and no national coverage. Not a trade-value source.",
+      "Old stub URL is 404; a future builder must use the live landing/issue URLs."
+    ],
+    "schema_changes_required": [
+      "Add a cost/measure detail field (e.g. cost_component) for PICI components.",
+      "Add a unit/rate_basis field (AUD per TEU, AUD per ship visit, dollars per TEU constant prices, index points if any).",
+      "Add trade_flow='total' or an aggregation_role so total throughput rows can be represented without mislabelling.",
+      "Add location.granularity='five_ports' (or an explicit aggregation label) for the published Five ports aggregate."
+    ],
+    "recommended_action": "DEFER a trade_records builder in the current schema. If the product wants five-port container volumes and port interface cost rates, open a schema-change item first, then build a bounded connector for (a) import/export TEU volume splits and (b) the published total fees and charges ($/TEU) only. Do not build a trade-value or CIF/FOB connector from Waterline.",
+    "recommended_builder_scope_if_approved": {
+      "volume": "Five ports x import/export x quarterly/half-yearly, only the full/empty import/export TEU columns; skip total rows until a total flow exists.",
+      "cost": "Five ports x import/export x 3 ship-size classes x 2023H1-2025H1, only the published 'Total fees and charges' row; data_quality_flag='estimated'; amount_cents=0; price=$/TEU.",
+      "never": "Sum rates; multiply rates by throughput to invent a cost total; convert PICI to CIF/FOB; add to ABS or OECD; treat five ports as national."
+    }
+  },
+  "premise": {
+    "statement": "BITRE Waterline publishes accessible port-level Australian trade data with a usable licence.",
+    "result": "partially_true_trade_value_false",
+    "finding": "Accessible port-level data exists for five major container ports under CC BY 4.0 (with exceptions), but Waterline publishes container throughput/performance and indicative port interface costs, not trade values, CIF/FOB margins or customs values. It covers only five container ports, not all Australian ports.",
+    "falsifier": "If the required builder is port-level trade value, CIF/FOB or a national port total, the premise fails: Waterline has no such series and covers only five container ports. Document the deferral rather than inventing a port cost or margin."
+  },
+  "archive": {
+    "root": "/home/steve/ausspend-source-archive/bitre-waterline",
+    "checksums_file": "/home/steve/ausspend-source-archive/bitre-waterline/SHA256SUMS",
+    "records": 19,
+    "verified": 19,
+    "note": "Raw PDF/XLSX/ZIP/CSV/HTML bytes are archived outside the repo; the repo contains only this discovery packet."
+  },
+  "sources": [
+    {
+      "document_id": "bitre-waterline:409bea8234e8e5fd63a4bcb8",
+      "source_id": "bitre-waterline",
+      "title": "BITRE Waterline 71 landing page",
+      "original_url": "https://www.bitre.gov.au/resource/maritime/waterline-71",
+      "retrieved_from": "https://www.bitre.gov.au/resource/maritime/waterline-71",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/waterline-71-landing.html",
+      "sha256": "409bea8234e8e5fd63a4bcb8a67f6489e0899b957803b47c0cd8906d3b8089ba",
+      "bytes": 47921,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:17:28.953Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Release page: release date 25 September 2026, ISBN/ISSN, 5 ports, activity to June quarter 2025."
+    },
+    {
+      "document_id": "bitre-waterline:215f3c3edaa53c56f3061651",
+      "source_id": "bitre-waterline",
+      "title": "BITRE Waterline series landing page",
+      "original_url": "https://www.bitre.gov.au/resource/freight/waterline",
+      "retrieved_from": "https://www.bitre.gov.au/resource/freight/waterline",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/waterline-series-landing.html",
+      "sha256": "215f3c3edaa53c56f30616516c5bd28c71a0b0bd1c20fe34c9ee3d493789f260",
+      "bytes": 38612,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:17:28.961Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Official series landing page listing Waterline 62-71 and their release dates."
+    },
+    {
+      "document_id": "bitre-waterline:01bd7fd61ec593f597741004",
+      "source_id": "bitre-waterline",
+      "title": "BITRE Waterline 70 landing page",
+      "original_url": "https://www.bitre.gov.au/resource/maritime/waterline-70",
+      "retrieved_from": "https://www.bitre.gov.au/resource/maritime/waterline-70",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/waterline-70-landing.html",
+      "sha256": "01bd7fd61ec593f597741004d7efe9a3e1f5198acd9bcd749c3026c50165d61b",
+      "bytes": 49034,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:17:28.965Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Prior issue page: release date 2 December 2024, activity to June quarter 2023."
+    },
+    {
+      "document_id": "bitre-waterline:3f5cbf9f647b6e51aa18bad0",
+      "source_id": "bitre-waterline",
+      "title": "Old stub URL response",
+      "original_url": "https://www.bitre.gov.au/statistics/waterline",
+      "retrieved_from": "https://www.bitre.gov.au/statistics/waterline",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/old-stub-404.html",
+      "sha256": "3f5cbf9f647b6e51aa18bad04a9bb0f3f623bc060a2f5ec7c12432ad7013039e",
+      "bytes": 24730,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:17:28.969Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "HTTP 404 for the old plan URL; the live series page is /resource/freight/waterline."
+    },
+    {
+      "document_id": "bitre-waterline:a4c303f2e436b9670aeebb89",
+      "source_id": "bitre-waterline",
+      "title": "Department copyright page",
+      "original_url": "https://www.infrastructure.gov.au/copyright",
+      "retrieved_from": "https://www.infrastructure.gov.au/copyright",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/copyright.html",
+      "sha256": "a4c303f2e436b9670aeebb89aa84a8e5359be303b4e353b0ae964b177d830ff9",
+      "bytes": 650141,
+      "content_type": "text/html",
+      "fetched_at": "2026-11-18T04:17:28.974Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Site-wide copyright/CC BY 4.0 terms and attribution wording."
+    },
+    {
+      "document_id": "bitre-waterline:7fc6b7f820581a8e5449583a",
+      "source_id": "bitre-waterline",
+      "title": "BITRE sitemap",
+      "original_url": "https://www.bitre.gov.au/sitemap.xml",
+      "retrieved_from": "https://www.bitre.gov.au/sitemap.xml",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/sitemap.xml",
+      "sha256": "7fc6b7f820581a8e5449583a5c8a128084fa5612b8d06916c2cacf77ccd6fe5e",
+      "bytes": 175030,
+      "content_type": "application/xml",
+      "fetched_at": "2026-11-18T04:17:28.995Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Lists all Waterline issue URLs (issues 8-71) and the series landing page."
+    },
+    {
+      "document_id": "bitre-waterline:50ce4b5f08f498b0df42c9b8",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 Statistical Report (PDF)",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_0.pdf",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_0.pdf",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_0.pdf",
+      "sha256": "50ce4b5f08f498b0df42c9b8380bec3a5c65483a582cdd5d4eeea75b21405a62",
+      "bytes": 4064757,
+      "content_type": "application/pdf",
+      "fetched_at": "2026-11-18T04:17:29.004Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "110-page report; authoritative definitions, units, PICI method, licence and release metadata."
+    },
+    {
+      "document_id": "bitre-waterline:2693f150645b91a053087662",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 container terminal performance",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_performance.xlsx",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_performance.xlsx",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_performance.xlsx",
+      "sha256": "2693f150645b91a05308766213dc3725fbbec371cf4b10c9e698c34d16dea1e6",
+      "bytes": 57410,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "fetched_at": "2026-11-18T04:17:29.035Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Sheets 2.1-2.6: Brisbane, Sydney, Melbourne, Adelaide, Fremantle, Five ports."
+    },
+    {
+      "document_id": "bitre-waterline:4946728722602701b05c6868",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 Port Interface Cost Index",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_pici.xlsx",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_pici.xlsx",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_pici.xlsx",
+      "sha256": "4946728722602701b05c6868c5d98da12a9cb7dbcc00f7bf827fde16b72574cd",
+      "bytes": 55002,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "fetched_at": "2026-11-18T04:17:29.039Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Sheets 4.1-4.5: per-port port interface cost parameters and estimates, 2023H1-2025H1."
+    },
+    {
+      "document_id": "bitre-waterline:2312a72f33e98e0657021195",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 container terminal throughput",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_throughput.xlsx",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_throughput.xlsx",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_throughput.xlsx",
+      "sha256": "2312a72f33e98e065702119531d6317b7629fafdc5015bf2cd0559116d817541",
+      "bytes": 43136,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "fetched_at": "2026-11-18T04:17:29.042Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Sheets 1.1-1.6: container terminal throughput, 2023Q1-2025Q2."
+    },
+    {
+      "document_id": "bitre-waterline:299d5b76a2c6c9f7663b334c",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 VBS/TAS operations",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_vbs.xlsx",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_vbs.xlsx",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_vbs.xlsx",
+      "sha256": "299d5b76a2c6c9f7663b334cfc0adde1d6ffc14efb65d0490a768aafbed1a2de",
+      "bytes": 34835,
+      "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "fetched_at": "2026-11-18T04:17:29.045Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Sheets 3.1-3.6: vehicle booking system timeslots available/used, 2023Q1-2025Q2."
+    },
+    {
+      "document_id": "bitre-waterline:5ae003832f4a28b4a0ec5ed3",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series tables (ZIP)",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_timeSeries.zip",
+      "sha256": "5ae003832f4a28b4a0ec5ed3e77196a6b6ddf301e0413b02560fca89344907b6",
+      "bytes": 182057,
+      "content_type": "application/zip",
+      "fetched_at": "2026-11-18T04:17:29.048Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "7 CSVs; 2011Q1-2025Q2 quarterly/half-yearly throughput/performance and 2014H2-2025Q2 TEU capacity/exchange."
+    },
+    {
+      "document_id": "bitre-waterline:4371d7ec33990270d01e1488",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series wl71_t1qtr.csv",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_ts_wl71_t1qtr.csv",
+      "sha256": "4371d7ec33990270d01e1488e8a8807e550bd39c17fd337abb8a8a7d694e37a5",
+      "bytes": 58836,
+      "content_type": "text/csv",
+      "fetched_at": "2026-11-18T04:17:29.051Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Extracted from water_071_timeSeries.zip; original member wl71_t1qtr.csv."
+    },
+    {
+      "document_id": "bitre-waterline:a236d6e2bcdbc130138080d0",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series wl71_t1str.csv",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_ts_wl71_t1str.csv",
+      "sha256": "a236d6e2bcdbc130138080d098644935e0b3653b1a21156521a90c5ddf192578",
+      "bytes": 30554,
+      "content_type": "text/csv",
+      "fetched_at": "2026-11-18T04:17:29.054Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Extracted from water_071_timeSeries.zip; original member wl71_t1str.csv."
+    },
+    {
+      "document_id": "bitre-waterline:1eadc9e6f10ff44363fe4407",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series wl71_t1str_teucap.csv",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_ts_wl71_t1str_teucap.csv",
+      "sha256": "1eadc9e6f10ff44363fe4407bf4b4da9552cb8d89af6416e0a4b06a22ffb7807",
+      "bytes": 101593,
+      "content_type": "text/csv",
+      "fetched_at": "2026-11-18T04:17:29.056Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Extracted from water_071_timeSeries.zip; original member wl71_t1str_teucap.csv."
+    },
+    {
+      "document_id": "bitre-waterline:c3b5e6ef781e38f55791e5cf",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series wl71_t1str_teuex.csv",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_ts_wl71_t1str_teuex.csv",
+      "sha256": "c3b5e6ef781e38f55791e5cfe34d3a6a7e62892e60cf297130c269f359a6e829",
+      "bytes": 101746,
+      "content_type": "text/csv",
+      "fetched_at": "2026-11-18T04:17:29.058Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Extracted from water_071_timeSeries.zip; original member wl71_t1str_teuex.csv."
+    },
+    {
+      "document_id": "bitre-waterline:c99e1a4769494285eeeaa3da",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series wl71_t2qtr.csv",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_ts_wl71_t2qtr.csv",
+      "sha256": "c99e1a4769494285eeeaa3dadb8fb8e558ef6f70439b659be35259ed5c60d454",
+      "bytes": 137651,
+      "content_type": "text/csv",
+      "fetched_at": "2026-11-18T04:17:29.060Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Extracted from water_071_timeSeries.zip; original member wl71_t2qtr.csv."
+    },
+    {
+      "document_id": "bitre-waterline:44dbb5eaf45ec2a90c9176b4",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series wl71_t2str.csv",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_ts_wl71_t2str.csv",
+      "sha256": "44dbb5eaf45ec2a90c9176b4815da7ab52756945942816d5fedf83faea5b6ac0",
+      "bytes": 70318,
+      "content_type": "text/csv",
+      "fetched_at": "2026-11-18T04:17:29.064Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Extracted from water_071_timeSeries.zip; original member wl71_t2str.csv."
+    },
+    {
+      "document_id": "bitre-waterline:220a9b8c8f8286a75e8ef39e",
+      "source_id": "bitre-waterline",
+      "title": "Waterline 71 time series wl71_t3qtr.csv",
+      "original_url": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "retrieved_from": "https://www.bitre.gov.au/sites/default/files/documents/water_071_timeSeries.zip",
+      "archived_from": "direct",
+      "local_path": "/home/steve/ausspend-source-archive/bitre-waterline/water_071_ts_wl71_t3qtr.csv",
+      "sha256": "220a9b8c8f8286a75e8ef39ea2b6ef5ff22e385b5ced11438f62a024fb3cbeb3",
+      "bytes": 54416,
+      "content_type": "text/csv",
+      "fetched_at": "2026-11-18T04:17:29.066Z",
+      "last_modified": null,
+      "etag": null,
+      "hash_verified": true,
+      "notes": "Extracted from water_071_timeSeries.zip; original member wl71_t3qtr.csv."
+    }
+  ],
+  "checks": {
+    "http": "All 6 data files, the issue-71 page, the series landing page, the issue-70 page and the copyright page returned HTTP 200; the old stub URL returned HTTP 404.",
+    "pdf": "110 pages and 108 tables detected with the repo PDF extractor; unit/licence/PICI definitions read from the PDF text.",
+    "xlsx": "Throughput 6 sheets, performance 6, VBS/TAS 6, PICI 5; sheet names and row labels inspected.",
+    "csv": "7 CSVs; quarterly 2011Q1-2025Q2, half-yearly 2011H1-2025H1, TEU capacity/exchange 2014H2-2025Q2.",
+    "archive": "19/19 archived documents re-hashed and matched their SHA-256 records.",
+    "no_database_write": true,
+    "no_connector": true
+  }
+}
