@@ -14,6 +14,7 @@ import { RegionsPage } from './pages/RegionsPage';
 import { SearchPage } from './pages/SearchPage';
 import { SocPage } from './pages/SocPage';
 import { StatesPage } from './pages/StatesPage';
+import { TradePage } from './pages/TradePage';
 
 export function App() {
   return (
@@ -32,6 +33,7 @@ export function App() {
             <Route path="/areas/:slug" element={<RegionsPage />} />
             <Route path="/states" element={<StatesPage />} />
             <Route path="/states/:code" element={<StatesPage />} />
+            <Route path="/trade" element={<TradePage />} />
             <Route path="/benchmark" element={<BenchmarkPage />} />
             <Route path="/soc" element={<SocPage />} />
             <Route path="/data-sources" element={<DataSourcesPage />} />

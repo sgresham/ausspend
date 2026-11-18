@@ -2,8 +2,9 @@
 
 **Status:** ABS International Trade is live through the keyless ABS Data API Beta, and OECD ITIC
 CIF/FOB margins are live through the public OECD SDMX endpoint. The `trade_records` model, read-only
-`/api/v1/trade` endpoints and separation guards remain separate from spending. The `/trade`
-frontend route is still deferred.
+`/api/v1/trade` endpoints and separation guards remain separate from spending. The read-only
+`/trade` frontend route is live for ABS trade values; OECD CIF/FOB and the deferred sources are not
+surfaced there yet.
 
 ## Why a separate domain
 
@@ -166,6 +167,17 @@ All routes are mounted under both `/api` and `/api/v1`; the versioned contract i
 Empty state is a valid `200` with empty arrays and zero counts. No endpoint computes a grand total
 across measure types. The API reads only `TradeRecordModel`; it never queries `MeasureModel` or any
 spending collection.
+
+## Frontend (`/trade`)
+
+The `/trade` page is a read-only ABS view and a top-level nav item. It consumes
+`GET /api/trade` with `measure_type=trade_value` and one `trade_flow` at a time, so the OECD
+CIF/FOB rows are not mixed into the ABS view. Filters are flow, financial year and commodity/service
+label. Rows keep their own published period, unit and `data_quality_flag`; the table renders at most
+20 rows per page and the page never computes or displays a combined trade total, a spending total or
+a profit figure. The warning copy states that trade value is not spending and not profit, and that
+trade measures and commodity parent/child rows are non-additive. Any CIF/FOB figure is labelled a
+border cost, not a margin. Empty, loading and API-error states are explicit.
 
 ## Separation from spending
 

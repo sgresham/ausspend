@@ -678,3 +678,79 @@ export interface SpendingResponse {
   applied_filters: SpendingAppliedFilters;
   area_profile?: AreaProfile;
 }
+
+/** ABS/OECD trade domains are a separate analytical layer from spending. */
+export type TradeFlow = 'import' | 'export';
+
+export type TradeMeasureType =
+  'trade_value' | 'cif_fob_margin' | 'port_interface_cost' | 'trade_volume' | 'trade_price';
+
+export type TradeDataQualityFlag = 'verified' | 'observed' | 'provisional' | 'estimated';
+
+/** GET /api/trade — one stored trade observation. Never a spending measure. */
+export interface TradeRow {
+  id: string;
+  trade_flow: TradeFlow;
+  measure_type: TradeMeasureType;
+  commodity_name: string;
+  commodity_code: string | null;
+  partner_country: string | null;
+  port_name: string | null;
+  jurisdiction_level: JurisdictionLevel;
+  location: {
+    state: string | null;
+    port: string | null;
+    granularity: 'national' | 'port';
+  } | null;
+  amount_cents: number;
+  margin_percent: number | null;
+  index_value: number | null;
+  volume: number | null;
+  price: number | null;
+  financial_year: string;
+  time_period: string | null;
+  source_dataset: string;
+  source_url: string;
+  source_date: string;
+  data_quality_flag: TradeDataQualityFlag;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface TradeSummaryGroup {
+  measure_type: TradeMeasureType;
+  trade_flow?: TradeFlow;
+  count: number;
+  amount_cents: number;
+}
+
+/**
+ * GET /api/trade — rows plus per-measure groups. The response never contains
+ * one grand total: measure types (and even commodity parent/child rows) are
+ * not additive, so the client must not sum them.
+ */
+export interface TradeResponse {
+  filters: {
+    trade_flow?: TradeFlow;
+    measure_type?: TradeMeasureType;
+    commodity?: string;
+    partner_country?: string;
+    port?: string;
+    financial_year?: string;
+  };
+  rows: TradeRow[];
+  summary: TradeSummaryGroup[];
+  counts: {
+    rows: number;
+    by_measure_type: Partial<Record<TradeMeasureType, number>>;
+  };
+  warning: string;
+  note: string;
+}
+
+export interface TradeCommoditiesResponse {
+  filters: TradeResponse['filters'];
+  commodities: { commodity_name: string; commodity_code: string | null; count: number }[];
+  count: number;
+  warning: string;
+}
