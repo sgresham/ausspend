@@ -703,6 +703,54 @@ distinct year-scoped rows; no row and no API total spans years.
 unchanged. A second ingest run fetched/upserted the same 54 natural keys and left the DB total at
 **693,374** (idempotent).
 
+#### 7.1.3 FY2022-23 historical variant (landed 2026-11-18)
+
+**Scope.** Add Dubbo Regional Council's audited **FY2022-23** GPFS as actual rows under the existing
+source id `dubbo-council-gpfs`, preserving FY2023-24 (17), FY2024-25 (18) and FY2025-26 (19). No older
+historical year and no other council is ingested here.
+
+**Source.** The reviewed D2 packet (`docs/source-discovery/dubbo-regional.md` §10) records the
+document
+<https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/Dubbo%20Regional%20Council%20-%20Annual%20Financial%20Statements-%20%202022-2023%20(1).pdf.aspx>
+and SHA-256 `b663ddc3a8a5fca8f1887de978a1df7d1cecd24550815fdc7c1c64209074212a`. The connector
+re-discovers it from the reporting page (no hard-coded PDF URL) and archives the exact bytes outside
+the repo at
+`~/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2022-23.pdf`: **3,665,534
+bytes**, SHA-256 matching the packet exactly. The D2 archive copy at
+`~/ausspend-source-archive/dubbo-regional/2022-23/gpfs-2022-23.pdf` has the same hash. The printed
+unit is explicit `$'000` on the income statement (PDF p.5) and B1-1 (PDF p.15).
+
+**Layout variant.** FY2022-23 uses inline face rows (the FY2018-19..FY2022-23 style) with one printed
+`Total expenses from continuing operations` line (162,924) and no "excluding depreciation" subtotal,
+so the expense components (including depreciation and the 3,276 disposal loss) sum directly to the
+printed total. It has no disposal-gain revenue line. No OLG anchor exists for FY2022-23, so none is
+invented.
+
+| Check                                                                                                                |                                                              Printed / derived | Result                   |
+| -------------------------------------------------------------------------------------------------------------------- | -----------------------------------------------------------------------------: | ------------------------ |
+| Revenue components sum (rates + user charges + other revenue + operating + capital grants + interest + other income) | `72,492 + 44,916 + 3,405 + 28,542 + 56,552 + 7,662 + 71` = `$213,640` thousand | = printed total income   |
+| Expense components sum (employee + materials + borrowing + other + disposal loss + depreciation)                     |       `47,319 + 51,966 + 2,995 + 3,045 + 3,276 + 54,323` = `$162,924` thousand | = printed total expenses |
+| Total revenue − total expenses                                                                                       |                                                            `213,640 − 162,924` | = `$50,716` net result   |
+| B1-1 Total functions and activities                                                                                  |     income `$213,640`; expenses `$162,924`; result `$50,716`; grants `$85,094` | = face statement         |
+| External anchor                                                                                                      |                                                     none defined for FY2022-23 | not invented             |
+
+The printed `(5,836)` net result before capital grants equals `50,716 − 56,552` capital grants and
+is stored as a non-negative magnitude with `gpfs_printed_sign: "negative"`.
+
+**Rows.** **17** rows for FY2022-23: 7 revenue components + total revenue, 5 expense components +
+depreciation + total expenses, and net result + net result before capital grants. Each row has
+`fiscal_year: "2022-23"`, `source_dataset: "Dubbo Regional Council GPFS 2022-23"`,
+`measure_type: "actual"`, `aggregation_role: "agency_detail"`, no `region_id`/`location`, and a
+year-scoped natural key. The 54 newer rows are unchanged, so the source holds **71** distinct
+year-scoped rows; no row and no API total spans years.
+
+**Database evidence (2026-11-18).** `measures` 693,374 → **693,391** (exactly **+17**);
+`dubbo-council-gpfs` 54 → **71** with FY2022-23 **17**, FY2023-24 **17**, FY2024-25 **18**,
+FY2025-26 **19**; `data_sources` still **83** (`records_ingested` for this source 54 → 71);
+`dubbo-council` still **245**. The only source whose measure count changed is `dubbo-council-gpfs`;
+every other source is unchanged. A second ingest run fetched/upserted the same 71 natural keys and
+left the DB total at **693,391** (idempotent).
+
 ### 7.2 Second council — City of Sydney FY2024-25 GPFS (landed 2026-11-17)
 
 **Source.** Discovered from the official annual-report page
@@ -3917,6 +3965,7 @@ After ingesting only this source: total **693,299** (+17), GPFS **746** across *
 SHA-anchored natural keys and leaves the total at **693,299** (idempotent). `data_sources` records
 `central-coast-gpfs` as `active` with `records_ingested: 17`. Targeted connector tests passed
 (13/13).
+
 ### 7.41 Forty-first council — Hornsby Shire Council FY2025-26 GPFS (landed 2026-11-18)
 
 **Source.** Discovered from Hornsby Shire Council's official Financial Statements page
