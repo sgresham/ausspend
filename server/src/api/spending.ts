@@ -228,6 +228,12 @@ function serializeSpendingRow(measure: LeanMeasure, lookups: Lookups): SpendingM
     ...(measure.act_region ? { act_region: measure.act_region } : {}),
     ...(measure.act_unit ? { act_unit: measure.act_unit } : {}),
     ...(measure.act_printed_sign ? { act_printed_sign: measure.act_printed_sign } : {}),
+    ...(measure.nt_cofog_category ? { nt_cofog_category: measure.nt_cofog_category } : {}),
+    ...(measure.nt_unit ? { nt_unit: measure.nt_unit } : {}),
+    ...(measure.nt_percent_share !== undefined
+      ? { nt_percent_share: measure.nt_percent_share }
+      : {}),
+    ...(measure.nt_table ? { nt_table: measure.nt_table } : {}),
     ...(measure.performance_value !== undefined
       ? { performance_value: measure.performance_value }
       : {}),

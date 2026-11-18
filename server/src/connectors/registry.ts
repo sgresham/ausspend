@@ -59,6 +59,7 @@ import { createFagConnector } from './vic-vlgc-fag.js';
 import { createLgprfConnector } from './vic-lgprf.js';
 import { createSaGfsConnector } from './sa-budget-gfs.js';
 import { createActBudgetConnector } from './act-budget.js';
+import { createNtBudgetConnector } from './nt-budget.js';
 import { notImplemented, type Connector, type ConnectorMetadata } from './types.js';
 
 /**
@@ -509,6 +510,10 @@ export const CONNECTORS: readonly Connector[] = [
   // Territory/ACT, budget measure type, $'000 project x fiscal-year components;
   // printed project totals are reconciliation-only and never emitted.
   createActBudgetConnector(),
+  // Phase 6.8: NT Budget 2026-27 COFOG-A capital works from Budget Paper No. 4.
+  // The NT site is Cloudflare-gated, so the PDF is fetched headless, archived and
+  // hash-gated; one row per published COFOG-A category, $ million, budget.
+  createNtBudgetConnector(),
   // Phase 4: live data.qld CKAN ingestion of the 2026-27 BP3 Capital
   // Statement and BP4 Budget Measures CSVs, plus their unit dictionaries.
   createQldBudgetConnector(),

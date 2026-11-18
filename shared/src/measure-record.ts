@@ -317,6 +317,11 @@ export const MeasureRecordSchema = z.object({
   act_region: z.string().min(1).optional(),
   act_unit: z.string().min(1).optional(),
   act_printed_sign: z.enum(['positive', 'negative']).optional(),
+  /** NT Budget COFOG-A table provenance. */
+  nt_cofog_category: z.string().min(1).optional(),
+  nt_unit: z.string().min(1).optional(),
+  nt_percent_share: z.number().optional(),
+  nt_table: z.string().min(1).optional(),
   /**
    * VIC council performance-indicator provenance (LGPRF). Performance values
    * are not money: a value may be a per-head amount, per-unit cost, percentage,
