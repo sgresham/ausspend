@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await mockApi(page);
 });
 
-test('home renders the shell, coverage banner and provenance', async ({ page }) => {
+test('home renders the shell and provenance', async ({ page }) => {
   await page.goto('/');
 
   await expect(page).toHaveTitle('AusSpend — Australian government spending');
@@ -14,18 +14,6 @@ test('home renders the shell, coverage banner and provenance', async ({ page }) 
     page.getByRole('navigation', { name: 'Main navigation' }).getByText('AusSpend'),
   ).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
-  await expect(page.getByTestId('coverage-banner')).toContainText(
-    'Phase 1 + F2/F3 + S1/S2/S3 (AusTender + PBS + NSW + Dubbo live).',
-  );
-  await expect(page.getByTestId('coverage-banner')).toContainText(
-    'Live AusTender contract records, PBS budget line items, NSW Budget rows',
-  );
-  await expect(page.getByTestId('coverage-banner')).toContainText('QLD QGIP 2018-19..2024-25');
-  await expect(page.getByTestId('coverage-banner')).toContainText('2019-20 QGIP is partial');
-  await expect(page.getByTestId('coverage-banner')).toContainText(
-    'QGIP grants and contracts are never summed',
-  );
-  await expect(page.getByTestId('coverage-banner')).toContainText('human-verified');
   await expect(page.getByText('Provenance:').first()).toBeVisible();
   await expect(page.getByRole('link', { name: 'Data sources' }).first()).toBeVisible();
 

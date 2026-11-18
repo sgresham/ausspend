@@ -17,7 +17,6 @@ import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DatasetIcon from '@mui/icons-material/Dataset';
 import InfoIcon from '@mui/icons-material/Info';
 import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import { CoverageBanner } from './CoverageBanner';
 import { Footer } from './Footer';
 import { QuickSearch } from './QuickSearch';
 import FunctionsIcon from '@mui/icons-material/Functions';
@@ -168,7 +167,6 @@ export function Layout() {
       >
         <Toolbar />
         <Box sx={{ maxWidth: 1100, mx: 'auto' }}>
-          <CoverageBanner />
           <Outlet />
           <Footer />
         </Box>
