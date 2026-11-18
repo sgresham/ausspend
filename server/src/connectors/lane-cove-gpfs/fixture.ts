@@ -29,7 +29,7 @@ const CONTEXT: LaneCoveGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/home/steve/.pool-worktrees/ausspend/_source-archive/lane-cove-gpfs/lane-cove-council-annual-report-2024-25.pdf',
+      '/tmp/ausspend-source-archive/lane-cove-gpfs/lane-cove-council-annual-report-2024-25.pdf',
     sha256: LANE_COVE_PDF_SHA256,
     bytes: LANE_COVE_PDF_BYTES,
     fetched_at: '2026-11-18T00:00:00.000Z',

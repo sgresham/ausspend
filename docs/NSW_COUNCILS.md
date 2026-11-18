@@ -3112,7 +3112,7 @@ missing or conflicting unit rejects the whole extraction.
 
 Exact bytes archived outside the repo at
 `$AUSSPEND_SOURCE_ARCHIVE/lane-cove-gpfs/lane-cove-council-annual-report-2024-25.pdf` (pool run:
-`/home/steve/.pool-worktrees/ausspend/_source-archive/lane-cove-gpfs/...`): **12,880,333 bytes**,
+`~/ausspend-source-archive/lane-cove-gpfs/...` (or the pool `$AUSSPEND_SOURCE_ARCHIVE` root)): **12,880,333 bytes**,
 SHA-256 `460b964d9f8fe85aa7c3e98b80b5a56c01fe6b2401f723ecbd8fd4b31f8c7206` (`hash_verified: true`).
 The `source_documents` metadata JSON is stored alongside it.
 
@@ -3498,7 +3498,6 @@ migration were performed.
   `data-nsw-ckan` still 3,472; `data_sources` 55 → 56; a second run upserted the same 17 natural keys
   with no count change.
 
-<<<<<<< HEAD
 **GPFS thirty-first-council checks (2026-11-18):**
 
 - Strathfield Council official Reports and Registers page fetched directly; the FY2024-25
@@ -3519,8 +3518,7 @@ migration were performed.
   +17); after this ingest 693,148 (Strathfield +17 and concurrent Mosman +18); all other sources
   delta 0; `data_sources` 67 → 68; a second run upserted the same 17 natural keys with no count
   change.
-=======
-**Lane Cove Council FY2024-25 GPFS (§7.31), 2026-11-18:**
+**Lane Cove Council FY2024-25 GPFS (§7.32), 2026-11-18:**
 
 - Community Strategic Plan page fetched HTTP 200; the printed **"Annual Report"** link resolved to the
   council TRIM document link `http://ecouncil.lanecove.nsw.gov.au/trim/DocumentLink.asp?RecId=84401/25`,
@@ -3537,7 +3535,6 @@ migration were performed.
 - DB (shared dev snapshot at ingest): measures 693,096 → 693,113 (+17 only); per-source diff showed no
   other source increased or decreased and no rows deleted; a second run upserted the same 17
   SHA-anchored natural keys with no count change.
->>>>>>> d07369f (Add Lane Cove Council FY2024-25 GPFS connector (lane-cove-gpfs))
 
 ---
 
