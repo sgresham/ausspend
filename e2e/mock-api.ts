@@ -1302,6 +1302,10 @@ async function json(route: Route, body: unknown, status = 200) {
 export interface MockApiOptions {
   /** Simulate a database with the synthetic seed retired and no matching real rows. */
   empty?: boolean;
+  /** Return an empty ABS trade result (valid zero-row response). */
+  tradeEmpty?: boolean;
+  /** Fail GET /api/trade to exercise the visible error state. */
+  tradeError?: boolean;
 }
 
 function emptySpendingResponse() {
@@ -1552,6 +1556,60 @@ const SOC_RESPONSE = {
   note: 'Entity-level SOC statement lines for WaterNSW. No total is computed here. Note-level rows are components of their printed subtotals and are never additional spending.',
 };
 
+const TRADE_WARNING =
+  'Trade values, CIF/FOB margins, port interface costs, trade volumes and trade prices are different measures and must never be summed. CIF/FOB is a border cost, not profit. Port costs are not national totals.';
+
+const TRADE_COMMODITIES = [
+  'Coal, coke and briquettes',
+  'Cereal grains and cereal preparations',
+  'Services',
+];
+
+function tradeRows(flow: 'export' | 'import') {
+  return Array.from({ length: 25 }, (_, index) => ({
+    id: `${flow}-trade-${index + 1}`,
+    trade_flow: flow,
+    measure_type: 'trade_value' as const,
+    commodity_name: TRADE_COMMODITIES[index % TRADE_COMMODITIES.length] ?? 'Services',
+    commodity_code: index % 3 === 2 ? null : String(1000 + index),
+    partner_country: null,
+    port_name: null,
+    jurisdiction_level: 'federal' as const,
+    location: { state: null, port: null, granularity: 'national' as const },
+    amount_cents: 105_500_000_000 + index,
+    margin_percent: null,
+    index_value: null,
+    volume: null,
+    price: null,
+    financial_year: '2024-25',
+    time_period: `2024-${String((index % 12) + 1).padStart(2, '0')}`,
+    source_dataset: 'ABS International Trade (Data API Beta)',
+    source_url: 'https://data.api.abs.gov.au/rest/data/ABS,ITGS,1.2.0/M1..10.AUS.M',
+    source_date: '2026-11-18',
+    data_quality_flag: 'verified' as const,
+    created_at: '2026-11-18T03:46:04.769Z',
+    updated_at: '2026-11-18T03:46:16.065Z',
+  }));
+}
+
+function tradeResponse(flow: 'export' | 'import') {
+  const rows = tradeRows(flow);
+  return {
+    filters: { trade_flow: flow, measure_type: 'trade_value' as const },
+    rows,
+    summary: [
+      {
+        measure_type: 'trade_value' as const,
+        count: rows.length,
+        amount_cents: rows.reduce((sum, row) => sum + row.amount_cents, 0),
+      },
+    ],
+    counts: { rows: rows.length, by_measure_type: { trade_value: rows.length } },
+    warning: TRADE_WARNING,
+    note: 'Trade records are a separate analytical domain. They are never joined to, or summed with, spending records.',
+  };
+}
+
 export async function mockApi(page: Page, options: MockApiOptions = {}) {
   const empty = options.empty === true;
   const coverage = empty
@@ -1601,6 +1659,26 @@ export async function mockApi(page: Page, options: MockApiOptions = {}) {
 
       if (path === '/api/soc') {
         await json(route, SOC_RESPONSE);
+        return;
+      }
+
+      if (path === '/api/trade' || path === '/api/v1/trade') {
+        if (options.tradeError) {
+          await json(route, { ok: false, error: 'Trade API unavailable' }, 500);
+          return;
+        }
+        const flow = url.searchParams.get('trade_flow') === 'import' ? 'import' : 'export';
+        const response = tradeResponse(flow);
+        if (options.tradeEmpty) {
+          await json(route, {
+            ...response,
+            rows: [],
+            summary: [],
+            counts: { rows: 0, by_measure_type: {} },
+          });
+          return;
+        }
+        await json(route, response);
         return;
       }
 

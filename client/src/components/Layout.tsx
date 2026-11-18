@@ -28,6 +28,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import SearchIcon from '@mui/icons-material/Search';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import CorporateFareIcon from '@mui/icons-material/CorporateFare';
+import ImportExportIcon from '@mui/icons-material/ImportExport';
 
 const DRAWER_WIDTH = 248;
 
@@ -43,6 +44,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Functions', to: '/functions', icon: <FunctionsIcon /> },
   { label: 'Regions', to: '/regions', icon: <MapIcon /> },
   { label: 'States', to: '/states', icon: <PlaceIcon /> },
+  { label: 'Trade', to: '/trade', icon: <ImportExportIcon /> },
   { label: 'GFS benchmark', to: '/benchmark', icon: <AssessmentIcon /> },
   { label: 'NSW SOC', to: '/soc', icon: <CorporateFareIcon /> },
   { label: 'Data sources', to: '/data-sources', icon: <DatasetIcon /> },
