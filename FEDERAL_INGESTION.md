@@ -680,11 +680,88 @@ move the breakdowns to a Mongo aggregation if the dataset grows materially beyon
   Vite client on `5174` (`VITE_API_PROXY_TARGET=http://localhost:3101 npm run dev -w client --
 --port 5174 --strictPort`), then `npx playwright test --config=e2e/playwright.alt.config.ts`.
 
+## AusTender FY2020-21..FY2023-24 backfill run (2026-11-18)
+
+This second historical backfill extended `contractPublished` coverage backwards from the existing
+2024-07-01 boundary to cover the four earlier financial years. It ran only the F2 connector,
+never PBS/GrantConnect/state/local/SOC sources, and it never deleted a row. Every chunk upserts on
+`natural_key`, so no existing 2024-25..2026-27 contract or any other source was touched.
+
+| Item                      | Value                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------- |
+| Feed                      | `contractPublished` only, existing F2 connector/mapper                        |
+| Window (publication date) | `2020-07-01T00:00:00Z` .. `2024-07-01T00:00:00Z`                              |
+| Financial years covered   | 2020-21, 2021-22, 2022-23, 2023-24 (documented equivalent: date-published)    |
+| Chunking                  | 209 contiguous 7-day chunks (`AUSTENDER_CHUNK_DAYS=7`), no gaps/overlaps      |
+| Page bound per chunk      | `AUSTENDER_PAGE_LIMIT=100` (≈10,000 releases/week); peak observed 3,597       |
+| Rate policy               | 1 s between pages, `Retry-After`/exponential 429 backoff (existing connector) |
+| Pre-run backup (gate)     | `<backup-dir>/ausspend/<timestamp>` (731,492 measures)                        |
+| Backup age at gate        | 10.6 min (dry run) / 12.2 min (real run); 731,492/731,492 natural keys        |
+| Resume backup (fresh)     | `<backup-dir>/ausspend/<timestamp>` (884,872 measures)                        |
+| Resume backup age at gate | 1.0 min; 884,872/884,872 natural keys                                         |
+| Idempotency backup        | `<backup-dir>/ausspend/<timestamp>` (989,095 measures)                        |
+| Fetched / upserted        | 365,776 releases / 257,647 upserts (220,066+145,710 fetched, 153,423+104,224) |
+| AusTender rows added      | 257,603 distinct `ocid`s (375,497 final − 117,894 pre-run)                    |
+| Result                    | AusTender 117,894 → 375,497; database 731,492 → 989,095                       |
+| Distinct natural keys     | 989,095; 0 duplicate groups                                                   |
+| Invalid cents             | 0                                                                             |
+| Non-AusTender rows        | 613,598 before and after (per-source counts unchanged)                        |
+| Chunk failures            | 1 transient (see caveat), recovered; final resume 92/92 `success`             |
+
+Command (the fixed gate passed; `BACKFILL_CONFIRM=yes` was set only because the data-safety
+backup was verified):
+
+```bash
+BACKFILL_CONFIRM=yes \
+BACKUP_DIR=<verified-backup-dir> \
+AUSTENDER_START_DATE=2020-07-01T00:00:00Z \
+AUSTENDER_END_DATE=2024-07-01T00:00:00Z \
+INGEST_SOURCES=aus-tender \
+MONGO_URL=<app-mongo-url> \
+npm run ingest:federal -- --backfill
+```
+
+**Transient 502 caveat.** The first pass stopped at chunk 118/209
+(`2022-09-28T00:00:00Z..2022-10-05T00:00:00Z`) after `api.tenders.gov.au` returned HTTP 502 through
+the connector's retries; chunks 1–117 had succeeded and no chunk was skipped or truncated. The
+failed window was re-checked (HTTP 200) and a fresh verified backup was taken, then the remaining
+range `2022-09-28T00:00:00Z..2024-07-01T00:00:00Z` was resumed in 92 chunks: 92/92 `success`,
+0 failures. Combined with the first pass, all 209 weekly windows in
+`2020-07-01..2024-07-01` are covered with no gap.
+
+Final fiscal-year distribution (AusTender `measure_type: contract`):
+
+```text
+2020-21 = 65,729
+2021-22 = 70,844
+2022-23 = 59,689
+2023-24 = 61,341
+2024-25 = 59,688   (preserved)
+2025-26 = 57,345   (preserved)
+2026-27 = 861      (preserved, pre-existing one-week run)
+```
+
+`data_sources` ends with `aus-tender` `active`, `records_ingested: 375497`, no errors. The
+`contractPublished` nuance is unchanged: coverage is by publication date, so a contract signed just
+outside the window can still appear, and the larger count is contract notices, not total spending.
+
+### Idempotency proof
+
+Re-running one sample chunk (`2022-09-28T00:00:00Z..2022-10-05T00:00:00Z`, the previously failed
+window) against a fresh verified backup left every total identical:
+
+```text
+before total=989095 aus-tender=375497 distinct_natural_keys=989095 duplicate_groups=0 invalid_cents=0
+chunk 1/1 ... status=success fetched=1520 upserted=1044
+after  total=989095 aus-tender=375497 distinct_natural_keys=989095 duplicate_groups=0 invalid_cents=0
+```
+
 ## Backup before a historical backfill
 
 The historical backfill has now run, but any future re-run must still take a fresh verified
 snapshot first. The pre-backfill baseline was 810 synthetic seed measures plus 861 AusTender
-contract measures (plus 1,231 PBS rows); the current baseline is 119,935 measures. The gate below
+contract measures (plus 1,231 PBS rows); after the 2026-11-18 FY2020-21..FY2023-24 backfill the
+current baseline is 989,095 measures. The gate below
 refuses to fetch anything without a recent verified backup.
 
 ### Take and restore a verified backup
