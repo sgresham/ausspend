@@ -7,8 +7,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
 /**
  * Statewide local-government ingestion.
  *
- * Current priority order: QLD -> WA -> TAS. VIC/SA/NT remain explicit
- * placeholders in LOCAL_GOVERNMENT_SOURCES.
+ * Current priority order: QLD -> WA -> TAS -> NT. VIC/SA remain decision-only.
  *
  *   MONGO_URL=mongodb://localhost:27017/ausspend_dev npm run ingest:local-gov
  *   MONGO_URL=... npx tsx scripts/ingest-local-gov.ts --source=qld-local-government
@@ -24,8 +23,8 @@ export const LOCAL_GOVERNMENT_SOURCES: readonly LocalGovernmentSource[] = [
   { id: 'qld-local-government', jurisdiction: 'QLD', priority: 1 },
   { id: 'wa-mycouncil', jurisdiction: 'WA', priority: 2 },
   { id: 'tas-lg-cdc', jurisdiction: 'TAS', priority: 3 },
-  // Extension point: VIC/SA/NT, added here in priority order after their
-  // connector is registered in server/src/connectors/registry.ts.
+  { id: 'nt-lg-pilot', jurisdiction: 'NT', priority: 4 },
+  // VIC and SA are decision-only, not builders; no further source is queued here.
 ];
 
 export const LOCAL_GOVERNMENT_ORDER = LOCAL_GOVERNMENT_SOURCES.map((source) => source.id);

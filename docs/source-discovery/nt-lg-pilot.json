@@ -1,0 +1,39 @@
+{
+  "schema": "ausspend.source-discovery.v1",
+  "source_id": "nt-lg-pilot",
+  "title": "Northern Territory local government GPFS pilot — three councils",
+  "generated_at": "2026-11-18T18:25:00Z",
+  "state": "buildable; three of three councils retrieved and reconciled",
+  "jurisdiction": "local",
+  "coverage": ["City of Darwin", "City of Palmerston", "Alice Springs Town Council"],
+  "fiscal_year": "2025-26",
+  "documents": [
+    {
+      "council": "City of Darwin",
+      "url": "https://www.darwin.nt.gov.au/sites/default/files/2026-11/109572%20City%20of%20Darwin%20Annual%20Report%202025%20-%2026_FA%20Pages.pdf",
+      "bytes": 28591026,
+      "sha256": "7291498d18748194e2eb8d5e4a8d1ff7d3eaee7f2f6583c4a55a76f456d0ef79",
+      "anchor": { "total_income": 148681, "total_expenses": 161642 }
+    },
+    {
+      "council": "City of Palmerston",
+      "url": "https://palmerston.nt.gov.au/sites/default/files/uploads/files/2026/COP_Annual%20Report%202025-26_WEB%20-%20Final.pdf",
+      "bytes": 7910758,
+      "sha256": "57c33a4d90e682ffef0c86b5f3380aa9c814b9e183fe098b290cb5b9f3f271eb",
+      "anchor": { "total_income": 46613, "total_expenses": 56027 }
+    },
+    {
+      "council": "Alice Springs Town Council",
+      "url": "https://www.alicesprings.nt.gov.au/documents/1041/annual-report-2025-2026",
+      "bytes": 11640642,
+      "sha256": "68944b6d82f1ab443e3c5a235785767985dae061606c364699618016f535c48b",
+      "anchor": { "total_income": 51532, "total_expenses": 56301 }
+    }
+  ],
+  "unit": "$'000 (explicit)",
+  "reconciliation": "income components = printed total income; expense components = printed total expenses; zero tolerance",
+  "rows": 37,
+  "non_additive": true,
+  "not_statewide": true,
+  "premise_falsifier": "TRUE for these three councils: accessible audited GPFS with explicit $'000 totals and printed components."
+}
