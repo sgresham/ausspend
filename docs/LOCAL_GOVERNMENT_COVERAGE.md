@@ -3,8 +3,9 @@
 **Status as at 2026-11-18.** Phase 1 covers **Queensland** (`qld-local-government`); Phase 2 adds
 **Western Australia** (`wa-mycouncil`); Phase 3 adds **Tasmania** (`tas-lg-cdc`). VIC has an existing
 **performance-indicator-only** layer (`vic-lgprf`, 23,068 rows); it is not a financial-spending
-source and is not added to the spending layer. SA/NT are not added; the runner has an explicit
-priority-order extension point for them.
+source and is not added to the spending layer. SA's statewide package is **governance/services
+only** (no council financial data; Parse host no longer resolves), so SA local financial coverage is
+deferred. NT is not added; the runner has an explicit priority-order extension point for it.
 
 ## QLD — source and package
 
@@ -288,6 +289,46 @@ values. `vic-lgprf` is not a duplicate VIC spending source.
 - The source disclaimer forbids „overly simplistic league tables of councils“; every row carries
   the CC BY 4.0 attribution and non-additive caveat.
 - No cross-council and no performance-to-dollar total is created.
+
+## SA — statewide package is governance/services only
+
+- Data.sa package: `api-statewide-local-government-datasets` —
+  <https://data.sa.gov.au/data/dataset/api-statewide-local-government-datasets>
+- metadata modified: **2021-07-15**
+- resources (3 only):
+  - Parse API entry — `https://parse.com` (generic; not a dataset)
+  - Parse instruction PDF — 9 pages (per-file bytes; CKAN lists 73,986 B)
+  - `local-council-name.csv` — 1,807 B; **67 council names**
+
+### What the package actually contains
+
+The package description says the data is the LGA of South Australia’s statewide **Metabase** for
+the **My Local Services App**, covering **Elected Members (Mayors and Councillors), Events,
+Libraries, Parks and Councils**.
+
+The Parse instruction PDF (August 2018) defines exactly these classes and fields:
+
+- `contact` — elected members/mayors/councillors, position, ward, contact details
+- `contentItem` — Events, Libraries, Parks and Points of Interest
+- `council` — name, contact email/phone, logo/payment URLs, website, state
+- `custom_event`, `custom_library`, `custom_park`, `custom_pointOfInterest` — rendered content
+
+**No class/field contains council expenses, revenue, rates, capital works, assets/liabilities or
+financial statements.** The only monetary-looking fields are payment/website URLs on `council`.
+
+### Access status
+
+The documented Parse server `http://parse.lga.sa.gov.au:5338/parse/` **no longer resolves** (DNS
+failure on 2026-11-18). The generic `https://parse.com` entry is not a dataset, and the legacy
+`https://api.parse.com/1/classes/...` endpoint returns HTTP 410. No reachable council-level actual
+financial API/class was found.
+
+### Decision
+
+**SA local financial coverage is not available from this statewide dataset.** No `sa-lg-statewide`
+source, stub or spending mapper is created. Council names, elected members, events, libraries and
+parks are not spending and are not ingested. A council-by-council SA GPFS layer is deferred under
+the user non-goal; `sa-budget-gfs` remains the separate SA state GFS source and is never duplicated.
 
 ## Ingestion
 
