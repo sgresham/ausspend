@@ -218,7 +218,13 @@ Phase 6.7 adds **66 TAS Budget rows** from Budget Paper No. 1 (2026-27), Table 9
 General Government Expenses from Transactions by Purpose, COFOG-A categories × six
 `$m` columns, with all six years reconciled to the printed total. Rows are
 provisional non-additive benchmark aggregates; nominal interest on superannuation
-is a non-COFOG reconciliation line. The latest verified snapshot is 691,459 measures.
+is a non-COFOG reconciliation line.
+Phase 6.9 adds **1,590 QLD local government rows** from the QLD comparative-information
+report Financial Inputs CSV (data.qld.gov.au CKAN): council-level actual `$’000` total
+operating expenses, employee, depreciation/amortisation and interest, 2010-11..2015-16.
+Components are components of the printed total, every row is `agency_detail`, and the
+source is separate from QGIP project grants/procurement. The latest verified snapshot is
+693,059 measures.
 The pre-removal
 backup is `/home/steve/backups/ausspend/2026-11-17T03-26-35.175Z` (349,749 measures including the
 810 synthetic rows; natural-key count 348,939). Take a fresh verified backup before any future

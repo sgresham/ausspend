@@ -154,6 +154,13 @@ export interface MeasureDocument {
   tas_budget_table?: string;
   tas_budget_column?: string;
   tas_budget_unit?: string;
+  qld_lg_measure?:
+    | 'total_operating_expenses'
+    | 'employee_expenses'
+    | 'depreciation_amortisation'
+    | 'interest_paid_borrowing_costs';
+  qld_lg_unit?: string;
+  qld_lg_component_of?: string;
   /** AIHW exact published detailed funding source. */
   aihw_detailed_source_of_funding?: string;
   /** AIHW state/territory code the published table applies to. */
@@ -349,6 +356,18 @@ const MeasureMongooseSchema = new Schema<MeasureDocument>(
     tas_budget_table: { type: String, index: true },
     tas_budget_column: { type: String },
     tas_budget_unit: { type: String },
+    qld_lg_measure: {
+      type: String,
+      enum: [
+        'total_operating_expenses',
+        'employee_expenses',
+        'depreciation_amortisation',
+        'interest_paid_borrowing_costs',
+      ],
+      index: true,
+    },
+    qld_lg_unit: { type: String },
+    qld_lg_component_of: { type: String, index: true },
     aihw_detailed_source_of_funding: { type: String, index: true },
     aihw_state: { type: String, index: true },
     aihw_funding_sector: {
