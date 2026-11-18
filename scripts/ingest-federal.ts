@@ -119,14 +119,21 @@ async function measureCounts(): Promise<MeasureCounts> {
     MeasureModel.aggregate<{ _id: string; count: number }>([
       { $group: { _id: '$source_id', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-    ]),
-    MeasureModel.distinct('natural_key', { natural_key: { $ne: null } }),
+    ]).allowDiskUse(true),
+    // `distinct()` caps its result at 16 MB, which a large measures collection
+    // exceeds. Count distinct keys in the aggregation pipeline (disk-spilling)
+    // so the backfill's before/after report works at any size.
+    MeasureModel.aggregate<{ count: number }>([
+      { $match: { natural_key: { $ne: null } } },
+      { $group: { _id: '$natural_key' } },
+      { $count: 'count' },
+    ]).allowDiskUse(true),
     MeasureModel.aggregate<{ count: number }>([
       { $match: { natural_key: { $ne: null } } },
       { $group: { _id: '$natural_key', count: { $sum: 1 } } },
       { $match: { count: { $gt: 1 } } },
       { $count: 'count' },
-    ]),
+    ]).allowDiskUse(true),
     MeasureModel.countDocuments({
       $or: [
         { amount_cents: { $lt: 0 } },
@@ -140,7 +147,7 @@ async function measureCounts(): Promise<MeasureCounts> {
   return {
     total,
     by_source: Object.fromEntries(bySource.map((entry) => [entry._id, entry.count])),
-    distinct_natural_keys: distinctKeys.length,
+    distinct_natural_keys: distinctKeys[0]?.count ?? 0,
     duplicate_natural_key_groups: duplicateGroups[0]?.count ?? 0,
     invalid_amount_cents: invalidAmounts,
   };
