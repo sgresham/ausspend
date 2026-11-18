@@ -48,7 +48,7 @@ export const DUBBO_GPFS_SOURCE_DATASET = 'Dubbo Regional Council GPFS 2024-25';
  * historical FY2015-16..FY2022-23 series are deliberately excluded: they are
  * separate builders and must not be ingested here.
  */
-export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = ['2024-25', '2023-24'] as const;
+export const DUBBO_GPFS_SUPPORTED_FISCAL_YEARS = ['2025-26', '2024-25', '2023-24'] as const;
 export const DUBBO_GPFS_LICENSE = DUBBO_LICENSE;
 export const DUBBO_GPFS_DATA_QUALITY_FLAG = 'provisional/local_government';
 
@@ -92,6 +92,11 @@ export interface DubboGpfsLineSpec {
   component_of?: string;
   /** Government grant/contribution row that may overlap government program data. */
   potential_double_count?: boolean;
+  /**
+   * The current-year column may be printed as a dash/nil. Read that as a
+   * printed zero instead of falling through to the comparative column.
+   */
+  allow_printed_nil?: boolean;
   statement: 'Income Statement' | 'B1-1 Functions or activities';
 }
 
@@ -357,6 +362,150 @@ export const DUBBO_GPFS_FY2023_24_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
   },
 ];
 
+/**
+ * FY2025-26 keeps the FY2024-25 face shape (printed "excluding depreciation"
+ * subtotal plus B1-1 total) but adds a "Net gain from the disposal of assets"
+ * revenue component (864) and prints the disposal-loss expense line at nil.
+ * The nil-aware reader stores that printed dash as a printed zero, never the
+ * comparative 5,035.
+ */
+export const DUBBO_GPFS_FY2025_26_LINES: ReadonlyArray<DubboGpfsLineSpec> = [
+  {
+    key: 'rates_and_annual_charges',
+    label: 'Rates and annual charges',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'user_charges_and_fees',
+    label: 'User charges and fees',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_revenues',
+    label: 'Other revenues',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_operating',
+    label: 'Grants and contributions provided for operating purposes',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'government_grants_capital',
+    label: 'Grants and contributions provided for capital purposes',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    potential_double_count: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'interest_and_investment_income',
+    label: 'Interest and investment income',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_income',
+    label: 'Other income',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_gain_from_disposal_of_assets',
+    label: 'Net gain from the disposal of assets',
+    section: 'revenue',
+    component_of: 'total_revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_revenue',
+    label: 'Total income from continuing operations',
+    section: 'revenue',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'employee_expenses',
+    label: 'Employee benefits and on-costs',
+    section: 'expenses',
+    component_of: 'total_expenses_excluding_depreciation',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'materials_and_services',
+    label: 'Materials and services',
+    section: 'expenses',
+    component_of: 'total_expenses_excluding_depreciation',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'borrowing_costs',
+    label: 'Borrowing costs',
+    section: 'expenses',
+    component_of: 'total_expenses_excluding_depreciation',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'other_expenses',
+    label: 'Other expenses',
+    section: 'expenses',
+    component_of: 'total_expenses_excluding_depreciation',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_loss_from_disposal_of_assets',
+    label: 'Net loss from the disposal of assets',
+    section: 'expenses',
+    component_of: 'total_expenses_excluding_depreciation',
+    allow_printed_nil: true,
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_expenses_excluding_depreciation',
+    label:
+      'Total expenses from continuing operations excluding depreciation, amortisation and impairment of non-financial assets',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'depreciation_amortisation_impairment',
+    label: 'Depreciation, amortisation and impairment of non-financial assets',
+    section: 'expenses',
+    component_of: 'total_expenses',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'total_expenses',
+    label: 'Total functions and activities',
+    section: 'expenses',
+    statement: 'B1-1 Functions or activities',
+  },
+  {
+    key: 'net_result',
+    label: 'Net operating result for the year attributable to Council',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+  {
+    key: 'net_result_before_capital_grants',
+    label:
+      'Net operating result for the year before grants and contributions provided for capital purposes',
+    section: 'result',
+    statement: 'Income Statement',
+  },
+];
+
 export interface DubboGpfsYearLayout {
   fiscalYear: string;
   sourceDataset: string;
@@ -370,6 +519,13 @@ export interface DubboGpfsYearLayout {
 }
 
 export const DUBBO_GPFS_YEAR_LAYOUTS: Readonly<Record<string, DubboGpfsYearLayout>> = {
+  '2025-26': {
+    fiscalYear: '2025-26',
+    sourceDataset: 'Dubbo Regional Council GPFS 2025-26',
+    lines: DUBBO_GPFS_FY2025_26_LINES,
+    totalExpensesStatement: 'B1-1 Functions or activities',
+    expenseBridge: 'excluding-depreciation',
+  },
   '2024-25': {
     fiscalYear: '2024-25',
     sourceDataset: 'Dubbo Regional Council GPFS 2024-25',
@@ -409,6 +565,8 @@ interface DubboGpfsLineValue {
   spec: DubboGpfsLineSpec;
   value: number;
   page_number: number;
+  /** True when the current-year column was printed as a dash/nil. */
+  printed_nil?: boolean;
 }
 
 export interface DubboGpfsReconciliation {
@@ -573,6 +731,23 @@ function firstAmountAfter(text: string, label: string): number | null {
   return parseAmountCell(match[0])?.value ?? null;
 }
 
+function firstAmountOrNilAfter(
+  text: string,
+  label: string,
+): { value: number; printed_nil: boolean } | null {
+  const index = text.indexOf(label);
+  if (index < 0) return null;
+  const rest = text.slice(index + label.length).trimStart();
+  if (/^(?:[–—-]|nil)(?:\s|$)/i.test(rest)) {
+    return { value: 0, printed_nil: true };
+  }
+  const match = rest.match(MONEY_TOKEN);
+  if (!match) return null;
+  const parsed = parseAmountCell(match[0]);
+  if (parsed?.value === null || parsed?.value === undefined) return null;
+  return { value: parsed.value, printed_nil: false };
+}
+
 function allAmountsAfter(text: string, label: string): number[] {
   const index = text.indexOf(label);
   if (index < 0) return [];
@@ -599,6 +774,19 @@ function lineValue(
   pageNumber: number,
   errors: string[],
 ): DubboGpfsLineValue | null {
+  if (spec.allow_printed_nil) {
+    const parsed = firstAmountOrNilAfter(text, spec.label);
+    if (!parsed) {
+      errors.push(`p${pageNumber}: could not read printed value for "${spec.label}"`);
+      return null;
+    }
+    return {
+      spec,
+      value: parsed.value,
+      page_number: pageNumber,
+      ...(parsed.printed_nil ? { printed_nil: true } : {}),
+    };
+  }
   const value = firstAmountAfter(text, spec.label);
   if (value === null) {
     errors.push(`p${pageNumber}: could not read printed value for "${spec.label}"`);
@@ -673,6 +861,7 @@ function notesFor(
   unitReason: string,
   pageNumber: number,
   reconciliationNote: string,
+  printedNil = false,
 ): string {
   return [
     `source_detail: ${context.archive.local_path}`,
@@ -684,6 +873,7 @@ function notesFor(
     `page: ${pageNumber}`,
     `printed_label: ${spec.label}`,
     `unit: ${unit} (explicit; ${unitReason})`,
+    printedNil ? 'printed_nil: true (current-year column printed as dash/nil)' : null,
     `reconciliation: ${reconciliationNote}`,
     'provisional/local_government; non-additive agency detail; no region/LGA allocation; never summed with dubbo-council summary rows; unverified',
   ]
@@ -741,7 +931,15 @@ function mapLine(
     ...(printedSign === 'negative' ? { gpfs_printed_sign: printedSign } : {}),
     ...(spec.component_of ? { gpfs_component_of: spec.component_of } : {}),
     ...(spec.potential_double_count ? { potential_double_count: true } : {}),
-    notes: notesFor(context, spec, unit, unitReason, line.page_number, reconciliationNote),
+    notes: notesFor(
+      context,
+      spec,
+      unit,
+      unitReason,
+      line.page_number,
+      reconciliationNote,
+      line.printed_nil ?? false,
+    ),
   };
 }
 
@@ -947,24 +1145,22 @@ export function parseDubboGpfsExtraction(
     face_expense_bridge: faceExpenseBridge,
     olg_expenses_cents: layout.olg?.expensesCents ?? null,
     olg_revenue_cents: layout.olg?.revenueCents ?? null,
-    checks:
+    checks: [
+      'income statement revenue components sum to the printed total revenue',
       layout.expenseBridge === 'excluding-depreciation'
-        ? [
-            'all printed face-statement line sums equal their printed subtotals/total',
-            'B1-1 Total functions and activities equals the face statement',
-            'printed total expenses excluding depreciation + depreciation = B1-1 total expenses',
-            'OLG FY2024-25 expenses and revenue anchors match exactly',
-          ]
-        : [
-            'all printed face-statement expense components sum to the printed total expenses',
-            'B1-1 Total functions and activities equals the face statement',
-            `no external OLG anchor is defined for FY${fiscalYear}`,
-          ],
+        ? 'printed total expenses excluding depreciation + depreciation = B1-1 total expenses'
+        : 'printed expense components sum to the printed total expenses',
+      'B1-1 Total functions and activities equals the face statement',
+      layout.olg
+        ? 'OLG FY2024-25 expenses and revenue anchors match exactly'
+        : `no external OLG anchor is defined for FY${fiscalYear}`,
+    ],
   };
 
   const reconciliationNote =
     layout.expenseBridge === 'excluding-depreciation'
-      ? 'printed total expenses from B1-1, not a component sum; face-statement bridge and OLG anchors reconcile exactly'
+      ? 'printed total expenses from B1-1, not a component sum; face-statement bridge reconciles exactly' +
+        (layout.olg ? ' and OLG anchors match' : `; no OLG anchor for FY${fiscalYear}`)
       : 'printed total expenses from the income statement; expense components, revenue components and B1-1 reconcile exactly (no OLG anchor for this year)';
   const records = values.map((line) =>
     mapLine(line, context, unit, incomeUnit.reason, reconciliationNote),
@@ -1016,7 +1212,7 @@ export function createDubboGpfsConnector(options: DubboGpfsConnectorOptions = {}
     jurisdiction_level: 'local',
     license: DUBBO_GPFS_LICENSE,
     notes:
-      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2024-25 and FY2023-24 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and B1-1 Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
+      "GPFS pilot: one council only (Dubbo Regional Council), audited FY2025-26, FY2024-25 and FY2023-24 General Purpose Financial Statements. Each year's PDF is discovered from the official reporting page (no hard-coded document URL), SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, the printed total expenses and B1-1 Total functions and activities reconcile exactly (plus the OLG FY2024-25 anchors where that year matches). Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id from the 245 dubbo-council budget/estimate rows; no region/LGA allocation is created and no cross-year sum is taken.",
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];

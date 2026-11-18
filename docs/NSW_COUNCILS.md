@@ -653,6 +653,56 @@ source whose measure count changed is `dubbo-council-gpfs`; every other source i
 second ingest run fetched/upserted the same 35 natural keys and left the DB total at **693,316**
 (idempotent).
 
+#### 7.1.2 FY2025-26 multi-year variant (landed 2026-11-18)
+
+**Scope.** Add Dubbo Regional Council's audited **FY2025-26** GPFS as actual rows under the existing
+source id `dubbo-council-gpfs`, preserving FY2023-24 (17 rows) and FY2024-25 (18 rows). No historical
+year and no other council is ingested here.
+
+**Source.** The reviewed discovery packet (`docs/source-discovery/dubbo-regional.md` §4 and §10)
+records the document
+<https://www.dubbo.nsw.gov.au/ArticleDocuments/11102/2025-2026%20Annual%20Financial%20Statements%20-%20Dubbo%20Regional%20Council.pdf.aspx>
+and SHA-256 `b6f52c9377952c6d72d011cda4c1cc0fda16c3aff32d501a05a263e3fd7d4fb5`. The connector
+re-discovers it from the reporting page (no hard-coded PDF URL) and archives the exact bytes outside
+the repo at
+`~/ausspend-source-archive/dubbo-council-gpfs/dubbo-regional-council-gpfs-2025-26.pdf`: **2,940,971
+bytes**, SHA-256 matching the packet exactly. The D2 archive copy at
+`~/ausspend-source-archive/dubbo-regional/2025-26/gpfs-2025-26.pdf` has the same hash. The printed
+unit is explicit `$'000` on the income statement (PDF p.5) and B1-1 (PDF p.14).
+
+**Layout variant.** FY2025-26 keeps the FY2024-25 face shape (printed "excluding depreciation"
+subtotal plus B1-1 total expenses) but adds a `Net gain from the disposal of assets` revenue line
+(864) and prints the disposal-loss expense line at nil (`–`). The nil-aware reader stores that printed
+dash as a printed zero and never reads the comparative 5,035. No OLG anchor exists for FY2025-26, so
+none is invented.
+
+| Check                                                                                                                                |                                                                      Printed / derived | Result                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------: | ----------------------------------------- |
+| Revenue components sum (rates + user charges + other revenue + operating + capital grants + interest + other income + disposal gain) | `84,034 + 63,474 + 4,312 + 30,491 + 28,315 + 14,696 + 172 + 864` = `$226,358` thousand | = printed total income                    |
+| Expense components excluding depreciation (employee + materials + borrowing + other + nil disposal loss)                             |                            `57,396 + 56,028 + 2,458 + 2,872 + 0` = `$118,754` thousand | = printed excluding-depreciation subtotal |
+| Total expenses excluding depreciation + depreciation                                                                                 |                                                                     `118,754 + 61,576` | = `$180,330` = B1-1 total                 |
+| Total revenue − total expenses                                                                                                       |                                                                    `226,358 − 180,330` | = `$46,028` net result                    |
+| B1-1 Total functions and activities                                                                                                  |             income `$226,358`; expenses `$180,330`; result `$46,028`; grants `$58,806` | = face statement                          |
+| External anchor                                                                                                                      |                                                             none defined for FY2025-26 | not invented                              |
+
+The printed `17,713` net result before capital grants equals `46,028 − 28,315` capital grants and is
+reconciled explicitly.
+
+**Rows.** **19** rows for FY2025-26: 8 revenue components (including the 864 disposal gain) + total
+revenue, 5 expense components (including the printed-nil disposal loss) + total expenses excluding
+depreciation + depreciation + total expenses, and net result + net result before capital grants. Each
+row has `fiscal_year: "2025-26"`, `source_dataset: "Dubbo Regional Council GPFS 2025-26"`,
+`measure_type: "actual"`, `aggregation_role: "agency_detail"`, no `region_id`/`location`, and a
+year-scoped natural key. FY2024-25 (18) and FY2023-24 (17) are unchanged, so the source holds **54**
+distinct year-scoped rows; no row and no API total spans years.
+
+**Database evidence (2026-11-18).** `measures` 693,355 → **693,374** (exactly **+19**);
+`dubbo-council-gpfs` 35 → **54** with FY2025-26 **19**, FY2024-25 **18**, FY2023-24 **17**;
+`data_sources` still **83** (`records_ingested` for this source 35 → 54); `dubbo-council` still
+**245**. The only source whose measure count changed is `dubbo-council-gpfs`; every other source is
+unchanged. A second ingest run fetched/upserted the same 54 natural keys and left the DB total at
+**693,374** (idempotent).
+
 ### 7.2 Second council — City of Sydney FY2024-25 GPFS (landed 2026-11-17)
 
 **Source.** Discovered from the official annual-report page
