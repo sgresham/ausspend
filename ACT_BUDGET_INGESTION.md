@@ -61,6 +61,11 @@ Before: **689,273** measures (source absent). After: **691,393** (+2,120 all `ac
 other source deleted or modified. All 2,120 rows are `territory` / `budget` / `additive`;
 violations=0. A second run upserts the same 2,120 natural keys and leaves the DB at **691,393**.
 
+Build note: the first verification run did not request Socrata's hidden `:id`, so 65 duplicate
+project/directorate names collapsed on the natural key (2,055 rows). Those **ACT-only** rows were
+removed and replaced with the corrected 2,120 rows after adding `:id` to the paging query and the
+natural key. No other source row was deleted or modified; the other-source count remained 689,273.
+
 ```bash
 export MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev
 npm run ingest:act-budget
