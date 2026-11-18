@@ -21,3 +21,12 @@ export {
   type IngestionLogDocument,
   type IngestionLogStatus,
 } from './ingestion-log.js';
+
+export {
+  TradeRecordModel,
+  type TradeRecordDocument,
+  type TradeFlow,
+  type TradeMeasureType,
+  type TradeDataQualityFlag,
+  type TradeLocationDocument,
+} from './trade-record.js';
