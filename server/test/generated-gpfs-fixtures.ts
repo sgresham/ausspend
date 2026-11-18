@@ -33,8 +33,9 @@ import * as fixture30 from '../src/connectors/sutherland-shire-gpfs/fixture.js';
 import * as fixture31 from '../src/connectors/tweed-shire-gpfs/fixture.js';
 import * as fixture32 from '../src/connectors/waverley-gpfs/fixture.js';
 import * as fixture33 from '../src/connectors/willoughby-gpfs/fixture.js';
-import * as fixture34 from '../src/connectors/wollongong-gpfs/fixture.js';
-import * as fixture35 from '../src/connectors/woollahra-gpfs/fixture.js';
+import * as fixture34 from '../src/connectors/wollondilly-gpfs/fixture.js';
+import * as fixture35 from '../src/connectors/wollongong-gpfs/fixture.js';
+import * as fixture36 from '../src/connectors/woollahra-gpfs/fixture.js';
 
 export const GPFS_FIXTURES = [
   { id: 'bayside-gpfs', fixture: fixture0 },
@@ -71,6 +72,7 @@ export const GPFS_FIXTURES = [
   { id: 'tweed-shire-gpfs', fixture: fixture31 },
   { id: 'waverley-gpfs', fixture: fixture32 },
   { id: 'willoughby-gpfs', fixture: fixture33 },
-  { id: 'wollongong-gpfs', fixture: fixture34 },
-  { id: 'woollahra-gpfs', fixture: fixture35 },
+  { id: 'wollondilly-gpfs', fixture: fixture34 },
+  { id: 'wollongong-gpfs', fixture: fixture35 },
+  { id: 'woollahra-gpfs', fixture: fixture36 },
 ] as const;
