@@ -164,7 +164,8 @@ describe('GET /api/meta/coverage', () => {
     const response = await request(app).get('/api/meta/coverage');
 
     expect(response.status).toBe(200);
-    expect(response.headers['cache-control']).toBe('no-store');
+    expect(response.headers['cache-control']).toBe('public, max-age=30, stale-while-revalidate=30');
+    expect(response.headers.etag).toBeTruthy();
     expect(response.body).toMatchObject({
       phase:
         'Phase 1 + F2/F3 + S1/S2/S3 + Phase 4 (AusTender + PBS + NSW/VIC/QLD + Dubbo live) + ACNC charity + AIHW health expenditure',

@@ -110,3 +110,68 @@ mongosh "$MONGO_URL" --eval '
 
 Look for `IXSCAN … indexName: "search_text"` and `docsExamined` in the tens of
 thousands rather than ~998k.
+
+## Root page load
+
+### Symptom
+
+The root page made six API calls and shipped one ~1.1 MB JS bundle. Two of the
+calls were duplicates: `DiscoveryProvider` and `HomePage` each fetched
+`/api/functions` and `/api/data-sources` under different `useApi` keys. Every
+route was imported eagerly in `App.tsx`, so `recharts` (used only by the
+function/region chart views) was in the initial bundle.
+
+### Fix
+
+1. **One request per root resource.** `HomePage` now reads the functions and
+   data-sources state from `useDiscovery()` instead of calling `useApi` again.
+   Root calls are `coverage`, `functions`, `regions`, `data-sources` — four, not
+   six.
+2. **Bounded coverage cache with ETag.** `GET /api/meta/coverage` caches the
+   serialised payload for 30s and serves
+   `Cache-Control: public, max-age=30, stale-while-revalidate=30` plus an ETag;
+   `If-None-Match` returns `304`. The cache key includes the newest ingestion-log
+   `_id`, so a completed ingestion (which always writes a log) invalidates it
+   immediately instead of waiting for the TTL. `invalidateCoverageCache()` is
+   exported for tests/in-process callers. The payload itself is unchanged.
+3. **Route-level splitting.** `App.tsx` keeps the shell, providers and `HomePage`
+   eager and wraps every other route in `React.lazy` + `Suspense` with a visible
+   loading state. `vite.config.ts` adds vendor `manualChunks` (`react`, `mui`,
+   and a separate `charts` chunk for `recharts`).
+
+### Measured result
+
+API (`/api/meta/coverage`, same database, direct calls):
+
+|                      | Before (no cache) | After (cold / warm)                       |
+| -------------------- | ----------------- | ----------------------------------------- |
+| `/api/meta/coverage` | ~430–550 ms       | **496 ms cold, ~7 ms warm (median of 5)** |
+
+Client production build (`npm run build -w client`):
+
+|                       | Before                                | After                                                      |
+| --------------------- | ------------------------------------- | ---------------------------------------------------------- |
+| Initial JS            | 1,114.36 kB (333.36 kB gzip), 1 chunk | **604.17 kB (190.90 kB gzip)** — `index` + `react` + `mui` |
+| `charts` (`recharts`) | in the initial bundle                 | **390.23 kB (112.76 kB gzip), separate lazy chunk**        |
+| Route chunks          | none                                  | per-route chunks (Search 25.1 kB, Data sources 18.9 kB, …) |
+
+The initial JS is ~46% smaller uncompressed (~43% gzip) and the root page no
+longer downloads recharts. Duplicate `/api/functions` and `/api/data-sources`
+requests are gone: only `DiscoveryProvider` calls those two endpoints; `HomePage`
+exposes its cached state through `useDiscovery()`. The spending search path and
+`/api/spending` indexes were not touched, so search latency is unchanged.
+
+### How to check
+
+```bash
+# cold then warm coverage, headers and 304
+curl -s -D - -o /dev/null 'http://127.0.0.1:3001/api/meta/coverage'
+curl -s -D - -o /dev/null -H 'If-None-Match: <etag>' 'http://127.0.0.1:3001/api/meta/coverage'
+
+# bundle split: look for separate charts-*.js and no recharts in index-*.js
+npm run build -w client
+ls client/dist/assets
+
+# one request per root endpoint (only DiscoveryProvider calls these)
+grep -rn "/api/functions'\\|/api/data-sources'" client/src
+```
