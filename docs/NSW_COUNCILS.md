@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 60    |
-| NSW local-government source ids     | 61    |
-| Registered spending connectors      | 122   |
-| Active spending connectors          | 120   |
+| NSW council GPFS sources            | 61    |
+| NSW local-government source ids     | 62    |
+| Registered spending connectors      | 123   |
+| Active spending connectors          | 121   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -208,7 +208,7 @@ category is the 128.
 | Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                             In DB now |
 | --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------: |
 | OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                                     0 |
-| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **1193** (60 council GPFS sources, FY2024-25/FY2025-26; separate non-additive sources) |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **1210** (61 council GPFS sources, FY2024-25/FY2025-26; separate non-additive sources) |
 | LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                                     0 |
 | data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                                    3,472 rows, none council financial |
 | Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                                     0 |
@@ -319,7 +319,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 1193 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 1210 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -348,12 +348,12 @@ for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Cou
 23 for Blue Mountains City Council FY2024-25 (`blue-mountains-gpfs`, §7.36) and 18 for Wollondilly
 Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY2024-25
 (`camden-gpfs`, §7.38), 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) and
-17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) and 16 for Gilgandra Shire Council FY2025-26 (`gilgandra-gpfs`, §7.55) and 17 for Lockhart Shire Council FY2025-26 (`lockhart-gpfs`, §7.56) and 17 for Coonamble Shire Council FY2024-25 (`coonamble-gpfs`, §7.57) and 17 for Weddin Shire Council FY2024-25 (`weddin-gpfs`, §7.58) and 17 for Walcha Council FY2024-25 (`walcha-gpfs`, §7.59) — all separate source ids. The
+17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) and 16 for Gilgandra Shire Council FY2025-26 (`gilgandra-gpfs`, §7.55) and 17 for Lockhart Shire Council FY2025-26 (`lockhart-gpfs`, §7.56) and 17 for Coonamble Shire Council FY2024-25 (`coonamble-gpfs`, §7.57) and 17 for Weddin Shire Council FY2024-25 (`weddin-gpfs`, §7.58) and 17 for Walcha Council FY2024-25 (`walcha-gpfs`, §7.59) and 17 for Murrumbidgee Council FY2024-25 (`murrumbidgee-gpfs`, §7.60) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
-GPFS rows. The shared dev DB currently records **60** active `data_sources` GPFS entries and **1193**
+GPFS rows. The shared dev DB currently records **61** active `data_sources` GPFS entries and **1210**
 GPFS measures, from a fresh aggregate of `source_id` matching `/gpfs$/` (2026-11-19, after the
-§7.59 Walcha landing); this is the live
+§7.60 Murrumbidgee landing); this is the live
 DB count, not an increment of the earlier table total.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
@@ -5767,6 +5767,99 @@ connector tests passed (17/17).
 
 ---
 
+### 7.60 Sixty-first council — Murrumbidgee Council FY2024-25 GPFS (landed 2026-11-19)
+
+**Source and year.** FY2024-25 is the latest audited year published by Murrumbidgee Council at
+2026-11-19; **no FY2025-26 GPFS is posted**. The accepted current-available year is therefore
+FY2024-25, and the connector never substitutes a 2025-26 or 2023-24 document. The statement source is
+the council's **Appendix A Financial Information** (not the narrative annual report), discovered from
+the official Annual Reports and Financial Statements page
+<https://www.murrumbidgee.nsw.gov.au/My-council/Plans-strategies-policies-council-information/Reporting-our-progress/Annual-Reports-Financial-Statements>.
+The current upload is
+<https://www.murrumbidgee.nsw.gov.au/files/assets/public/v/1/publications/ip-and-r/a-report-2024-25/appendix-a-financial-information.pdf>,
+which redirects to the `/v/2/` path; both are recorded. A documented official fallback pin is used
+only if the page yields no usable anchor.
+
+**Akamai UA method.** The host's WAF returns **403** (`text/html`, 554 bytes) to a bare Chrome UA and
+**200** `application/pdf` (1,063,092 bytes) to a plain client UA. The connector sends an explicit plain
+`curl/8.5.0` User-Agent (plus a broad PDF/HTML `Accept`) for both the listing and the PDF, and a
+focused test asserts that header is used and contains no `Chrome` token.
+
+The 100-page Appendix A PDF contains the signed General Purpose Financial Statements — Income
+Statement PDF p4, Statement of Comprehensive Income p5 and B1-1 "Functions or activities" p13 — plus
+the notes and the independent auditor's reports. The printed unit is explicit `$ '000`; a missing or
+conflicting unit rejects the whole extraction. Exact bytes archived outside the repo:
+
+- bytes: **1,063,092**
+- SHA-256: `a279e11fdd620d4ea7f08794ea93e8671adafc502ed2e18069fe6b09ff9b0fc1`
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check | Printed / derived | Result |
+| --- | --- | --- |
+| Total income from continuing operations (Income Statement) | `$30,190` thousand | = `$30,190,000` |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + net gain on disposal + other income) | `$6,893` + `$3,184` + `$455` + `$9,519` + `$8,183` + `$1,408` + `$360` + `$188` = `$30,190` thousand | = printed total |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses) | `$10,401` + `$7,404` + `$8` + `$713` = `$18,526` thousand | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$8,550`) | `$18,526` + `$8,550` = `$27,076` thousand | = printed B1-1 total expenses |
+| B1-1 Total functions and activities — income | `$30,190` thousand | = face statement |
+| B1-1 Total functions and activities — expenses | `$27,076` thousand | = face bridge |
+| B1-1 Total functions and activities — operating result | `$3,114` thousand | = face operating result |
+| B1-1 grants and contributions | `$17,702` thousand | = operating `$9,519` + capital `$8,183` |
+| Operating result from continuing operations | `$30,190` − `$27,076` = `$3,114` thousand | = printed operating result |
+| Net operating result for the year attributable to Council | `$3,114` thousand | = printed net result |
+| Net operating result before grants and contributions provided for capital purposes | `$3,114` − `$8,183` = `−$5,069` thousand | = printed figure (evidence only) |
+| Statement of Comprehensive Income net result | `$3,114` thousand | = Income Statement net result |
+| Other comprehensive income (revaluation of IPP&E) | `$15,836` thousand | = printed total other comprehensive income for the period and total items not reclassified |
+| Statement of Comprehensive Income total (`$3,114` + `$15,836` other comprehensive income) | `$18,950` thousand | = printed total comprehensive income |
+
+Total expenses is the printed face-statement bridge of expenses-excluding-depreciation (`$18,526`
+thousand) plus printed depreciation/amortisation/impairment (`$8,550` thousand), and equals the B1-1
+"Total functions and activities" expense total (`$27,076` thousand). B1-1 income, expenses, operating
+result and grants reconcile exactly to the face statement — there is **no face-vs-B1-1 discrepancy**.
+Murrumbidgee prints eight non-zero revenue lines (including a net gain on disposal `$360` thousand and
+other income `$188` thousand). Its printed net loss on disposal of assets is nil for 2025 and is not
+parsed or emitted (the 2024 comparative is never read). The Comprehensive Income statement labels its
+total-OCI line "Total other comprehensive income for the period"; the adapter reads that label
+explicitly. The printed net result is positive (`$3,114` thousand) and the before-capital result is
+negative (`−$5,069` thousand).
+
+**Rows.** 17 rows, source id `murrumbidgee-gpfs`, `source_dataset` "Murrumbidgee Council GPFS
+2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Murrumbidgee Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. The minimum lines are total revenue
+`$30,190,000`, total expenses `$27,076,000`, employee expenses `$10,401,000`,
+depreciation/amortisation/impairment `$8,550,000`, operating government grants `$9,519,000`,
+capital government grants `$8,183,000`, borrowing costs `$8,000`, net gain on disposal of assets
+`$360,000`, other income `$188,000` and net result `$3,114,000`. The printed before-capital result is
+retained in reconciliation evidence only and is not emitted as a row. The B1-1 function split is used
+only for the reconciliation checks and is not emitted as rows.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government
+program data; they are not added to expenditure. The pre-existing same-entity rows are preserved
+untouched and never summed. A DB check confirms **0** non-`agency_detail` rows, **0** rows with
+`region_id`/`location` and a single `delivery_entity` for the source.
+
+**Database ingest proof (2026-11-19, shared dev DB `ausspend_dev`).** Ingesting only
+`murrumbidgee-gpfs` took the shared dev DB from **998,711** to **998,728** measures — exactly **+17**
+rows. GPFS rows moved **1193 → 1210** and active GPFS `data_sources` **60 → 61**; the SOC measure
+count (rows with `jurisdiction_level: "soc"`) stayed at **205** and every other per-source count was
+unchanged. A second ingest fetched/upserted the same 17 SHA-anchored natural keys, left the total at
+**998,728** and created no duplicate (idempotent). `data_sources` records the source `active` with
+`records_ingested: 17`; the latest `ingestion_logs` entry is `status: "success"`,
+`records_fetched: 17`, `records_upserted: 17`. All 17 measures carry `fiscal_year: "2024-25"`. Both
+the council URL and the resolved `/v/2/` URL are recorded in the row provenance. The exact PDF is
+archived outside the repo under the configured source-archive root at
+`murrumbidgee-gpfs/appendix-a-financial-information.pdf` with its SHA-256 and retrieval metadata; no
+PDF is committed. The focused connector test also proves idempotency against a dedicated test Mongo
+(seeded 5 rows → 22 with 17 rows; a second ingest leaves it at 22). Targeted connector tests passed
+(17/17).
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -6217,6 +6310,6 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.59 GPFS sources: sixty councils, one audited year
+The only ingestions are the §7.1–§7.60 GPFS sources: sixty-one councils, one audited year
 each, non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
