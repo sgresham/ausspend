@@ -100,6 +100,7 @@ const KNOWN_SOURCE_IDS = [
   'singleton-gpfs',
   'orange-gpfs',
   'blayney-gpfs',
+  'liverpool-plains-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
