@@ -38,6 +38,7 @@ import { createPortsNorthConnector } from './soc/qld/ports-north.js';
 import { createNqbpConnector } from './soc/qld/nqbp.js';
 import { createWaterCorporationConnector } from './soc/wa/water-corporation.js';
 import { createSynergyConnector } from './soc/wa/synergy.js';
+import { createWesternPowerConnector } from './soc/wa/western-power.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -611,6 +612,14 @@ export const CONNECTORS: readonly Connector[] = [
   // spending, the PNFC benchmark, Water Corporation, another WA GTE, a QLD/NSW
   // SOC, a WA total, or any other SOC.
   createSynergyConnector(),
+  // WA SOC: third WA Government Trading Enterprise pilot — Western Power
+  // (Electricity Networks Corporation), a WA GTE under the Electricity
+  // Corporations Act 2005 (WA). Latest annual report discovered from the
+  // official annual-report page (PDF URLs embedded in JSON) and parsed as
+  // entity-level statement lines. Never added to government program spending,
+  // the PNFC benchmark, Water Corporation, Synergy, another WA GTE, a QLD/NSW
+  // SOC, a WA total, or any other SOC.
+  createWesternPowerConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending

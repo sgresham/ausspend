@@ -2,7 +2,7 @@
 
 **Status: inventory plus eight implemented QLD pilots (Energy Queensland, CS Energy, Stanwell,
 Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North and NQBP)
-and the first two WA GTE pilots (Water Corporation and Synergy). No other state connector,
+and the first three WA GTE pilots (Water Corporation, Synergy and Western Power). No other state connector,
 no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
 were read-only page/API probes made on **2026-11-17**. The QLD pilots added on **2026-11-19** are
 entity-level adapters in the existing SOC framework; they do not create a QLD total and are never
@@ -78,7 +78,7 @@ Counts below are the counts of the _named lists at the cited source_, not an est
 | State   | Legal/reporting class                                                                                   | Official list found                                                                                                                      | Entities named at source                                                                                 | Latest annual reports                                                                                                                      | Entity-level extraction                                                          | Proposed rank |
 | ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------- |
 | **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North and NQBP 2025-26 verified (pilots; NQBP via the official Parliament tabled copy); Port of Townsville FY2025-26 deferred (printed $1 rounding gap, no rows)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
-| **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified; Water Corporation and Synergy 2025-26 verified (pilots)                                                                                          | **High for the 12**; medium for tranche 2                                        | **2**         |
+| **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified; Water Corporation, Synergy and Western Power 2025-26 verified (pilots)                                                                                          | **High for the 12**; medium for tranche 2                                        | **2**         |
 | **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                          | Entity reports published; URLs not individually verified                                                                                   | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
 | **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                                                                                        | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
 | **ACT** | Territory-owned Corporations (legal) / PTE/PNFC (budget classification)                                 | ACT Budget 2026-27 "Classification of ACT Entities"                                                                                      | **6 PTE/PNFC entities**; legal TOC list not separately consolidated                                      | Entity reports published; URLs not individually verified                                                                                   | **Medium-low** — only Icon Water is a classic commercial utility; class mismatch | **5**         |
@@ -240,7 +240,7 @@ GTE annual reports. Archive metadata/hashes, quote with attribution, and do not 
 
 1. Water Corporation — largest water utility; standard statements (implemented 2026-11-19; first WA GTE pilot).
 2. Synergy — electricity generation/retail; standard statements (implemented 2026-11-19; second WA GTE pilot).
-3. Western Power — electricity network; standard statements.
+3. Western Power — electricity network; standard statements (implemented 2026-11-19; third WA GTE pilot).
 4. Horizon Power — regional electricity; standard statements.
 5. DevelopmentWA — land development; different but audited.
 6. Pilbara Ports Authority — large port; standard statements.
@@ -1055,6 +1055,42 @@ Corporation and every other WA GTE and QLD/NSW SOC; no WA total is created.
   benchmark, Water Corporation, another WA GTE, a QLD/NSW SOC, a WA total, a national total, or
   another SOC line. Rows are provisional and unverified.
 
+## WA pilot — Western Power (implemented 2026-11-19)
+
+The third WA Government Trading Enterprise pilot is **Western Power only** — Electricity Networks
+Corporation trading as Western Power, a WA GTE under the Electricity Corporations Act 2005 (WA), not
+a QLD GOC or an NSW SOC. It is separate from Water Corporation, Synergy and every other WA GTE and
+QLD/NSW SOC; no WA total is created.
+
+- **Source id / entity:** `wa-western-power` / Western Power.
+- **Report:** Western Power Annual Report 2025-26, for the year ended 30 June 2026 (FY2025-26).
+- **Discovery page:** the official annual-report page
+  <https://www.westernpower.com.au/about/reports-publications/annual-report/> embeds the report PDF
+  URLs in page JSON (`"url":"/4a8589/…"`). Discovery reads both anchors and the embedded `url`
+  fields; no PDF URL is hard-coded. The exact PDF is
+  <https://www.westernpower.com.au/4a8589/siteassets/documents/reports/annual-report/2026-annual-report.pdf>
+  (HTTP 200, `application/pdf`, 65,292,260 bytes, 132 PDF pages).
+- **Archive:** exact PDF archived outside the repo at `~/ausspend-source-archive/wa-western-power/`
+  with `SHA256SUMS` and `retrieval.json`; SHA-256
+  `fbded32ee826244c0fc54f11cbca48d848e45089d28e47a078d879c1142fd11e`.
+- **Unit:** `$M` — the Statement of comprehensive income (PDF page 76, printed page 76) prints `$M`
+  for the 2025/26 and 2024/25 (restated) columns.
+- **Rows:** five entity-level SOC statement lines, from the current **2025/26** column only:
+  total revenue **2,560** (printed Total income = Revenue from rendering of services 2,548 + Other
+  income 12); total expenses **1,539** (printed Total expense = Materials and services 361 +
+  Employee related expenses 290 + Depreciation and amortisation expenses 592 + Other expenses 296);
+  employee expenses **290**; depreciation and amortisation **592**; net result **a profit of 487**
+  (`$M`).
+- **Reconciliation (zero tolerance):** 2,560 − 1,539 − 338 (Net finance costs) = **683** (printed
+  Profit before income tax equivalent expense); 683 − 196 = **487** (printed Profit for the reporting
+  year). The prior-year column is never added.
+- **Implementation:** `server/src/connectors/soc/wa/western-power.ts`, registered in the SOC source
+  list, `/api/soc`, the SOC page and the ingestion runner. Tests:
+  `server/test/wa-western-power.test.ts`.
+- **Caveat:** entity-level only. Never add Western Power to government program spending, the PNFC
+  benchmark, Water Corporation, Synergy, another WA GTE, a QLD/NSW SOC, a WA total, a national total,
+  or another SOC line. Rows are provisional and unverified.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -1230,11 +1266,12 @@ that the page will be stable.
 The QLD Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited,
 Gladstone Ports Corporation Limited, Ports North and NQBP pilots described above are implemented
 and verified against their 2025-26 audited annual reports (NQBP from the official Queensland
-Parliament tabled copy because its corporate site is bot-blocked). The first two WA GTE pilots, Water Corporation
-and Synergy, are also implemented and verified against their 2025-26 audited annual reports. Port of
+Parliament tabled copy because its corporate site is bot-blocked). The first three WA GTE pilots, Water Corporation,
+Synergy and Western Power, are also implemented and verified against their 2025-26 audited annual
+reports. Port of
 Townsville remains deferred, not merged data. They remain single-entity,
 read-only proofs: do not add another QLD GOC, a QLD total or another state until the owner confirms
 the legal class, the entity list and the intended use. Any next entity needs its own unit read and
 reconciliation; its rows must never be summed with Energy Queensland, CS Energy, Stanwell, Powerlink
 Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North, NQBP, Water
-Corporation, Synergy or government spending.
+Corporation, Synergy, Western Power or government spending.
