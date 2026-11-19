@@ -31,6 +31,7 @@ import { createEnergyQueenslandConnector } from './soc/qld/energy-queensland.js'
 import { createCsEnergyConnector } from './soc/qld/cs-energy.js';
 import { createStanwellConnector } from './soc/qld/stanwell.js';
 import { createPowerlinkConnector } from './soc/qld/powerlink.js';
+import { createSunwaterConnector } from './soc/qld/sunwater.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -552,6 +553,12 @@ export const CONNECTORS: readonly Connector[] = [
   // the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, another QLD
   // GOC, a QLD total, or any other SOC.
   createPowerlinkConnector(),
+  // QLD SOC: fifth entity — Sunwater Limited, a Queensland GOC. Latest annual
+  // report discovered from Sunwater's official publications page and parsed as
+  // entity-level statement lines. Never added to government program spending,
+  // the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink
+  // Queensland, another QLD GOC, a QLD total, or any other SOC.
+  createSunwaterConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending
