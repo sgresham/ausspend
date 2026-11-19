@@ -91,6 +91,7 @@ import * as fixture88 from '../src/connectors/wingecarribee-gpfs/fixture.js';
 import * as fixture89 from '../src/connectors/wollondilly-gpfs/fixture.js';
 import * as fixture90 from '../src/connectors/wollongong-gpfs/fixture.js';
 import * as fixture91 from '../src/connectors/woollahra-gpfs/fixture.js';
+import * as fixture92 from '../src/connectors/yass-valley-gpfs/fixture.js';
 
 export const GPFS_FIXTURES = [
   { id: 'armidale-gpfs', fixture: fixture0 },
@@ -185,4 +186,5 @@ export const GPFS_FIXTURES = [
   { id: 'wollondilly-gpfs', fixture: fixture89 },
   { id: 'wollongong-gpfs', fixture: fixture90 },
   { id: 'woollahra-gpfs', fixture: fixture91 },
+  { id: 'yass-valley-gpfs', fixture: fixture92 },
 ] as const;
