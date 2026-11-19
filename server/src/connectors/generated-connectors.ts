@@ -77,11 +77,12 @@ import { connectorModule as module74 } from './walcha-gpfs/index.js';
 import { connectorModule as module75 } from './warren-gpfs/index.js';
 import { connectorModule as module76 } from './waverley-gpfs/index.js';
 import { connectorModule as module77 } from './weddin-gpfs/index.js';
-import { connectorModule as module78 } from './willoughby-gpfs/index.js';
-import { connectorModule as module79 } from './wingecarribee-gpfs/index.js';
-import { connectorModule as module80 } from './wollondilly-gpfs/index.js';
-import { connectorModule as module81 } from './wollongong-gpfs/index.js';
-import { connectorModule as module82 } from './woollahra-gpfs/index.js';
+import { connectorModule as module78 } from './wentworth-gpfs/index.js';
+import { connectorModule as module79 } from './willoughby-gpfs/index.js';
+import { connectorModule as module80 } from './wingecarribee-gpfs/index.js';
+import { connectorModule as module81 } from './wollondilly-gpfs/index.js';
+import { connectorModule as module82 } from './wollongong-gpfs/index.js';
+import { connectorModule as module83 } from './woollahra-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -167,6 +168,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module80,
   module81,
   module82,
+  module83,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);

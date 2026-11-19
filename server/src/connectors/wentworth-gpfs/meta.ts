@@ -1,0 +1,17 @@
+import {
+  WENTWORTH_GPFS_ID,
+  WENTWORTH_GPFS_NAME,
+  WENTWORTH_GPFS_PUBLISHER,
+  WENTWORTH_GPFS_FISCAL_YEAR,
+  WENTWORTH_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: WENTWORTH_GPFS_ID,
+  name: WENTWORTH_GPFS_NAME,
+  publisher: WENTWORTH_GPFS_PUBLISHER,
+  fiscalYear: WENTWORTH_GPFS_FISCAL_YEAR,
+  dataQualityFlag: WENTWORTH_GPFS_DATA_QUALITY_FLAG,
+} as const;
