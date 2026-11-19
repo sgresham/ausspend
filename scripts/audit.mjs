@@ -80,6 +80,7 @@ const KNOWN_SOURCE_IDS = [
   'gilgandra-gpfs',
   'lockhart-gpfs',
   'coonamble-gpfs',
+  'weddin-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

@@ -52,10 +52,11 @@ import * as fixture49 from '../src/connectors/tweed-shire-gpfs/fixture.js';
 import * as fixture50 from '../src/connectors/uralla-gpfs/fixture.js';
 import * as fixture51 from '../src/connectors/warren-gpfs/fixture.js';
 import * as fixture52 from '../src/connectors/waverley-gpfs/fixture.js';
-import * as fixture53 from '../src/connectors/willoughby-gpfs/fixture.js';
-import * as fixture54 from '../src/connectors/wollondilly-gpfs/fixture.js';
-import * as fixture55 from '../src/connectors/wollongong-gpfs/fixture.js';
-import * as fixture56 from '../src/connectors/woollahra-gpfs/fixture.js';
+import * as fixture53 from '../src/connectors/weddin-gpfs/fixture.js';
+import * as fixture54 from '../src/connectors/willoughby-gpfs/fixture.js';
+import * as fixture55 from '../src/connectors/wollondilly-gpfs/fixture.js';
+import * as fixture56 from '../src/connectors/wollongong-gpfs/fixture.js';
+import * as fixture57 from '../src/connectors/woollahra-gpfs/fixture.js';
 
 export const GPFS_FIXTURES = [
   { id: 'bayside-gpfs', fixture: fixture0 },
@@ -111,8 +112,9 @@ export const GPFS_FIXTURES = [
   { id: 'uralla-gpfs', fixture: fixture50 },
   { id: 'warren-gpfs', fixture: fixture51 },
   { id: 'waverley-gpfs', fixture: fixture52 },
-  { id: 'willoughby-gpfs', fixture: fixture53 },
-  { id: 'wollondilly-gpfs', fixture: fixture54 },
-  { id: 'wollongong-gpfs', fixture: fixture55 },
-  { id: 'woollahra-gpfs', fixture: fixture56 },
+  { id: 'weddin-gpfs', fixture: fixture53 },
+  { id: 'willoughby-gpfs', fixture: fixture54 },
+  { id: 'wollondilly-gpfs', fixture: fixture55 },
+  { id: 'wollongong-gpfs', fixture: fixture56 },
+  { id: 'woollahra-gpfs', fixture: fixture57 },
 ] as const;
