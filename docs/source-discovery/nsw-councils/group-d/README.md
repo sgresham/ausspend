@@ -42,7 +42,7 @@ per-council inventory is therefore still the prerequisite for the next ingestion
 8. **Leeton** — signed audited FS FY2024-25 (plus FY2025-26).
 9. **Nambucca Valley** — audited AFS FY2024-25 (plus FY2025-26).
 10. **Narrabri** — FS FY2024-25 (plus FY2025-26).
-11. **Parkes** — audited FS YE 30 Jun 2025 (plus FY2025-26).
+11. **Parkes** — audited FS **YE 30 Jun 2026**, 6.31 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
 12. **Snowy Valleys** — signed audited FS FY2024-25.
 13. **Upper Hunter** — signed FS FY2024-25.
 14. **Yass Valley** — audited FS FY2024-25.
