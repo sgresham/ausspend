@@ -1,0 +1,17 @@
+import {
+  GRIFFITH_GPFS_ID,
+  GRIFFITH_GPFS_NAME,
+  GRIFFITH_GPFS_PUBLISHER,
+  GRIFFITH_GPFS_FISCAL_YEAR,
+  GRIFFITH_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: GRIFFITH_GPFS_ID,
+  name: GRIFFITH_GPFS_NAME,
+  publisher: GRIFFITH_GPFS_PUBLISHER,
+  fiscalYear: GRIFFITH_GPFS_FISCAL_YEAR,
+  dataQualityFlag: GRIFFITH_GPFS_DATA_QUALITY_FLAG,
+} as const;

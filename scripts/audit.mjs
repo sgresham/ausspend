@@ -92,6 +92,7 @@ const KNOWN_SOURCE_IDS = [
   'queanbeyan-palerang-gpfs',
   'goulburn-mulwaree-gpfs',
   'broken-hill-gpfs',
+  'griffith-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
