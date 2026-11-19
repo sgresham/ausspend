@@ -109,6 +109,7 @@ const KNOWN_SOURCE_IDS = [
   'forbes-gpfs',
   'bellingen-gpfs',
   'gunnedah-gpfs',
+  'parkes-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
