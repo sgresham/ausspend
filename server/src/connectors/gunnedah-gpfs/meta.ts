@@ -1,0 +1,17 @@
+import {
+  GUNNEDAH_GPFS_ID,
+  GUNNEDAH_GPFS_NAME,
+  GUNNEDAH_GPFS_PUBLISHER,
+  GUNNEDAH_GPFS_FISCAL_YEAR,
+  GUNNEDAH_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: GUNNEDAH_GPFS_ID,
+  name: GUNNEDAH_GPFS_NAME,
+  publisher: GUNNEDAH_GPFS_PUBLISHER,
+  fiscalYear: GUNNEDAH_GPFS_FISCAL_YEAR,
+  dataQualityFlag: GUNNEDAH_GPFS_DATA_QUALITY_FLAG,
+} as const;
