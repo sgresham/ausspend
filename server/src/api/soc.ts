@@ -198,6 +198,15 @@ import {
   JACANA_ENERGY_UNIT,
   JACANA_ENERGY_UNIT_LABEL,
   JACANA_ENERGY_UNIT_TO_CENTS,
+  TERRITORY_GENERATION_CAVEAT,
+  TERRITORY_GENERATION_ENTITY,
+  TERRITORY_GENERATION_ID,
+  TERRITORY_GENERATION_JURISDICTION,
+  TERRITORY_GENERATION_NAME,
+  TERRITORY_GENERATION_SOURCE_URL,
+  TERRITORY_GENERATION_UNIT,
+  TERRITORY_GENERATION_UNIT_LABEL,
+  TERRITORY_GENERATION_UNIT_TO_CENTS,
   ENERGY_QUEENSLAND_CAVEAT,
   ENERGY_QUEENSLAND_ENTITY,
   ENERGY_QUEENSLAND_ID,
@@ -300,8 +309,8 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority; and the first NT source, Jacana Energy only) is a separate
- * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. Jacana Energy is a Northern Territory Government Owned Corporation; the NT GOC list is not claimed to be complete and no NT total is created.
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority; and the first two NT sources, Jacana Energy and Territory Generation only) is a separate
+ * source and is never summed with the others. There is no NT total: the two NT entities are separate GOCs and the NT GOC list is not claimed to be complete. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. Jacana Energy and Territory Generation are separate Northern Territory Government Owned Corporations; they are never combined with each other, and the NT GOC list is not claimed to be complete and no NT total is created.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
  * `soc_component_of`, `soc_breakdown`). They are grouped for the UI but are
@@ -663,6 +672,17 @@ const SOC_SOURCES = [
     unit_to_cents: JACANA_ENERGY_UNIT_TO_CENTS,
     caveat: JACANA_ENERGY_CAVEAT,
   },
+  {
+    source_id: TERRITORY_GENERATION_ID,
+    name: TERRITORY_GENERATION_NAME,
+    entity: TERRITORY_GENERATION_ENTITY,
+    jurisdiction: TERRITORY_GENERATION_JURISDICTION,
+    discovery_page: TERRITORY_GENERATION_SOURCE_URL,
+    unit: TERRITORY_GENERATION_UNIT,
+    unit_label: TERRITORY_GENERATION_UNIT_LABEL,
+    unit_to_cents: TERRITORY_GENERATION_UNIT_TO_CENTS,
+    caveat: TERRITORY_GENERATION_CAVEAT,
+  },
 ] as const;
 
 export const getSoc: RequestHandler = async (req, res) => {
@@ -787,6 +807,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority; and the first NT source, Jacana Energy only — the NT GOC list is not claimed to be complete and no NT total is created). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. Jacana Energy is a Northern Territory Government Owned Corporation and is never combined with the NSW/QLD/WA entities; the NT GOC list is not claimed to be complete and no NT total is created. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority; and the first two NT sources, Jacana Energy and Territory Generation only — the NT GOC list is not claimed to be complete and no NT total is created). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. Jacana Energy and Territory Generation are separate Northern Territory Government Owned Corporations and are never combined with the NSW/QLD/WA entities or with each other; the NT GOC list is not claimed to be complete and no NT total is created. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };

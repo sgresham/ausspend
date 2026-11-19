@@ -30,8 +30,8 @@ Generated from the checked-in connector registry by `npm run generate:sources` a
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| Registered spending connectors      | 104   |
-| Active spending connectors          | 102   |
+| Registered spending connectors      | 105   |
+| Active spending connectors          | 103   |
 | Degraded spending connectors        | 0     |
 | Stub spending connectors            | 2     |
 | NSW council GPFS sources            | 44    |
