@@ -1,0 +1,17 @@
+import {
+  SINGLETON_GPFS_ID,
+  SINGLETON_GPFS_NAME,
+  SINGLETON_GPFS_PUBLISHER,
+  SINGLETON_GPFS_FISCAL_YEAR,
+  SINGLETON_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: SINGLETON_GPFS_ID,
+  name: SINGLETON_GPFS_NAME,
+  publisher: SINGLETON_GPFS_PUBLISHER,
+  fiscalYear: SINGLETON_GPFS_FISCAL_YEAR,
+  dataQualityFlag: SINGLETON_GPFS_DATA_QUALITY_FLAG,
+} as const;
