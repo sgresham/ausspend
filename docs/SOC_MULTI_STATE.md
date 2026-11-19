@@ -3,14 +3,14 @@
 **Status: inventory plus nine QLD pilots (Energy Queensland, CS Energy, Stanwell,
 Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North, NQBP and
 CleanCo Queensland Limited — CleanCo deferred 2026-11-19: FY2025-26 is Flipsnack-only with no
-parseable official PDF, so no rows) the first nine WA GTE pilots (Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Ports) plus Kimberley Ports Authority (deferred 2026-11-19: no printed total employee benefits expense; no rows) and Pilbara Ports Authority (deferred 2026-11-19: official annual-report and publications pages are Incapsula JavaScript shells; no rows). No other state connector,
+parseable official PDF, so no rows) the first nine WA GTE pilots (Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Ports) plus Kimberley Ports Authority (deferred 2026-11-19: no printed total employee benefits expense; no rows) and Pilbara Ports Authority (deferred 2026-11-19: official annual-report and publications pages are Incapsula JavaScript shells; no rows), and the first NT GOC pilot (Jacana Energy, implemented 2026-11-19: five entity-level rows; the NT GOC list is not claimed to be complete and no NT total is created). No other state connector,
 no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
 were read-only page/API probes made on **2026-11-17**. The QLD pilots added on **2026-11-19** are
 entity-level adapters in the existing SOC framework; they do not create a QLD total and are never
-added to government spending, the PNFC benchmark or each other. The local app database was **not**
-written to by this documentation work; the documented baseline is **515,449 measures and 105 NSW
-SOC rows**. The older brief figure of **515,413 is stale** and is not used here. No 3001/5173 or
-production nginx change was made.
+added to government spending, the PNFC benchmark or each other. The inventory itself was
+read-only; the separate NT Jacana Energy targeted ingest on 2026-11-19 added 5 entity-level rows
+(measures **998,429 → 998,434**; SOC rows **190 → 195**) and created **no** NT/state/national
+aggregate row. No 3001/5173 or production nginx change was made.
 
 This document inventories the _entity-level_ state-owned commercial sector in the seven
 jurisdictions the owner asked about. It deliberately does **not** call every regime "NSW SOC".
@@ -84,7 +84,7 @@ Counts below are the counts of the _named lists at the cited source_, not an est
 | **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                                                                                                                                                                                                                                                                                                                                                                     | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
 | **ACT** | Territory-owned Corporations (legal) / PTE/PNFC (budget classification)                                 | ACT Budget 2026-27 "Classification of ACT Entities"                                                                                      | **6 PTE/PNFC entities**; legal TOC list not separately consolidated                                      | Entity reports published; URLs not individually verified                                                                                                                                                                                                                                                                                                                                                                | **Medium-low** — only Icon Water is a classic commercial utility; class mismatch | **5**         |
 | **SA**  | Public corporations + statutory corporations                                                            | _Public Corporations Act 1993_ (SA); no single consolidated public list found                                                            | **No reliable count**; 3 examples verified from enabling Acts                                            | Entity reports published; no consolidated list                                                                                                                                                                                                                                                                                                                                                                          | **Low-medium** — entity-by-entity; list must be confirmed first                  | **6**         |
-| **NT**  | Government Owned Corporations (GOCs) + government business divisions                                    | _Government Owned Corporations Act 2001_ (NT); NTTC client-services table; entity disclosures                                            | **No single consolidated list**; 3 GOCs confirmed (Power and Water, Territory Generation, Jacana Energy) | Jacana 2025-26 PDF verified; Power and Water/Territory Generation not opened                                                                                                                                                                                                                                                                                                                                            | **Low-medium** — only 3 confirmed; Act declares per constituting Act             | **7**         |
+| **NT**  | Government Owned Corporations (GOCs) + government business divisions                                    | _Government Owned Corporations Act 2001_ (NT); NTTC client-services table; entity disclosures                                            | **No single consolidated list**; 3 GOCs confirmed (Power and Water, Territory Generation, Jacana Energy); the list is not claimed complete | **Jacana Energy FY2025-26 implemented 2026-11-19 (five entity-level rows; explicit $'000; every printed subtotal and result bridge reconciles)**; Power and Water/Territory Generation not opened                                                                                                                                                                                                                        | **Low-medium** — one entity implemented; NT GOC list not complete               | **7**         |
 
 **Unit and comparability finding.** No state publishes one unit across all of its state-owned
 entities. Even within a state, an annual report may print `$'000` or `$m`, and some entities may
@@ -1471,6 +1471,59 @@ Ports, Kimberley Ports Authority and every other WA GTE and QLD/NSW SOC; no WA t
   WA GTE, a QLD/NSW SOC, a WA total, a national total, or another SOC line. No rows from the
   2025-26 report were ingested; any future rows would be provisional and unverified.
 
+## NT pilot — Jacana Energy (implemented 2026-11-19)
+
+This is the **first Northern Territory state-owned-entity source**. It is **Jacana Energy only** —
+the trading name of Power Retail Corporation, a Northern Territory Government Owned Corporation
+(GOC) under the Power Retail Corporation Act 2014. The NT GOC list is **not** authoritatively
+consolidated here: this adapter ingests one self-identifying, report-verifiable entity and does not
+claim or invent the full NT GOC set. It is separate from Power and Water Corporation, Territory
+Generation and every other NT GOC/government business division, and from every NSW/QLD/WA SOC/GTE.
+No NT total, state total or national total is created.
+
+- **Source id / entity:** `nt-jacana-energy` / Jacana Energy (`Power Retail Corporation` trading as
+  Jacana Energy).
+- **Report:** Jacana Energy Annual Report 2025–26, for the year ended 30 June 2026 (FY2025-26).
+- **Discovery page:** <https://www.jacanaenergy.com.au/about/who-we-are> (HTTP 200, 63,712 bytes);
+  it states Jacana is a government-owned corporation and links the annual reports. The PDF URL is
+  discovered from that page and is not hard-coded. The discovered FY2025-26 PDF is
+  <https://www.jacanaenergy.com.au/sites/default/files/2026-10/Jacana%20Energy%20Annual%20Report%202025-2026.pdf>
+  (HTTP 200, `application/pdf`, **2,435,076 bytes**, 60 PDF pages, Last-Modified 2026-10-23).
+- **Archive:** `~/ausspend-source-archive/nt-jacana-energy/` (outside the repo; not committed). It
+  contains the exact PDF, `SHA256SUMS` and `retrieval.json` with the URL, discovery page, retrieval
+  date, bytes, PDF page count and SHA-256. The connector re-verifies the hash before parsing.
+  **SHA-256:** `c5ac0c972e9021f452789d9e240956f42d173d2dd42e4f55fc78c80db831fc55`.
+- **Printed unit and statement:** the audited statement and notes print an explicit `$’000` unit.
+  The face Statement of profit or loss and other comprehensive income is PDF page 30 (printed page
+  28); Note 4 Revenue is PDF page 42 (printed page 40) and Note 5 Expenses is PDF page 43 (printed
+  page 41). The 2026 column prints Total revenue **596,639** (Note 4), Total expenses **572,049**
+  (Note 5), Employee benefits expense **13,606**, Depreciation and amortisation expense **842** and
+  Profit for the year **17,210**. Profit before tax is **24,590** and income tax expense is
+  **7,380**.
+- **Reconciliation (zero tolerance):** Note 4(a) electricity subtotal (456,840 + 4,812 = 461,652);
+  Note 4 Total revenue (461,652 + 131,347 + 3,640 = 596,639); Note 5(a) energy costs subtotal
+  (531,675 + 9,529 + 3,627 + 321 = 545,152); Note 5(b) employee benefits subtotal (11,354 + 1,183 +
+  47 + 678 + 344 = 13,606); Note 5(e) other expenses subtotal (200 + 3,098 + 205 + 27 + 1,775 +
+  917 + 1,129 + 4,376 = 11,727); Note 5 Total expenses (545,152 + 13,606 + 652 + 842 + 11,727 + 70
+  = 572,049); profit before tax (596,639 − 572,049 = 24,590); net result (24,590 − 7,380 =
+  17,210); total comprehensive income = 17,210 (other comprehensive income nil). The face-line
+  values are also required to equal the Note 4/5 totals. Any mismatch defers the whole document
+  with 0 rows.
+- **Rows:** exactly five entity-level SOC statement lines — `total_revenue`, `total_expenses`,
+  `employee_expenses`, `depreciation_amortisation`, `net_result` — with jurisdiction `NT`,
+  jurisdiction_level `soc`, aggregation_role `agency_detail`, measure_type `actual`,
+  `verified:false`, `potential_double_count:false` and a deterministic natural key.
+- **Implementation:** `server/src/connectors/soc/nt/jacana-energy.ts`, registered in
+  `server/src/connectors/registry.ts`, exported from `server/src/connectors/index.ts`, listed in
+  `/api/soc`, the SOC page and the ingestion runner (`scripts/ingest-soc.ts`). Tests:
+  `server/test/nt-jacana-energy.test.ts` (discovery/latest, filename/year conversion, unit gate,
+  ambiguous-unit gate, zero-tolerance reconciliation failure, natural-key/idempotency and
+  no-cross-entity/NT aggregate).
+- **Caveat:** entity-level only. Never add Jacana Energy to government program spending, the PNFC
+  benchmark, another NT GOC or government business division, another state's SOC/GTE, an NT total,
+  a state total, a national total, or another SOC line. The NT GOC list is not claimed complete;
+  the source is one entity, not the Territory.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -1572,8 +1625,9 @@ These rules follow the existing NSW SOC discipline in `SOC_INGESTION.md` and
 - **Preserve provenance.** Record the entity's legal name, trading name, state, legal class,
   regulator, report title, financial year, page/table, URL, SHA-256 and retrieval date.
 
-The existing DB baseline must stay at **515,449 measures / 105 NSW SOC rows**. This document adds
-zero rows.
+The inventory itself adds zero rows. The separate NT Jacana Energy targeted ingest on 2026-11-19
+added 5 entity-level rows (measures **998,429 → 998,434**; SOC rows **190 → 195**) and created no
+NT/state/national aggregate row.
 
 ## Ambiguities and questions for the owner
 
@@ -1632,14 +1686,17 @@ that the page will be stable.
 
 ## What this document does not do
 
-- It does not ingest a row, start a state connector, write a schema, change an API, or touch the
-  database.
-- It does not extract financial figures from any state annual report.
-- It does not create a state-by-state total, a national total, or a "SOC spending" figure.
+- The inventory findings above are read-only. The NT Jacana Energy section below records a
+  separately implemented entity adapter and its targeted ingest proof; the other jurisdictions
+  remain inventory only.
+- It does not establish a complete NT GOC list from one entity's annual report.
+- It does not create an NT total, a state-by-state total, a national total, or a "SOC spending"
+  figure.
 - It does not declare any unconfirmed entity "in scope". Where the list is partial, the gap is
   stated.
-- It does not change 3001/5173 or production nginx. The DB remains at **515,449 measures / 105 NSW
-  SOC rows**; the older 515,413 figure is stale.
+- It does not change 3001/5173 or production nginx. The only new rows are the five NT Jacana
+  Energy entity-level rows recorded in the targeted-ingest proof above; no NT/state/national
+  aggregate row was created.
 
 ## Recommended next action
 
@@ -1653,7 +1710,11 @@ Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Por
 verified against their 2025-26 audited annual reports. Kimberley Ports Authority is implemented but
 deferred 2026-11-19 (no printed total employee benefits expense; no rows). Pilbara Ports Authority is
 implemented but deferred 2026-11-19 because its official annual-report and publications pages are
-Incapsula JavaScript shells and no official current PDF was obtainable (no rows). Aqwest remains not resolvable (JS-only
+Incapsula JavaScript shells and no official current PDF was obtainable (no rows). The first NT
+pilot, Jacana Energy, is implemented and verified against its FY2025-26 audited annual report
+(five entity-level rows); it is one NT GOC only and the NT GOC list is not claimed complete, so
+do not add Power and Water, Territory Generation, another NT GOC or an NT total until the owner
+confirms the list and intended use. Aqwest remains not resolvable (JS-only
 official page; no rows). Port of
 Townsville remains deferred, not merged data. They remain single-entity,
 read-only proofs: do not add another QLD GOC, a QLD total or another state until the owner confirms
@@ -1662,4 +1723,4 @@ reconciliation; its rows must never be summed with Energy Queensland, CS Energy,
 Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North, NQBP, CleanCo
 Queensland Limited, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports,
 DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority,
-Pilbara Ports Authority or government spending.
+Pilbara Ports Authority, Jacana Energy or government spending.

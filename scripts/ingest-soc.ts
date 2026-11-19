@@ -280,6 +280,18 @@ import {
   PILBARA_PORTS_UNIT,
   PILBARA_PORTS_UNIT_LABEL,
   PILBARA_PORTS_UNIT_TO_CENTS,
+  JACANA_ENERGY_CAVEAT,
+  JACANA_ENERGY_ENTITY,
+  JACANA_ENERGY_ID,
+  JACANA_ENERGY_JURISDICTION,
+  JACANA_ENERGY_LEGAL_CLASS,
+  JACANA_ENERGY_LICENSE,
+  JACANA_ENERGY_NAME,
+  JACANA_ENERGY_PUBLISHER,
+  JACANA_ENERGY_SOURCE_URL,
+  JACANA_ENERGY_UNIT,
+  JACANA_ENERGY_UNIT_LABEL,
+  JACANA_ENERGY_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -454,6 +466,7 @@ export const SOC_SOURCE_IDS = [
   MID_WEST_PORTS_ID,
   KIMBERLEY_PORTS_ID,
   PILBARA_PORTS_ID,
+  JACANA_ENERGY_ID,
 ] as const;
 
 /**
@@ -1533,8 +1546,7 @@ async function writeKimberleyPortsManifest(): Promise<void> {
 async function writePilbaraPortsManifest(): Promise<void> {
   const records = await listArchivedRecords({ source_id: PILBARA_PORTS_ID });
   const manifestPath = path.resolve(
-    process.env.PILBARA_PORTS_MANIFEST ??
-      'docs/source-archive/wa-pilbara-ports-annual-report.json',
+    process.env.PILBARA_PORTS_MANIFEST ?? 'docs/source-archive/wa-pilbara-ports-annual-report.json',
   );
   const manifest = {
     entity: PILBARA_PORTS_ENTITY,
@@ -1558,6 +1570,40 @@ async function writePilbaraPortsManifest(): Promise<void> {
     })),
     notes:
       'WA SOC: Pilbara Ports Authority only, a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)) and port authority (Port Authorities Act 1999 (WA)). The official annual-report and publications pages answer plain fetches with an Incapsula JavaScript challenge shell; the official sitemap lists no PDF document and the WA Parliament tabled-papers route is behind an Azure WAF JavaScript challenge. The adapter therefore defers FY2025-26 with zero rows; no stale prior-year row is created, no unofficial/search-engine copy is used and no archived PDF is committed. Never add Pilbara Ports Authority rows to government program spending, the PNFC benchmark, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
+async function writeJacanaEnergyManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: JACANA_ENERGY_ID });
+  const manifestPath = path.resolve(
+    process.env.JACANA_ENERGY_MANIFEST ?? 'docs/source-archive/nt-jacana-energy-annual-report.json',
+  );
+  const manifest = {
+    entity: JACANA_ENERGY_ENTITY,
+    legal_class: JACANA_ENERGY_LEGAL_CLASS,
+    jurisdiction: JACANA_ENERGY_JURISDICTION,
+    dataset: JACANA_ENERGY_NAME,
+    publisher: JACANA_ENERGY_PUBLISHER,
+    discovery_page: JACANA_ENERGY_SOURCE_URL,
+    license: JACANA_ENERGY_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${JACANA_ENERGY_UNIT_LABEL} (${JACANA_ENERGY_UNIT}; x${JACANA_ENERGY_UNIT_TO_CENTS} cents per unit)`,
+    caveat: JACANA_ENERGY_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "NT SOC: Jacana Energy only, trading name of Power Retail Corporation, a Northern Territory Government Owned Corporation (Power Retail Corporation Act 2014). The latest annual report is discovered from the official 'Who we are' page (no hard-coded PDF URL) and the exact PDF is SHA-256 archived outside the repo with SHA256SUMS and retrieval.json. The audited statement and notes print an explicit $'000 unit; the adapter reads Note 4 Total revenue, Note 5 Total expenses and the face-statement Employee benefits expense, Depreciation and amortisation expense and Profit for the year. Every printed subtotal and result bridge reconciles exactly at zero tolerance on the FY2025-26 report. The NT GOC list is not claimed to be complete. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Jacana Energy rows to government program spending, the PNFC benchmark, another NT GOC, another state's SOC/GTE, an NT total, a state total, a national total, or any other SOC.",
   };
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -1651,6 +1697,7 @@ async function main(): Promise<void> {
       [MID_WEST_PORTS_ID]: writeMidWestPortsManifest,
       [KIMBERLEY_PORTS_ID]: writeKimberleyPortsManifest,
       [PILBARA_PORTS_ID]: writePilbaraPortsManifest,
+      [JACANA_ENERGY_ID]: writeJacanaEnergyManifest,
     };
     for (const sourceId of selectedSourceIds) {
       const writer = manifestWriters[sourceId];
@@ -2420,10 +2467,39 @@ async function main(): Promise<void> {
       `[ingest:soc] ${PILBARA_PORTS_ID} rows=${pilbaraPortsRows} source_documents=${pilbaraPortsArchived.length} verified=${pilbaraPortsVerified} potential_double_count=${pilbaraPortsDoubleCount} deferred_documents=${pilbaraPortsDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed; FY2025-26 deferred 2026-11-19 because the official annual-report and publications pages are Incapsula JavaScript shells and no official current PDF was obtainable; no prior-year or unofficial copy is ingested)`,
     );
     for (const group of pilbaraPortsByLine) {
-      console.log(`[ingest:soc] ${PILBARA_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+      console.log(
+        `[ingest:soc] ${PILBARA_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const jacanaRows = await MeasureModel.countDocuments({ source_id: JACANA_ENERGY_ID });
+    const jacanaVerified = await MeasureModel.countDocuments({
+      source_id: JACANA_ENERGY_ID,
+      verified: true,
+    });
+    const jacanaDoubleCount = await MeasureModel.countDocuments({
+      source_id: JACANA_ENERGY_ID,
+      potential_double_count: true,
+    });
+    const jacanaByLine = await MeasureModel.aggregate([
+      { $match: { source_id: JACANA_ENERGY_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const jacanaDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: JACANA_ENERGY_ID,
+      status: 'deferred',
+    });
+    const jacanaArchived = await listArchivedRecords({ source_id: JACANA_ENERGY_ID });
+    console.log(
+      `[ingest:soc] ${JACANA_ENERGY_ID} rows=${jacanaRows} source_documents=${jacanaArchived.length} verified=${jacanaVerified} potential_double_count=${jacanaDoubleCount} deferred_documents=${jacanaDeferred} (NT entity-level SOC statement lines for Jacana Energy only; the NT GOC list is not claimed to be complete and no NT/state/national total is printed or computed)`,
+    );
+    for (const group of jacanaByLine) {
+      console.log(
+        `[ingest:soc] ${JACANA_ENERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
     }
     console.log(
-      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD and WA SOC adapters intentionally not implemented)`,
+      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD, WA and NT SOC adapters intentionally not implemented)`,
     );
 
     const failed = result.results.filter((entry) => entry.log_status === 'error').length;
