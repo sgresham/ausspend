@@ -1,0 +1,17 @@
+import {
+  COOLAMON_GPFS_ID,
+  COOLAMON_GPFS_NAME,
+  COOLAMON_GPFS_PUBLISHER,
+  COOLAMON_GPFS_FISCAL_YEAR,
+  COOLAMON_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: COOLAMON_GPFS_ID,
+  name: COOLAMON_GPFS_NAME,
+  publisher: COOLAMON_GPFS_PUBLISHER,
+  fiscalYear: COOLAMON_GPFS_FISCAL_YEAR,
+  dataQualityFlag: COOLAMON_GPFS_DATA_QUALITY_FLAG,
+} as const;
