@@ -11440,6 +11440,72 @@ unit-conflict rejection, a broken-subtotal rejection, the B1-1 bridge, exact rec
 natural-key stability and additive-only idempotent 17-row ingestion. Full evidence:
 `docs/source-discovery/nsw-councils/hay-gpfs.md`.
 
+### 7.123 One hundred and twenty-third landed council — Carrathool Shire Council FY2025-26 standalone GPFS (landed 2026-11-20)
+
+**Outcome: landed — 16 statement rows from the official audited Annual Financial Statements for the
+year ended 30 June 2026.** The cheap check is half-confirmed: the annual-report page and page
+sitemap expose nothing newer than the combined FY2023-24 narrative report. The premise that no
+current audited GPFS is retrievable is **falsified**: the council publishes the FY2025-26 GPFS as
+official WordPress media, discoverable from its own media REST index.
+
+**Stale-year check.** Checked 2026-11-20. The annual-report page
+<https://carrathool.nsw.gov.au/about-council/publications/annual-report> and
+<https://carrathool.nsw.gov.au/page-sitemap.xml> list narrative annual reports only to
+`Combined-Master-Annual-Report-2023-2024.pdf`. The official media index
+(<https://carrathool.nsw.gov.au/wp-json/wp/v2/media?search=annual%20financial%20statements&per_page=100>)
+returns the current FY2025-26 statements, an advertisement, the prior FY2024-25 file (bare-year
+filename, not selected), and planning-agreement/contribution statements (excluded). No FY2026-27
+statements were published.
+
+**Audit status.** The FY2025-26 GPFS was authorised for issue on 15 September 2026 and embeds the
+signed, **unmodified** Auditor-General opinions for the GPFS and special purpose statements, dated
+30 September 2026 (Chris Harper, Director, Financial Audit, delegate of the Auditor-General for New
+South Wales). No audit placeholder and no older-year substitution.
+
+**Source and year.** Exact PDF
+<https://carrathool.nsw.gov.au/wp-content/uploads/Public-Exhibition/Carrathool-Shire-Annual-Financial-Statements-25-26.pdf>
+(also the documented fallback pin; identical bytes at the Agendas-Minutes path). The PDF is
+**5,397,495 bytes**, **114 pages**, SHA-256
+`cf6c36b1c5fdeb5b95f21a4c2bac45a7b7715b38fa71cd8d5aa602ce11757ec4`, archived outside the repo at
+`carrathool-gpfs/Carrathool-Shire-Annual-Financial-Statements-25-26.pdf`. On 2026-11-20 the
+annual-report page, media index and PDF returned **HTTP 200** to plain `curl/8.5.0` and to headless
+Chromium (no WAF); the browser helper (`scripts/carrathool-gpfs-browser.ts`) discovered the PDF live
+and returned **5,397,495** bytes.
+
+**Exact reconciliation ($'000).** Total income `36,029` = six revenue components; expenses excluding
+depreciation `15,372` = five expense components (including the printed net loss on disposal `877`);
+`15,372` + depreciation `6,549` = total expenses `21,921` = B1-1 expense total; `36,029` −
+`21,921` = net result `14,108`; B1-1 income `36,029`, operating result `14,108`, grants `23,420`
+(= operating `21,467` + capital `1,953`) and carrying amount `392,865` all reconcile; comprehensive
+income `14,108` + other comprehensive income `22,826` (revaluation `22,823` + other movements `3`)
+= `36,934`; total assets `392,865` − liabilities `8,695` = net assets `384,170` = accumulated surplus
+`185,729` + IPPE revaluation surplus `198,441` = Council equity interest = total equity; cash
+operating `21,879` + investing `(18,304)` + financing `(332)` = net change `3,243`, opening `34,717`
+plus the change = closing `37,960` = SoFP cash; the printed before-capital result `12,155` is
+evidence only. The printed unit is `$ '000`; a missing or conflicting unit is rejected.
+
+**Rows.** 16 rows, source id `carrathool-gpfs`, `source_dataset` "Carrathool Shire Council GPFS
+2025-26", `measure_type: "actual"`, `fiscal_year: "2025-26"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Carrathool Shire Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. Emitted AUD cents: rates `682,600,000`, user
+charges `331,000,000`, other revenue `52,400,000`, operating grants `2,146,700,000`, capital grants
+`195,300,000`, interest `194,900,000`, total revenue `3,602,900,000`, employee `941,300,000`,
+materials `456,400,000`, borrowing `6,200,000`, other expenses `45,600,000`, net loss on disposal
+`87,700,000`, total expenses excluding depreciation `1,537,200,000`, depreciation `654,900,000`,
+total expenses `2,192,100,000`, net result `1,410,800,000`. The B1-1 function split, balance-sheet
+components and cash-flow lines are reconciliation evidence only.
+
+**No double count.** Every row is `aggregation_role: "agency_detail"` with no `region_id` and no
+`location`/LGA allocation; government grant rows carry `potential_double_count: true` and are not
+added to expenditure. One council only; no council aggregate, state total or cross-council sum.
+
+**Checks.** Focused tests cover official media-index discovery/current-year selection, Public
+Exhibition preference, prior-year and future-year rejection, bare-year exclusion,
+planning-agreement/advertisement exclusion, the browser path with plain fallback, the unit gate, a
+unit-conflict rejection, a broken-subtotal rejection, the B1-1 bridge, exact reconciliation,
+natural-key stability and additive-only idempotent 16-row ingestion. Full evidence:
+`docs/source-discovery/nsw-councils/carrathool-gpfs.md`.
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
