@@ -79,6 +79,7 @@ const KNOWN_SOURCE_IDS = [
   'coolamon-gpfs',
   'gilgandra-gpfs',
   'lockhart-gpfs',
+  'coonamble-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

@@ -1,0 +1,17 @@
+import {
+  COONAMBLE_GPFS_ID,
+  COONAMBLE_GPFS_NAME,
+  COONAMBLE_GPFS_PUBLISHER,
+  COONAMBLE_GPFS_FISCAL_YEAR,
+  COONAMBLE_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: COONAMBLE_GPFS_ID,
+  name: COONAMBLE_GPFS_NAME,
+  publisher: COONAMBLE_GPFS_PUBLISHER,
+  fiscalYear: COONAMBLE_GPFS_FISCAL_YEAR,
+  dataQualityFlag: COONAMBLE_GPFS_DATA_QUALITY_FLAG,
+} as const;
