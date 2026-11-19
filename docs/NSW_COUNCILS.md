@@ -11454,8 +11454,9 @@ official WordPress media, discoverable from its own media REST index.
 `Combined-Master-Annual-Report-2023-2024.pdf`. The official media index
 (<https://carrathool.nsw.gov.au/wp-json/wp/v2/media?search=annual%20financial%20statements&per_page=100>)
 returns the current FY2025-26 statements, an advertisement, the prior FY2024-25 file (bare-year
-filename, not selected), and planning-agreement/contribution statements (excluded). No FY2026-27
-statements were published.
+filename, not selected), and planning-agreement/contribution statements (excluded). A broader media
+search also finds FY2024-25 and draft FY2025-26 narrative annual reports; neither is the audited GPFS
+and neither is ingested. No FY2026-27 statements were published.
 
 **Audit status.** The FY2025-26 GPFS was authorised for issue on 15 September 2026 and embeds the
 signed, **unmodified** Auditor-General opinions for the GPFS and special purpose statements, dated

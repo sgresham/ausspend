@@ -15,7 +15,13 @@ Checked on **2026-11-20**. The official annual-report page
 <https://carrathool.nsw.gov.au/about-council/publications/annual-report> and the WordPress page
 sitemap (<https://carrathool.nsw.gov.au/page-sitemap.xml>) expose annual reports only up to the
 combined **FY2023-24** narrative report (`Combined-Master-Annual-Report-2023-2024.pdf`). No
-FY2024-25 or FY2025-26 narrative report is linked there as at 2026-11-20.
+FY2024-25 or FY2025-26 narrative report is linked there as at 2026-11-20. A broader official media
+search does find a FY2024-25 narrative report
+(`https://carrathool.nsw.gov.au/wp-content/uploads/Public-Exhibition/Master-Annual-Report-2024-2025.pdf`)
+and a **draft** FY2025-26 narrative report published 2026-11-12
+(`https://carrathool.nsw.gov.au/wp-content/uploads/Agendas-Minutes/Separately-Circulated/2026-November/Draft-Annual-Report-25-2026.pdf`);
+neither is the audited financial statements and neither is ingested. The audited GPFS is published
+standalone, as listed next.
 
 The council's official media index
 (<https://carrathool.nsw.gov.au/wp-json/wp/v2/media?search=annual%20financial%20statements&per_page=100>)
