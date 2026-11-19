@@ -93,6 +93,7 @@ const KNOWN_SOURCE_IDS = [
   'goulburn-mulwaree-gpfs',
   'broken-hill-gpfs',
   'griffith-gpfs',
+  'lithgow-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
