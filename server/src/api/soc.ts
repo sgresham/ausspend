@@ -81,6 +81,15 @@ import {
   NQBP_UNIT,
   NQBP_UNIT_LABEL,
   NQBP_UNIT_TO_CENTS,
+  WATER_CORPORATION_CAVEAT,
+  WATER_CORPORATION_ENTITY,
+  WATER_CORPORATION_ID,
+  WATER_CORPORATION_JURISDICTION,
+  WATER_CORPORATION_NAME,
+  WATER_CORPORATION_SOURCE_URL,
+  WATER_CORPORATION_UNIT,
+  WATER_CORPORATION_UNIT_LABEL,
+  WATER_CORPORATION_UNIT_TO_CENTS,
   ENERGY_QUEENSLAND_CAVEAT,
   ENERGY_QUEENSLAND_ENTITY,
   ENERGY_QUEENSLAND_ID,
@@ -183,8 +192,8 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP) is a separate
- * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together.
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North NQBP and Water Corporation) is a separate
+ * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together. Water Corporation is a WA Government Trading Enterprise and is never combined with them.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
  * `soc_component_of`, `soc_breakdown`). They are grouped for the UI but are
@@ -403,6 +412,17 @@ const SOC_SOURCES = [
     unit_to_cents: NQBP_UNIT_TO_CENTS,
     caveat: NQBP_CAVEAT,
   },
+  {
+    source_id: WATER_CORPORATION_ID,
+    name: WATER_CORPORATION_NAME,
+    entity: WATER_CORPORATION_ENTITY,
+    jurisdiction: WATER_CORPORATION_JURISDICTION,
+    discovery_page: WATER_CORPORATION_SOURCE_URL,
+    unit: WATER_CORPORATION_UNIT,
+    unit_label: WATER_CORPORATION_UNIT_LABEL,
+    unit_to_cents: WATER_CORPORATION_UNIT_TO_CENTS,
+    caveat: WATER_CORPORATION_CAVEAT,
+  },
 ] as const;
 
 export const getSoc: RequestHandler = async (req, res) => {
@@ -527,6 +547,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North NQBP and Water Corporation). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together. Water Corporation is a WA Government Trading Enterprise and is never combined with them. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };
