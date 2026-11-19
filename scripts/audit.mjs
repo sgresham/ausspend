@@ -72,6 +72,7 @@ const KNOWN_SOURCE_IDS = [
   'kyogle-gpfs',
   'junee-gpfs',
   'uralla-gpfs',
+  'cootamundra-gundagai-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
