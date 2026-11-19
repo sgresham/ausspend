@@ -44,6 +44,7 @@ import { fetchWilloughbyGpfsViaBrowser } from './willoughby-gpfs-browser.js';
 import { fetchWollongongGpfsViaBrowser } from './wollongong-gpfs-browser.js';
 import { fetchCessnockGpfsViaBrowser } from './cessnock-gpfs-browser.js';
 import { fetchKiamaGpfsViaBrowser } from './kiama-gpfs-browser.js';
+import { fetchLismoreGpfsViaBrowser } from './lismore-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -52,6 +53,10 @@ import {
   KIAMA_GPFS_ID,
   createKiamaGpfsConnector,
 } from '../server/src/connectors/kiama-gpfs/index.js';
+import {
+  LISMORE_GPFS_ID,
+  createLismoreGpfsConnector,
+} from '../server/src/connectors/lismore-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -169,7 +174,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - ballina-gpfs  Annual-report GPFS: Ballina Shire Council's audited FY2024-25 GPFS (embedded in annual report)
  *   - cessnock-gpfs  Standalone AFS cure: Cessnock City Council's audited FY2024-25 GPFS (separate Annual Financial Statements PDF)
  *   - kiama-gpfs  Standalone FS cure: Kiama Municipal Council's audited FY2024-25 GPFS (separate Financial Statements 2024-25 PDF)
- *   - lismore-gpfs  Annual-report check: Lismore City Council FY2024-25 (deferred: annual report has no audited GPFS section; separate Financial reports 2024/25 PDF recorded for a cure)
+ *   - lismore-gpfs  Standalone FS cure: Lismore City Council's audited FY2024-25 GPFS (signed Financial reports 2024/25 PDF)
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -528,6 +533,23 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] kiama-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createKiamaGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === LISMORE_GPFS_ID) {
+      // Lismore's official host can return a WAF challenge to a plain HTTP
+      // client. The documented headless Chromium path loads the Annual and
+      // Financial Reports page, the connector still discovers the signed
+      // FY2024-25 FS link from the cleared HTML and re-verifies the exact
+      // bytes. (The FY2024-25 annual report itself has no GPFS section.)
+      console.log('[ingest:nsw] lismore-gpfs: browser discovery/download starting');
+      const fetched = await fetchLismoreGpfsViaBrowser();
+      console.log(`[ingest:nsw] lismore-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createLismoreGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
