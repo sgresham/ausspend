@@ -1,0 +1,17 @@
+import {
+  TAMWORTH_GPFS_ID,
+  TAMWORTH_GPFS_NAME,
+  TAMWORTH_GPFS_PUBLISHER,
+  TAMWORTH_GPFS_FISCAL_YEAR,
+  TAMWORTH_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: TAMWORTH_GPFS_ID,
+  name: TAMWORTH_GPFS_NAME,
+  publisher: TAMWORTH_GPFS_PUBLISHER,
+  fiscalYear: TAMWORTH_GPFS_FISCAL_YEAR,
+  dataQualityFlag: TAMWORTH_GPFS_DATA_QUALITY_FLAG,
+} as const;

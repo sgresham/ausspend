@@ -48,6 +48,7 @@ import { fetchLismoreGpfsViaBrowser } from './lismore-gpfs-browser.js';
 import { fetchPortStephensGpfsViaBrowser } from './port-stephens-gpfs-browser.js';
 import { fetchWaggaWaggaGpfsViaBrowser } from './wagga-wagga-gpfs-browser.js';
 import { fetchEurobodallaGpfsViaBrowser } from './eurobodalla-gpfs-browser.js';
+import { fetchTamworthGpfsViaBrowser } from './tamworth-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -72,6 +73,10 @@ import {
   EUROBODALLA_GPFS_ID,
   createEurobodallaGpfsConnector,
 } from '../server/src/connectors/eurobodalla-gpfs/index.js';
+import {
+  TAMWORTH_GPFS_ID,
+  createTamworthGpfsConnector,
+} from '../server/src/connectors/tamworth-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -331,6 +336,7 @@ export const NSW_SOURCE_IDS = [
   'port-stephens-gpfs',
   'wagga-wagga-gpfs',
   'eurobodalla-gpfs',
+  'tamworth-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -625,6 +631,23 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] eurobodalla-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createEurobodallaGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === TAMWORTH_GPFS_ID) {
+      // The item brief expected a plain-fetch 403, but on 2026-11-20 the
+      // Tamworth host returns 200 to a plain curl UA and 403 to headless
+      // Chromium. The WAF-aware helper tries the browser first and falls back
+      // to the plain client, discovering the FY2025-26 link from the official
+      // Financial Reporting page in both cases.
+      console.log('[ingest:nsw] tamworth-gpfs: browser/plain discovery starting');
+      const fetched = await fetchTamworthGpfsViaBrowser();
+      console.log(`[ingest:nsw] tamworth-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createTamworthGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
