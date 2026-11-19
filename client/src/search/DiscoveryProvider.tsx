@@ -3,7 +3,7 @@ import type Fuse from 'fuse.js';
 import { apiGet } from '../api';
 import type { DataSourcesResponse, FunctionsResponse, RegionsResponse } from '../api/types';
 import { useCoverage } from '../coverage';
-import { useApi } from '../hooks/useApi';
+import { useApi, type ApiState } from '../hooks/useApi';
 import {
   buildDiscoveryItems,
   createDiscoveryFuse,
@@ -17,6 +17,9 @@ export interface DiscoveryContextValue {
   fuse: Fuse<DiscoveryItem> | null;
   loading: boolean;
   error: string | null;
+  /** Shared request state so HomePage reads the same two requests, not new ones. */
+  functions: ApiState<FunctionsResponse>;
+  sources: ApiState<DataSourcesResponse>;
   search: (query: string, limit?: number) => DiscoveryItem[];
   suggest: (query: string) => DiscoveryItem | null;
 }
@@ -69,6 +72,8 @@ export function DiscoveryProvider({ children }: { children: ReactNode }) {
       fuse,
       loading: functionsState.loading || regionsState.loading || sourcesState.loading,
       error: failed?.error?.message ?? null,
+      functions: functionsState,
+      sources: sourcesState,
       search,
       suggest,
     };

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { RequestHandler } from 'express';
 import { MEASURE_TYPES, REGION_LEVELS, SYNTHETIC_SOURCE } from '@ausspend/shared';
 import {
@@ -176,16 +177,60 @@ const NOTE =
 
 /**
  * Coverage banner payload. Reads counts from the live database, connector
- * metadata from the registry and the latest ingestion logs. No response is
- * cached: every request is generated fresh and marked `Cache-Control: no-store`.
+ * metadata from the registry and the latest ingestion logs. The serialised
+ * payload is cached for 30s with an ETag: the several whole-collection counts
+ * and distinct reads are computed at most once per TTL, and every request can
+ * revalidate with `If-None-Match`.
  */
+const COVERAGE_CACHE_TTL_MS = 30_000;
+export const COVERAGE_CACHE_CONTROL = 'public, max-age=30, stale-while-revalidate=30';
+
+interface CoverageCacheEntry {
+  body: string;
+  etag: string;
+  expiresAt: number;
+  /** Latest ingestion-log id at compute time (cheap cross-process token). */
+  generation: string;
+}
+
+let coverageCache: CoverageCacheEntry | null = null;
+
+/** Drop the cached payload (used by tests and in-process callers). */
+export function invalidateCoverageCache(): void {
+  coverageCache = null;
+}
+
+/**
+ * A new ingestion log is written after every run. Its ObjectId is indexed and
+ * cheap to read, so it acts as a generation token: a completed ingestion in
+ * another process invalidates the cached counts immediately rather than
+ * waiting for the 30s TTL.
+ */
+async function coverageGeneration(): Promise<string> {
+  const latest = await IngestionLogModel.findOne().sort({ _id: -1 }).select('_id').lean();
+  return latest ? latest._id.toString() : 'none';
+}
+
 export function createCoverageHandler(
   pingDb: () => Promise<DbStatus> = pingDatabase,
 ): RequestHandler {
-  return async (_req, res) => {
+  return async (req, res) => {
     const status = await pingDb();
     if (status !== 'connected') {
       throw new HttpError(503, 'Database unavailable: coverage metadata cannot be read');
+    }
+
+    const generation = await coverageGeneration();
+    const now = Date.now();
+    if (coverageCache && coverageCache.generation === generation && now < coverageCache.expiresAt) {
+      res.set('Cache-Control', COVERAGE_CACHE_CONTROL);
+      res.set('ETag', coverageCache.etag);
+      if (req.headers['if-none-match'] === coverageCache.etag) {
+        res.status(304).end();
+        return;
+      }
+      res.type('application/json').send(coverageCache.body);
+      return;
     }
 
     const [
@@ -359,8 +404,8 @@ export function createCoverageHandler(
         : 'Phase 1 + F2 (AusTender live)'
       : 'Phase 1';
 
-    res.set('Cache-Control', 'no-store');
-    res.json({
+    res.set('Cache-Control', COVERAGE_CACHE_CONTROL);
+    const payload = {
       phase: [
         charityLive ? `${phaseBase} + ACNC charity` : phaseBase,
         benchmarkLive ? '+ ABS GFS benchmark' : null,
@@ -718,6 +763,17 @@ export function createCoverageHandler(
       limitations: coverageLimitations(liveIngestion, pbsLive, syntheticMeasures),
       coverage_gaps: COVERAGE_GAPS,
       note: NOTE,
-    });
+    };
+
+    const body = JSON.stringify(payload);
+    const etag = `"${createHash('sha1').update(body).digest('hex')}"`;
+    coverageCache = {
+      body,
+      etag,
+      expiresAt: Date.now() + COVERAGE_CACHE_TTL_MS,
+      generation,
+    };
+    res.set('ETag', etag);
+    res.type('application/json').send(body);
   };
 }

@@ -12,11 +12,9 @@ import {
   Typography,
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { apiGet } from '../api';
-import type { DataSourcesResponse, FunctionsResponse } from '../api/types';
-import { useApi } from '../hooks/useApi';
 import { useCoverage } from '../coverage';
 import { formatDate } from '../format';
+import { useDiscovery } from '../search/DiscoveryProvider';
 import { ProvenanceFooter, SourceLink, VerifiedBadge } from '../components/Provenance';
 import { QuickSearch } from '../components/QuickSearch';
 import { ApiErrorState, LoadingState } from '../components/StatusViews';
@@ -59,12 +57,11 @@ const QUICK_LINKS = [
 
 export function HomePage() {
   const coverage = useCoverage();
-  const functionsState = useApi('home:functions', () =>
-    apiGet<FunctionsResponse>('/api/functions'),
-  );
-  const sourcesState = useApi('home:sources', () =>
-    apiGet<DataSourcesResponse>('/api/data-sources'),
-  );
+  const discovery = useDiscovery();
+  // Reuse the DiscoveryProvider requests instead of issuing a second
+  // /api/functions and /api/data-sources on the root page.
+  const functionsState = discovery.functions;
+  const sourcesState = discovery.sources;
 
   const divisions = functionsState.data?.functions ?? [];
   const sources = sourcesState.data?.sources ?? [];
