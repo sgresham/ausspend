@@ -30,14 +30,14 @@ Generated from the checked-in connector registry by `npm run generate:sources` a
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| Registered spending connectors      | 113   |
-| Active spending connectors          | 111   |
+| Registered spending connectors      | 114   |
+| Active spending connectors          | 112   |
 | Degraded spending connectors        | 0     |
 | Stub spending connectors            | 2     |
-| NSW council GPFS sources            | 51    |
-| NSW local-government source ids     | 52    |
+| NSW council GPFS sources            | 52    |
+| NSW local-government source ids     | 53    |
 | Trade connectors (separate subtree) | 2     |
-| Generated connector source docs     | 53    |
+| Generated connector source docs     | 54    |
 
 These are current registry counts, not database row counts. The landing notes in
 [`docs/NSW_COUNCILS.md`](./docs/NSW_COUNCILS.md) are chronological snapshots of individual
