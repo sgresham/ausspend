@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 123   |
-| NSW local-government source ids     | 124   |
-| Registered spending connectors      | 185   |
-| Active spending connectors          | 183   |
+| NSW council GPFS sources            | 124   |
+| NSW local-government source ids     | 125   |
+| Registered spending connectors      | 186   |
+| Active spending connectors          | 184   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -12018,6 +12018,38 @@ migration were performed.
   comprehensive income `$30,970,000` (single IPPE revaluation component `$31,285,000`).
 - `greater-hume-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - Docs counts refreshed to `nsw-gpfs=123`; focused Greater Hume tests, golden-digest test, typecheck,
+  lint, docs-count guard and leak guard pass. No deploy.
+
+**GPFS fortieth-council checks (Burwood), 2026-11-20:**
+
+- The council's main site is behind Akamai: plain HTTP clients get HTTP 403 ("Access Denied") for
+  the home page, `sitemap.xml` and every `/files` path. A real headless Chromium session gets HTTP
+  200 for the main site, and the official consultation host
+  `participate.burwood.nsw.gov.au` serves both the exhibition page and the pinned PDF to plain and
+  browser clients.
+- The prior `BURWOOD_GPFS_DEFERRED` decision was based on the FY2024-25 annual report (summary-only).
+  That premise is **falsified** by the official FY2025-26 Annual Financial Statements exhibition page
+  (<https://participate.burwood.nsw.gov.au/annual-financial-statement-year-ended-30-june-2026>),
+  which records the 27 October 2026 Council presentation of the audited financial statements and
+  Auditor's Report for the year ended 30 June 2026.
+- The FY2025-26 Annual Financial Statements PDF
+  (`https://participate.burwood.nsw.gov.au/download_file/2459/1036`) is 4,450,607 bytes and 70 pages.
+  It was fetched through both the browser and plain paths and SHA-256 archived outside the repo;
+  SHA-256 `9b6e3f8725e47823038329b269d955ef263d7cc6680aacea9b944320919f2e13`
+  (`hash_verified: true`). It embeds the Auditor-General's unmodified GPFS opinion (PDF page 68,
+  dated 20 October 2026).
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1,
+  Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows; the
+  connector rejects a missing or conflicting unit. Because the Income Statement PDF uses overlapping
+  text runs, the adapter reconstructs visual rows from positioned text and reads the actual columns
+  directly, accumulating multi-line labels.
+- Income statement, B1-1, comprehensive-income, balance-sheet and cash-flow totals reconcile exactly:
+  revenue `$89,251,000`, expenses `$70,409,000` (printed bridge of expenses excluding depreciation
+  `$59,755,000` plus depreciation/amortisation/impairment `$10,654,000`), net result `$18,842,000`;
+  B1-1 grants `$20,098,000` = operating `$4,277,000` + capital `$15,821,000`; total comprehensive
+  income `$40,570,000` (single IPPE revaluation component `$21,728,000`).
+- `burwood-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Docs counts refreshed to `nsw-gpfs=124`; focused Burwood tests, golden-digest test, typecheck,
   lint, docs-count guard and leak guard pass. No deploy.
 
 ---
