@@ -52,6 +52,7 @@ import { fetchTamworthGpfsViaBrowser } from './tamworth-gpfs-browser.js';
 import { fetchBathurstGpfsViaBrowser } from './bathurst-gpfs-browser.js';
 import { fetchBalranaldGpfsViaBrowser } from './balranald-gpfs-browser.js';
 import { fetchCabonneGpfsViaBrowser } from './cabonne-gpfs-browser.js';
+import { fetchFederationGpfsViaBrowser } from './federation-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -92,6 +93,10 @@ import {
   CABONNE_GPFS_ID,
   createCabonneGpfsConnector,
 } from '../server/src/connectors/cabonne-gpfs/index.js';
+import {
+  FEDERATION_GPFS_ID,
+  createFederationGpfsConnector,
+} from '../server/src/connectors/federation-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -355,6 +360,7 @@ export const NSW_SOURCE_IDS = [
   'bathurst-gpfs',
   'balranald-gpfs',
   'cabonne-gpfs',
+  'federation-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -688,6 +694,16 @@ async function main(): Promise<void> {
       const fetched = await fetchCabonneGpfsViaBrowser();
       console.log(`[ingest:nsw] cabonne-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(createCabonneGpfsConnector({ pdfBytes: fetched.pdfBytes }));
+      continue;
+    }
+    if (id === FEDERATION_GPFS_ID) {
+      // Federation's official site is Akamai-blocked to plain clients, but
+      // headless Chromium retrieves the latest published audited AFS (FY2024-25;
+      // no FY2025-26 financial statements were published as at 2026-11-20).
+      console.log('[ingest:nsw] federation-gpfs: browser discovery/download starting');
+      const fetched = await fetchFederationGpfsViaBrowser();
+      console.log(`[ingest:nsw] federation-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(createFederationGpfsConnector({ pdfBytes: fetched.pdfBytes }));
       continue;
     }
     if (id === BATHURST_GPFS_ID) {

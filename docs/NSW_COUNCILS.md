@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 121   |
-| NSW local-government source ids     | 122   |
-| Registered spending connectors      | 183   |
-| Active spending connectors          | 181   |
+| NSW council GPFS sources            | 122   |
+| NSW local-government source ids     | 123   |
+| Registered spending connectors      | 184   |
+| Active spending connectors          | 182   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -11962,6 +11962,34 @@ migration were performed.
   income `$41,038,000` (revaluation `$20,479,000` plus joint ventures/associates `$597,000`).
 - `cabonne-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - Docs counts refreshed to `nsw-gpfs=121`; focused Cabonne tests, golden-digest test, typecheck,
+  lint, docs-count guard and leak guard pass. No deploy.
+
+**GPFS thirty-eighth-council checks (Federation), 2026-11-20:**
+
+- The entire official Federation Council site is behind Akamai: plain HTTP clients get HTTP 403
+  ("Access Denied", Akamai reference `#18.…`) for the home page, `robots.txt`, sitemaps and every
+  `/files` path. A real headless Chromium session gets HTTP 200 and the `/files` PDFs.
+- No FY2025-26 annual financial statements or annual report were published as at 2026-11-20. The
+  official Annual Financial Statements page and Annual Report page both present **FY2024-25** as
+  the latest; FY2024-25 is therefore ingested as the **latest available audited GPFS**, explicitly
+  labelled, with no older-year substitution.
+- The FY2024-25 Annual Financial Statements document
+  (`https://www.federationcouncil.nsw.gov.au/files/assets/public/v/1/document-library/corporate-documents/other/financial-statements/federation-council-annual_financial_statements-2025.pdf`)
+  (4,790,806 bytes, 114 pages) was fetched through the browser/WAF path and SHA-256 archived outside
+  the repo; SHA-256
+  `7dbdc2a08b4f03e217f1112db1684c1302363d6632ce2660c1f8717779426ca5` (`hash_verified: true`). It
+  embeds the Auditor-General's unmodified GPFS opinion (PDF pages 76-80) and SPFS opinion (pages
+  101-102).
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1,
+  Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows; the
+  connector rejects a missing or conflicting unit.
+- Income statement, B1-1, comprehensive-income, balance-sheet and cash-flow totals reconcile
+  exactly: revenue `$57,687,000`, expenses `$55,229,000` (printed bridge of expenses excluding
+  depreciation `$36,941,000` plus depreciation/amortisation/impairment `$18,288,000`), net result
+  `$2,458,000`; B1-1 grants `$18,889,000` = operating `$13,299,000` + capital `$5,590,000`; total
+  comprehensive income `$62,731,000` (single IPPE revaluation component `$60,273,000`).
+- `federation-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Docs counts refreshed to `nsw-gpfs=122`; focused Federation tests, golden-digest test, typecheck,
   lint, docs-count guard and leak guard pass. No deploy.
 
 ---
