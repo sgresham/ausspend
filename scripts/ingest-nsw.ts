@@ -137,6 +137,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - bellingen-gpfs  GPFS expansion: Bellingen Shire Council's audited FY2025-26 GPFS
  *   - gunnedah-gpfs  GPFS expansion: Gunnedah Shire Council's audited FY2025-26 GPFS
  *   - parkes-gpfs  GPFS expansion: Parkes Shire Council's audited FY2025-26 GPFS
+ *   - cowra-gpfs  GPFS expansion: Cowra Shire Council's audited FY2025-26 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -152,7 +153,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Lane Cove Council, Mosman Council, Wollondilly Shire Council, Camden
  * Council, Campbelltown City Council, Central Coast Council, Hornsby Shire
  * Council, Penrith City Council, The Hills Shire Council, Warren Shire Council
- * and Brewarrina Shire Council and Bogan Shire Council and Kyogle Council and Junee Shire Council and Uralla Shire Council and Cootamundra-Gundagai Regional Council and Moree Plains Shire Council and Hilltops Council and Bourke Shire Council and Coolamon Shire Council and Gilgandra Shire Council and Lockhart Shire Council and Coonamble Shire Council and Weddin Shire Council and Walcha Council and Murrumbidgee Council and Armidale Regional Council and Byron Shire Council and Clarence Valley Council and Richmond Valley Council and Kempsey Shire Council and Wingecarribee Shire Council and Queanbeyan-Palerang Regional Council and Goulburn Mulwaree Council and Broken Hill City Council and Griffith City Council and Lithgow City Council and Mid-Western Regional Council and Bega Valley Shire Council and Snowy Monaro Regional Council and Singleton Council and Orange City Council and Blayney Shire Council and Liverpool Plains Shire Council and Tenterfield Shire Council and Cobar Shire Council and Narromine Shire Council and Inverell Shire Council and Wentworth Shire Council and Forbes Shire Council and Bellingen Shire Council and Gunnedah Shire Council and Parkes Shire Council. No other councils, states/territories, SOC/charity or live state
+ * and Brewarrina Shire Council and Bogan Shire Council and Kyogle Council and Junee Shire Council and Uralla Shire Council and Cootamundra-Gundagai Regional Council and Moree Plains Shire Council and Hilltops Council and Bourke Shire Council and Coolamon Shire Council and Gilgandra Shire Council and Lockhart Shire Council and Coonamble Shire Council and Weddin Shire Council and Walcha Council and Murrumbidgee Council and Armidale Regional Council and Byron Shire Council and Clarence Valley Council and Richmond Valley Council and Kempsey Shire Council and Wingecarribee Shire Council and Queanbeyan-Palerang Regional Council and Goulburn Mulwaree Council and Broken Hill City Council and Griffith City Council and Lithgow City Council and Mid-Western Regional Council and Bega Valley Shire Council and Snowy Monaro Regional Council and Singleton Council and Orange City Council and Blayney Shire Council and Liverpool Plains Shire Council and Tenterfield Shire Council and Cobar Shire Council and Narromine Shire Council and Inverell Shire Council and Wentworth Shire Council and Forbes Shire Council and Bellingen Shire Council and Gunnedah Shire Council and Parkes Shire Council and Cowra Shire Council. No other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -247,6 +248,7 @@ export const NSW_SOURCE_IDS = [
   'bellingen-gpfs',
   'gunnedah-gpfs',
   'parkes-gpfs',
+  'cowra-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
