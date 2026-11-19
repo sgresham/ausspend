@@ -1,0 +1,17 @@
+import {
+  BATHURST_GPFS_ID,
+  BATHURST_GPFS_NAME,
+  BATHURST_GPFS_PUBLISHER,
+  BATHURST_GPFS_FISCAL_YEAR,
+  BATHURST_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: BATHURST_GPFS_ID,
+  name: BATHURST_GPFS_NAME,
+  publisher: BATHURST_GPFS_PUBLISHER,
+  fiscalYear: BATHURST_GPFS_FISCAL_YEAR,
+  dataQualityFlag: BATHURST_GPFS_DATA_QUALITY_FLAG,
+} as const;

@@ -49,6 +49,7 @@ import { fetchPortStephensGpfsViaBrowser } from './port-stephens-gpfs-browser.js
 import { fetchWaggaWaggaGpfsViaBrowser } from './wagga-wagga-gpfs-browser.js';
 import { fetchEurobodallaGpfsViaBrowser } from './eurobodalla-gpfs-browser.js';
 import { fetchTamworthGpfsViaBrowser } from './tamworth-gpfs-browser.js';
+import { fetchBathurstGpfsViaBrowser } from './bathurst-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -77,6 +78,10 @@ import {
   TAMWORTH_GPFS_ID,
   createTamworthGpfsConnector,
 } from '../server/src/connectors/tamworth-gpfs/index.js';
+import {
+  BATHURST_GPFS_ID,
+  createBathurstGpfsConnector,
+} from '../server/src/connectors/bathurst-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -337,6 +342,7 @@ export const NSW_SOURCE_IDS = [
   'wagga-wagga-gpfs',
   'eurobodalla-gpfs',
   'tamworth-gpfs',
+  'bathurst-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -648,6 +654,22 @@ async function main(): Promise<void> {
       console.log(`[ingest:nsw] tamworth-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(
         createTamworthGpfsConnector({
+          listingHtml: fetched.listingHtml,
+          pdfBytes: fetched.pdfBytes,
+        }),
+      );
+      continue;
+    }
+    if (id === BATHURST_GPFS_ID) {
+      // Bathurst's Future Plans & Budget section publishes the standalone
+      // audited FS on its Annual Plan page. Both the page and the PDF returned
+      // HTTP 200 to headless Chromium and to a plain client on 2026-11-20, so
+      // the browser helper fetches the FY2024-25 link from the official page.
+      console.log('[ingest:nsw] bathurst-gpfs: browser discovery/download starting');
+      const fetched = await fetchBathurstGpfsViaBrowser();
+      console.log(`[ingest:nsw] bathurst-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createBathurstGpfsConnector({
           listingHtml: fetched.listingHtml,
           pdfBytes: fetched.pdfBytes,
         }),
