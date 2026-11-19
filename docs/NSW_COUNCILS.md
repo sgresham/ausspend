@@ -11378,6 +11378,68 @@ a broken-subtotal rejection, the B1-1 income/grants bridge, exact reconciliation
 stability, and additive-only idempotent 18-row ingestion. Full evidence:
 `docs/source-discovery/nsw-councils/bathurst-gpfs.md`.
 
+### 7.122 One hundred and twenty-second landed council — Hay Shire Council FY2025-26 standalone GPFS (landed 2026-11-20)
+
+**Outcome: landed — 17 statement rows from the official standalone Annual Financial Statements for
+the year ended 30 June 2026.** The cheap check ("annual-report-only; dedicated financial statements
+page renders no documents") is falsified: the official combined **Council Meetings and Reports** feed
+publishes a standalone "Hay Shire Council ANNUAL FINANCIAL STATEMENTS for the year ended 30 June
+2026" PDF, and the GPFS reconciles exactly. The dedicated *Council Plans and Reports* page is not where
+the FS live.
+
+**Stale-year check.** Checked 2026-11-20. The FY2025-26 GPFS (signed 27 October 2026) is the latest
+published GPFS; the prior FY2024-25 "HSC Annual Financial Statements 2025" remains in the feed but is
+not ingested. A stale `/Portals/0/Annual Financial Statements 2025.pdf` link returns **HTTP 404**.
+No FY2026-27 FS was published.
+
+**Audit caveat.** The FY2025-26 GPFS PDF carries **placeholder** pages for the two section 417
+independent auditor reports ("Please uplift Council's Audit Report PDF"); the signed opinion is not
+embedded. The prior FY2024-25 FS in the same feed embeds the signed Auditor-General opinion (dated
+29 October 2025). The FY2025-26 primary statements are the current official GPFS and reconcile
+exactly; the missing embedded opinion is recorded as an access gap, not a reason to substitute the
+older year.
+
+**Source and year.** Reporting feed
+<https://www.hay.nsw.gov.au/Inside-Hay-Shire-Council/Council-Meetings-and-Reports>; exact PDF
+<https://www.hay.nsw.gov.au/Portals/0/Files/Annual_Financial_Statements-2026.pdf> (also the documented
+fallback pin). The PDF is **1,345,435 bytes**, **80 pages**, SHA-256
+`710fce7da5e69d93cc30fc943e122c8a20b28d840f9726cfb90aa926cc7a75ce`, archived outside the repo at
+`hay-gpfs/Annual_Financial_Statements-2026.pdf`. On 2026-11-20 the feed and PDF returned **HTTP 200**
+to plain `curl/8.5.0` and to headless Chromium (no WAF); the browser helper
+(`scripts/hay-gpfs-browser.ts`) discovered the PDF live and returned **1,345,435** bytes.
+
+**Exact reconciliation ($'000).** Total income `24,591` = seven revenue components; expenses
+excluding depreciation `13,972` = five expense components (including the printed net loss on disposal
+`91`); `13,972` + depreciation `5,311` = total expenses `19,283` = B1-1 expense total; `24,591` −
+`19,283` = net result `5,308`; B1-1 income `24,591`, operating result `5,308`, grants `16,371`
+(= operating `9,803` + capital `6,568`) and carrying amount `292,009` all reconcile; comprehensive
+income `5,308` + revaluation `13,779` = `19,087`; total assets `292,009` − liabilities `5,602` =
+net assets `286,407` = accumulated surplus `91,325` + IPPE revaluation surplus `195,082` = equity;
+cash operating `9,099` + investing `(9,963)` + financing `(273)` = net change `(1,137)`, opening
+`21,521` + change = closing `20,384` = SoFP cash; the printed before-capital result `(1,260)` is
+evidence only. The printed unit is `$ '000`; a missing or conflicting unit is rejected.
+
+**Rows.** 17 rows, source id `hay-gpfs`, `source_dataset` "Hay Shire Council GPFS 2025-26",
+`measure_type: "actual"`, `fiscal_year: "2025-26"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Hay Shire Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. Emitted AUD cents: rates `570,300,000`, user
+charges `179,800,000`, other revenue `10,100,000`, operating grants `980,300,000`, capital grants
+`656,800,000`, interest `51,800,000`, other income `10,000,000`, total revenue `2,459,100,000`,
+employee `709,000,000`, materials `643,300,000`, borrowing `6,200,000`, other expenses `29,600,000`,
+net loss on disposal `9,100,000`, total expenses excluding depreciation `1,397,200,000`,
+depreciation `531,100,000`, total expenses `1,928,300,000`, net result `530,800,000`. The B1-1
+function split, balance-sheet components and cash-flow lines are reconciliation evidence only.
+
+**No double count.** Every row is `aggregation_role: "agency_detail"` with no `region_id` and no
+`location`/LGA allocation; government grant rows carry `potential_double_count: true` and are not
+added to expenditure. One council only; no council aggregate, state total or cross-council sum.
+
+**Checks.** Focused tests cover discovery/latest selection, prior-year and future-year rejection, the
+narrative-report/bare-year exclusions, the browser path with plain fallback, the unit gate, a
+unit-conflict rejection, a broken-subtotal rejection, the B1-1 bridge, exact reconciliation,
+natural-key stability and additive-only idempotent 17-row ingestion. Full evidence:
+`docs/source-discovery/nsw-councils/hay-gpfs.md`.
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
