@@ -32,7 +32,10 @@ function StatesIndex() {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         The eight states and territories from <code>GET /api/regions?type=state</code>. State pages
-        are fetched by abbreviation (NSW, VIC, QLD, WA, SA, TAS, ACT, NT).
+        are fetched by abbreviation (NSW, VIC, QLD, WA, SA, TAS, ACT, NT). Each page includes that
+        government&apos;s state or territory budget rows; federal rows merely located in the state
+        and local council rows are excluded. Benchmark-only layers such as TAS are shown separately
+        at <code>/benchmark</code> and are never added to additive totals.
       </Typography>
       <ProvenanceFooter
         sources={[]}

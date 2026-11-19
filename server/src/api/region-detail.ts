@@ -21,12 +21,14 @@ import { areaQueries, buildAreaProfile, resolveRegion, type AreaProfile } from '
  * The full match set for a region/state page. Aggregates run over this query;
  * the row page is a separate `.limit(filters.limit)` query over the same match.
  *
- * A state page is the state government's own spending: it matches
- * `jurisdiction = <code>` at `jurisdiction_level: "state"`. It deliberately
- * does NOT match `location.state`: that would pull in federal AusTender
- * contracts merely *located* in the state and make the page's count diverge
- * from the state's `jurisdiction` dataset. Local-council rows (e.g. Dubbo,
- * jurisdiction NSW but level local) are excluded by the level filter.
+ * A state page is the state/territory government's own spending: it matches
+ * `jurisdiction = <code>` at `jurisdiction_level` `state` OR `territory`. The
+ * ACT and NT budget connectors record their rows at level `territory`, so a
+ * state-only filter silently hid real budget data. It deliberately does NOT
+ * match `location.state`: that would pull in federal AusTender contracts merely
+ * *located* in the state and make the page's count diverge from the state's
+ * `jurisdiction` dataset. Local-council rows (e.g. Dubbo, jurisdiction NSW but
+ * level local) are excluded by the level filter.
  */
 function regionBaseQuery(
   region: LeanRegion,
@@ -34,7 +36,7 @@ function regionBaseQuery(
   stateCode?: string,
 ): Record<string, unknown> {
   const regionMatch = stateCode
-    ? { jurisdiction: stateCode, jurisdiction_level: 'state' }
+    ? { jurisdiction: stateCode, jurisdiction_level: { $in: ['state', 'territory'] } }
     : { region_id: region._id };
   return { ...measureQuery(filters), ...regionMatch };
 }
@@ -183,6 +185,96 @@ function nonAdditiveBlocks(measures: readonly LeanMeasure[]) {
   );
 }
 
+export type RegionCoverageReason =
+  'has-additive-rows' | 'national-no-project-series' | 'benchmark-only' | 'no-additive-rows';
+
+export interface RegionCoverage {
+  scope: 'national' | 'state' | 'region';
+  reason: RegionCoverageReason;
+  additive_count: number;
+  benchmark_count: number;
+  benchmark_sources: string[];
+  benchmark_available: boolean;
+  benchmark_href: '/benchmark';
+  message: string | null;
+}
+
+const BENCHMARK_HREF = '/benchmark' as const;
+
+/**
+ * Explicit coverage note for a region/state page. Benchmark rows are counted
+ * only to explain an otherwise-empty page; they are never returned here and
+ * never enter an additive count or total. A national page is never mapped to
+ * federal contracts or given an invented national total.
+ */
+async function regionCoverage(
+  region: LeanRegion,
+  stateCode: string | undefined,
+  additiveCount: number,
+  filtersActive: boolean,
+): Promise<RegionCoverage> {
+  const scope: RegionCoverage['scope'] =
+    region.level === 'national' ? 'national' : stateCode ? 'state' : 'region';
+  const benchmarkMatch =
+    region.level === 'national'
+      ? { aggregation_role: 'benchmark', jurisdiction: 'Australia' }
+      : stateCode
+        ? { aggregation_role: 'benchmark', jurisdiction: stateCode }
+        : { aggregation_role: 'benchmark', region_id: region._id };
+
+  const benchmarkGroups = await MeasureModel.aggregate<{ _id: string; count: number }>([
+    { $match: benchmarkMatch },
+    { $group: { _id: '$source_id', count: { $sum: 1 } } },
+    { $sort: { _id: 1 } },
+  ]);
+  const benchmarkCount = benchmarkGroups.reduce((sum, group) => sum + group.count, 0);
+  const benchmarkSources = benchmarkGroups.map((group) => group._id).filter(Boolean);
+
+  let reason: RegionCoverageReason;
+  if (additiveCount > 0) {
+    reason = 'has-additive-rows';
+  } else if (filtersActive) {
+    // A filter that matches nothing must not claim the whole layer is absent.
+    reason = 'no-additive-rows';
+  } else if (region.level === 'national') {
+    reason = 'national-no-project-series';
+  } else if (benchmarkCount > 0) {
+    reason = 'benchmark-only';
+  } else {
+    reason = 'no-additive-rows';
+  }
+
+  const sourceList = benchmarkSources.length > 0 ? benchmarkSources.join(', ') : 'benchmark';
+  let message: string | null = null;
+  if (reason === 'national-no-project-series') {
+    message =
+      'No national actual, budget or estimate project series is recorded against a curated national region. ' +
+      'The ABS GFS COFOG-A benchmark publishes official national, state and federal aggregate expense levels at /benchmark; ' +
+      'it is a top-down statistical benchmark, not project data, and is never added to these totals. ' +
+      'Federal contracts and grants are not mapped to a national region.';
+  } else if (reason === 'benchmark-only') {
+    message =
+      `No additive ${region.name} actual, budget or estimate rows are exposed on this page. ` +
+      `${benchmarkCount} published benchmark aggregate row(s) from ${sourceList} are recorded for ${region.name} ` +
+      `and are shown separately at /benchmark; they are non-additive and never enter these totals.`;
+  } else if (reason === 'no-additive-rows') {
+    message = filtersActive
+      ? `No additive ${region.name} rows match these filters. Nothing is estimated, zero-filled or replaced with a placeholder.`
+      : `No additive ${region.name} actual, budget or estimate rows are recorded yet. Nothing is estimated, zero-filled or replaced with a placeholder.`;
+  }
+
+  return {
+    scope,
+    reason,
+    additive_count: additiveCount,
+    benchmark_count: benchmarkCount,
+    benchmark_sources: benchmarkSources,
+    benchmark_available: benchmarkCount > 0,
+    benchmark_href: BENCHMARK_HREF,
+    message,
+  };
+}
+
 async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCode?: string) {
   const baseQuery = regionBaseQuery(region, filters, stateCode);
   // The summary and per-function totals cover the whole match set; only the
@@ -196,6 +288,8 @@ async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCo
     functionTypeTotals(baseQuery),
   ]);
   const additiveMeasures = measures.filter(isAdditiveMeasure);
+  const filtersActive = Boolean(filters.fiscal_year || filters.measure_type || filters.source_id);
+  const coverage = await regionCoverage(region, stateCode, summary.count, filtersActive);
 
   return {
     region: serializeRegion(region),
@@ -206,6 +300,7 @@ async function regionDetail(region: LeanRegion, filters: MeasureFilters, stateCo
       limit: filters.limit,
     },
     ...summary,
+    coverage,
     rows_returned: measures.length,
     rows_truncated: measures.length < summary.count,
     by_function: await groupByFunction(functionTotals, additiveMeasures, summary.mixed),
