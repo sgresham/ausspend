@@ -54,7 +54,9 @@ function RegionRow({ region }: { region: RegionRef }) {
         secondary={
           region.level === 'state'
             ? 'State/territory row; opens the state page by abbreviation.'
-            : `Opens /regions/${region._id} using the region _id from /api/regions.`
+            : region.level === 'national'
+              ? 'National coverage note; no national project series is invented and the GFS benchmark is linked separately.'
+              : `Opens /regions/${region._id} using the region _id from /api/regions.`
         }
       />
     </ListItem>
@@ -103,7 +105,9 @@ function RegionsIndex() {
         from <code>GET /api/regions</code>. National rows link by <code>_id</code>, state rows by
         abbreviation, and sub-state rows by their slug (for example
         <code>/regions/dubbo</code>, alias <code>/region/dubbo</code> and
-        <code>/areas/dubbo</code>). This page does not invent region ids.
+        <code>/areas/dubbo</code>). The national page is a coverage note, not an invented national
+        total: federal contracts are not mapped to a national region and the ABS GFS benchmark is
+        linked at <code>/benchmark</code>. This page does not invent region ids.
       </Typography>
       <ProvenanceFooter
         sources={[]}

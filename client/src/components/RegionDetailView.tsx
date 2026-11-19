@@ -26,6 +26,25 @@ interface RegionDetailViewProps {
   stateCode?: string;
 }
 
+/**
+ * Coverage note added to the region/state detail response. Kept local so the
+ * component consumes the new API field without widening the shared response
+ * types in this cure.
+ */
+interface RegionCoverage {
+  scope: 'national' | 'state' | 'region';
+  reason:
+    'has-additive-rows' | 'national-no-project-series' | 'benchmark-only' | 'no-additive-rows';
+  additive_count: number;
+  benchmark_count: number;
+  benchmark_sources: string[];
+  benchmark_available: boolean;
+  benchmark_href: string;
+  message: string | null;
+}
+
+type RegionDetailWithCoverage = RegionDetail & { coverage?: RegionCoverage };
+
 export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps) {
   const isState = Boolean(stateCode);
   const scope = isState ? `state:${stateCode}` : `region:${regionId}`;
@@ -48,10 +67,10 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
     })}`;
 
   const base = useApi(`${scope}:base`, () =>
-    apiGet<RegionDetail>(detailUrl({ fiscalYear: '', measureType: '' })),
+    apiGet<RegionDetailWithCoverage>(detailUrl({ fiscalYear: '', measureType: '' })),
   );
   const filtered = useApi(`${scope}:view:${selection.fiscalYear}:${selection.measureType}`, () =>
-    filterActive ? apiGet<RegionDetail>(detailUrl(selection)) : Promise.resolve(null),
+    filterActive ? apiGet<RegionDetailWithCoverage>(detailUrl(selection)) : Promise.resolve(null),
   );
 
   const detail = filterActive ? filtered.data : base.data;
@@ -136,7 +155,10 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
   }));
   const functionBarSources = uniqueSources(singleFunctionGroups.flatMap((group) => group.measures));
   const additiveRows = detail.measures.filter(
-    (row) => row.aggregation_role !== 'agency_detail' && row.aggregation_role !== 'policy_measure',
+    (row) =>
+      row.aggregation_role !== 'agency_detail' &&
+      row.aggregation_role !== 'policy_measure' &&
+      row.aggregation_role !== 'benchmark',
   );
   const nonAdditiveBlocks =
     detail.non_additive && detail.non_additive.length > 0
@@ -145,6 +167,22 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
         ? [detail.agency_detail]
         : [];
   const sources = uniqueSources(additiveRows);
+
+  const regionCoverage = detail.coverage;
+  const coverageTitle =
+    regionCoverage?.reason === 'national-no-project-series'
+      ? 'No national project series in this layer'
+      : regionCoverage?.reason === 'benchmark-only'
+        ? 'No additive rows; benchmark data exists separately'
+        : syntheticPresent
+          ? 'No measures for this view'
+          : 'No additive data for this dimension yet';
+  const coverageMessage =
+    !syntheticPresent && regionCoverage?.message
+      ? regionCoverage.message
+      : syntheticPresent
+        ? `No measure rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. Nothing is being estimated or filled in.`
+        : `No real published additive rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. Benchmark and other non-additive layers are never merged into these totals. Nothing is estimated, zero-filled or replaced with a placeholder.`;
 
   const exploreParams = new URLSearchParams(
     areaProfile ? { area: areaProfile.area.slug } : { region: region._id },
@@ -165,9 +203,11 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {areaProfile
           ? 'Area profile: local Dubbo rows, NSW-wide state rows, NSW-tagged federal AusTender rows and a separate Commonwealth-wide PBS panel. These levels overlap and are never added together.'
-          : syntheticPresent
-            ? 'Spending recorded for this region in the Phase 1 synthetic seed and live ingestions. Region detail is fetched by the region _id or a case-insensitive slug/name; state pages use the state/territory abbreviation. Group totals and per-type totals come from the API.'
-            : 'Real spending recorded for this region. Region pages match a curated region _id; state pages match the state jurisdiction (not merely a location tag). NSW, VIC and QLD state feeds are live; no real feed covers national or sub-state actual/estimate spending with COFOG and region yet. Group totals and per-type totals come from the API over the full match set.'}
+          : detail.coverage?.reason === 'national-no-project-series'
+            ? 'National coverage note: no actual, budget or estimate project series is recorded against a curated national region. The ABS GFS COFOG-A benchmark is a separate, non-additive statistical layer at /benchmark; federal contracts and grants are not mapped to a national region and no national total is invented.'
+            : syntheticPresent
+              ? 'Spending recorded for this region in the Phase 1 synthetic seed and live ingestions. Region detail is fetched by the region _id or a case-insensitive slug/name; state pages use the state/territory abbreviation. Group totals and per-type totals come from the API.'
+              : 'Real spending recorded for this region. Region pages match a curated region _id; state and territory pages match the government jurisdiction (not merely a location tag), including ACT/NT territory budget rows. Benchmark-only layers such as TAS are listed separately at /benchmark and never added to these totals. Group totals and per-type totals come from the API over the full match set.'}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mb: 3 }} flexWrap="wrap" useFlexGap>
         <Button
@@ -189,16 +229,19 @@ export function RegionDetailView({ regionId, stateCode }: RegionDetailViewProps)
       />
 
       {detail.count === 0 ? (
-        <EmptyState
-          title={
-            syntheticPresent ? 'No measures for this view' : 'No real data for this dimension yet'
-          }
-          message={
-            syntheticPresent
-              ? `No measure rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. Nothing is being estimated or filled in.`
-              : `No real published spending rows match fiscal year “${selection.fiscalYear || 'all'}” and measure type “${selection.measureType || 'all'}” for ${region.name}. The synthetic seed is not present and no real feed covers this region/type yet. Nothing is estimated, zero-filled or replaced with a placeholder.`
-          }
-        />
+        <EmptyState title={coverageTitle} message={coverageMessage}>
+          {regionCoverage?.benchmark_available ? (
+            <Button
+              component={RouterLink}
+              to={regionCoverage.benchmark_href}
+              size="small"
+              variant="outlined"
+              sx={{ mt: 1 }}
+            >
+              Open the non-additive benchmark
+            </Button>
+          ) : null}
+        </EmptyState>
       ) : areaProfile ? (
         <>
           <AreaPanels profile={areaProfile} />
