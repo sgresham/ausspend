@@ -8781,6 +8781,31 @@ committed. Targeted connector tests passed (19/19). Full evidence:
 
 ---
 
+### 7.93 Ninety-third council item — Snowy Valleys Council FY2024-25 (DEFERRED, no rows)
+
+**Decision: defer, do not ingest or invent rows.** The official Integrated Reporting page publishes
+the FY2024-25 standalone signed audited financial statements at
+<https://www.snowyvalleys.nsw.gov.au/files/assets/public/v/1/reports-amp-strategies/202425-ipampr/2024-2025-signed-audited-financial-statements.pdf>
+(HTTP 200, `application/pdf`, 42,979,731 bytes, 99 PDF pages, SHA-256
+`e21e519a60f7e65ad3cb33ab1e601cdbe385840c70b0a67852a1d2e0a50e4162`). The PDF is **scanned images with
+no text layer**: it contains 99 image objects and **zero fonts**, and the repository's pdfjs extraction
+returns **0 text characters on every page**. No Income Statement, Statement of Comprehensive Income,
+B1-1 statement line or printed reconciling total can be read, so no `$ '000` unit or zero-tolerance
+reconciliation is possible.
+
+No FY2025-26 audited standalone statements are published on the page; the only 2025-26 document is a
+**six-monthly progress report**, not audited statements. The FY2024-25 annual report including audited
+financial statements (a separate PDF) was **not** used as an annual-report-only substitute. No prior
+year or narrative figure was substituted.
+
+No `snowy-valleys-gpfs` connector was registered and no rows were invented or ingested. The DB stays
+at **999,253** measures with **205** SOC rows and **92** active GPFS sources; a
+`deferred_soc_documents` record for `snowy-valleys-gpfs` records the exact gap (99-page scanned
+image-only PDF, no text layer). Full evidence:
+`docs/source-discovery/nsw-councils/snowy-valleys-gpfs.md`.
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -9234,5 +9259,5 @@ amalgamations and administrators can change the population, so re-read the OLG w
 The only ingestions are the §7.1–§7.92 GPFS sources: ninety-two councils, one audited year
 each, non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
-§7.61 (Central Darling) is a documented deferral only: the FY2024-25 annual report's statutory
-financial-statements section is scanned with no text layer, so it contributes 0 rows.
+§7.61 (Central Darling) and §7.93 (Snowy Valleys) are documented deferrals only: their FY2024-25
+statutory financial statements are scanned with no text layer, so they contribute 0 rows.
