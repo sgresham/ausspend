@@ -110,6 +110,7 @@ const KNOWN_SOURCE_IDS = [
   'bellingen-gpfs',
   'gunnedah-gpfs',
   'parkes-gpfs',
+  'cowra-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
