@@ -83,7 +83,7 @@ export function HomePage() {
             Search the spending explorer
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-            Find a COFOG function, region, registered data source or NSW SOC entity. Matching is
+            Find a COFOG function, region, registered data source or state-owned entity. Matching is
             typo-tolerant over that <strong>bounded discovery index</strong> — try{' '}
             <code>health</code>, <code>dubbo</code>, <code>waternsw</code> or{' '}
             <code>hunter wter</code>. Press Enter to run the same query through the full spending
@@ -92,12 +92,13 @@ export function HomePage() {
           <QuickSearch
             autoFocus
             testId="home-autocomplete"
-            label="Search functions, regions, sources and NSW SOC entities"
+            label="Search functions, regions, sources and State-owned entities"
           />
           <Typography variant="caption" component="div" color="text.secondary" sx={{ mt: 1.5 }}>
-            Phase 1 scope: discovery rows only (taxonomy, regions, source register and the ten NSW
-            SOC entities). Result ranking over the full 515k-row measure set is Phase 2 and needs a
-            dedicated search index — this box does not claim full-dataset fuzzy search.
+            Phase 1 scope: discovery rows only (taxonomy, regions, source register and the
+            registered state-owned entities). Result ranking over the full 515k-row measure set is
+            Phase 2 and needs a dedicated search index — this box does not claim full-dataset fuzzy
+            search.
           </Typography>
         </CardContent>
       </Card>

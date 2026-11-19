@@ -36,7 +36,7 @@ const OPTION_TEST_IDS: Record<DiscoveryKind, string> = {
   soc: 'quick-soc-result',
 };
 
-const DEFAULT_LABEL = 'Search functions, regions, sources and NSW SOC entities';
+const DEFAULT_LABEL = 'Search functions, regions, sources and State-owned entities';
 
 export function QuickSearch({
   label = DEFAULT_LABEL,
@@ -155,7 +155,7 @@ export function QuickSearch({
         helperText={
           variant === 'header'
             ? undefined
-            : 'Typo-tolerant over a bounded discovery index (functions, regions, sources, 10 SOC entities). Press Enter to search every measure.'
+            : 'Typo-tolerant over a bounded discovery index (functions, regions, sources, 10 state-owned entities). Press Enter to search every measure.'
         }
         FormHelperTextProps={variant === 'header' ? undefined : { id: helperId }}
         inputProps={{
@@ -237,8 +237,8 @@ export function QuickSearch({
           {noResults ? (
             <Box sx={{ p: 1 }} data-testid="quick-search-no-results">
               <Typography variant="body2" color="text.secondary">
-                No function, region, data source or SOC entity matches “{trimmed}”. Nothing is
-                invented.
+                No function, region, data source or state-owned entity matches “{trimmed}”. Nothing
+                is invented.
               </Typography>
               {suggestion ? (
                 <Typography variant="body2" sx={{ mt: 0.5 }} data-testid="quick-search-suggestion">
