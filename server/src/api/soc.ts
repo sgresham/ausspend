@@ -108,6 +108,15 @@ import {
   WESTERN_POWER_UNIT,
   WESTERN_POWER_UNIT_LABEL,
   WESTERN_POWER_UNIT_TO_CENTS,
+  HORIZON_POWER_CAVEAT,
+  HORIZON_POWER_ENTITY,
+  HORIZON_POWER_ID,
+  HORIZON_POWER_JURISDICTION,
+  HORIZON_POWER_NAME,
+  HORIZON_POWER_SOURCE_URL,
+  HORIZON_POWER_UNIT,
+  HORIZON_POWER_UNIT_LABEL,
+  HORIZON_POWER_UNIT_TO_CENTS,
   ENERGY_QUEENSLAND_CAVEAT,
   ENERGY_QUEENSLAND_ENTITY,
   ENERGY_QUEENSLAND_ID,
@@ -210,8 +219,8 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North NQBP Water Corporation, Synergy and Western Power) is a separate
- * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together. Water Corporation, Synergy and Western Power are WA Government Trading Enterprises and are never combined with them.
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North NQBP Water Corporation, Synergy, Western Power and Horizon Power) is a separate
+ * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power and Horizon Power are WA Government Trading Enterprises and are never combined with them.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
  * `soc_component_of`, `soc_breakdown`). They are grouped for the UI but are
@@ -463,6 +472,17 @@ const SOC_SOURCES = [
     unit_to_cents: WESTERN_POWER_UNIT_TO_CENTS,
     caveat: WESTERN_POWER_CAVEAT,
   },
+  {
+    source_id: HORIZON_POWER_ID,
+    name: HORIZON_POWER_NAME,
+    entity: HORIZON_POWER_ENTITY,
+    jurisdiction: HORIZON_POWER_JURISDICTION,
+    discovery_page: HORIZON_POWER_SOURCE_URL,
+    unit: HORIZON_POWER_UNIT,
+    unit_label: HORIZON_POWER_UNIT_LABEL,
+    unit_to_cents: HORIZON_POWER_UNIT_TO_CENTS,
+    caveat: HORIZON_POWER_CAVEAT,
+  },
 ] as const;
 
 export const getSoc: RequestHandler = async (req, res) => {
@@ -587,6 +607,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North NQBP Water Corporation, Synergy and Western Power). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together. Water Corporation, Synergy and Western Power are WA Government Trading Enterprises and are never combined with them. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North NQBP Water Corporation, Synergy, Western Power and Horizon Power). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North and NQBP are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power and Horizon Power are WA Government Trading Enterprises and are never combined with them. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };

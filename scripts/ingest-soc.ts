@@ -169,6 +169,19 @@ import {
   WESTERN_POWER_UNIT,
   WESTERN_POWER_UNIT_LABEL,
   WESTERN_POWER_UNIT_TO_CENTS,
+  HORIZON_POWER_CAVEAT,
+  HORIZON_POWER_ENTITY,
+  HORIZON_POWER_ID,
+  HORIZON_POWER_JURISDICTION,
+  HORIZON_POWER_LEGAL_CLASS,
+  HORIZON_POWER_LICENSE,
+  HORIZON_POWER_NAME,
+  HORIZON_POWER_OFFICIAL_FALLBACK_URL,
+  HORIZON_POWER_PUBLISHER,
+  HORIZON_POWER_SOURCE_URL,
+  HORIZON_POWER_UNIT,
+  HORIZON_POWER_UNIT_LABEL,
+  HORIZON_POWER_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -307,7 +320,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy and Western Power). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power and Horizon Power). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -334,6 +347,7 @@ export const SOC_SOURCE_IDS = [
   WATER_CORPORATION_ID,
   SYNERGY_ID,
   WESTERN_POWER_ID,
+  HORIZON_POWER_ID,
 ] as const;
 
 /**
@@ -1130,6 +1144,42 @@ async function writeWesternPowerManifest(): Promise<void> {
   );
 }
 
+async function writeHorizonPowerManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: HORIZON_POWER_ID });
+  const manifestPath = path.resolve(
+    process.env.HORIZON_POWER_MANIFEST ?? 'docs/source-archive/wa-horizon-power-annual-report.json',
+  );
+  const manifest = {
+    entity: HORIZON_POWER_ENTITY,
+    legal_class: HORIZON_POWER_LEGAL_CLASS,
+    jurisdiction: HORIZON_POWER_JURISDICTION,
+    dataset: HORIZON_POWER_NAME,
+    publisher: HORIZON_POWER_PUBLISHER,
+    discovery_page: HORIZON_POWER_SOURCE_URL,
+    official_page_http_status: 403,
+    fallback_url: HORIZON_POWER_OFFICIAL_FALLBACK_URL,
+    license: HORIZON_POWER_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${HORIZON_POWER_UNIT_LABEL} (${HORIZON_POWER_UNIT}; x${HORIZON_POWER_UNIT_TO_CENTS} cents per unit)`,
+    caveat: HORIZON_POWER_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Horizon Power only (Regional Power Corporation), a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). The official publications pages return HTTP 403 (Cloudflare/bot challenge) from the ingestion host; discovery falls back to the official FY2025-26 annual-report PDF on Horizon Power's own CDN. The exact PDF is SHA-256 archived outside the repo. The Statement of comprehensive income prints an explicit $'000 unit and two reporting-date columns; the adapter reads the 30 June 2026 column only. It has no printed Total expenses subtotal, so total expenses is the exact sum of the printed expense lines, accepted only when it bridges to the printed Profit before income tax equivalent expense and Profit for the year at zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Horizon Power rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, Western Power, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1189,6 +1239,7 @@ async function main(): Promise<void> {
     await writeWaterCorporationManifest();
     await writeSynergyManifest();
     await writeWesternPowerManifest();
+    await writeHorizonPowerManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1712,6 +1763,33 @@ async function main(): Promise<void> {
     for (const group of westernPowerByLine) {
       console.log(
         `[ingest:soc] ${WESTERN_POWER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const horizonPowerRows = await MeasureModel.countDocuments({ source_id: HORIZON_POWER_ID });
+    const horizonPowerVerified = await MeasureModel.countDocuments({
+      source_id: HORIZON_POWER_ID,
+      verified: true,
+    });
+    const horizonPowerDoubleCount = await MeasureModel.countDocuments({
+      source_id: HORIZON_POWER_ID,
+      potential_double_count: true,
+    });
+    const horizonPowerByLine = await MeasureModel.aggregate([
+      { $match: { source_id: HORIZON_POWER_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const horizonPowerDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: HORIZON_POWER_ID,
+      status: 'deferred',
+    });
+    const horizonPowerArchived = await listArchivedRecords({ source_id: HORIZON_POWER_ID });
+    console.log(
+      `[ingest:soc] ${HORIZON_POWER_ID} rows=${horizonPowerRows} source_documents=${horizonPowerArchived.length} verified=${horizonPowerVerified} potential_double_count=${horizonPowerDoubleCount} deferred_documents=${horizonPowerDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of horizonPowerByLine) {
+      console.log(
+        `[ingest:soc] ${HORIZON_POWER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(
