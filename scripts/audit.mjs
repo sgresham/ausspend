@@ -133,6 +133,7 @@ const KNOWN_SOURCE_IDS = [
   'cessnock-gpfs',
   'kiama-gpfs',
   'lismore-gpfs',
+  'muswellbrook-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
