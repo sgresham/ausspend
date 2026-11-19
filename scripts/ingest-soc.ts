@@ -120,6 +120,19 @@ import {
   PORTS_NORTH_UNIT,
   PORTS_NORTH_UNIT_LABEL,
   PORTS_NORTH_UNIT_TO_CENTS,
+  NQBP_CAVEAT,
+  NQBP_ENTITY,
+  NQBP_ID,
+  NQBP_JURISDICTION,
+  NQBP_LEGAL_CLASS,
+  NQBP_LICENSE,
+  NQBP_NAME,
+  NQBP_PARLIAMENT_FALLBACK_URL,
+  NQBP_PUBLISHER,
+  NQBP_SOURCE_URL,
+  NQBP_UNIT,
+  NQBP_UNIT_LABEL,
+  NQBP_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -258,7 +271,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited and Ports North). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North and NQBP). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -281,6 +294,7 @@ export const SOC_SOURCE_IDS = [
   GLADSTONE_PORTS_ID,
   PORT_OF_TOWNSVILLE_ID,
   PORTS_NORTH_ID,
+  NQBP_ID,
 ] as const;
 
 /**
@@ -938,6 +952,42 @@ async function writePortsNorthManifest(): Promise<void> {
   );
 }
 
+async function writeNqbpManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: NQBP_ID });
+  const manifestPath = path.resolve(
+    process.env.NQBP_MANIFEST ?? 'docs/source-archive/qld-nqbp-annual-report.json',
+  );
+  const manifest = {
+    entity: NQBP_ENTITY,
+    legal_class: NQBP_LEGAL_CLASS,
+    jurisdiction: NQBP_JURISDICTION,
+    dataset: NQBP_NAME,
+    publisher: NQBP_PUBLISHER,
+    discovery_page: NQBP_SOURCE_URL,
+    official_page_http_status: 403,
+    fallback_url: NQBP_PARLIAMENT_FALLBACK_URL,
+    license: NQBP_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${NQBP_UNIT_LABEL} (${NQBP_UNIT}; x${NQBP_UNIT_TO_CENTS} cents per unit)`,
+    caveat: NQBP_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: North Queensland Bulk Ports Corporation Limited (NQBP) only, a Queensland Government Owned Corporation. The official NQBP publications page returns HTTP 403 (Cloudflare/bot challenge) from the ingestion host; discovery falls back to the verified Queensland Parliament tabled-paper copy of the same annual report. The exact PDF is SHA-256 archived outside the repo. The Consolidated Statement of Comprehensive Income prints an explicit $’000 unit and both Consolidated and Parent columns; the adapter reads the Consolidated 2026 column only. The printed income and expense components sum exactly to the printed subtotals and the operating-result, net-finance, profit-before-tax, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add NQBP rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports, Port of Townsville, Ports North, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -993,6 +1043,7 @@ async function main(): Promise<void> {
     await writeGladstonePortsManifest();
     await writePortOfTownsvilleManifest();
     await writePortsNorthManifest();
+    await writeNqbpManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1413,6 +1464,31 @@ async function main(): Promise<void> {
     );
     for (const group of portsNorthByLine) {
       console.log(`[ingest:soc] ${PORTS_NORTH_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const nqbpRows = await MeasureModel.countDocuments({ source_id: NQBP_ID });
+    const nqbpVerified = await MeasureModel.countDocuments({
+      source_id: NQBP_ID,
+      verified: true,
+    });
+    const nqbpDoubleCount = await MeasureModel.countDocuments({
+      source_id: NQBP_ID,
+      potential_double_count: true,
+    });
+    const nqbpByLine = await MeasureModel.aggregate([
+      { $match: { source_id: NQBP_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const nqbpDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: NQBP_ID,
+      status: 'deferred',
+    });
+    const nqbpArchived = await listArchivedRecords({ source_id: NQBP_ID });
+    console.log(
+      `[ingest:soc] ${NQBP_ID} rows=${nqbpRows} source_documents=${nqbpArchived.length} verified=${nqbpVerified} potential_double_count=${nqbpDoubleCount} deferred_documents=${nqbpDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of nqbpByLine) {
+      console.log(`[ingest:soc] ${NQBP_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
