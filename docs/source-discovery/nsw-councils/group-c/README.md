@@ -45,7 +45,7 @@ fetch > bot-walled; smaller native PDF > large bundle.
 |---|---------|---------|-------|--------|
 | 12 | Gwydir Shire | 2024-25 | 1,862,025 | Akamai headers |
 | 13 | Wentworth Shire | 2024-25 | 1,707,983 | plain fetch |
-| 14 | Edward River | 2024-25 | 2,142,775 | Akamai headers |
+| 14 | Edward River | 2024-25 | 2,142,775 | plain fetch (2026-11); FS in combined AR; no FY2025-26 audited FS |
 | 15 | Glen Innes Severn | 2024-25 | 3,903,779 | plain fetch (2026-11); no FY2025-26 audited FS |
 | 16 | Temora Shire | 2024-25 | 2,464,389 | Akamai headers |
 | 17 | Dungog Shire | 2024-25 | 2,733,768 | Akamai headers |
@@ -84,6 +84,7 @@ curl -sS -L -r 0-1023 -D - -o /dev/null \
 - **14 of 23** council sites sit behind an Akamai bot wall that returns **403 to bare `curl`**.
   A full browser header set (UA + `Accept`, `Accept-Language`, `Sec-Fetch-*`, `Upgrade-Insecure-Requests`,
   `--compressed`) yields `200`. This is recorded per row in `access_notes`.
+- **Edward River** publishes no standalone FS; the audited statements are embedded in the combined annual report + financial statements PDF, which returns 200 to plain fetch in this run. No FY2025-26 audited statements are published.
 - **Glen Innes Severn** now returns the standalone 2024-25 PDF to plain fetch in this run; the Annual Reports page links only the annual report for 2024-25, so the exact standalone PDF is the documented pin. No FY2025-26 audited standalone FS is published.
 - **Narromine** serves PDFs from the host root with `%20` encoded spaces and `?downloadable=1`.
 - **Blayney/Forbes** use ASP.NET `.pdf.aspx` wrappers; they still return `application/pdf`.
