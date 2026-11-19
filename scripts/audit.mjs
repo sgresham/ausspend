@@ -75,6 +75,7 @@ const KNOWN_SOURCE_IDS = [
   'cootamundra-gundagai-gpfs',
   'moree-plains-gpfs',
   'hilltops-gpfs',
+  'bourke-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 53    |
-| NSW local-government source ids     | 54    |
-| Registered spending connectors      | 115   |
-| Active spending connectors          | 113   |
+| NSW council GPFS sources            | 54    |
+| NSW local-government source ids     | 55    |
+| Registered spending connectors      | 116   |
+| Active spending connectors          | 114   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -348,12 +348,12 @@ for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Cou
 23 for Blue Mountains City Council FY2024-25 (`blue-mountains-gpfs`, §7.36) and 18 for Wollondilly
 Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY2024-25
 (`camden-gpfs`, §7.38), 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) and
-17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) — all separate source ids. The
+17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
-GPFS rows. The shared dev DB currently records **53** active `data_sources` GPFS entries and **1075**
+GPFS rows. The shared dev DB currently records **54** active `data_sources` GPFS entries and **1092**
 GPFS measures, from a fresh aggregate of `source_id` matching `/gpfs$/` (2026-11-19, after the
-§7.52 Hilltops landing); this is the live
+§7.53 Bourke landing); this is the live
 DB count, not an increment of the earlier table total.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
@@ -5163,6 +5163,90 @@ committed. The focused connector test also proves idempotency against a dedicate
 
 ---
 
+### 7.53 Fifty-fourth council — Bourke Shire Council FY2025-26 GPFS (landed 2026-11-19)
+
+**Source and year.** FY2025-26 is the latest audited standalone General Purpose Financial Statements
+published by Bourke Shire Council at 2026-11-19, for the year ended 30 June 2026 (authorised for
+issue 28 September 2026). The statements are linked from the council's Reports page
+<https://bourke.nsw.gov.au/council/reports/>; the connector selects the FY2025-26 statements upload
+and ignores annual reports, quarterly budget review statements, public notices, special-purpose
+statements and prior years. The current upload is
+<https://bourke.nsw.gov.au/wp-content/uploads/2026/10/Annual-Financial-Statements-2025-2026.pdf>.
+A documented official fallback pin is used only if the page yields no usable anchor. The WordPress
+media path's upload year/month (`/2026/10/`) is skipped as a non-consecutive year pair; the parser
+reads the document's `2025-2026` range.
+
+The 88-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p6,
+Statement of Comprehensive Income p7 and B1-1 "Functions or activities" p15 — plus the independent
+auditor's reports. The printed unit is explicit `$ '000`; a missing or conflicting unit rejects the
+whole extraction. Exact bytes archived outside the repo:
+
+- bytes: **3,413,641**
+- SHA-256: `9441ad45d329e66ed888da82673e027b4d662b858308b4bb5ddd14ce1b41bce5`
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check | Printed / derived | Result |
+| --- | --- | --- |
+| Total income from continuing operations (Income Statement) | `$51,143` thousand | = `$51,143,000` |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) | `$5,024` + `$7,180` + `$2,220` + `$30,590` + `$4,172` + `$1,599` + `$358` = `$51,143` thousand | = printed total |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses + net loss on disposal) | `$9,206` + `$17,915` + `$196` + `$642` + `$280` = `$28,239` thousand | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$10,895`) | `$28,239` + `$10,895` = `$39,134` thousand | = printed B1-1 total expenses |
+| B1-1 Total functions and activities — income | `$51,143` thousand | = face statement |
+| B1-1 Total functions and activities — expenses | `$39,134` thousand | = face bridge |
+| B1-1 Total functions and activities — operating result | `$12,009` thousand | = face operating result |
+| B1-1 grants and contributions | `$34,762` thousand | = operating `$30,590` + capital `$4,172` |
+| Operating result from continuing operations | `$51,143` − `$39,134` = `$12,009` thousand | = printed operating result |
+| Net operating result for the year attributable to Council | `$12,009` thousand | = printed net result |
+| Net operating result before grants and contributions provided for capital purposes | `$12,009` − `$4,172` = `$7,837` thousand | = printed figure (evidence only) |
+| Statement of Comprehensive Income net result | `$12,009` thousand | = Income Statement net result |
+| Statement of Comprehensive Income total (`$12,009` + `$22,603` other comprehensive income) | `$34,612` thousand | = printed total comprehensive income |
+
+Total expenses is the printed face-statement bridge of expenses-excluding-depreciation (`$28,239`
+thousand) plus printed depreciation/amortisation/impairment (`$10,895` thousand), and equals the B1-1
+"Total functions and activities" expense total (`$39,134` thousand). B1-1 income, expenses, operating
+result and grants reconcile exactly to the face statement — there is **no face-vs-B1-1 discrepancy**.
+Bourke prints seven non-zero revenue lines; its net gain on disposal is nil and is not emitted (a
+non-nil gain would break the seven-component total check and reject the extraction). It prints a net
+loss on disposal of `$280` thousand as an expense line. The printed net result and before-capital
+result are both positive.
+
+**Rows.** 17 rows, source id `bourke-gpfs`, `source_dataset` "Bourke Shire Council GPFS 2025-26",
+`measure_type: "actual"`, `fiscal_year: "2025-26"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Bourke Shire Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. The minimum lines are total revenue
+`$51,143,000`, total expenses `$39,134,000`, employee expenses `$9,206,000`,
+depreciation/amortisation/impairment `$10,895,000`, operating government grants `$30,590,000`,
+capital government grants `$4,172,000`, borrowing costs `$196,000`, other income `$358,000`, net loss
+on disposal of assets `$280,000` and net result `$12,009,000`. The printed before-capital result is
+retained in reconciliation evidence only and is not emitted as a row. The B1-1 function split is used
+only for the reconciliation checks and is not emitted as rows.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government
+program data; they are not added to expenditure. The pre-existing same-entity rows are preserved
+untouched and never summed. A DB check confirms **0** non-`agency_detail` rows, **0** rows with
+`region_id`/`location` and a single `delivery_entity` for the source.
+
+**Database ingest proof (2026-11-19, shared dev DB `ausspend_dev`).** Ingesting only `bourke-gpfs`
+took the shared dev DB from **998,593** to **998,610** measures — exactly **+17** rows. GPFS rows
+moved **1075 → 1092** and active GPFS `data_sources` **53 → 54**; the SOC measure count (rows with
+`jurisdiction_level: "soc"`) stayed at **205** and every other per-source count was unchanged. A
+second ingest fetched/upserted the same 17 SHA-anchored natural keys, left the total at **998,610**
+and created no duplicate (idempotent). `data_sources` records the source `active` with
+`records_ingested: 17`; the latest `ingestion_logs` entry is `status: "success"`,
+`records_fetched: 17`, `records_upserted: 17`. All 17 measures carry `fiscal_year: "2025-26"`. The
+exact PDF is archived outside the repo under the configured source-archive root at
+`bourke-gpfs/Annual-Financial-Statements-2025-2026.pdf` with its SHA-256 and retrieval metadata; no
+PDF is committed. The focused connector test also proves idempotency against a dedicated test Mongo
+(seeded 5 rows → 22 with 17 rows; a second ingest leaves it at 22). Targeted connector tests passed
+(15/15).
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -5613,6 +5697,6 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.52 GPFS sources: fifty-three councils, one audited year
+The only ingestions are the §7.1–§7.53 GPFS sources: fifty-four councils, one audited year
 each, non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
