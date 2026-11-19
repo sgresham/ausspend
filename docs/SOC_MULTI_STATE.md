@@ -1,6 +1,7 @@
 # Multi-state SOC inventory — VIC, QLD, WA, SA, TAS, ACT and NT
 
-**Status: inventory plus three implemented QLD pilots (Energy Queensland, CS Energy and Stanwell). No other state connector,
+**Status: inventory plus four implemented QLD pilots (Energy Queensland, CS Energy, Stanwell and
+Powerlink Queensland). No other state connector,
 no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
 were read-only page/API probes made on **2026-11-17**. The QLD pilots added on **2026-11-19** are
 entity-level adapters in the existing SOC framework; they do not create a QLD total and are never
@@ -73,15 +74,15 @@ start extraction until the owner prioritises a state and the entity list is conf
 Counts below are the counts of the _named lists at the cited source_, not an estimate of the
 "real" universe. Where a source is partial, the cell says so.
 
-| State   | Legal/reporting class                                                                                   | Official list found                                                                                                                      | Entities named at source                                                                                 | Latest annual reports                                                                                                | Entity-level extraction                                                          | Proposed rank |
-| ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------- |
-| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy and Stanwell 2025-26 verified (pilots)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
-| **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified                                                                    | **High for the 12**; medium for tranche 2                                        | **2**         |
-| **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                          | Entity reports published; URLs not individually verified                                                             | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
-| **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                                                                  | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
-| **ACT** | Territory-owned Corporations (legal) / PTE/PNFC (budget classification)                                 | ACT Budget 2026-27 "Classification of ACT Entities"                                                                                      | **6 PTE/PNFC entities**; legal TOC list not separately consolidated                                      | Entity reports published; URLs not individually verified                                                             | **Medium-low** — only Icon Water is a classic commercial utility; class mismatch | **5**         |
-| **SA**  | Public corporations + statutory corporations                                                            | _Public Corporations Act 1993_ (SA); no single consolidated public list found                                                            | **No reliable count**; 3 examples verified from enabling Acts                                            | Entity reports published; no consolidated list                                                                       | **Low-medium** — entity-by-entity; list must be confirmed first                  | **6**         |
-| **NT**  | Government Owned Corporations (GOCs) + government business divisions                                    | _Government Owned Corporations Act 2001_ (NT); NTTC client-services table; entity disclosures                                            | **No single consolidated list**; 3 GOCs confirmed (Power and Water, Territory Generation, Jacana Energy) | Jacana 2025-26 PDF verified; Power and Water/Territory Generation not opened                                         | **Low-medium** — only 3 confirmed; Act declares per constituting Act             | **7**         |
+| State   | Legal/reporting class                                                                                   | Official list found                                                                                                                      | Entities named at source                                                                                 | Latest annual reports                                                                                                                      | Entity-level extraction                                                          | Proposed rank |
+| ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------- |
+| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy, Stanwell and Powerlink Queensland 2025-26 verified (pilots)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
+| **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified                                                                                          | **High for the 12**; medium for tranche 2                                        | **2**         |
+| **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                          | Entity reports published; URLs not individually verified                                                                                   | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
+| **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                                                                                        | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
+| **ACT** | Territory-owned Corporations (legal) / PTE/PNFC (budget classification)                                 | ACT Budget 2026-27 "Classification of ACT Entities"                                                                                      | **6 PTE/PNFC entities**; legal TOC list not separately consolidated                                      | Entity reports published; URLs not individually verified                                                                                   | **Medium-low** — only Icon Water is a classic commercial utility; class mismatch | **5**         |
+| **SA**  | Public corporations + statutory corporations                                                            | _Public Corporations Act 1993_ (SA); no single consolidated public list found                                                            | **No reliable count**; 3 examples verified from enabling Acts                                            | Entity reports published; no consolidated list                                                                                             | **Low-medium** — entity-by-entity; list must be confirmed first                  | **6**         |
+| **NT**  | Government Owned Corporations (GOCs) + government business divisions                                    | _Government Owned Corporations Act 2001_ (NT); NTTC client-services table; entity disclosures                                            | **No single consolidated list**; 3 GOCs confirmed (Power and Water, Territory Generation, Jacana Energy) | Jacana 2025-26 PDF verified; Power and Water/Territory Generation not opened                                                               | **Low-medium** — only 3 confirmed; Act declares per constituting Act             | **7**         |
 
 **Unit and comparability finding.** No state publishes one unit across all of its state-owned
 entities. Even within a state, an annual report may print `$'000` or `$m`, and some entities may
@@ -163,7 +164,7 @@ data.qld budget datasets applies to GOC annual reports.
 1. Energy Queensland Limited — largest energy network business; standard statements (implemented).
 2. CS Energy Limited — generation; standard statements (implemented).
 3. Stanwell Corporation Limited — generation; standard statements (implemented 2026-11-19).
-4. Powerlink Queensland — transmission; standard statements.
+4. Powerlink Queensland — transmission; standard statements (implemented 2026-11-19).
 5. Sunwater Limited — water; standard statements.
 6. Gladstone Ports Corporation Limited — large port; standard statements.
 7. Port of Townsville Limited; North Queensland Bulk Ports; Ports North — port group.
@@ -740,6 +741,48 @@ none is added to another and no QLD total is created.
   another SOC line. Consolidated parent only; subsidiaries are not added separately. Rows are
   provisional and unverified.
 
+## QLD pilot — Powerlink Queensland (implemented 2026-11-19)
+
+The fourth QLD pilot is **Powerlink Queensland only** — Queensland Electricity Transmission
+Corporation Limited, a Queensland Government Owned Corporation under the GOC Act 1993 (Qld), not a
+statutory body. It is separate from Energy Queensland, CS Energy and Stanwell; none is added to
+another and no QLD total is created.
+
+- **Source id / entity:** `qld-powerlink` / Powerlink Queensland.
+- **Report:** Powerlink Queensland Annual Report, Sustainability Report and Financial Statements
+  2025-26, for the year ended 30 June 2026 (FY2025-26).
+- **Discovery page:** the official reports page <https://www.powerlink.com.au/reports> lists the
+  annual-report landing pages. Discovery follows the newest landing page
+  (<https://www.powerlink.com.au/annual-report/annual-report-202526>) and reads its PDF link; no PDF
+  URL is hard-coded. The exact PDF is
+  <https://www.powerlink.com.au/sites/default/files/2026-10/Powerlink%20Queensland%20-%20Annual%20Report%20Sustainability%20Report%20and%20Financial%20Statements%202025-26.pdf>
+  (HTTP 200, `application/pdf`, 5,355,423 bytes, 136 PDF pages).
+- **Archive:** exact PDF archived outside the repo at `~/ausspend-source-archive/qld-powerlink/`
+  with `SHA256SUMS` and `retrieval.json`; SHA-256
+  `a4063d58b7c23169df1db3b9d38fb79aaa9e384a206ee7698df5b439d1c96e61`.
+- **Unit:** `$'000` — both the face statement (PDF page 74, printed page 73) and Note 3 (PDF page
+  85, printed page 84) print `$'000` for the 2026 and 2025 columns.
+- **Rows:** five entity-level SOC statement lines:
+  total revenue **1,227,832** (derived: Revenue 1,202,830 + Other gains/(losses) (997) + Finance
+  income 25,999); total expenses **1,411,833** (derived: Expenses from continuing operations
+  966,901 + Impairment losses 133,191 + Finance costs 311,741); employee benefit expense
+  **264,426** (Note 3 memo included within total expenses); depreciation and amortisation
+  **455,382** (Note 3 component); net result **a loss of 128,878** (`$'000`).
+- **Reconciliation (zero tolerance):** Note 3's five components
+  (52,640 + 212,218 + 185,427 + 61,234 + 455,382) = **966,901**, the printed TOTAL EXPENSES FROM
+  CONTINUING OPERATIONS and the face statement's Expenses from continuing operations. Profit from
+  continuing operations: 1,202,830 + (997) − 966,901 − 133,191 = **101,741** (printed). Net finance
+  costs: 25,999 + (311,741) = **(285,742)** (printed). Profit before tax: 101,741 + (285,742) =
+  **(184,001)** (printed). Total revenue − total expenses = 1,227,832 − 1,411,833 = **(184,001)**.
+  Net result: (184,001) + 55,123 = **(128,878)** (printed).
+- **Implementation:** `server/src/connectors/soc/qld/powerlink.ts`, registered in the SOC source
+  list, `/api/soc`, the SOC page and the ingestion runner. Tests:
+  `server/test/qld-powerlink.test.ts`.
+- **Caveat:** entity-level only. Never add Powerlink Queensland to government program spending, the
+  PNFC benchmark, Energy Queensland, CS Energy, Stanwell, another QLD GOC, a QLD total, a national
+  total, or another SOC line. Consolidated parent only; subsidiaries are not added separately. Rows
+  are provisional and unverified.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -912,8 +955,9 @@ that the page will be stable.
 
 ## Recommended next action
 
-The QLD Energy Queensland, CS Energy and Stanwell pilots described above are implemented and
-verified against their 2025-26 audited annual reports. They remain single-entity, read-only proofs: do not
-add another QLD GOC, a QLD total or another state until the owner confirms the legal class, the
-entity list and the intended use. Any next entity needs its own unit read and reconciliation; its
-rows must never be summed with Energy Queensland, CS Energy, Stanwell or government spending.
+The QLD Energy Queensland, CS Energy, Stanwell and Powerlink Queensland pilots described above are
+implemented and verified against their 2025-26 audited annual reports. They remain single-entity,
+read-only proofs: do not add another QLD GOC, a QLD total or another state until the owner confirms
+the legal class, the entity list and the intended use. Any next entity needs its own unit read and
+reconciliation; its rows must never be summed with Energy Queensland, CS Energy, Stanwell, Powerlink
+Queensland or government spending.
