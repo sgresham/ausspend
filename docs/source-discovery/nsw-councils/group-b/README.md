@@ -36,9 +36,7 @@ from official council domains.
     ingest from the GPFS page directly.
 11. **Murrumbidgee** — annual report 2024-25 plus Appendix A financial information; no
     standalone GPFS and no 2025-26 yet.
-12. **Central Darling** — annual report 2024-25 (statutory financial statements section).
-    The 2025-26 "GPFS" link is only a **1-page presentation notice**, not the statements.
-13. **Hay** — annual report 2024-25 only; the dedicated financial-statements page renders no
+12. **Hay** — annual report 2024-25 only; the dedicated financial-statements page renders no
     documents. Statement-line availability is unconfirmed.
 
 ## Explicit gaps
@@ -49,7 +47,11 @@ from official council domains.
 - **Carrathool** — the annual-report page and sitemap expose nothing newer than the
   **2023-24** combined annual report. Missing FY2024-25 and FY2025-26.
 - **Hay** — no standalone GPFS located (see above).
-- **Central Darling** — no standalone full GPFS; annual report is the usable source.
+- **Central Darling** — no standalone full GPFS. The annual report 2024-25 is the only source, but
+  its statutory financial-statements section (**PDF pages 49–151**) is **scanned images with no text
+  layer** (pdfjs returns only page numbers), so no statement lines or printed totals are readable.
+  **0 rows deferred 2026-11-19**; a machine-readable/OCR text-layer audited FS PDF is required. The
+  2025-26 "GPFS" link is only a **1-page presentation notice**, not the statements.
 
 ## Access notes for whoever ingests next
 
