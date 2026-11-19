@@ -5860,6 +5860,28 @@ PDF is committed. The focused connector test also proves idempotency against a d
 
 ---
 
+### 7.61 Sixty-second council item — Central Darling Shire Council FY2024-25 (DEFERRED, no rows)
+
+**Decision: defer, do not ingest or invent rows.** The council does not publish a standalone full
+General Purpose Financial Statements PDF. The official FY2024-25 annual report
+<https://www.centraldarling.nsw.gov.au/files/assets/public/v/1/governance/annual-report/2024-2025-annual-report/annual-report-2024-2205-final.pdf>
+(HTTP 200, `application/pdf`, 9,421,161 bytes, SHA-256
+`e00628ff2d75c2c71c354dffca1f2c7e1086c8ff566f1b5279fc3f1a9e540070`, 151 PDF pages; plain UA 200,
+bare Chrome UA 403) contains an "Audited Financial Statements 2024 - 2025" section starting at PDF
+page 49. That section is **scanned images with no text layer**: pdfjs extraction returns only the
+page-45 section title and page numbers for the following **102 pages (PDF pp. 50–151)**. No Income
+Statement, Statement of Comprehensive Income, B1-1 statement line or printed reconciling total can be
+read, so no `$ '000` unit or zero-tolerance reconciliation is possible.
+
+The 2025-26 "GPFS" link is a one-page presentation notice, not statements, and was rejected; no prior
+year or narrative figure was substituted. No `central-darling-gpfs` connector was registered and no
+rows were invented or ingested. The DB stays at **998,728** measures with **205** SOC rows and **61**
+active GPFS sources; a `deferred_soc_documents` record for `central-darling-gpfs` records the exact
+gap (scanned pages 49–151, no text layer). Full evidence:
+`docs/source-discovery/nsw-councils/central-darling-gpfs.md`.
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -6313,3 +6335,5 @@ amalgamations and administrators can change the population, so re-read the OLG w
 The only ingestions are the §7.1–§7.60 GPFS sources: sixty-one councils, one audited year
 each, non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
+§7.61 (Central Darling) is a documented deferral only: the FY2024-25 annual report's statutory
+financial-statements section is scanned with no text layer, so it contributes 0 rows.
