@@ -50,6 +50,7 @@ import { createKimberleyPortsConnector } from './soc/wa/kimberley-ports.js';
 import { createPilbaraPortsConnector } from './soc/wa/pilbara-ports.js';
 import { createJacanaEnergyConnector } from './soc/nt/jacana-energy.js';
 import { createTerritoryGenerationConnector } from './soc/nt/territory-generation.js';
+import { createMelbourneWaterConnector } from './soc/vic/melbourne-water.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -733,6 +734,19 @@ export const CONNECTORS: readonly Connector[] = [
   // another state's SOC/GTE, an NT total, a state total, a national total, or
   // another SOC line.
   createTerritoryGenerationConnector(),
+  // VIC SOC: first Victorian water-corporation source — Melbourne Water
+  // Corporation only, a statutory water corporation under the Water Act 1989
+  // (Vic), not a Government Business Enterprise / State business corporation
+  // under the State Owned Enterprises Act 1992. The latest annual report is
+  // discovered from the official annual-report page, SHA-256 archived outside
+  // the repo and parsed as five printed entity-level statement lines with every
+  // printed subtotal and result bridge reconciled at zero tolerance. This is
+  // one self-identifying, report-verifiable entity: no complete VIC
+  // water-corporation set is claimed and no VIC/water-sector total is created.
+  // Never added to government program spending, the PNFC benchmark, another
+  // water corporation or state-owned entity, a VIC total, a state total, a
+  // national total, or another SOC line.
+  createMelbourneWaterConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending

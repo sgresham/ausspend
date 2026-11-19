@@ -207,6 +207,15 @@ import {
   TERRITORY_GENERATION_UNIT,
   TERRITORY_GENERATION_UNIT_LABEL,
   TERRITORY_GENERATION_UNIT_TO_CENTS,
+  MELBOURNE_WATER_CAVEAT,
+  MELBOURNE_WATER_ENTITY,
+  MELBOURNE_WATER_ID,
+  MELBOURNE_WATER_JURISDICTION,
+  MELBOURNE_WATER_NAME,
+  MELBOURNE_WATER_SOURCE_URL,
+  MELBOURNE_WATER_UNIT,
+  MELBOURNE_WATER_UNIT_LABEL,
+  MELBOURNE_WATER_UNIT_TO_CENTS,
   ENERGY_QUEENSLAND_CAVEAT,
   ENERGY_QUEENSLAND_ENTITY,
   ENERGY_QUEENSLAND_ID,
@@ -311,6 +320,13 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * agency or a government contribution and must never be added to government
  * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority; and the first two NT sources, Jacana Energy and Territory Generation only) is a separate
  * source and is never summed with the others. There is no NT total: the two NT entities are separate GOCs and the NT GOC list is not claimed to be complete. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. Jacana Energy and Territory Generation are separate Northern Territory Government Owned Corporations; they are never combined with each other, and the NT GOC list is not claimed to be complete and no NT total is created.
+ *
+ * Melbourne Water is the first Victorian water-corporation source. It is a
+ * statutory water corporation under the Water Act 1989 (Vic) — not a
+ * Government Business Enterprise or State business corporation under the State
+ * Owned Enterprises Act 1992 (Vic). It is a single entity-level source: there is
+ * no complete VIC water-corporation set here, no VIC total and no water-sector
+ * total, and Melbourne Water is never combined with any other entity.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
  * `soc_component_of`, `soc_breakdown`). They are grouped for the UI but are
@@ -683,6 +699,17 @@ const SOC_SOURCES = [
     unit_to_cents: TERRITORY_GENERATION_UNIT_TO_CENTS,
     caveat: TERRITORY_GENERATION_CAVEAT,
   },
+  {
+    source_id: MELBOURNE_WATER_ID,
+    name: MELBOURNE_WATER_NAME,
+    entity: MELBOURNE_WATER_ENTITY,
+    jurisdiction: MELBOURNE_WATER_JURISDICTION,
+    discovery_page: MELBOURNE_WATER_SOURCE_URL,
+    unit: MELBOURNE_WATER_UNIT,
+    unit_label: MELBOURNE_WATER_UNIT_LABEL,
+    unit_to_cents: MELBOURNE_WATER_UNIT_TO_CENTS,
+    caveat: MELBOURNE_WATER_CAVEAT,
+  },
 ] as const;
 
 export const getSoc: RequestHandler = async (req, res) => {
@@ -807,6 +834,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority; and the first two NT sources, Jacana Energy and Territory Generation only — the NT GOC list is not claimed to be complete and no NT total is created). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. Jacana Energy and Territory Generation are separate Northern Territory Government Owned Corporations and are never combined with the NSW/QLD/WA entities or with each other; the NT GOC list is not claimed to be complete and no NT total is created. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority; and the first two NT sources, Jacana Energy and Territory Generation only — the NT GOC list is not claimed to be complete and no NT total is created). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. Jacana Energy and Territory Generation are separate Northern Territory Government Owned Corporations and are never combined with the NSW/QLD/WA entities or with each other; the NT GOC list is not claimed to be complete and no NT total is created. Melbourne Water is a Victorian statutory water corporation under the Water Act 1989 (Vic), not a Government Business Enterprise or State business corporation; it is a single entity-level source and there is no VIC total or water-corporation set total, and it is never combined with any other entity. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };
