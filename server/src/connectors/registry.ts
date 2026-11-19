@@ -34,6 +34,7 @@ import { createPowerlinkConnector } from './soc/qld/powerlink.js';
 import { createSunwaterConnector } from './soc/qld/sunwater.js';
 import { createGladstonePortsConnector } from './soc/qld/gladstone-ports.js';
 import { createPortOfTownsvilleConnector } from './soc/qld/port-of-townsville.js';
+import { createPortsNorthConnector } from './soc/qld/ports-north.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -576,6 +577,14 @@ export const CONNECTORS: readonly Connector[] = [
   // Queensland, Sunwater Limited, Gladstone Ports, another QLD GOC, a QLD
   // total, or any other SOC.
   createPortOfTownsvilleConnector(),
+  // QLD SOC: eighth entity — Ports North (Far North Queensland Ports Corporation
+  // Limited), a Queensland GOC. Latest annual report discovered from the
+  // official annual-reports page and parsed as entity-level statement lines.
+  // Never added to government program spending, the PNFC benchmark, Energy
+  // Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited,
+  // Gladstone Ports, Port of Townsville, another QLD GOC, a QLD total, or any
+  // other SOC.
+  createPortsNorthConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending

@@ -1,7 +1,7 @@
 # Multi-state SOC inventory — VIC, QLD, WA, SA, TAS, ACT and NT
 
-**Status: inventory plus six implemented QLD pilots (Energy Queensland, CS Energy, Stanwell,
-Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited). No other state connector,
+**Status: inventory plus seven implemented QLD pilots (Energy Queensland, CS Energy, Stanwell,
+Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited and Ports North). No other state connector,
 no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
 were read-only page/API probes made on **2026-11-17**. The QLD pilots added on **2026-11-19** are
 entity-level adapters in the existing SOC framework; they do not create a QLD total and are never
@@ -76,7 +76,7 @@ Counts below are the counts of the _named lists at the cited source_, not an est
 
 | State   | Legal/reporting class                                                                                   | Official list found                                                                                                                      | Entities named at source                                                                                 | Latest annual reports                                                                                                                      | Entity-level extraction                                                          | Proposed rank |
 | ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------- |
-| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited 2025-26 verified (pilots); Port of Townsville FY2025-26 deferred (printed $1 rounding gap, no rows)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
+| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited and Ports North 2025-26 verified (pilots); Port of Townsville FY2025-26 deferred (printed $1 rounding gap, no rows)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
 | **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified                                                                                          | **High for the 12**; medium for tranche 2                                        | **2**         |
 | **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                          | Entity reports published; URLs not individually verified                                                                                   | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
 | **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                                                                                        | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
@@ -167,7 +167,7 @@ data.qld budget datasets applies to GOC annual reports.
 4. Powerlink Queensland — transmission; standard statements (implemented 2026-11-19).
 5. Sunwater Limited — water; standard statements (implemented 2026-11-19).
 6. Gladstone Ports Corporation Limited — large port; standard statements (implemented 2026-11-19).
-7. Port of Townsville Limited — port; standard statements (deferred 2026-11-19: printed $1 rounding gap, no rows); North Queensland Bulk Ports; Ports North — remaining port group.
+7. Ports North — port; standard statements (implemented 2026-11-19). Port of Townsville Limited — deferred 2026-11-19 (printed $1 rounding gap, no rows); North Queensland Bulk Ports — remaining port group.
 8. CleanCo Queensland — smaller generation; later.
 9. QIC Limited — last; flag as non-comparable.
 
@@ -899,6 +899,48 @@ added to another and no QLD total is created.
   Sunwater Limited, Gladstone Ports Corporation Limited, another QLD GOC, a QLD total, a national
   total, or another SOC line.
 
+## QLD pilot — Ports North (implemented 2026-11-19)
+
+The seventh implemented QLD pilot is **Ports North only** — Far North Queensland Ports Corporation
+Limited, a Queensland Government Owned Corporation (GOC), not a statutory body. It is separate from
+Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports
+Corporation Limited and Port of Townsville Limited; none is added to another and no QLD total is
+created.
+
+- **Source id / entity:** `qld-ports-north` / Ports North.
+- **Report:** Ports North Annual Report 2025-26, for the year ended 30 June 2026 (FY2025-26).
+- **Discovery page:** the official annual-reports page
+  <https://www.portsnorth.com.au/news-publications/annual-reports/> lists the annual-report PDFs as
+  protocol-relative S3 links. Discovery reads the newest annual-report link; no PDF URL is
+  hard-coded. Filenames use full spans, `fy` prefixes or a single year-ended year; all are handled.
+  The exact PDF is
+  <https://os-data-2.s3-ap-southeast-2.amazonaws.com/portsnorth-com-au/bundle1/port_north_annual_report_2026_final.pdf>
+  (HTTP 200, `application/pdf`, 2,456,133 bytes, 68 PDF pages).
+- **Archive:** exact PDF archived outside the repo at `~/ausspend-source-archive/qld-ports-north/`
+  with `SHA256SUMS` and `retrieval.json`; SHA-256
+  `d61326bf72795da8ea16582715638ab5ed38b0f32dfaf405e39763d48c0d3b94`.
+- **Unit:** `$’000` — the Statement of Comprehensive Income (PDF page 30, printed page 30) prints
+  `$’000` for the 2026 and 2025 columns.
+- **Rows:** five entity-level SOC statement lines:
+  total revenue **96,667** (printed Total Income = User charges 76,925 + Interest revenue 2,068 +
+  Other revenue nil + Gain on sale 21 + Increase in Fair Value of Investment property 17,653);
+  total expenses **83,441** (printed Total Expenses = Supplies and services 42,629 + Employee
+  expenses 19,442 + Finance Costs 52 + Depreciation 7,507 + Write off of work in progress 37 +
+  Revaluation decrement 13,774); employee expenses **19,442**; depreciation **7,507**; net result
+  **a profit of 9,142** (`$’000`).
+- **Reconciliation (zero tolerance):** 96,667 − 83,441 = **13,226** (printed Operating Result before
+  income tax); 13,226 − 4,084 = **9,142** (printed Operating Result for the year). OCI:
+  (11,638) + 3,549 = **(8,089)** (printed); total comprehensive income: 9,142 + (8,089) = **1,053**
+  (printed). Every printed subtotal and bridge agrees exactly.
+- **Implementation:** `server/src/connectors/soc/qld/ports-north.ts`, registered in the SOC source
+  list, `/api/soc`, the SOC page and the ingestion runner. Tests:
+  `server/test/qld-ports-north.test.ts`.
+- **Caveat:** entity-level only. Never add Ports North to government program spending, the PNFC
+  benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited,
+  Gladstone Ports Corporation Limited, Port of Townsville Limited, another QLD GOC, a QLD total, a
+  national total, or another SOC line. Consolidated parent only; subsidiaries are not added
+  separately. Rows are provisional and unverified.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -1071,10 +1113,12 @@ that the page will be stable.
 
 ## Recommended next action
 
-The QLD Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and
-Gladstone Ports Corporation Limited pilots described above are implemented and verified against
-their 2025-26 audited annual reports. They remain single-entity,
+The QLD Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited,
+Gladstone Ports Corporation Limited and Ports North pilots described above are implemented and
+verified against their 2025-26 audited annual reports. Port of Townsville remains deferred, not
+merged data. They remain single-entity,
 read-only proofs: do not add another QLD GOC, a QLD total or another state until the owner confirms
 the legal class, the entity list and the intended use. Any next entity needs its own unit read and
 reconciliation; its rows must never be summed with Energy Queensland, CS Energy, Stanwell, Powerlink
-Queensland, Sunwater Limited, Gladstone Ports Corporation Limited or government spending.
+Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North or government
+spending.
