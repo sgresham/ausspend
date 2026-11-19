@@ -47,7 +47,7 @@ fetch > bot-walled; smaller native PDF > large bundle.
 | 13 | Wentworth Shire | 2024-25 | 1,707,983 | plain fetch |
 | 14 | Edward River | 2024-25 | 2,142,775 | plain fetch (2026-11); FS in combined AR; no FY2025-26 audited FS |
 | 15 | Glen Innes Severn | 2024-25 | 3,903,779 | plain fetch (2026-11); no FY2025-26 audited FS |
-| 16 | Temora Shire | 2024-25 | 2,464,389 | Akamai headers |
+| 16 | Temora Shire | 2024-25 | 2,464,389 | plain fetch (2026-11); no FY2025-26 audited FS |
 | 17 | Dungog Shire | 2024-25 | 2,733,768 | Akamai headers |
 | 18 | Forbes Shire | 2024-25 | 2,560,081 | plain fetch |
 | 19 | Lachlan Shire | 2024-25 | 2,779,801 | Akamai headers |
@@ -84,6 +84,7 @@ curl -sS -L -r 0-1023 -D - -o /dev/null \
 - **14 of 23** council sites sit behind an Akamai bot wall that returns **403 to bare `curl`**.
   A full browser header set (UA + `Accept`, `Accept-Language`, `Sec-Fetch-*`, `Upgrade-Insecure-Requests`,
   `--compressed`) yields `200`. This is recorded per row in `access_notes`.
+- **Temora** returns the standalone 2024-25 PDF to plain fetch in this run; no FY2025-26 audited standalone FS is published (2025-26/2026-27 quarterly reviews and planning documents only).
 - **Edward River** publishes no standalone FS; the audited statements are embedded in the combined annual report + financial statements PDF, which returns 200 to plain fetch in this run. No FY2025-26 audited statements are published.
 - **Glen Innes Severn** now returns the standalone 2024-25 PDF to plain fetch in this run; the Annual Reports page links only the annual report for 2024-25, so the exact standalone PDF is the documented pin. No FY2025-26 audited standalone FS is published.
 - **Narromine** serves PDFs from the host root with `%20` encoded spaces and `?downloadable=1`.
