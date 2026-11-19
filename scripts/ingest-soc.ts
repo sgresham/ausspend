@@ -145,6 +145,18 @@ import {
   WATER_CORPORATION_UNIT,
   WATER_CORPORATION_UNIT_LABEL,
   WATER_CORPORATION_UNIT_TO_CENTS,
+  SYNERGY_CAVEAT,
+  SYNERGY_ENTITY,
+  SYNERGY_ID,
+  SYNERGY_JURISDICTION,
+  SYNERGY_LEGAL_CLASS,
+  SYNERGY_LICENSE,
+  SYNERGY_NAME,
+  SYNERGY_PUBLISHER,
+  SYNERGY_SOURCE_URL,
+  SYNERGY_UNIT,
+  SYNERGY_UNIT_LABEL,
+  SYNERGY_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -283,7 +295,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTE, Water Corporation). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation and Synergy). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -308,6 +320,7 @@ export const SOC_SOURCE_IDS = [
   PORTS_NORTH_ID,
   NQBP_ID,
   WATER_CORPORATION_ID,
+  SYNERGY_ID,
 ] as const;
 
 /**
@@ -1036,6 +1049,40 @@ async function writeWaterCorporationManifest(): Promise<void> {
   );
 }
 
+async function writeSynergyManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: SYNERGY_ID });
+  const manifestPath = path.resolve(
+    process.env.SYNERGY_MANIFEST ?? 'docs/source-archive/wa-synergy-annual-report.json',
+  );
+  const manifest = {
+    entity: SYNERGY_ENTITY,
+    legal_class: SYNERGY_LEGAL_CLASS,
+    jurisdiction: SYNERGY_JURISDICTION,
+    dataset: SYNERGY_NAME,
+    publisher: SYNERGY_PUBLISHER,
+    discovery_page: SYNERGY_SOURCE_URL,
+    license: SYNERGY_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${SYNERGY_UNIT_LABEL} (${SYNERGY_UNIT}; x${SYNERGY_UNIT_TO_CENTS} cents per unit)`,
+    caveat: SYNERGY_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Synergy only, a WA Government Trading Enterprise (Electricity Corporations Act 2005 (WA)). Latest annual report discovered from the official annual-reports page (index -> newest landing page -> PDF; no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of profit or loss prints an explicit $'000 unit and both Group and Corporation columns; the adapter reads the Group 2026 column only. The printed revenue and expense components sum exactly to the printed subtotals and the net-finance, loss-before-tax and loss-for-the-year bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Synergy rows to government program spending, the PNFC benchmark, Water Corporation, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1093,6 +1140,7 @@ async function main(): Promise<void> {
     await writePortsNorthManifest();
     await writeNqbpManifest();
     await writeWaterCorporationManifest();
+    await writeSynergyManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1565,6 +1613,31 @@ async function main(): Promise<void> {
       console.log(
         `[ingest:soc] ${WATER_CORPORATION_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
+    }
+    const synergyRows = await MeasureModel.countDocuments({ source_id: SYNERGY_ID });
+    const synergyVerified = await MeasureModel.countDocuments({
+      source_id: SYNERGY_ID,
+      verified: true,
+    });
+    const synergyDoubleCount = await MeasureModel.countDocuments({
+      source_id: SYNERGY_ID,
+      potential_double_count: true,
+    });
+    const synergyByLine = await MeasureModel.aggregate([
+      { $match: { source_id: SYNERGY_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const synergyDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: SYNERGY_ID,
+      status: 'deferred',
+    });
+    const synergyArchived = await listArchivedRecords({ source_id: SYNERGY_ID });
+    console.log(
+      `[ingest:soc] ${SYNERGY_ID} rows=${synergyRows} source_documents=${synergyArchived.length} verified=${synergyVerified} potential_double_count=${synergyDoubleCount} deferred_documents=${synergyDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of synergyByLine) {
+      console.log(`[ingest:soc] ${SYNERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD and WA SOC adapters intentionally not implemented)`,
