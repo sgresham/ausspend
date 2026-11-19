@@ -73,7 +73,7 @@ export const ARMIDALE_CONTEXT: ArmidaleGpfsParseContext = {
 /** Golden fixture for the armidale-gpfs module: 17 rows. */
 export const ARMIDALE_GPFS_ROW_COUNT = 17;
 export const ARMIDALE_GPFS_GOLDEN_DIGEST =
-  '560971a68ed59de898244a4abcee99e869f78bd05969964d3ac2fc9b023e84ce';
+  'a7e59db6a31d63f48f156b7c517e0173c2d5521d5782038115f5e8a98f54a5ba';
 export const ROW_COUNT = ARMIDALE_GPFS_ROW_COUNT;
 export const GOLDEN_DIGEST = ARMIDALE_GPFS_GOLDEN_DIGEST;
 
