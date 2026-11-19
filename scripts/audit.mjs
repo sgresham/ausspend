@@ -134,6 +134,7 @@ const KNOWN_SOURCE_IDS = [
   'kiama-gpfs',
   'lismore-gpfs',
   'muswellbrook-gpfs',
+  'port-stephens-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

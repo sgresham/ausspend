@@ -82,35 +82,36 @@ import { connectorModule as module79 } from './parkes-gpfs/index.js';
 import { connectorModule as module80 } from './parramatta-gpfs/index.js';
 import { connectorModule as module81 } from './penrith-gpfs/index.js';
 import { connectorModule as module82 } from './port-macquarie-hastings-gpfs/index.js';
-import { connectorModule as module83 } from './queanbeyan-palerang-gpfs/index.js';
-import { connectorModule as module84 } from './randwick-gpfs/index.js';
-import { connectorModule as module85 } from './richmond-valley-gpfs/index.js';
-import { connectorModule as module86 } from './ryde-gpfs/index.js';
-import { connectorModule as module87 } from './shellharbour-gpfs/index.js';
-import { connectorModule as module88 } from './shoalhaven-gpfs/index.js';
-import { connectorModule as module89 } from './singleton-gpfs/index.js';
-import { connectorModule as module90 } from './snowy-monaro-gpfs/index.js';
-import { connectorModule as module91 } from './strathfield-gpfs/index.js';
-import { connectorModule as module92 } from './sutherland-shire-gpfs/index.js';
-import { connectorModule as module93 } from './temora-gpfs/index.js';
-import { connectorModule as module94 } from './tenterfield-gpfs/index.js';
-import { connectorModule as module95 } from './the-hills-gpfs/index.js';
-import { connectorModule as module96 } from './tweed-shire-gpfs/index.js';
-import { connectorModule as module97 } from './upper-hunter-gpfs/index.js';
-import { connectorModule as module98 } from './upper-lachlan-gpfs/index.js';
-import { connectorModule as module99 } from './uralla-gpfs/index.js';
-import { connectorModule as module100 } from './walcha-gpfs/index.js';
-import { connectorModule as module101 } from './warren-gpfs/index.js';
-import { connectorModule as module102 } from './warrumbungle-gpfs/index.js';
-import { connectorModule as module103 } from './waverley-gpfs/index.js';
-import { connectorModule as module104 } from './weddin-gpfs/index.js';
-import { connectorModule as module105 } from './wentworth-gpfs/index.js';
-import { connectorModule as module106 } from './willoughby-gpfs/index.js';
-import { connectorModule as module107 } from './wingecarribee-gpfs/index.js';
-import { connectorModule as module108 } from './wollondilly-gpfs/index.js';
-import { connectorModule as module109 } from './wollongong-gpfs/index.js';
-import { connectorModule as module110 } from './woollahra-gpfs/index.js';
-import { connectorModule as module111 } from './yass-valley-gpfs/index.js';
+import { connectorModule as module83 } from './port-stephens-gpfs/index.js';
+import { connectorModule as module84 } from './queanbeyan-palerang-gpfs/index.js';
+import { connectorModule as module85 } from './randwick-gpfs/index.js';
+import { connectorModule as module86 } from './richmond-valley-gpfs/index.js';
+import { connectorModule as module87 } from './ryde-gpfs/index.js';
+import { connectorModule as module88 } from './shellharbour-gpfs/index.js';
+import { connectorModule as module89 } from './shoalhaven-gpfs/index.js';
+import { connectorModule as module90 } from './singleton-gpfs/index.js';
+import { connectorModule as module91 } from './snowy-monaro-gpfs/index.js';
+import { connectorModule as module92 } from './strathfield-gpfs/index.js';
+import { connectorModule as module93 } from './sutherland-shire-gpfs/index.js';
+import { connectorModule as module94 } from './temora-gpfs/index.js';
+import { connectorModule as module95 } from './tenterfield-gpfs/index.js';
+import { connectorModule as module96 } from './the-hills-gpfs/index.js';
+import { connectorModule as module97 } from './tweed-shire-gpfs/index.js';
+import { connectorModule as module98 } from './upper-hunter-gpfs/index.js';
+import { connectorModule as module99 } from './upper-lachlan-gpfs/index.js';
+import { connectorModule as module100 } from './uralla-gpfs/index.js';
+import { connectorModule as module101 } from './walcha-gpfs/index.js';
+import { connectorModule as module102 } from './warren-gpfs/index.js';
+import { connectorModule as module103 } from './warrumbungle-gpfs/index.js';
+import { connectorModule as module104 } from './waverley-gpfs/index.js';
+import { connectorModule as module105 } from './weddin-gpfs/index.js';
+import { connectorModule as module106 } from './wentworth-gpfs/index.js';
+import { connectorModule as module107 } from './willoughby-gpfs/index.js';
+import { connectorModule as module108 } from './wingecarribee-gpfs/index.js';
+import { connectorModule as module109 } from './wollondilly-gpfs/index.js';
+import { connectorModule as module110 } from './wollongong-gpfs/index.js';
+import { connectorModule as module111 } from './woollahra-gpfs/index.js';
+import { connectorModule as module112 } from './yass-valley-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -225,6 +226,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module109,
   module110,
   module111,
+  module112,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);
