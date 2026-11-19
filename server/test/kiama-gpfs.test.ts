@@ -1,22 +1,29 @@
 import mongoose from 'mongoose';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SpendingRecord } from '@ausspend/shared';
 import {
+  KIAMA_ANNUAL_REPORT_GAP,
   KIAMA_GPFS_DOCUMENT_PIN,
   KIAMA_GPFS_FISCAL_YEAR,
   KIAMA_GPFS_ID,
   KIAMA_GPFS_LICENSE,
+  KIAMA_GPFS_LINES,
   KIAMA_GPFS_NAME,
   KIAMA_GPFS_PUBLISHER,
   KIAMA_GPFS_REPORTING_URL,
   KIAMA_GPFS_REQUEST_HEADERS,
-  KIAMA_GPFS_STANDALONE_FS_URL,
   discoverKiamaGpfsDocument,
   fiscalYearFromKiamaAnnualReportLink,
+  fiscalYearFromKiamaFinancialStatementsLink,
+  kiamaAnnualReportPinnedDocument,
   kiamaGpfsNaturalKey,
   kiamaPinnedDocument,
+  parseKiamaAnnualReportExtraction,
+  parseKiamaAnnualReportLinks,
   parseKiamaGpfsExtraction,
-  parseKiamaGpfsReportLinks,
+  parseKiamaGpfsFinancialStatementsLinks,
+  parseKiamaGpfsFunctionsTotals,
+  selectKiamaAnnualReportDocument,
   selectKiamaGpfsDocument,
 } from '../src/connectors/kiama-gpfs/index.js';
 import { runIngestion } from '../src/connectors/runner.js';
@@ -26,79 +33,137 @@ import {
   KIAMA_AUTHORISATION_TEXT,
   KIAMA_CONTENTS_TEXT,
   KIAMA_CONTEXT,
+  KIAMA_FUNCTIONS_TEXT,
+  KIAMA_INCOME_TEXT,
   KIAMA_SUMMARY_TEXT,
+  kiamaAnnualReportExtraction,
   kiamaExtraction,
 } from '../src/connectors/kiama-gpfs/fixture.js';
-import type { PdfExtraction } from '../src/connectors/pdf-extract.js';
 
-// Kiama Municipal Council's official Annual Report 2024-25 does NOT contain the
-// audited General Purpose Financial Statements section. It has an un-audited
-// Consolidated operating results summary (page 19) and ends at the Authorisation
-// and version control page (page 91). The same official page publishes a separate
-// current-year Financial Statements PDF. The brief limits this item to the annual
-// report and forbids substituting a standalone report, so the connector defers
-// with 0 rows and records the exact gap.
+// Kiama City Council's FY2024-25 annual report is narrative-only, but the
+// official Annual Reports and Financial Statements page publishes a separate
+// current-year FY2024-25 Financial Statements PDF with the audit opinion. The
+// connector discovers/archives that FS through the browser/WAF-aware path and
+// emits the printed statement slice, including the discontinued-operations
+// result. The annual-report-only rejection is retained.
 
-const GAP_REASON =
-  'audited GPFS section not found in the FY2024-25 annual report; page 19 contains only the un-audited Consolidated operating results summary; the report ends at the Authorisation and version control page (page 91); no Income Statement/Statement of Comprehensive Income/Statement of Financial Position/Statement of Cash Flows/B1-1 with printed subtotals was found; the official Reporting page publishes a separate FY2024-25 Financial Statements PDF, and this annual-report-only item does not substitute that standalone report; no rows ingested';
-
+const FS_2024_HREF =
+  '/files/sharedassets/public/v/1/council/council-plans-amp-reports/financial-plans-and-annual-reports/kiama-municipal-council-financial-statements-2024-25.pdf';
+const FS_2023_HREF = '/files/sharedassets/public/v/2/news/2023-24-audited-financial-statements.pdf';
+const FS_2022_HREF =
+  '/files/sharedassets/public/v/1/council/financial-plans-and-annual-reports/kiama-municipal-council-financial-statements-2022-23.pdf';
 const AR_2024_HREF =
   '/files/sharedassets/public/v/1/council/council-plans-amp-reports/2024-25-annual-report-final.pdf';
-const AR_2023_HREF =
-  '/files/sharedassets/public/v/1/council/council-plans-amp-reports/kmc-annual-report-2023-2024.pdf';
-const AR_2022_HREF =
-  '/files/sharedassets/public/v/5/council/council-plans-amp-reports/kmc-annual-report-2022-2023.pdf';
+
+const LISTING_HTML = `
+  <p>Council's Annual Financial Statements are based on each financial year, and set out Council's financial performance, financial position and cash flows.</p>
+  <a href="${FS_2024_HREF}" title="Financial-Statements-2024-25" target="_blank" class="document ext-pdf">Financial-Statements-2024-25<span class="file-info">(PDF,&nbsp;10MB)</span></a>
+  <a href="${FS_2023_HREF}" title="Financial statements 2023-24" target="_blank" class="document ext-pdf">Financial statements 2023-24<span class="file-info">(PDF,&nbsp;4MB)</span></a>
+  <a href="${FS_2022_HREF}" title="Financial statements 2022-23" target="_blank" class="document ext-pdf">Financial statements 2022-23<span class="file-info">(PDF,&nbsp;4MB)</span></a>
+  <a href="${AR_2024_HREF}" title="Annual Report 2024-25" target="_blank" class="document ext-pdf">Annual Report 2024-25<span class="file-info">(PDF,&nbsp;15MB)</span></a>
+  <a href="/files/sharedassets/public/v/1/council/council-plans-amp-reports/annual-report-2022-2023-addendum.pdf" title="Annual Report 2022-23 - Addendum">Annual Report 2022-23 - Addendum</a>
+`;
+
+const { BROWSER_BYTES, BROWSER_HTML } = vi.hoisted(() => {
+  const pin =
+    'https://www.kiama.nsw.gov.au/files/sharedassets/public/v/1/council/council-plans-amp-reports/financial-plans-and-annual-reports/kiama-municipal-council-financial-statements-2024-25.pdf';
+  return {
+    BROWSER_HTML: `<a href="${pin}" title="Financial-Statements-2024-25">Financial-Statements-2024-25</a>`,
+    BROWSER_BYTES: Buffer.from('browser-fetched-fs-bytes'),
+  };
+});
+
+vi.mock('playwright', () => {
+  const page = {
+    async goto() {
+      return { ok: () => true, status: () => 200 };
+    },
+    async waitForTimeout() {
+      return undefined;
+    },
+    async content() {
+      return BROWSER_HTML;
+    },
+    async evaluate() {
+      return Buffer.from('browser-fetched-fs-bytes').toString('base64');
+    },
+  };
+  const context = {
+    async newPage() {
+      return page;
+    },
+  };
+  const browser = {
+    async newContext() {
+      return context;
+    },
+    async close() {
+      return undefined;
+    },
+  };
+  return {
+    chromium: {
+      async launch() {
+        return browser;
+      },
+    },
+  };
+});
+
+const { fetchKiamaGpfsViaBrowser } = await import('../../scripts/kiama-gpfs-browser.js');
 
 function parsedFixture() {
   return parseKiamaGpfsExtraction(kiamaExtraction(), KIAMA_CONTEXT);
 }
 
-describe('Kiama Municipal Council annual-report discovery', () => {
-  const pageHtml = `
-    <p>Council's Annual Financial Statements are based on each financial year, and set out Council's financial performance, financial position and cash flows.</p>
-    <a href="${AR_2024_HREF}" title="Annual Report 2024-25" target="_blank" class="document ext-pdf">Annual Report 2024-25<span class="file-info">(PDF,&nbsp;15MB)</span></a>
-    <a href="${AR_2023_HREF}" title="Annual Report 2023-24" target="_blank" class="document ext-pdf">Annual Report 2023-24<span class="file-info">(PDF,&nbsp;9MB)</span></a>
-    <a href="${AR_2022_HREF}" title="Annual Report 2022-23" target="_blank" class="document ext-pdf">Annual Report 2022-23<span class="file-info">(PDF,&nbsp;10MB)</span></a>
-    <a href="/files/sharedassets/public/v/1/council/council-plans-amp-reports/annual-report-2022-2023-addendum.pdf" title="Annual Report 2022-23 - Addendum" target="_blank" class="document ext-pdf">Annual Report 2022-23 - Addendum</a>
-    <a href="${KIAMA_GPFS_STANDALONE_FS_URL}" title="Financial-Statements-2024-25" target="_blank" class="document ext-pdf">Financial-Statements-2024-25<span class="file-info">(PDF,&nbsp;10MB)</span></a>
-    <a href="/files/sharedassets/public/v/2/news/2023-24-audited-financial-statements.pdf" title="Financial statements 2023-24">Financial statements 2023-24</a>
-  `;
-
-  it('discovers the latest FY2024-25 annual report and never selects the separate FS', () => {
+describe('Kiama Municipal Council standalone FS discovery', () => {
+  it('discovers the FY2024-25 FS and never selects the annual report', () => {
     expect(KIAMA_GPFS_FISCAL_YEAR).toBe('2024-25');
-    const links = parseKiamaGpfsReportLinks(pageHtml, KIAMA_GPFS_REPORTING_URL);
+    const links = parseKiamaGpfsFinancialStatementsLinks(LISTING_HTML, KIAMA_GPFS_REPORTING_URL);
     expect(links.map((link) => link.fiscal_year)).toEqual(['2024-25', '2023-24', '2022-23']);
-    expect(links.some((link) => link.url === KIAMA_GPFS_STANDALONE_FS_URL)).toBe(false);
-    expect(links.some((link) => /addendum/i.test(link.url))).toBe(false);
+    expect(links.some((link) => link.url.includes('annual-report-final.pdf'))).toBe(false);
     const selected = selectKiamaGpfsDocument(links, '2024-25');
-    expect(selected.url).toBe(new URL(AR_2024_HREF, KIAMA_GPFS_REPORTING_URL).toString());
+    expect(selected.url).toBe(new URL(FS_2024_HREF, KIAMA_GPFS_REPORTING_URL).toString());
     expect(selected.fiscal_year).toBe('2024-25');
     expect(selected.listing_url).toBe(KIAMA_GPFS_REPORTING_URL);
-    expect(selected.title).toContain('Annual Report 2024-25');
-    expect(fiscalYearFromKiamaAnnualReportLink('Annual Report 2024-25')).toBe('2024-25');
-    expect(fiscalYearFromKiamaAnnualReportLink('Annual Report 2023-2024')).toBe('2023-24');
+    expect(selected.title).toContain('2024-25');
+    expect(fiscalYearFromKiamaFinancialStatementsLink('Financial-Statements-2024-25')).toBe(
+      '2024-25',
+    );
+    expect(fiscalYearFromKiamaFinancialStatementsLink('Financial statements 2023-24')).toBe(
+      '2023-24',
+    );
     expect(
-      fiscalYearFromKiamaAnnualReportLink('Long Term Financial Plan 2023-2033.pdf'),
+      fiscalYearFromKiamaFinancialStatementsLink('Long Term Financial Plan 2023-2033.pdf'),
     ).toBeNull();
   });
 
+  it('retains annual-report discovery and excludes the separate FS', () => {
+    const annualReports = parseKiamaAnnualReportLinks(LISTING_HTML, KIAMA_GPFS_REPORTING_URL);
+    expect(annualReports.map((link) => link.fiscal_year)).toEqual(['2024-25']);
+    const selected = selectKiamaAnnualReportDocument(annualReports, '2024-25');
+    expect(selected.url).toContain('2024-25-annual-report-final.pdf');
+    expect(fiscalYearFromKiamaAnnualReportLink('Annual Report 2024-25')).toBe('2024-25');
+    expect(fiscalYearFromKiamaAnnualReportLink('Annual Report 2023-2024')).toBe('2023-24');
+  });
+
   it('rejects a prior year and never substitutes 2023-24 for the target 2024-25', () => {
-    const priorOnly = `<a href="${AR_2023_HREF}" title="Annual Report 2023-24">Annual Report 2023-24</a>`;
-    const links = parseKiamaGpfsReportLinks(priorOnly, KIAMA_GPFS_REPORTING_URL);
+    const priorOnly = `<a href="${FS_2023_HREF}" title="Financial statements 2023-24">Financial statements 2023-24</a>`;
+    const links = parseKiamaGpfsFinancialStatementsLinks(priorOnly, KIAMA_GPFS_REPORTING_URL);
     expect(links.map((link) => link.fiscal_year)).toEqual(['2023-24']);
     expect(() => selectKiamaGpfsDocument(links, '2024-25')).toThrow(/No published/);
   });
 
-  it('does not substitute a 2025-26 annual report for the FY2024-25 target', () => {
-    const futureOnly = `<a href="/files/x/2025-26-annual-report-final.pdf" title="Annual Report 2025-26">Annual Report 2025-26</a>`;
-    const links = parseKiamaGpfsReportLinks(futureOnly, KIAMA_GPFS_REPORTING_URL);
+  it('does not substitute a 2025-26 FS for the FY2024-25 target', () => {
+    const futureOnly = `<a href="/files/x/financial-statements-2025-26.pdf" title="Financial statements 2025-26">Financial statements 2025-26</a>`;
+    const links = parseKiamaGpfsFinancialStatementsLinks(futureOnly, KIAMA_GPFS_REPORTING_URL);
     expect(links.map((link) => link.fiscal_year)).toEqual(['2025-26']);
     expect(() => selectKiamaGpfsDocument(links, '2024-25')).toThrow(/No published/);
   });
 
-  it('uses the documented official pin when the listing yields no usable anchor', async () => {
+  it('uses the documented official FS pin when the listing yields no usable anchor', async () => {
     expect(
-      parseKiamaGpfsReportLinks(
+      parseKiamaGpfsFinancialStatementsLinks(
         '<html><body>No document links here</body></html>',
         KIAMA_GPFS_REPORTING_URL,
       ),
@@ -106,6 +171,7 @@ describe('Kiama Municipal Council annual-report discovery', () => {
     const pinned = kiamaPinnedDocument();
     expect(pinned.url).toBe(KIAMA_GPFS_DOCUMENT_PIN);
     expect(pinned.fiscal_year).toBe('2024-25');
+    expect(kiamaAnnualReportPinnedDocument().url).toContain('2024-25-annual-report-final.pdf');
     const discovered = await discoverKiamaGpfsDocument(
       (async () => new Response('<html>no links</html>', { status: 200 })) as typeof fetch,
       '2024-25',
@@ -123,7 +189,7 @@ describe('Kiama Municipal Council annual-report discovery', () => {
     expect(discovered.fiscal_year).toBe('2024-25');
   });
 
-  it('sends a plain client UA for deterministic discovery and download', async () => {
+  it('sends a plain client UA for deterministic plain-fetch discovery', async () => {
     expect(KIAMA_GPFS_REQUEST_HEADERS['user-agent']).toBe('curl/8.5.0');
     let seenHeaders: Record<string, string> | undefined;
     await discoverKiamaGpfsDocument(
@@ -146,80 +212,131 @@ describe('Kiama Municipal Council annual-report discovery', () => {
       ),
     ).rejects.toThrow(/No published/);
   });
+
+  it('fetches the FS through the browser/WAF-aware path', async () => {
+    const fetched = await fetchKiamaGpfsViaBrowser(KIAMA_GPFS_REPORTING_URL, '2024-25');
+    expect(fetched.pdfUrl).toBe(KIAMA_GPFS_DOCUMENT_PIN);
+    expect(fetched.listingHtml).toBe(BROWSER_HTML);
+    expect(Buffer.from(fetched.pdfBytes).equals(BROWSER_BYTES)).toBe(true);
+  });
 });
 
-describe('Kiama Municipal Council annual-report FS-section absence', () => {
-  it('defers with 0 rows and records the exact annual-report gap', () => {
+describe('Kiama Municipal Council standalone FS GPFS slice', () => {
+  it('emits 19 printed statement lines with an explicit discontinued-result bridge', () => {
     const parsed = parsedFixture();
+    expect(parsed.records).toHaveLength(19);
+    expect(parsed.rejections).toEqual([]);
+    expect(KIAMA_GPFS_LINES).toHaveLength(19);
+    const recon = parsed.reconciliation!;
+    expect(recon.unit).toBe('thousands');
+    expect(recon.total_revenue).toBe(74_082);
+    expect(recon.total_expenses).toBe(74_829);
+    expect(recon.employee_expenses).toBe(30_853);
+    expect(recon.materials_and_services).toBe(30_044);
+    expect(recon.borrowing_costs).toBe(177);
+    expect(recon.other_expenses).toBe(1_135);
+    expect(recon.net_loss_from_disposal_of_assets).toBe(1_063);
+    expect(recon.depreciation_amortisation_impairment).toBe(11_557);
+    expect(recon.government_grants_operating).toBe(3_454);
+    expect(recon.government_grants_capital).toBe(15_517);
+    expect(recon.operating_result_continuing).toBe(-747);
+    expect(recon.discontinued_operations_result).toBe(-6_643);
+    expect(recon.net_result).toBe(-7_390);
+    expect(recon.net_result_before_capital_grants).toBe(-22_907);
+    expect(recon.operating_result_excluding_depreciation).toBe(10_810);
+    expect(recon.printed_total_expenses_excluding_depreciation).toBe(63_272);
+    expect(recon.functions_total_income).toBe(74_082);
+    expect(recon.functions_total_expenses).toBe(74_829);
+    expect(recon.functions_operating_result).toBe(-747);
+    expect(recon.functions_grants_and_contributions).toBe(18_971);
+    expect(recon.functions_carrying_amount).toBe(716_789);
+    expect(recon.comprehensive_total).toBe(16_621);
+    expect(recon.total_equity).toBe(624_145);
+    expect(recon.cash_net_change).toBe(-1_123);
+    expect(recon.checks).toHaveLength(12);
+    expect(parsed.warnings[0]).toContain('reconciled exactly');
+  });
+
+  it('stores the negative result rows with a printed-sign marker', () => {
+    const byKey = new Map(parsedFixture().records.map((record) => [record.gpfs_line_item, record]));
+    expect(byKey.get('rates_and_annual_charges')!.amount_cents).toBe(2_874_100_000);
+    expect(byKey.get('total_revenue')!.amount_cents).toBe(7_408_200_000);
+    expect(byKey.get('total_expenses')!.amount_cents).toBe(7_482_900_000);
+    expect(byKey.get('operating_result_continuing')!.amount_cents).toBe(74_700_000);
+    expect(byKey.get('operating_result_continuing')!.gpfs_printed_sign).toBe('negative');
+    expect(byKey.get('discontinued_operations_result')!.amount_cents).toBe(664_300_000);
+    expect(byKey.get('discontinued_operations_result')!.gpfs_printed_sign).toBe('negative');
+    expect(byKey.get('net_result')!.amount_cents).toBe(739_000_000);
+    expect(byKey.get('net_result')!.gpfs_printed_sign).toBe('negative');
+    expect(byKey.get('government_grants_capital')!.potential_double_count).toBe(true);
+    expect(byKey.get('depreciation_amortisation_impairment')!.gpfs_component_of).toBe(
+      'total_expenses',
+    );
+  });
+
+  it('parses B1-1 Total functions and activities', () => {
+    const totals = parseKiamaGpfsFunctionsTotals({
+      page_number: 13,
+      text: KIAMA_FUNCTIONS_TEXT,
+      items: [],
+    });
+    expect(totals).toEqual({
+      page_number: 13,
+      income: 74_082,
+      expenses: 74_829,
+      operating_result: -747,
+      grants_and_contributions: 18_971,
+      carrying_amount: 716_789,
+    });
+  });
+
+  it('rejects when the printed unit is missing (unit gate)', () => {
+    const extraction = kiamaExtraction();
+    extraction.pages = extraction.pages.map((page) =>
+      page.page_number === 4 ? { ...page, text: page.text.replace(/\$ '000/, 'Notes') } : page,
+    );
+    const parsed = parseKiamaGpfsExtraction(extraction, KIAMA_CONTEXT);
+    expect(parsed.records).toEqual([]);
+    expect(parsed.rejections[0]!.reason).toContain('no unambiguous printed currency unit');
+    expect(parsed.reconciliation).toBeNull();
+  });
+
+  it('rejects when printed units disagree between statements', () => {
+    const extraction = kiamaExtraction();
+    extraction.pages = extraction.pages.map((page) =>
+      page.page_number === 13 ? { ...page, text: page.text.replace("$ '000", '$m') } : page,
+    );
+    const parsed = parseKiamaGpfsExtraction(extraction, KIAMA_CONTEXT);
+    expect(parsed.records).toEqual([]);
+    expect(parsed.rejections[0]!.reason).toContain('printed units disagree');
+  });
+
+  it('retains the annual-report-only rejection (0 rows, exact gap)', () => {
+    const parsed = parseKiamaAnnualReportExtraction(kiamaAnnualReportExtraction(), KIAMA_CONTEXT);
     expect(parsed.records).toEqual([]);
     expect(parsed.reconciliation).toBeNull();
-    expect(parsed.rejections).toHaveLength(1);
-    expect(parsed.rejections[0]!.reason).toBe(GAP_REASON);
+    expect(parsed.rejections[0]!.reason).toBe(KIAMA_ANNUAL_REPORT_GAP);
     expect(KIAMA_SUMMARY_TEXT).toContain('Consolidated operating results');
-    expect(KIAMA_SUMMARY_TEXT).toContain(
-      'Net operating result for the year attributable to Council',
-    );
     expect(KIAMA_AUTHORISATION_TEXT).toContain('Authorisation and version control');
-    // The contents page also names the section; the parser must select the real
-    // authorisation page (91), not the table-of-contents entry (3).
     expect(KIAMA_CONTENTS_TEXT).toContain('Authorisation and version control');
     expect(parsed.rejections[0]!.reason).toContain('(page 91)');
     expect(parsed.rejections[0]!.reason).not.toContain('(page 3)');
+    expect(KIAMA_INCOME_TEXT).not.toBe(KIAMA_SUMMARY_TEXT);
   });
 
-  it('does not emit the un-audited Consolidated operating results summary', () => {
-    const parsed = parsedFixture();
-    expect(parsed.records).toEqual([]);
-    expect(KIAMA_SUMMARY_TEXT).toContain('$’000');
-    expect(KIAMA_SUMMARY_TEXT).toContain('74,082');
-    expect(KIAMA_SUMMARY_TEXT).not.toContain('Total functions and activities');
-    expect(KIAMA_SUMMARY_TEXT).not.toContain('Statement of Financial Position');
-  });
-
-  it('still defers if a future annual report exposes GPFS-like pages', () => {
-    const extraction: PdfExtraction = {
-      source: { sha256: 'test', bytes: 1 },
-      pages: [
-        {
-          page_number: 1,
-          text: 'Income Statement Total income from continuing operations Operating result from continuing operations',
-          items: [],
-        },
-        {
-          page_number: 2,
-          text: 'Statement of Financial Position Total assets Net assets',
-          items: [],
-        },
-        {
-          page_number: 3,
-          text: 'Statement of Cash Flows Net cash flows from operating activities',
-          items: [],
-        },
-      ],
-      text: '',
-      tables: [],
-      warnings: [],
-    };
-    const parsed = parseKiamaGpfsExtraction(extraction, KIAMA_CONTEXT);
-    expect(parsed.records).toEqual([]);
-    expect(parsed.rejections[0]!.reason).toContain('audited GPFS section is present');
-    expect(parsed.rejections[0]!.reason).toContain('no rows ingested');
-  });
-
-  it('does not invent a council total or cross-council row', () => {
-    const parsed = parsedFixture();
-    expect(parsed.records).toEqual([]);
-    expect(parsed.records.some((record) => record.aggregation_role !== 'agency_detail')).toBe(
-      false,
+  it('never produces a council total or cross-council row', () => {
+    const records = parsedFixture().records;
+    expect(records.every((record) => record.aggregation_role === 'agency_detail')).toBe(true);
+    expect(records.every((record) => record.region_id === undefined)).toBe(true);
+    expect(records.every((record) => record.location === undefined)).toBe(true);
+    expect(new Set(records.map((record) => record.delivery_entity))).toEqual(
+      new Set(['Kiama Municipal Council']),
     );
-    expect(
-      parsed.records.some(
-        (record) => record.region_id !== undefined || record.location !== undefined,
-      ),
-    ).toBe(false);
+    expect(records.some((record) => record.gpfs_line_item === 'council_total')).toBe(false);
+    expect(records.every((record) => record.fiscal_year === '2024-25')).toBe(true);
   });
 
-  it('still derives a deterministic natural key for parity', () => {
+  it('derives a stable natural key per line and year', () => {
     const url = KIAMA_CONTEXT.document.url;
     const revenue = kiamaGpfsNaturalKey(url, 'total_revenue', '2024-25');
     const expenses = kiamaGpfsNaturalKey(url, 'total_expenses', '2024-25');
@@ -252,13 +369,13 @@ function fakeConnector(records: SpendingRecord[]): Connector {
     metadata: {
       lastFetchedAt: null,
       recordsIngested: 0,
-      errors: [GAP_REASON],
+      errors: [],
       warnings: [],
     },
   };
 }
 
-describe('Kiama Municipal Council annual-report ingestion is additive-only and emits no rows', () => {
+describe('Kiama Municipal Council GPFS ingestion is additive-only and idempotent', () => {
   beforeAll(async () => {
     await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
     await mongoose.connection.dropDatabase();
@@ -293,23 +410,23 @@ describe('Kiama Municipal Council annual-report ingestion is additive-only and e
     await mongoose.disconnect();
   });
 
-  it('preserves existing rows and registers Kiama as degraded with 0 records', async () => {
+  it('adds exactly 19 rows, preserves existing rows, and is idempotent', async () => {
     const { records } = parsedFixture();
-    expect(records).toEqual([]);
+    expect(records).toHaveLength(19);
     const connector = fakeConnector(records);
 
     await runIngestion({ connectors: [connector] });
     expect(await MeasureModel.countDocuments({ source_id: 'aus-tender' })).toBe(1);
     expect(await MeasureModel.countDocuments({ source_id: 'data-nsw-ckan' })).toBe(1);
-    expect(await MeasureModel.countDocuments({ source_id: KIAMA_GPFS_ID })).toBe(0);
-    expect(await MeasureModel.countDocuments({})).toBe(2);
+    expect(await MeasureModel.countDocuments({ source_id: KIAMA_GPFS_ID })).toBe(19);
+    expect(await MeasureModel.countDocuments({})).toBe(21);
 
     await runIngestion({ connectors: [connector] });
-    expect(await MeasureModel.countDocuments({ source_id: KIAMA_GPFS_ID })).toBe(0);
-    expect(await MeasureModel.countDocuments({})).toBe(2);
+    expect(await MeasureModel.countDocuments({ source_id: KIAMA_GPFS_ID })).toBe(19);
+    expect(await MeasureModel.countDocuments({})).toBe(21);
 
     const source = await DataSourceModel.findOne({ source_id: KIAMA_GPFS_ID }).lean();
-    expect(source?.status).toBe('degraded');
-    expect(source?.records_ingested).toBe(0);
+    expect(source?.status).toBe('active');
+    expect(source?.records_ingested).toBe(19);
   });
 });
