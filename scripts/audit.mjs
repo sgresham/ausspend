@@ -111,6 +111,7 @@ const KNOWN_SOURCE_IDS = [
   'gunnedah-gpfs',
   'parkes-gpfs',
   'cowra-gpfs',
+  'leeton-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
