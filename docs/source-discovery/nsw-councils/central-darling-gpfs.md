@@ -1,89 +1,114 @@
-# NSW council GPFS — Central Darling Shire Council FY2024-25 (DEFERRED)
+# Central Darling Shire Council — General Purpose Financial Statements (FY2024-25)
 
-**Status:** DEFERRED. No `central-darling-gpfs` connector was registered and **no rows were
-ingested or invented**. One council, one audited year. The exact annual-report PDF is archived outside
-the repo; no PDF or raw table is committed.
-**Entity:** Central Darling Shire Council only. **No council total, no cross-council addition.**
+Source id `central-darling-gpfs` (NSW local government). One council only; entity-level rows, no
+council total and no cross-council or state/federal addition.
 
-**Checked:** 2026-11-19 (Australia/Sydney).
+**Status: landed — 17 statement rows from the official separate audited General Purpose Financial
+Statements for the year ended 30 June 2025 (FY2024-25).** The earlier `DEFERRED` decision was based on
+the FY2024-25 **annual report**, whose statutory financial-statements section is scanned images with
+no text layer. The council also publishes a separate, machine-readable, audited GPFS PDF on its
+public-notice page; that document is the source here, so the deferral is superseded.
 
-## 0. Decision and premise falsifier
+## 0. Stale-year check
 
-The statutory financial statements section in the FY2024-25 annual report is **scanned images with no
-text layer**. It cannot be parsed for printed statement lines or printed reconciling totals, so the
-adapter is deferred with **0 rows** and the exact gap below. The 2025-26 "GPFS" link is a one-page
-presentation notice, not statements, and was rejected; no prior year or narrative figure was
-substituted.
+Checked on 2026-11-20. The official public-notice page
+<https://www.centraldarling.nsw.gov.au/Public-notices/Presentation-of-Council-Financial-Statements-at-Council-meeting>
+lists:
 
-## 1. Discovery and access log (with UA probe)
+- the **FY2024-25 separate audited GPFS PDF** `cdsc-annual_financial_statements-2025-olg.pdf`
+  (3,386,192 bytes, 102 pages) — ingested;
+- the **FY2025-26 public notice** (1 page, 120,015 bytes, SHA-256
+  `77a91c3a63721d50819b56e98ca666a4839edeb215007fa91f2e9ec4ae656e97`), which states that the
+  ordinary Council meeting on **17 November 2026** would present the audited financial statements and
+  Auditor's Reports for the year ending 30 June 2026. The notice prints only summary figures and is
+  **not** a full GPFS, so it is not substituted.
 
-| Step                              | URL                                                                                          | HTTP    | Result                                                                 |
-| --------------------------------- | -------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------- |
-| Official FY2024-25 annual report (plain UA) | <https://www.centraldarling.nsw.gov.au/files/assets/public/v/1/governance/annual-report/2024-2025-annual-report/annual-report-2024-2205-final.pdf> | **200** | `application/pdf`, 9,421,161 bytes, 151 PDF pages.                    |
-| Same PDF (bare Chrome UA)         | same URL                                                                                     | **403** | `text/html`, 563 bytes — WAF rejects a bare browser UA.                |
+No full FY2025-26 audited GPFS PDF was published as at 2026-11-20. FY2024-25 is therefore ingested as
+the **latest available full audited GPFS**, explicitly labelled, with no older year substituted.
 
-**Method recorded.** The host's Akamai WAF returns 200 `application/pdf` to a plain client UA and 403
-to a bare Chrome UA. No connector was registered; a future implementation must send a plain UA.
+## 1. Source and year
 
-## 2. Exact document
+- Publisher: **Central Darling Shire Council**.
+- Document: **General Purpose Financial Statements for the year ended 30 June 2025** — FY2024-25.
+- Exact PDF:
+  <https://www.centraldarling.nsw.gov.au/files/assets/public/v/1/finance-2025/financial-statements/cdsc-annual_financial_statements-2025-olg.pdf>.
+- Reporting page:
+  <https://www.centraldarling.nsw.gov.au/Public-notices/Presentation-of-Council-Financial-Statements-at-Council-meeting>.
+- The PDF contains the Statement by Councillors and Management, the five primary statements (PDF
+  pages 6–10), the notes and B1-1 (PDF page 15), and the independent Auditor-General's reports. The
+  statements were authorised for issue on 17 September 2025.
 
-- **Title:** Central Darling Shire Council Annual Report 2024-2025.
-- **Financial year:** 2024-25, for the year ended 30 June 2025.
-- **URL:** `https://www.centraldarling.nsw.gov.au/files/assets/public/v/1/governance/annual-report/2024-2025-annual-report/annual-report-2024-2205-final.pdf`
-- **Bytes:** 9,421,161.
-- **PDF pages:** 151.
-- **SHA-256:** `e00628ff2d75c2c71c354dffca1f2c7e1086c8ff566f1b5279fc3f1a9e540070`.
-- **Archive:** the exact PDF is archived outside the repo under the configured source-archive root
-  (not committed).
+## 2. Access and WAF note
 
-## 3. Where the statutory statements are, and why they cannot be parsed
+The council host has the **opposite** WAF quirk to most NSW council sites: a plain client UA gets
+HTTP 200, while a bare Chrome UA gets HTTP 403.
 
-- The annual report's table of contents says **"Council's Audited Financial Reports: Starts page 45"**.
-- PDF page 49 carries the section title **"Audited Financial Statements 2024 - 2025"** (printed page
-  45).
-- PDF pages **50–151** (102 pages) are **scanned images with no text layer**. pdfjs text extraction
-  returns only `Page 46`, `Page 47`, …, i.e. the page number, for every one of those pages.
-- No page in the financial-statements section yields an Income Statement, Statement of Comprehensive
-  Income, B1-1 "Total functions and activities" row, printed `$ '000` unit, or any printed
-  subtotal/result bridge.
+| Client | Public-notice page | GPFS PDF |
+| --- | --- | --- |
+| `curl -sSL` with `curl/8.5.0` UA | HTTP 200, `text/html` | HTTP 200, `application/pdf`, 3,386,192 bytes |
+| Headless Chromium with `curl/8.5.0` UA | HTTP 200 | HTTP 200 through the browser context request client |
 
-Because the required printed statement lines and printed reconciling totals are not machine-readable,
-the premise falsifier applies: the item stops with **0 rows** and this exact access/extraction gap.
-Reading outline/narrative figures or OCR-guessing line values would fabricate data and is not done.
+`scripts/central-darling-gpfs-browser.ts` navigates the official public-notice page with the plain
+UA, confirms the page lists the pinned `/files/.../cdsc-annual_financial_statements-2025-olg.pdf`
+link, and fetches the exact bytes through the browser context request client with a plain-client
+fallback. The live browser run on 2026-11-20 reproduced 3,386,192 bytes and the SHA-256 below.
 
-## 4. What was not used
+## 3. Archive (outside the repo)
 
-- The **2025-26 "GPFS" link** is a one-page presentation notice, not statements; rejected.
-- No **prior year** (2023-24) document and no **narrative annual-report summary** figure was
-  substituted.
-- No standalone full GPFS PDF is published by the council.
+The exact PDF is archived outside the repository by `archiveSourceDocument` and re-verified by
+`verifySourceDocument` before parsing:
 
-## 5. Database record and counts (no rows)
+- bytes: **3,386,192**
+- pages: **102**
+- SHA-256: **`b583822dce9f5bac927d04dd60455f1de058f8542f990817839e3ed03c53b5c6`**
+- `hash_verified: true`
 
-- `measures` for `source_id = central-darling-gpfs`: **0**.
-- Total measures: **998,728** (unchanged).
-- SOC measures (`jurisdiction_level: "soc"`): **205** (unchanged).
-- Active GPFS `data_sources`: **61** (unchanged; no connector was registered).
-- A `deferred_soc_documents` record for `source_id = central-darling-gpfs` records the exact gap:
-  annual-report URL, SHA-256 `e00628ff…e540070`, fiscal year 2024-25, status `deferred`, and the
-  reason "pages 49–151 are scanned with no text layer; no statement lines or printed totals are
-  readable".
+The PDF is not committed to the repository.
 
-## 6. How to verify
+## 4. Printed unit and extraction
 
-```bash
-# Plain UA succeeds; bare Chrome UA returns 403.
-curl -sL -o /dev/null -w '%{http_code} %{content_type} %{size_download}\n' \
-  'https://www.centraldarling.nsw.gov.au/files/assets/public/v/1/governance/annual-report/2024-2025-annual-report/annual-report-2024-2205-final.pdf'
+The printed unit is **`$ '000`** on every primary statement and B1-1. The connector rejects a missing
+or conflicting unit and refuses to guess. The primary statements are machine-readable text on PDF
+pages 6–10; B1-1 is PDF page 15.
 
-# The annual report's FS section is scanned: inspect PDF pages 49–151, which contain only page numbers.
-MONGO_URL='<shared-dev MONGO_URL>' mongosh "$MONGO_URL" --quiet --eval 'printjson({measures:db.measures.countDocuments({source_id:"central-darling-gpfs"}), total:db.measures.countDocuments({}), soc:db.measures.countDocuments({jurisdiction_level:"soc"}), activeGpfs:db.data_sources.countDocuments({source_id:/gpfs$/,status:"active"}), deferred:db.deferred_soc_documents.findOne({source_id:"central-darling-gpfs"},{projection:{_id:0,source_id:1,fiscal_year:1,status:1,reason:1}})})'
-```
+## 5. Reconciliation (all zero tolerance)
 
-## 7. If this is revisited
+| Check | Printed values ($'000) |
+| --- | --- |
+| Revenue components = total income | 2,547 + 5,820 + 865 + 15,844 + 6,835 + 180 + 44 = **32,135** |
+| Expense components = printed expenses excluding depreciation | 7,372 + 20,804 + 75 + 626 + 1,932 = **30,809** |
+| Expenses excluding depreciation + depreciation/amortisation/impairment = total expenses bridge | 30,809 + 7,041 = **37,850** |
+| Total income − total expenses = net result | 32,135 − 37,850 = **−5,715** |
+| Net result − capital grants = before-capital result | −5,715 − 6,835 = **−12,550** |
+| B1-1 income / expenses / result / grants / carrying amount | **32,191 / 37,906 / −5,715 / 22,679 / 304,214** |
+| B1-1 internal charge/recovery allocation (equal on both sides) | **56** (32,191 − 32,135 = 37,906 − 37,850) |
+| Comprehensive income | net result −5,715 + IPPE revaluation 28,893 = **23,178** |
+| Balance sheet | assets 304,214 − liabilities 9,887 = net assets **294,327**; accumulated surplus 181,150 + IPPE revaluation 113,177 = total equity **294,327** |
+| Cash flows | operating 9,743 + investing (13,507) + financing (535) = net change **−4,299**; opening 14,734 − 4,299 = closing **10,435** |
 
-A future item must supply a **machine-readable** audited FY2024-25 financial statements PDF (or the
-same annual report with a text layer/OCR that preserves every printed line and total), including the
-Income Statement, Statement of Comprehensive Income and B1-1, with an explicit `$ '000` unit and
-printed reconciling totals. Do not substitute the one-page 2025-26 notice, a prior year, or narrative
-annual-report figures.
+The face Income Statement does not print a separate "Total expenses" line. B1-1 includes a printed
+internal charge/recovery allocation of **$56 thousand** on both income and expenses; the B1-1 result,
+grants and carrying amount reconcile to the face statements, and the equal allocation is checked as a
+documented bridge rather than netted away.
+
+## 6. Ingested rows
+
+`central-darling-gpfs` emits **17** non-additive `agency_detail` rows (7 revenue components + total
+revenue, 5 expense components + expenses-excluding-depreciation + depreciation + total-expenses
+bridge, and net result), all `provisional/local_government`, `verified: false`, with no
+`region_id`/LGA allocation. Government grants and contributions are marked
+`potential_double_count`. The net result is stored as a magnitude with `gpfs_printed_sign:
+"negative"`. No council total, no cross-council row, no state/federal addition.
+
+## 7. Verification
+
+- Focused test: `npx vitest run server/test/central-darling-gpfs.test.ts` (17 tests, including
+  browser, plain-fallback, unit-gate, reconciliation-failure, golden-digest and idempotent-ingest
+  checks).
+- Live browser fetch: `npx tsx scripts/central-darling-gpfs-browser.ts` — 3,386,192 bytes, SHA-256
+  `b583822dce9f5bac927d04dd60455f1de058f8542f990817839e3ed03c53b5c6`.
+- Typecheck: `npm run typecheck -w server`.
+- Lint: `npx eslint server/src/connectors/central-darling-gpfs
+  scripts/central-darling-gpfs-browser.ts server/test/central-darling-gpfs.test.ts`.
+- Docs counts: `npm run generate:connectors && npm run generate:sources` then
+  `npm run check:doc-counts`.

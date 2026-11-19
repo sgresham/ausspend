@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 124   |
-| NSW local-government source ids     | 125   |
-| Registered spending connectors      | 186   |
-| Active spending connectors          | 184   |
+| NSW council GPFS sources            | 125   |
+| NSW local-government source ids     | 126   |
+| Registered spending connectors      | 187   |
+| Active spending connectors          | 185   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -5879,9 +5879,15 @@ PDF is committed. The focused connector test also proves idempotency against a d
 
 ---
 
-### 7.61 Sixty-second council item — Central Darling Shire Council FY2024-25 (DEFERRED, no rows)
+### 7.61 Sixty-second council item — Central Darling Shire Council FY2024-25 (DEFERRED, no rows; SUPERSEDED 2026-11-20 by a separate machine-readable GPFS)
 
-**Decision: defer, do not ingest or invent rows.** The council does not publish a standalone full
+> **Superseded 2026-11-20.** The council also publishes a separate audited FY2024-25 GPFS PDF
+> (`cdsc-annual_financial_statements-2025-olg.pdf`, 3,386,192 bytes, 102 pages, SHA-256
+> `b583822dce9f5bac927d04dd60455f1de058f8542f990817839e3ed03c53b5c6`) with a text layer. It is now
+> ingested as `central-darling-gpfs` (17 rows); see the fortieth-first-council checks below. The
+> deferral text below records only the annual-report scanning gap and is retained as history.
+
+**Decision (original): defer, do not ingest or invent rows.** The council does not publish a standalone full
 General Purpose Financial Statements PDF. The official FY2024-25 annual report
 <https://www.centraldarling.nsw.gov.au/files/assets/public/v/1/governance/annual-report/2024-2025-annual-report/annual-report-2024-2205-final.pdf>
 (HTTP 200, `application/pdf`, 9,421,161 bytes, SHA-256
@@ -12052,6 +12058,36 @@ migration were performed.
 - Docs counts refreshed to `nsw-gpfs=124`; focused Burwood tests, golden-digest test, typecheck,
   lint, docs-count guard and leak guard pass. No deploy.
 
+**GPFS forty-first-council checks (Central Darling), 2026-11-20:**
+
+- The prior §7.61 deferral was based on the FY2024-25 annual report, whose statutory
+  financial-statements section (PDF pp. 49–151) is scanned with no text layer. That premise is
+  **superseded**: the official public-notice page also publishes a separate machine-readable audited
+  GPFS PDF, `cdsc-annual_financial_statements-2025-olg.pdf` (3,386,192 bytes, 102 pages, SHA-256
+  `b583822dce9f5bac927d04dd60455f1de058f8542f990817839e3ed03c53b5c6`), with the primary statements on
+  PDF pp. 6–10 and B1-1 on p. 15. It was authorised for issue on 17 September 2025 and embeds the
+  Auditor-General's unmodified GPFS opinion.
+- The FY2025-26 document is only a one-page presentation notice (120,015 bytes, SHA-256
+  `77a91c3a63721d50819b56e98ca666a4839edeb215007fa91f2e9ec4ae656e97`) for the 17 November 2026
+  meeting, with summary figures only; it is not a full GPFS and is not substituted. FY2024-25 is
+  ingested as the latest available full audited GPFS.
+- The host has the opposite WAF quirk to most NSW councils: a plain client UA gets HTTP 200 while a
+  bare Chrome UA gets HTTP 403. The browser helper uses the plain UA; the live browser fetch on
+  2026-11-20 returned the exact 3,386,192 bytes and the SHA-256 above.
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1,
+  Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows; the
+  connector rejects a missing or conflicting unit.
+- Income statement, B1-1, comprehensive-income, balance-sheet and cash-flow totals reconcile exactly:
+  revenue `$32,135,000`, expenses `$37,850,000` (printed bridge of expenses excluding depreciation
+  `$30,809,000` plus depreciation/amortisation/impairment `$7,041,000`), net result `$-5,715,000`;
+  B1-1 income `$32,191,000` and expenses `$37,906,000` each include an equal printed internal
+  charge/recovery allocation of `$56,000`, while B1-1 result `$-5,715,000`, grants `$22,679,000` and
+  carrying amount `$304,214,000` reconcile to the face statements; total comprehensive income
+  `$23,178,000` (single IPPE revaluation component `$28,893,000`).
+- `central-darling-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Docs counts refreshed to `nsw-gpfs=125`; focused Central Darling tests, golden-digest test,
+  typecheck, lint, docs-count guard and leak guard pass. No deploy.
+
 ---
 
 ## 10. Ambiguities / open questions (verbatim where possible)
@@ -12101,5 +12137,7 @@ amalgamations and administrators can change the population, so re-read the OLG w
 The only ingestions are the ninety-seven council GPFS sources (§7.1–§7.92, §7.94–§7.98): one audited year
 each, non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.
-§7.61 (Central Darling) and §7.93 (Snowy Valleys) are documented deferrals only: their FY2024-25
-statutory financial statements are scanned with no text layer, so they contribute 0 rows.
+§7.93 (Snowy Valleys) remains a documented deferral: its FY2024-25 statutory financial statements are
+scanned with no text layer, so it contributes 0 rows. §7.61 (Central Darling) was deferred on the same
+annual-report scanning gap, but was superseded on 2026-11-20 by a separate machine-readable audited
+FY2024-25 GPFS PDF, now ingested as `central-darling-gpfs` with 17 non-additive rows.

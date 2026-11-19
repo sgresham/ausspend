@@ -55,6 +55,7 @@ import { fetchCabonneGpfsViaBrowser } from './cabonne-gpfs-browser.js';
 import { fetchFederationGpfsViaBrowser } from './federation-gpfs-browser.js';
 import { fetchGreaterHumeGpfsViaBrowser } from './greater-hume-gpfs-browser.js';
 import { fetchBurwoodGpfsViaBrowser } from './burwood-gpfs-browser.js';
+import { fetchCentralDarlingGpfsViaBrowser } from './central-darling-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -107,6 +108,10 @@ import {
   BURWOOD_GPFS_ID,
   createBurwoodGpfsConnector,
 } from '../server/src/connectors/burwood-gpfs/index.js';
+import {
+  CENTRAL_DARLING_GPFS_ID,
+  createCentralDarlingGpfsConnector,
+} from '../server/src/connectors/central-darling-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -373,6 +378,7 @@ export const NSW_SOURCE_IDS = [
   'federation-gpfs',
   'greater-hume-gpfs',
   'burwood-gpfs',
+  'central-darling-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -734,6 +740,16 @@ async function main(): Promise<void> {
       const fetched = await fetchBurwoodGpfsViaBrowser();
       console.log(`[ingest:nsw] burwood-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(createBurwoodGpfsConnector({ pdfBytes: fetched.pdfBytes }));
+      continue;
+    }
+    if (id === CENTRAL_DARLING_GPFS_ID) {
+      // Central Darling's host serves the plain UA but rejects a bare Chrome UA.
+      // The browser helper uses the plain UA and fetches the latest available
+      // full audited FY2024-25 GPFS.
+      console.log('[ingest:nsw] central-darling-gpfs: browser discovery/download starting');
+      const fetched = await fetchCentralDarlingGpfsViaBrowser();
+      console.log(`[ingest:nsw] central-darling-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(createCentralDarlingGpfsConnector({ pdfBytes: fetched.pdfBytes }));
       continue;
     }
     if (id === BATHURST_GPFS_ID) {
