@@ -65,13 +65,21 @@ inventory remains the prerequisite for the next ingestion batches.
 
 ## Access notes for whoever ingests next
 
-- **Akamai WAF quirk:** most of these councils (`burwood`, `armidale`, `begavalley`,
-  `brokenhill`, `byron`, `cessnock`, `clarence`, `goulburn`, `griffith`, `kempsey`, `kiama`,
-  `lismore`, `lithgow`, `midwestern`, `qprc`, `snowymonaro`, `wingecarribee`) return **403 to a
-  plain `curl` UA** on both pages and PDFs. Supplying normal browser headers fixes it:
-  `Accept: application/pdf,...`, `Accept-Language`, `Sec-Fetch-Dest/Mode/Site` and
-  `Upgrade-Insecure-Requests: 1`. This is a header/fingerprint gate, not a per-council content
-  block.
+- **Akamai WAF quirk — UA-sensitive, not a fixed rule.** Re-verified 2026-11-19T04:4x on the
+  Armidale, Lithgow, Queanbeyan-Palerang, Snowy Monaro and Wingecarribee GPFS PDFs:
+
+  | request variant | observed result (all five URLs) |
+  |---|---|
+  | plain `curl` (default UA/headers) | **200** `application/pdf`; bytes match the CSV |
+  | bare Chrome `User-Agent` only | **403** `text/html` (~0.5 KB challenge/deny body) |
+  | Chrome UA + full browser bundle (`Accept: application/pdf,...`, `Accept-Language`, `Sec-Fetch-Dest/Mode/Site`, `Upgrade-Insecure-Requests`) | **200** `application/pdf`; same bytes |
+
+  The earlier "plain curl gets 403 / browser headers get 200" wording in this file was wrong.
+  The reliable failure case is a **bare browser UA**; on all five tested sites both plain `curl`
+  defaults and the full browser-header bundle returned the real PDF. Because the edge rule can
+  change and may differ by council, **use a two-attempt probe rather than a fixed header
+  recipe**: try plain `curl` first, then the full browser-header bundle, and accept whichever
+  returns `200 application/pdf`. This applies to the HTML pages as well as the PDFs.
 - **Cloudflare** (`portstephens`, `wagga`, `esc`) is different: it serves a JS challenge page,
   not a header gate. Do not treat a 403 there as a missing document.
 - **Redirects:** Kiama and Lismore old `/v/1` asset paths 301 to `/v/2` (Kiama) and to
@@ -86,14 +94,18 @@ inventory remains the prerequisite for the next ingestion batches.
 ## How to reproduce a check
 
 ```bash
-# Akamai-hosted GPFS (needs browser-like headers; plain curl gets 403)
-curl -sL -o /dev/null -w '%{http_code} %{content_type} %{size_download}\n' \
+# Akamai-hosted GPFS: probe twice — plain curl first, then the full browser-header bundle.
+# Plain curl (default UA) returned 200 application/pdf on the five re-verified sites;
+# a bare Chrome UA alone returns 403, while UA + Accept/Sec-Fetch also returns 200.
+U='https://www.snowymonaro.nsw.gov.au/files/assets/public/v/2/council/ipr/annual-reports/smrc-annual_financial_statements-gpfs-2025-final-audited.pdf'
+curl -sL -o /dev/null -w 'plain: %{http_code} %{content_type} %{size_download}\n' "$U"
+curl -sL -o /dev/null -w 'browser: %{http_code} %{content_type} %{size_download}\n' \
   -A 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125 Safari/537.36' \
   -H 'Accept: application/pdf,*/*;q=0.8' -H 'Sec-Fetch-Dest: document' \
   -H 'Sec-Fetch-Mode: navigate' -H 'Sec-Fetch-Site: none' \
-  'https://www.snowymonaro.nsw.gov.au/files/assets/public/v/2/council/ipr/annual-reports/smrc-annual_financial_statements-gpfs-2025-final-audited.pdf'
+  -H 'Upgrade-Insecure-Requests: 1' "$U"
 
-# Plain-fetchexample (Richmond Valley)
+# Plain-fetch example (Richmond Valley)
 curl -sL -o /dev/null -w '%{http_code} %{content_type} %{size_download}\n' \
   'https://richmondvalley.nsw.gov.au/wp-content/uploads/2026/10/Richmond-Valley-Council-Financial-Statements-for-the-year-ended-30-June-2026.pdf'
 
