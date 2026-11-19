@@ -80,17 +80,18 @@ import { connectorModule as module77 } from './sutherland-shire-gpfs/index.js';
 import { connectorModule as module78 } from './tenterfield-gpfs/index.js';
 import { connectorModule as module79 } from './the-hills-gpfs/index.js';
 import { connectorModule as module80 } from './tweed-shire-gpfs/index.js';
-import { connectorModule as module81 } from './uralla-gpfs/index.js';
-import { connectorModule as module82 } from './walcha-gpfs/index.js';
-import { connectorModule as module83 } from './warren-gpfs/index.js';
-import { connectorModule as module84 } from './waverley-gpfs/index.js';
-import { connectorModule as module85 } from './weddin-gpfs/index.js';
-import { connectorModule as module86 } from './wentworth-gpfs/index.js';
-import { connectorModule as module87 } from './willoughby-gpfs/index.js';
-import { connectorModule as module88 } from './wingecarribee-gpfs/index.js';
-import { connectorModule as module89 } from './wollondilly-gpfs/index.js';
-import { connectorModule as module90 } from './wollongong-gpfs/index.js';
-import { connectorModule as module91 } from './woollahra-gpfs/index.js';
+import { connectorModule as module81 } from './upper-hunter-gpfs/index.js';
+import { connectorModule as module82 } from './uralla-gpfs/index.js';
+import { connectorModule as module83 } from './walcha-gpfs/index.js';
+import { connectorModule as module84 } from './warren-gpfs/index.js';
+import { connectorModule as module85 } from './waverley-gpfs/index.js';
+import { connectorModule as module86 } from './weddin-gpfs/index.js';
+import { connectorModule as module87 } from './wentworth-gpfs/index.js';
+import { connectorModule as module88 } from './willoughby-gpfs/index.js';
+import { connectorModule as module89 } from './wingecarribee-gpfs/index.js';
+import { connectorModule as module90 } from './wollondilly-gpfs/index.js';
+import { connectorModule as module91 } from './wollongong-gpfs/index.js';
+import { connectorModule as module92 } from './woollahra-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -185,6 +186,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module89,
   module90,
   module91,
+  module92,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);
