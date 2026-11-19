@@ -39,7 +39,9 @@ test('home autocomplete links regions by _id/state and functions by code', async
   await page.goto('/');
 
   const search = page.getByTestId('home-autocomplete');
-  await search.getByLabel('Search functions, regions, sources and NSW SOC entities').fill('New');
+  await search
+    .getByLabel('Search functions, regions, sources and State-owned entities')
+    .fill('New');
 
   const nsw = search
     .getByTestId('quick-region-result')
@@ -48,7 +50,9 @@ test('home autocomplete links regions by _id/state and functions by code', async
   await expect(nsw).toBeVisible();
   await expect(nsw).toHaveAttribute('href', '/states/NSW');
 
-  await search.getByLabel('Search functions, regions, sources and NSW SOC entities').fill('health');
+  await search
+    .getByLabel('Search functions, regions, sources and State-owned entities')
+    .fill('health');
 
   const health = search
     .getByTestId('quick-function-result')

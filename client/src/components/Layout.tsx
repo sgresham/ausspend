@@ -45,7 +45,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'States', to: '/states', icon: <PlaceIcon /> },
   { label: 'Trade', to: '/trade', icon: <ImportExportIcon /> },
   { label: 'GFS benchmark', to: '/benchmark', icon: <AssessmentIcon /> },
-  { label: 'NSW SOC', to: '/soc', icon: <CorporateFareIcon /> },
+  { label: 'State-owned entities', to: '/soc', icon: <CorporateFareIcon /> },
   { label: 'Data sources', to: '/data-sources', icon: <DatasetIcon /> },
   { label: 'Coverage limitations', to: '/coverage-limitations', icon: <ReportProblemIcon /> },
   { label: 'About', to: '/about', icon: <InfoIcon /> },

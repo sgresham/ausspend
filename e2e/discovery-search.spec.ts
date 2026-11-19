@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { mockApi } from './mock-api';
 
-const HOME_LABEL = 'Search functions, regions, sources and NSW SOC entities';
+const HOME_LABEL = 'Search functions, regions, sources and State-owned entities';
 
 test.beforeEach(async ({ page }) => {
   await mockApi(page);
@@ -22,7 +22,9 @@ test('home makes the bounded search the first interaction and documents Phase 2'
   await expect(search.getByLabel(HOME_LABEL)).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('typo and partial queries match functions, regions and SOC entities', async ({ page }) => {
+test('typo and partial queries match functions, regions and state-owned entities', async ({
+  page,
+}) => {
   await page.goto('/');
   const input = page.getByTestId('home-autocomplete').getByLabel(HOME_LABEL);
 
@@ -114,7 +116,7 @@ test('header search keeps discovery access and SOC links deep-link the entity pa
   await soc.click();
 
   await expect(page).toHaveURL(/\/soc\?entity=WaterNSW$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'NSW SOC entities' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'State-owned entities' })).toBeVisible();
 });
 
 test('discovery search is GET-only and does not write', async ({ page }) => {
