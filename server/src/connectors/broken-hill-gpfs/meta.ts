@@ -1,0 +1,17 @@
+import {
+  BROKEN_HILL_GPFS_ID,
+  BROKEN_HILL_GPFS_NAME,
+  BROKEN_HILL_GPFS_PUBLISHER,
+  BROKEN_HILL_GPFS_FISCAL_YEAR,
+  BROKEN_HILL_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: BROKEN_HILL_GPFS_ID,
+  name: BROKEN_HILL_GPFS_NAME,
+  publisher: BROKEN_HILL_GPFS_PUBLISHER,
+  fiscalYear: BROKEN_HILL_GPFS_FISCAL_YEAR,
+  dataQualityFlag: BROKEN_HILL_GPFS_DATA_QUALITY_FLAG,
+} as const;
