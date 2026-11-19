@@ -9,11 +9,13 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Typography,
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import type { SpendingMeasureRow } from '../api/types';
 import { Amount, FiscalYearChip, MeasureTypeChip, SourceCell } from './Provenance';
+import { useTableSort } from '../tableSort';
 
 function regionHref(row: SpendingMeasureRow): string {
   return row.region_level === 'state'
@@ -23,6 +25,8 @@ function regionHref(row: SpendingMeasureRow): string {
 
 /** One page of `/api/spending` rows, each with its own source and verification. */
 export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
+  const { sortedRows, sortKey, sortDirection, onSort, ariaSortFor } = useTableSort(rows);
+
   return (
     <Card variant="outlined" sx={{ mb: 3 }}>
       <CardContent>
@@ -31,7 +35,9 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           The summary above covers the whole filtered set; this table is only the current page.
-          Every row carries its own source id, link and verification status.
+          Sorting these headers reorders only the rows shown below — it does not change the API Sort
+          control, totals, grouping, pagination or which rows the server returned. Every row carries
+          its own source id, link and verification status.
         </Typography>
         <TableContainer>
           <Table size="small" aria-label="Spending rows" data-testid="spending-rows">
@@ -40,14 +46,37 @@ export function SpendingRowsTable({ rows }: { rows: SpendingMeasureRow[] }) {
                 <TableCell>Project / description</TableCell>
                 <TableCell>Function</TableCell>
                 <TableCell>Location</TableCell>
-                <TableCell>Fiscal year</TableCell>
+                <TableCell
+                  sortDirection={sortKey === 'fiscal_year' ? sortDirection : false}
+                  aria-sort={ariaSortFor('fiscal_year')}
+                >
+                  <TableSortLabel
+                    active={sortKey === 'fiscal_year'}
+                    direction={sortKey === 'fiscal_year' ? sortDirection : 'asc'}
+                    onClick={() => onSort('fiscal_year')}
+                  >
+                    Fiscal year
+                  </TableSortLabel>
+                </TableCell>
                 <TableCell>Measure type</TableCell>
-                <TableCell align="right">Amount</TableCell>
+                <TableCell
+                  align="right"
+                  sortDirection={sortKey === 'amount' ? sortDirection : false}
+                  aria-sort={ariaSortFor('amount')}
+                >
+                  <TableSortLabel
+                    active={sortKey === 'amount'}
+                    direction={sortKey === 'amount' ? sortDirection : 'asc'}
+                    onClick={() => onSort('amount')}
+                  >
+                    Amount
+                  </TableSortLabel>
+                </TableCell>
                 <TableCell>Provenance</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row) => (
+              {sortedRows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>
                     <Typography variant="body2">

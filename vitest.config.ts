@@ -19,6 +19,14 @@ export default defineConfig({
           environment: 'node',
         },
       },
+      {
+        test: {
+          name: 'client',
+          root: './client',
+          include: ['src/**/*.test.ts'],
+          environment: 'node',
+        },
+      },
     ],
   },
 });

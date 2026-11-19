@@ -9,6 +9,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Typography,
 } from '@mui/material';
 import type {
@@ -22,6 +23,7 @@ import type {
 import { titleCase } from '../format';
 import { Amount, FiscalYearChip, MeasureTypeChip, SourceCell } from './Provenance';
 import { uniqueSources } from '../provenance';
+import { useTableSort } from '../tableSort';
 
 function TableTitle({ children, caption }: { children: string; caption?: string }) {
   return (
@@ -54,6 +56,8 @@ export function MeasureRowsTable({
   caption: string;
   testId: string;
 }) {
+  const { sortedRows, sortKey, sortDirection, onSort, ariaSortFor } = useTableSort(rows);
+
   return (
     <Card variant="outlined" sx={{ mb: 3 }}>
       <CardContent>
@@ -64,14 +68,37 @@ export function MeasureRowsTable({
               <TableRow>
                 <TableCell>Dimension</TableCell>
                 <TableCell>Measure type</TableCell>
-                <TableCell>Fiscal year</TableCell>
-                <TableCell align="right">Amount</TableCell>
+                <TableCell
+                  sortDirection={sortKey === 'fiscal_year' ? sortDirection : false}
+                  aria-sort={ariaSortFor('fiscal_year')}
+                >
+                  <TableSortLabel
+                    active={sortKey === 'fiscal_year'}
+                    direction={sortKey === 'fiscal_year' ? sortDirection : 'asc'}
+                    onClick={() => onSort('fiscal_year')}
+                  >
+                    Fiscal year
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sortDirection={sortKey === 'amount' ? sortDirection : false}
+                  aria-sort={ariaSortFor('amount')}
+                >
+                  <TableSortLabel
+                    active={sortKey === 'amount'}
+                    direction={sortKey === 'amount' ? sortDirection : 'asc'}
+                    onClick={() => onSort('amount')}
+                  >
+                    Amount
+                  </TableSortLabel>
+                </TableCell>
                 <TableCell>Source / verification</TableCell>
                 <TableCell>Notes</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((row) => (
+              {sortedRows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell>{labelFor(row)}</TableCell>
                   <TableCell>

@@ -19,6 +19,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TableSortLabel,
   Typography,
 } from '@mui/material';
 import { apiGet, buildQuery } from '../api';
@@ -33,6 +34,7 @@ import { useApi } from '../hooks/useApi';
 import { Amount, ProvenanceFooter } from '../components/Provenance';
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 import { titleCase } from '../format';
+import { useTableSort } from '../tableSort';
 
 /**
  * Read-only ABS international trade view. Trade values are a different
@@ -89,22 +91,47 @@ function QualityChip({ flag }: { flag: TradeDataQualityFlag }) {
 }
 
 function TradeTable({ rows }: { rows: TradeRow[] }) {
+  const { sortedRows, sortKey, sortDirection, onSort, ariaSortFor } = useTableSort(rows);
+
   return (
     <TableContainer component={Card} variant="outlined" data-testid="trade-table">
       <Table size="small" aria-label="ABS trade observations">
         <TableHead>
           <TableRow>
-            <TableCell>Financial year</TableCell>
+            <TableCell
+              sortDirection={sortKey === 'fiscal_year' ? sortDirection : false}
+              aria-sort={ariaSortFor('fiscal_year')}
+            >
+              <TableSortLabel
+                active={sortKey === 'fiscal_year'}
+                direction={sortKey === 'fiscal_year' ? sortDirection : 'asc'}
+                onClick={() => onSort('fiscal_year')}
+              >
+                Financial year
+              </TableSortLabel>
+            </TableCell>
             <TableCell>Flow</TableCell>
             <TableCell>Commodity / service</TableCell>
             <TableCell>Period</TableCell>
-            <TableCell align="right">Trade value</TableCell>
+            <TableCell
+              align="right"
+              sortDirection={sortKey === 'amount' ? sortDirection : false}
+              aria-sort={ariaSortFor('amount')}
+            >
+              <TableSortLabel
+                active={sortKey === 'amount'}
+                direction={sortKey === 'amount' ? sortDirection : 'asc'}
+                onClick={() => onSort('amount')}
+              >
+                Trade value
+              </TableSortLabel>
+            </TableCell>
             <TableCell>Data quality</TableCell>
             <TableCell>Source</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
+          {sortedRows.map((row) => (
             <TableRow key={row.id} data-testid="trade-row">
               <TableCell>{row.financial_year}</TableCell>
               <TableCell>{titleCase(row.trade_flow)}</TableCell>
