@@ -44,7 +44,7 @@ per-council inventory is therefore still the prerequisite for the next ingestion
 10. **Narrabri** — FS **FY2025-26**, 2.90 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
 11. **Parkes** — audited FS **YE 30 Jun 2026**, 6.31 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
 12. **Snowy Valleys** — signed audited FS FY2024-25 is **scanned image-only (no text layer)**; **DEFERRED, 0 rows**, no connector registered. FY2025-26 audited standalone FS is not published (only a six-monthly progress report).
-13. **Upper Hunter** — signed FS FY2024-25.
+13. **Upper Hunter** — signed FS **FY2024-25**, 2.88 MB; FY2025-26 audited standalone FS not published (only 2026 budget/planning and quarterly-review documents); plain fetch in this run.
 14. **Yass Valley** — audited FS FY2024-25.
 
 ### Tier 3 — FS only embedded in the annual report

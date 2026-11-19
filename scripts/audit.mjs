@@ -114,6 +114,7 @@ const KNOWN_SOURCE_IDS = [
   'leeton-gpfs',
   'nambucca-valley-gpfs',
   'narrabri-gpfs',
+  'upper-hunter-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
