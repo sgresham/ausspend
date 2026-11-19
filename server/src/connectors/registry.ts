@@ -41,6 +41,7 @@ import { createSynergyConnector } from './soc/wa/synergy.js';
 import { createWesternPowerConnector } from './soc/wa/western-power.js';
 import { createHorizonPowerConnector } from './soc/wa/horizon-power.js';
 import { createFremantlePortsConnector } from './soc/wa/fremantle-ports.js';
+import { createDevelopmentWaConnector } from './soc/wa/developmentwa.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -638,6 +639,15 @@ export const CONNECTORS: readonly Connector[] = [
   // Corporation, Synergy, Western Power, Horizon Power, another WA GTE, a
   // QLD/NSW SOC, a WA total, or any other SOC.
   createFremantlePortsConnector(),
+  // WA SOC: next WA Government Trading Enterprise pilot — DevelopmentWA (the
+  // Western Australian Land Authority), a WA GTE under the Government Trading
+  // Enterprises Act 2023 (WA). Latest report discovered from the official
+  // publications page and parsed as entity-level WALA statement lines; the
+  // separate MRA statements are not added. Never added to government program
+  // spending, the PNFC benchmark, Water Corporation, Synergy, Western Power,
+  // Horizon Power, Fremantle Ports, another WA GTE, a QLD/NSW SOC, a WA total,
+  // or any other SOC.
+  createDevelopmentWaConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending

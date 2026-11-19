@@ -194,6 +194,18 @@ import {
   FREMANTLE_PORTS_UNIT,
   FREMANTLE_PORTS_UNIT_LABEL,
   FREMANTLE_PORTS_UNIT_TO_CENTS,
+  DEVELOPMENTWA_CAVEAT,
+  DEVELOPMENTWA_ENTITY,
+  DEVELOPMENTWA_ID,
+  DEVELOPMENTWA_JURISDICTION,
+  DEVELOPMENTWA_LEGAL_CLASS,
+  DEVELOPMENTWA_LICENSE,
+  DEVELOPMENTWA_NAME,
+  DEVELOPMENTWA_PUBLISHER,
+  DEVELOPMENTWA_SOURCE_URL,
+  DEVELOPMENTWA_UNIT,
+  DEVELOPMENTWA_UNIT_LABEL,
+  DEVELOPMENTWA_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -332,7 +344,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power and Fremantle Ports). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports and DevelopmentWA). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -361,6 +373,7 @@ export const SOC_SOURCE_IDS = [
   WESTERN_POWER_ID,
   HORIZON_POWER_ID,
   FREMANTLE_PORTS_ID,
+  DEVELOPMENTWA_ID,
 ] as const;
 
 /**
@@ -1228,6 +1241,41 @@ async function writeFremantlePortsManifest(): Promise<void> {
   );
 }
 
+async function writeDevelopmentWaManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: DEVELOPMENTWA_ID });
+  const manifestPath = path.resolve(
+    process.env.DEVELOPMENTWA_MANIFEST ??
+      'docs/source-archive/wa-developmentwa-annual-report.json',
+  );
+  const manifest = {
+    entity: DEVELOPMENTWA_ENTITY,
+    legal_class: DEVELOPMENTWA_LEGAL_CLASS,
+    jurisdiction: DEVELOPMENTWA_JURISDICTION,
+    dataset: DEVELOPMENTWA_NAME,
+    publisher: DEVELOPMENTWA_PUBLISHER,
+    discovery_page: DEVELOPMENTWA_SOURCE_URL,
+    license: DEVELOPMENTWA_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${DEVELOPMENTWA_UNIT_LABEL} (${DEVELOPMENTWA_UNIT}; x${DEVELOPMENTWA_UNIT_TO_CENTS} cents per unit)`,
+    caveat: DEVELOPMENTWA_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: DevelopmentWA only (the Western Australian Land Authority), a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). Latest report discovered from the official publications page (edocman download links; no hard-coded PDF URL) and archived with SHA-256 outside the repo. The WALA statement of profit or loss and other comprehensive income prints an explicit $'000 unit and two reporting-year columns; the adapter reads the 2026 column only. It has no printed Total revenue or Total expenses subtotal, so both are derived from the printed lines, accepted only when they bridge to the printed Profit before income tax and Profit for the year at zero tolerance; depreciation and amortisation is the Note 2(b) component within Other expenses, reconciled to the face Other expenses. The WALA statements are used; the separate MRA statements are not added. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add DevelopmentWA rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1289,6 +1337,7 @@ async function main(): Promise<void> {
     await writeWesternPowerManifest();
     await writeHorizonPowerManifest();
     await writeFremantlePortsManifest();
+    await writeDevelopmentWaManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1866,6 +1915,33 @@ async function main(): Promise<void> {
     for (const group of fremantleByLine) {
       console.log(
         `[ingest:soc] ${FREMANTLE_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const developmentWaRows = await MeasureModel.countDocuments({ source_id: DEVELOPMENTWA_ID });
+    const developmentWaVerified = await MeasureModel.countDocuments({
+      source_id: DEVELOPMENTWA_ID,
+      verified: true,
+    });
+    const developmentWaDoubleCount = await MeasureModel.countDocuments({
+      source_id: DEVELOPMENTWA_ID,
+      potential_double_count: true,
+    });
+    const developmentWaByLine = await MeasureModel.aggregate([
+      { $match: { source_id: DEVELOPMENTWA_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const developmentWaDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: DEVELOPMENTWA_ID,
+      status: 'deferred',
+    });
+    const developmentWaArchived = await listArchivedRecords({ source_id: DEVELOPMENTWA_ID });
+    console.log(
+      `[ingest:soc] ${DEVELOPMENTWA_ID} rows=${developmentWaRows} source_documents=${developmentWaArchived.length} verified=${developmentWaVerified} potential_double_count=${developmentWaDoubleCount} deferred_documents=${developmentWaDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of developmentWaByLine) {
+      console.log(
+        `[ingest:soc] ${DEVELOPMENTWA_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(
