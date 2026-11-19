@@ -1,0 +1,17 @@
+import {
+  NARRABRI_GPFS_ID,
+  NARRABRI_GPFS_NAME,
+  NARRABRI_GPFS_PUBLISHER,
+  NARRABRI_GPFS_FISCAL_YEAR,
+  NARRABRI_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: NARRABRI_GPFS_ID,
+  name: NARRABRI_GPFS_NAME,
+  publisher: NARRABRI_GPFS_PUBLISHER,
+  fiscalYear: NARRABRI_GPFS_FISCAL_YEAR,
+  dataQualityFlag: NARRABRI_GPFS_DATA_QUALITY_FLAG,
+} as const;
