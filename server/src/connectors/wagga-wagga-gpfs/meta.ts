@@ -1,0 +1,17 @@
+import {
+  WAGGA_WAGGA_GPFS_ID,
+  WAGGA_WAGGA_GPFS_NAME,
+  WAGGA_WAGGA_GPFS_PUBLISHER,
+  WAGGA_WAGGA_GPFS_FISCAL_YEAR,
+  WAGGA_WAGGA_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: WAGGA_WAGGA_GPFS_ID,
+  name: WAGGA_WAGGA_GPFS_NAME,
+  publisher: WAGGA_WAGGA_GPFS_PUBLISHER,
+  fiscalYear: WAGGA_WAGGA_GPFS_FISCAL_YEAR,
+  dataQualityFlag: WAGGA_WAGGA_GPFS_DATA_QUALITY_FLAG,
+} as const;
