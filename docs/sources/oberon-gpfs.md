@@ -1,0 +1,10 @@
+# Oberon Council — General Purpose Financial Statements
+
+- id: `oberon-gpfs`
+- publisher: Oberon Council
+- source: <https://haveyoursay.oberon.nsw.gov.au/2024-2025-audited-financial-statements>
+- jurisdiction: local
+- status: active
+- licence: © Oberon Council. Published council documents used here for public-interest research; not an open-data licence grant.
+
+NSW council GPFS adapter: one council only (Oberon Council), FY2024-25 General Purpose Financial Statements (year ended 30 June 2025) from the official separate audited GPFS PDF published in the Documents tab of the Have Your Say Oberon 2024/2025 audited financial statements page. FY2024-25 is the latest available full audited GPFS as at 2026-11-20; the main IP&R page links only a 52 MB combined annual report bundle and no FY2025-26 full GPFS was published, so neither is substituted. The main council site rejects a bare Chrome UA with HTTP 403 but serves a plain client UA; the browser helper uses the plain UA, captures the official download and the connector archives and SHA-256 verifies those bytes. The PDF embeds the Auditor-General's unmodified GPFS opinion and report on the conduct of the audit. Parsed only when the printed $'000 unit is explicit and the Income Statement, B1-1 Total functions and activities, Statement of Comprehensive Income, Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows reconcile exactly. The face statement has no net gain from disposal line and prints a net loss from the disposal of assets as an expense component; total expenses is the documented bridge of the printed expenses-excluding-depreciation line plus printed depreciation/amortisation/impairment; other comprehensive income is the single IPPE revaluation gain; B1-1 income and expenses equal the face totals and the B1-1 result, grants and carrying amount reconcile. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id; no region/LGA allocation and no other council is ingested.

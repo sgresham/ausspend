@@ -56,6 +56,7 @@ import { fetchFederationGpfsViaBrowser } from './federation-gpfs-browser.js';
 import { fetchGreaterHumeGpfsViaBrowser } from './greater-hume-gpfs-browser.js';
 import { fetchBurwoodGpfsViaBrowser } from './burwood-gpfs-browser.js';
 import { fetchCentralDarlingGpfsViaBrowser } from './central-darling-gpfs-browser.js';
+import { fetchOberonGpfsViaBrowser } from './oberon-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -112,6 +113,10 @@ import {
   CENTRAL_DARLING_GPFS_ID,
   createCentralDarlingGpfsConnector,
 } from '../server/src/connectors/central-darling-gpfs/index.js';
+import {
+  OBERON_GPFS_ID,
+  createOberonGpfsConnector,
+} from '../server/src/connectors/oberon-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -379,6 +384,7 @@ export const NSW_SOURCE_IDS = [
   'greater-hume-gpfs',
   'burwood-gpfs',
   'central-darling-gpfs',
+  'oberon-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -750,6 +756,21 @@ async function main(): Promise<void> {
       const fetched = await fetchCentralDarlingGpfsViaBrowser();
       console.log(`[ingest:nsw] central-darling-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(createCentralDarlingGpfsConnector({ pdfBytes: fetched.pdfBytes }));
+      continue;
+    }
+    if (id === OBERON_GPFS_ID) {
+      // Oberon publishes the separate FY2024-25 GPFS in the Documents tab of the
+      // official Have Your Say page. The document entry point triggers a browser
+      // download, so the helper captures the exact bytes.
+      console.log('[ingest:nsw] oberon-gpfs: browser download starting');
+      const fetched = await fetchOberonGpfsViaBrowser();
+      console.log(`[ingest:nsw] oberon-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(
+        createOberonGpfsConnector({
+          pdfBytes: fetched.pdfBytes,
+          resolvedUrl: fetched.resolvedUrl,
+        }),
+      );
       continue;
     }
     if (id === BATHURST_GPFS_ID) {

@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 125   |
-| NSW local-government source ids     | 126   |
-| Registered spending connectors      | 187   |
-| Active spending connectors          | 185   |
+| NSW council GPFS sources            | 126   |
+| NSW local-government source ids     | 127   |
+| Registered spending connectors      | 188   |
+| Active spending connectors          | 186   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -12087,6 +12087,38 @@ migration were performed.
 - `central-darling-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - Docs counts refreshed to `nsw-gpfs=125`; focused Central Darling tests, golden-digest test,
   typecheck, lint, docs-count guard and leak guard pass. No deploy.
+
+**GPFS forty-second-council checks (Oberon), 2026-11-20:**
+
+- The known gap was that the main Integrated Planning & Reporting page exposes only a 52 MB combined
+  annual report bundle and no standalone GPFS after FY2021-22. That is **superseded**: the official
+  Have Your Say Oberon page for the 2024/2025 audited financial statements
+  (<https://haveyoursay.oberon.nsw.gov.au/2024-2025-audited-financial-statements>) publishes a
+  separate audited **General Purpose Annual Financial Statements - 2025 (6.79 MB)** PDF in its
+  Documents tab. The stable document entry point
+  (<https://haveyoursay.oberon.nsw.gov.au/104015/widgets/476199/documents/318527>) is 7,118,843 bytes
+  and 80 pages; SHA-256
+  `ef24ded09ec28724e7b622f97860685c606eeec42b6b31f38b59088ac866a630` (`hash_verified: true`). It
+  contains the five primary statements (PDF pp. 4–8), B1-1 (p. 13) and the Auditor-General's
+  unmodified GPFS opinion dated 24 October 2025.
+- No full FY2025-26 audited GPFS was published as at 2026-11-20; the main IP&R page still lists the
+  2024-25 combined annual report bundle as the latest annual report. FY2024-25 is ingested as the
+  latest available full audited GPFS, explicitly labelled.
+- The main council site serves a plain UA but rejects a bare Chrome UA with HTTP 403. The browser
+  helper uses the plain UA and captures the official download; the live run on 2026-11-20 reproduced
+  7,118,843 bytes and the SHA-256 above.
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1,
+  Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows; the
+  connector rejects a missing or conflicting unit.
+- Income statement, B1-1, comprehensive-income, balance-sheet and cash-flow totals reconcile exactly:
+  revenue `$28,947,000`, expenses `$25,822,000` (printed bridge of expenses excluding depreciation
+  `$18,606,000` plus depreciation/amortisation/impairment `$7,216,000`), net result `$3,125,000`;
+  B1-1 income/expenses/result/grants/carrying `$28,947,000 / $25,822,000 / $3,125,000 / $14,787,000 /
+  $394,496,000` all equal the face statements; total comprehensive income `$16,479,000` (single IPPE
+  revaluation component `$13,354,000`).
+- `oberon-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Docs counts refreshed to `nsw-gpfs=126`; focused Oberon tests, golden-digest test, typecheck,
+  lint, docs-count guard and leak guard pass. No deploy.
 
 ---
 
