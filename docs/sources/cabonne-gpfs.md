@@ -1,0 +1,10 @@
+# Cabonne Council — General Purpose Financial Statements
+
+- id: `cabonne-gpfs`
+- publisher: Cabonne Council
+- source: <https://www.cabonne.nsw.gov.au/Council/Strategies-policies-and-publications/Reports>
+- jurisdiction: local
+- status: active
+- licence: © Cabonne Council. Published council documents used here for public-interest research; not an open-data licence grant.
+
+NSW council GPFS adapter: one council only (Cabonne Council), FY2025-26 General Purpose Financial Statements (year ended 30 June 2026) from the official standalone Annual Financial Statements — GPFS PDF published on the council's Reports page. The entire official site is behind Akamai bot protection (plain clients get HTTP 403 'Access Denied' for the home page, sitemaps and every /files path), so the exact official pin is fetched through headless Chromium and the connector archives and SHA-256 verifies those bytes. The PDF embeds the independent Auditor-General report (PDF pages 64-66) with an unmodified opinion and was authorised for issue on 22 September 2026. The newest combined annual report on the same page is still FY2024-25, so no narrative annual report is substituted. Parsed only when the printed $'000 unit is explicit and the Income Statement, B1-1 Total functions and activities, Statement of Comprehensive Income, Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows reconcile exactly. Cabonne prints the net gain from the disposal of assets as a revenue component; total expenses is the documented bridge of the printed expenses-excluding-depreciation line plus printed depreciation/amortisation/impairment, equal to the printed B1-1 expense total; other comprehensive income is the IPPE revaluation gain plus the joint-venture/associate share. B1-1 income includes grants and contributions, so B1-1 income equals the face total income, B1-1 operating result equals the net result, and B1-1 grants equal operating plus capital grants. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id; no region/LGA allocation and no other council is ingested.

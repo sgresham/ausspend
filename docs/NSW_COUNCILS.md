@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 120   |
-| NSW local-government source ids     | 121   |
-| Registered spending connectors      | 182   |
-| Active spending connectors          | 180   |
+| NSW council GPFS sources            | 121   |
+| NSW local-government source ids     | 122   |
+| Registered spending connectors      | 183   |
+| Active spending connectors          | 181   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -11936,6 +11936,32 @@ migration were performed.
   decrement).
 - `balranald-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - Docs counts refreshed to `nsw-gpfs=120`; focused Balranald tests, golden-digest test, typecheck,
+  lint, docs-count guard and leak guard pass. No deploy.
+
+**GPFS thirty-seventh-council checks (Cabonne), 2026-11-20:**
+
+- The entire official Cabonne Council site is behind Akamai: plain HTTP clients get HTTP 403
+  ("Access Denied", Akamai reference `#18.…`) for the home page, `robots.txt`, sitemaps and every
+  `/files` path. A real headless Chromium session gets HTTP 200 and the `/files` PDFs.
+- The official Reports page lists the current standalone **FY2025-26 GPFS** as
+  `https://www.cabonne.nsw.gov.au/files/98ceb2a5-f381-4fcb-b4e6-32cb52eab396/Annual_Financial_Statements-GPFS-2026.pdf`;
+  the newest combined annual report on the same page is still FY2024-25, so no narrative annual
+  report is substituted.
+- The FY2025-26 GPFS PDF (8,577,237 bytes, 77 pages) was fetched through the browser/WAF path and
+  SHA-256 archived outside the repo; SHA-256
+  `acb8b3d53a4b795bfb6bd5dd4770e377fe24dfc0ca2801f44df9a348369d885f` (`hash_verified: true`). It
+  embeds the independent Auditor-General report (PDF pages 64-66) with an unmodified opinion and was
+  authorised for issue on 22 September 2026.
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1,
+  Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows; the
+  connector rejects a missing or conflicting unit.
+- Income statement, B1-1, comprehensive-income, balance-sheet and cash-flow totals reconcile exactly:
+  revenue `$70,018,000`, expenses `$50,056,000` (printed bridge of expenses excluding depreciation
+  `$33,963,000` plus depreciation/amortisation/impairment `$16,093,000`), net result `$19,962,000`;
+  B1-1 grants `$36,528,000` = operating `$15,902,000` + capital `$20,626,000`; total comprehensive
+  income `$41,038,000` (revaluation `$20,479,000` plus joint ventures/associates `$597,000`).
+- `cabonne-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Docs counts refreshed to `nsw-gpfs=121`; focused Cabonne tests, golden-digest test, typecheck,
   lint, docs-count guard and leak guard pass. No deploy.
 
 ---
