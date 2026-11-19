@@ -82,6 +82,7 @@ const KNOWN_SOURCE_IDS = [
   'coonamble-gpfs',
   'weddin-gpfs',
   'walcha-gpfs',
+  'murrumbidgee-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

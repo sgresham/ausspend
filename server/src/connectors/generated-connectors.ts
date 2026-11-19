@@ -36,29 +36,30 @@ import { connectorModule as module33 } from './maitland-gpfs/index.js';
 import { connectorModule as module34 } from './mid-coast-gpfs/index.js';
 import { connectorModule as module35 } from './moree-plains-gpfs/index.js';
 import { connectorModule as module36 } from './mosman-gpfs/index.js';
-import { connectorModule as module37 } from './newcastle-gpfs/index.js';
-import { connectorModule as module38 } from './north-sydney-gpfs/index.js';
-import { connectorModule as module39 } from './northern-beaches-gpfs/index.js';
-import { connectorModule as module40 } from './parramatta-gpfs/index.js';
-import { connectorModule as module41 } from './penrith-gpfs/index.js';
-import { connectorModule as module42 } from './port-macquarie-hastings-gpfs/index.js';
-import { connectorModule as module43 } from './randwick-gpfs/index.js';
-import { connectorModule as module44 } from './ryde-gpfs/index.js';
-import { connectorModule as module45 } from './shellharbour-gpfs/index.js';
-import { connectorModule as module46 } from './shoalhaven-gpfs/index.js';
-import { connectorModule as module47 } from './strathfield-gpfs/index.js';
-import { connectorModule as module48 } from './sutherland-shire-gpfs/index.js';
-import { connectorModule as module49 } from './the-hills-gpfs/index.js';
-import { connectorModule as module50 } from './tweed-shire-gpfs/index.js';
-import { connectorModule as module51 } from './uralla-gpfs/index.js';
-import { connectorModule as module52 } from './walcha-gpfs/index.js';
-import { connectorModule as module53 } from './warren-gpfs/index.js';
-import { connectorModule as module54 } from './waverley-gpfs/index.js';
-import { connectorModule as module55 } from './weddin-gpfs/index.js';
-import { connectorModule as module56 } from './willoughby-gpfs/index.js';
-import { connectorModule as module57 } from './wollondilly-gpfs/index.js';
-import { connectorModule as module58 } from './wollongong-gpfs/index.js';
-import { connectorModule as module59 } from './woollahra-gpfs/index.js';
+import { connectorModule as module37 } from './murrumbidgee-gpfs/index.js';
+import { connectorModule as module38 } from './newcastle-gpfs/index.js';
+import { connectorModule as module39 } from './north-sydney-gpfs/index.js';
+import { connectorModule as module40 } from './northern-beaches-gpfs/index.js';
+import { connectorModule as module41 } from './parramatta-gpfs/index.js';
+import { connectorModule as module42 } from './penrith-gpfs/index.js';
+import { connectorModule as module43 } from './port-macquarie-hastings-gpfs/index.js';
+import { connectorModule as module44 } from './randwick-gpfs/index.js';
+import { connectorModule as module45 } from './ryde-gpfs/index.js';
+import { connectorModule as module46 } from './shellharbour-gpfs/index.js';
+import { connectorModule as module47 } from './shoalhaven-gpfs/index.js';
+import { connectorModule as module48 } from './strathfield-gpfs/index.js';
+import { connectorModule as module49 } from './sutherland-shire-gpfs/index.js';
+import { connectorModule as module50 } from './the-hills-gpfs/index.js';
+import { connectorModule as module51 } from './tweed-shire-gpfs/index.js';
+import { connectorModule as module52 } from './uralla-gpfs/index.js';
+import { connectorModule as module53 } from './walcha-gpfs/index.js';
+import { connectorModule as module54 } from './warren-gpfs/index.js';
+import { connectorModule as module55 } from './waverley-gpfs/index.js';
+import { connectorModule as module56 } from './weddin-gpfs/index.js';
+import { connectorModule as module57 } from './willoughby-gpfs/index.js';
+import { connectorModule as module58 } from './wollondilly-gpfs/index.js';
+import { connectorModule as module59 } from './wollongong-gpfs/index.js';
+import { connectorModule as module60 } from './woollahra-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -121,6 +122,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module57,
   module58,
   module59,
+  module60,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);
