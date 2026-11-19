@@ -96,6 +96,7 @@ const KNOWN_SOURCE_IDS = [
   'lithgow-gpfs',
   'mid-western-regional-gpfs',
   'bega-valley-gpfs',
+  'snowy-monaro-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
