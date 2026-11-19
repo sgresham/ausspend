@@ -108,6 +108,18 @@ import {
   PORT_OF_TOWNSVILLE_UNIT,
   PORT_OF_TOWNSVILLE_UNIT_LABEL,
   PORT_OF_TOWNSVILLE_UNIT_TO_CENTS,
+  PORTS_NORTH_CAVEAT,
+  PORTS_NORTH_ENTITY,
+  PORTS_NORTH_ID,
+  PORTS_NORTH_JURISDICTION,
+  PORTS_NORTH_LEGAL_CLASS,
+  PORTS_NORTH_LICENSE,
+  PORTS_NORTH_NAME,
+  PORTS_NORTH_PUBLISHER,
+  PORTS_NORTH_SOURCE_URL,
+  PORTS_NORTH_UNIT,
+  PORTS_NORTH_UNIT_LABEL,
+  PORTS_NORTH_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -246,7 +258,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited and Ports North). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -268,6 +280,7 @@ export const SOC_SOURCE_IDS = [
   SUNWATER_ID,
   GLADSTONE_PORTS_ID,
   PORT_OF_TOWNSVILLE_ID,
+  PORTS_NORTH_ID,
 ] as const;
 
 /**
@@ -891,6 +904,40 @@ async function writePortOfTownsvilleManifest(): Promise<void> {
   );
 }
 
+async function writePortsNorthManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: PORTS_NORTH_ID });
+  const manifestPath = path.resolve(
+    process.env.PORTS_NORTH_MANIFEST ?? 'docs/source-archive/qld-ports-north-annual-report.json',
+  );
+  const manifest = {
+    entity: PORTS_NORTH_ENTITY,
+    legal_class: PORTS_NORTH_LEGAL_CLASS,
+    jurisdiction: PORTS_NORTH_JURISDICTION,
+    dataset: PORTS_NORTH_NAME,
+    publisher: PORTS_NORTH_PUBLISHER,
+    discovery_page: PORTS_NORTH_SOURCE_URL,
+    license: PORTS_NORTH_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${PORTS_NORTH_UNIT_LABEL} (${PORTS_NORTH_UNIT}; x${PORTS_NORTH_UNIT_TO_CENTS} cents per unit)`,
+    caveat: PORTS_NORTH_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: Ports North only (Far North Queensland Ports Corporation Limited), a Queensland Government Owned Corporation. Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $’000 unit and printed Total Income and Total Expenses subtotals; the printed income and expense components sum exactly to those subtotals and the operating-result, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Ports North rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports, Port of Townsville, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -945,6 +992,7 @@ async function main(): Promise<void> {
     await writeSunwaterManifest();
     await writeGladstonePortsManifest();
     await writePortOfTownsvilleManifest();
+    await writePortsNorthManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1341,6 +1389,31 @@ async function main(): Promise<void> {
     console.log(
       `[ingest:soc] ${PORT_OF_TOWNSVILLE_ID} rows=${townsvilleRows} source_documents=${townsvilleArchived.length} verified=${townsvilleVerified} potential_double_count=${townsvilleDoubleCount} deferred_documents=${townsvilleDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
     );
+    const portsNorthRows = await MeasureModel.countDocuments({ source_id: PORTS_NORTH_ID });
+    const portsNorthVerified = await MeasureModel.countDocuments({
+      source_id: PORTS_NORTH_ID,
+      verified: true,
+    });
+    const portsNorthDoubleCount = await MeasureModel.countDocuments({
+      source_id: PORTS_NORTH_ID,
+      potential_double_count: true,
+    });
+    const portsNorthByLine = await MeasureModel.aggregate([
+      { $match: { source_id: PORTS_NORTH_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const portsNorthDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: PORTS_NORTH_ID,
+      status: 'deferred',
+    });
+    const portsNorthArchived = await listArchivedRecords({ source_id: PORTS_NORTH_ID });
+    console.log(
+      `[ingest:soc] ${PORTS_NORTH_ID} rows=${portsNorthRows} source_documents=${portsNorthArchived.length} verified=${portsNorthVerified} potential_double_count=${portsNorthDoubleCount} deferred_documents=${portsNorthDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of portsNorthByLine) {
+      console.log(`[ingest:soc] ${PORTS_NORTH_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
     );
