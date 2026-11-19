@@ -230,6 +230,18 @@ import {
   BUSSELTON_WATER_UNIT,
   BUSSELTON_WATER_UNIT_LABEL,
   BUSSELTON_WATER_UNIT_TO_CENTS,
+  MID_WEST_PORTS_CAVEAT,
+  MID_WEST_PORTS_ENTITY,
+  MID_WEST_PORTS_ID,
+  MID_WEST_PORTS_JURISDICTION,
+  MID_WEST_PORTS_LEGAL_CLASS,
+  MID_WEST_PORTS_LICENSE,
+  MID_WEST_PORTS_NAME,
+  MID_WEST_PORTS_PUBLISHER,
+  MID_WEST_PORTS_SOURCE_URL,
+  MID_WEST_PORTS_UNIT,
+  MID_WEST_PORTS_UNIT_LABEL,
+  MID_WEST_PORTS_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -368,7 +380,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports and Busselton Water). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Ports). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -400,6 +412,7 @@ export const SOC_SOURCE_IDS = [
   DEVELOPMENTWA_ID,
   SOUTHERN_PORTS_ID,
   BUSSELTON_WATER_ID,
+  MID_WEST_PORTS_ID,
 ] as const;
 
 /**
@@ -1048,7 +1061,7 @@ async function writePortsNorthManifest(): Promise<void> {
       archived_from: record.archived_from,
     })),
     notes:
-      "QLD SOC: Ports North only (Far North Queensland Ports Corporation Limited), a Queensland Government Owned Corporation. Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $’000 unit and printed Total Income and Total Expenses subtotals; the printed income and expense components sum exactly to those subtotals and the operating-result, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Ports North rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports, Port of Townsville, another QLD GOC, a QLD total, or any other SOC.",
+      'QLD SOC: Ports North only (Far North Queensland Ports Corporation Limited), a Queensland Government Owned Corporation. Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $’000 unit and printed Total Income and Total Expenses subtotals; the printed income and expense components sum exactly to those subtotals and the operating-result, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Ports North rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports, Port of Townsville, another QLD GOC, a QLD total, or any other SOC.',
   };
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -1084,7 +1097,7 @@ async function writeNqbpManifest(): Promise<void> {
       archived_from: record.archived_from,
     })),
     notes:
-      "QLD SOC: North Queensland Bulk Ports Corporation Limited (NQBP) only, a Queensland Government Owned Corporation. The official NQBP publications page returns HTTP 403 (Cloudflare/bot challenge) from the ingestion host; discovery falls back to the verified Queensland Parliament tabled-paper copy of the same annual report. The exact PDF is SHA-256 archived outside the repo. The Consolidated Statement of Comprehensive Income prints an explicit $’000 unit and both Consolidated and Parent columns; the adapter reads the Consolidated 2026 column only. The printed income and expense components sum exactly to the printed subtotals and the operating-result, net-finance, profit-before-tax, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add NQBP rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports, Port of Townsville, Ports North, another QLD GOC, a QLD total, or any other SOC.",
+      'QLD SOC: North Queensland Bulk Ports Corporation Limited (NQBP) only, a Queensland Government Owned Corporation. The official NQBP publications page returns HTTP 403 (Cloudflare/bot challenge) from the ingestion host; discovery falls back to the verified Queensland Parliament tabled-paper copy of the same annual report. The exact PDF is SHA-256 archived outside the repo. The Consolidated Statement of Comprehensive Income prints an explicit $’000 unit and both Consolidated and Parent columns; the adapter reads the Consolidated 2026 column only. The printed income and expense components sum exactly to the printed subtotals and the operating-result, net-finance, profit-before-tax, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add NQBP rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports, Port of Townsville, Ports North, another QLD GOC, a QLD total, or any other SOC.',
   };
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -1119,7 +1132,7 @@ async function writeWaterCorporationManifest(): Promise<void> {
       archived_from: record.archived_from,
     })),
     notes:
-      "WA SOC: Water Corporation only, a WA Government Trading Enterprise under the Government Trading Enterprises Act 2023 (WA). Latest annual report discovered from the official annual report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $M unit and both Group and Corporation columns; the adapter reads the Group 2026 column only. The printed revenue and expense components sum exactly to the printed subtotals and the operating-activities, profit-before-tax, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Water Corporation rows to government program spending, the PNFC benchmark, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+      'WA SOC: Water Corporation only, a WA Government Trading Enterprise under the Government Trading Enterprises Act 2023 (WA). Latest annual report discovered from the official annual report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $M unit and both Group and Corporation columns; the adapter reads the Group 2026 column only. The printed revenue and expense components sum exactly to the printed subtotals and the operating-activities, profit-before-tax, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Water Corporation rows to government program spending, the PNFC benchmark, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.',
   };
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -1187,7 +1200,7 @@ async function writeWesternPowerManifest(): Promise<void> {
       archived_from: record.archived_from,
     })),
     notes:
-      "WA SOC: Western Power only (Electricity Networks Corporation), a WA Government Trading Enterprise (Electricity Corporations Act 2005 (WA)). Latest annual report discovered from the official annual-report page (the page embeds the PDF URLs in JSON; no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of comprehensive income prints an explicit $M unit and two reporting-year columns; the adapter reads the current 2025/26 column only. The printed income and expense components sum exactly to the printed totals and the profit-before-tax and net-result bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Western Power rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+      'WA SOC: Western Power only (Electricity Networks Corporation), a WA Government Trading Enterprise (Electricity Corporations Act 2005 (WA)). Latest annual report discovered from the official annual-report page (the page embeds the PDF URLs in JSON; no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of comprehensive income prints an explicit $M unit and two reporting-year columns; the adapter reads the current 2025/26 column only. The printed income and expense components sum exactly to the printed totals and the profit-before-tax and net-result bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Western Power rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.',
   };
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -1270,8 +1283,7 @@ async function writeFremantlePortsManifest(): Promise<void> {
 async function writeDevelopmentWaManifest(): Promise<void> {
   const records = await listArchivedRecords({ source_id: DEVELOPMENTWA_ID });
   const manifestPath = path.resolve(
-    process.env.DEVELOPMENTWA_MANIFEST ??
-      'docs/source-archive/wa-developmentwa-annual-report.json',
+    process.env.DEVELOPMENTWA_MANIFEST ?? 'docs/source-archive/wa-developmentwa-annual-report.json',
   );
   const manifest = {
     entity: DEVELOPMENTWA_ENTITY,
@@ -1363,7 +1375,42 @@ async function writeBusseltonWaterManifest(): Promise<void> {
       archived_from: record.archived_from,
     })),
     notes:
-      "WA SOC: Busselton Water only (Busselton Water Corporation), a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $ (whole-dollar) unit and two reporting-year columns; the adapter reads the 2026 column only. Total revenue is the exact sum of the printed income lines checked against the unlabeled printed total, and total expenses is the exact sum of the printed expense lines checked against the printed Total expenses subtotal; both are accepted only when the Profit before income tax and Profit after income tax bridges agree at zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Busselton Water rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+      'WA SOC: Busselton Water only (Busselton Water Corporation), a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $ (whole-dollar) unit and two reporting-year columns; the adapter reads the 2026 column only. Total revenue is the exact sum of the printed income lines checked against the unlabeled printed total, and total expenses is the exact sum of the printed expense lines checked against the printed Total expenses subtotal; both are accepted only when the Profit before income tax and Profit after income tax bridges agree at zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Busselton Water rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
+async function writeMidWestPortsManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: MID_WEST_PORTS_ID });
+  const manifestPath = path.resolve(
+    process.env.MID_WEST_PORTS_MANIFEST ??
+      'docs/source-archive/wa-mid-west-ports-annual-report.json',
+  );
+  const manifest = {
+    entity: MID_WEST_PORTS_ENTITY,
+    legal_class: MID_WEST_PORTS_LEGAL_CLASS,
+    jurisdiction: MID_WEST_PORTS_JURISDICTION,
+    dataset: MID_WEST_PORTS_NAME,
+    publisher: MID_WEST_PORTS_PUBLISHER,
+    discovery_page: MID_WEST_PORTS_SOURCE_URL,
+    license: MID_WEST_PORTS_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${MID_WEST_PORTS_UNIT_LABEL} (${MID_WEST_PORTS_UNIT}; x${MID_WEST_PORTS_UNIT_TO_CENTS} cents per unit)`,
+    caveat: MID_WEST_PORTS_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Mid West Ports only (Mid West Ports Authority), a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Profit or Loss and Other Comprehensive Income prints an explicit $'000 unit and two reporting-year columns; the adapter reads the 2026 column only. It has no printed Total income or Total expenses subtotal, so total income is the exact sum of Revenue + Other income and total expenses is the exact sum of the printed expense lines; both are accepted only when the Profit before income tax and Profit for the year bridges agree at zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Mid West Ports rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
   };
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -1436,6 +1483,7 @@ async function main(): Promise<void> {
     await writeDevelopmentWaManifest();
     await writeSouthernPortsManifest();
     await writeBusseltonWaterManifest();
+    await writeMidWestPortsManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1855,7 +1903,9 @@ async function main(): Promise<void> {
       `[ingest:soc] ${PORTS_NORTH_ID} rows=${portsNorthRows} source_documents=${portsNorthArchived.length} verified=${portsNorthVerified} potential_double_count=${portsNorthDoubleCount} deferred_documents=${portsNorthDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
     );
     for (const group of portsNorthByLine) {
-      console.log(`[ingest:soc] ${PORTS_NORTH_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+      console.log(
+        `[ingest:soc] ${PORTS_NORTH_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
     }
     const nqbpRows = await MeasureModel.countDocuments({ source_id: NQBP_ID });
     const nqbpVerified = await MeasureModel.countDocuments({
@@ -2094,6 +2144,33 @@ async function main(): Promise<void> {
     for (const group of busseltonByLine) {
       console.log(
         `[ingest:soc] ${BUSSELTON_WATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const midWestPortsRows = await MeasureModel.countDocuments({ source_id: MID_WEST_PORTS_ID });
+    const midWestPortsVerified = await MeasureModel.countDocuments({
+      source_id: MID_WEST_PORTS_ID,
+      verified: true,
+    });
+    const midWestPortsDoubleCount = await MeasureModel.countDocuments({
+      source_id: MID_WEST_PORTS_ID,
+      potential_double_count: true,
+    });
+    const midWestPortsByLine = await MeasureModel.aggregate([
+      { $match: { source_id: MID_WEST_PORTS_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const midWestPortsDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: MID_WEST_PORTS_ID,
+      status: 'deferred',
+    });
+    const midWestPortsArchived = await listArchivedRecords({ source_id: MID_WEST_PORTS_ID });
+    console.log(
+      `[ingest:soc] ${MID_WEST_PORTS_ID} rows=${midWestPortsRows} source_documents=${midWestPortsArchived.length} verified=${midWestPortsVerified} potential_double_count=${midWestPortsDoubleCount} deferred_documents=${midWestPortsDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of midWestPortsByLine) {
+      console.log(
+        `[ingest:soc] ${MID_WEST_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(
