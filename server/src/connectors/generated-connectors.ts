@@ -92,6 +92,7 @@ import { connectorModule as module89 } from './wingecarribee-gpfs/index.js';
 import { connectorModule as module90 } from './wollondilly-gpfs/index.js';
 import { connectorModule as module91 } from './wollongong-gpfs/index.js';
 import { connectorModule as module92 } from './woollahra-gpfs/index.js';
+import { connectorModule as module93 } from './yass-valley-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -187,6 +188,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module90,
   module91,
   module92,
+  module93,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);

@@ -1,0 +1,17 @@
+import {
+  YASS_VALLEY_GPFS_ID,
+  YASS_VALLEY_GPFS_NAME,
+  YASS_VALLEY_GPFS_PUBLISHER,
+  YASS_VALLEY_GPFS_FISCAL_YEAR,
+  YASS_VALLEY_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: YASS_VALLEY_GPFS_ID,
+  name: YASS_VALLEY_GPFS_NAME,
+  publisher: YASS_VALLEY_GPFS_PUBLISHER,
+  fiscalYear: YASS_VALLEY_GPFS_FISCAL_YEAR,
+  dataQualityFlag: YASS_VALLEY_GPFS_DATA_QUALITY_FLAG,
+} as const;
