@@ -41,6 +41,7 @@ type SummaryMeasure = Pick<
   LeanMeasure,
   | '_id'
   | 'amount_cents'
+  | 'fiscal_year'
   | 'measure_type'
   | 'function_code'
   | 'region_id'
@@ -51,6 +52,9 @@ type SummaryMeasure = Pick<
 
 const SUMMARY_PROJECTION = {
   amount_cents: 1,
+  // Needed to reproduce the fiscal_year sorts locally when the requested page
+  // is sliced out of the already-loaded filtered set.
+  fiscal_year: 1,
   measure_type: 1,
   function_code: 1,
   region_id: 1,
@@ -94,6 +98,78 @@ const SORTS: Record<SpendingSort, Record<string, 1 | -1>> = {
   fiscal_year_desc: { fiscal_year: -1, amount_cents: -1, _id: 1 },
   fiscal_year_asc: { fiscal_year: 1, amount_cents: -1, _id: 1 },
 };
+
+/** Literal substring filter: every token must occur in one descriptive field. */
+function applyRegexTextFilters(
+  base: Record<string, unknown>,
+  tokens: string[],
+): Record<string, unknown> {
+  const query = { ...base };
+  const filters = tokens.map((token) => {
+    const pattern = new RegExp(escapeRegex(token), 'i');
+    return {
+      $or: [{ project_name: pattern }, { description: pattern }, { delivery_entity: pattern }],
+    };
+  });
+  if (filters.length === 0) return query;
+  if (query.$or) {
+    query.$and = [{ $or: query.$or }, ...filters];
+    delete query.$or;
+  } else if (filters.length === 1) {
+    Object.assign(query, filters[0]);
+  } else {
+    query.$and = filters;
+  }
+  return query;
+}
+
+/** Index-backed text filter: every quoted token must occur (AND across tokens). */
+function applyTextSearch(base: Record<string, unknown>, tokens: string[]): Record<string, unknown> {
+  const query = { ...base };
+  const textClause = { $text: { $search: tokens.map((token) => `"${token}"`).join(' ') } };
+  if (query.$or) {
+    query.$and = [{ $or: query.$or }, textClause];
+    delete query.$or;
+  } else {
+    query.$and = [textClause];
+  }
+  return query;
+}
+
+/** A fresh database may not have finished building the text index yet. */
+function isMissingTextIndex(error: unknown): boolean {
+  const candidate = error as { code?: number; codeName?: string; message?: string };
+  return (
+    candidate?.code === 27 ||
+    candidate?.codeName === 'IndexNotFound' ||
+    (typeof candidate?.message === 'string' && candidate.message.includes('text index required'))
+  );
+}
+
+/**
+ * Reproduce Mongo's sort for the four documented sorts over the filtered set
+ * that is already in memory. `_id` compares as its hex string, which preserves
+ * ObjectId byte order. A missing value never occurs for `amount_cents` or
+ * `fiscal_year` (both required), so field ordering matches the server exactly.
+ */
+function compareMeasures(a: SummaryMeasure, b: SummaryMeasure, sort: SpendingSort): number {
+  for (const [field, direction] of Object.entries(SORTS[sort])) {
+    let order: number;
+    if (field === '_id') {
+      const aId = a._id.toString();
+      const bId = b._id.toString();
+      order = aId < bId ? -1 : aId > bId ? 1 : 0;
+    } else if (field === 'amount_cents') {
+      order = a.amount_cents < b.amount_cents ? -1 : a.amount_cents > b.amount_cents ? 1 : 0;
+    } else if (field === 'fiscal_year') {
+      order = a.fiscal_year < b.fiscal_year ? -1 : a.fiscal_year > b.fiscal_year ? 1 : 0;
+    } else {
+      continue;
+    }
+    if (order !== 0) return direction === 1 ? order : -order;
+  }
+  return 0;
+}
 
 interface Lookups {
   functions: Map<string, LeanFunction>;
@@ -471,7 +547,7 @@ export const listSpending: RequestHandler = async (req, res) => {
       'SOC entity statements are exposed at /api/soc only, never in generic spending',
     );
   }
-  const mongoQuery: Record<string, unknown> = {
+  let mongoQuery: Record<string, unknown> = {
     // ABS GFS benchmark rows are top-down statistical aggregates, never project
     // data. Keep them out of the generic spending query and every total; the
     // dedicated /api/benchmark endpoint reads them explicitly.
@@ -498,32 +574,6 @@ export const listSpending: RequestHandler = async (req, res) => {
   if (regionId) mongoQuery.region_id = regionId;
   if (areaRegion)
     Object.assign(mongoQuery, areaQueries(areaRegion, areaRegion.parent_code ?? 'NSW').combined);
-  if (query.q && query.q.length > 0) {
-    // Tokenised project/item text filter: every whitespace-separated word must
-    // occur in at least one of the project fields (AND across words, OR across
-    // fields). Word order therefore does not matter, while a single word still
-    // behaves like the previous literal substring filter. Only the descriptive
-    // project fields match: never notes or source_url, and never a total.
-    const tokens = tokenizeQuery(query.q);
-    const textFilters = tokens.map((token) => {
-      const pattern = new RegExp(escapeRegex(token), 'i');
-      return {
-        $or: [{ project_name: pattern }, { description: pattern }, { delivery_entity: pattern }],
-      };
-    });
-    if (textFilters.length > 0) {
-      if (mongoQuery.$or) {
-        // Area mode already uses $or; combine both with an explicit $and so the
-        // text filter composes with every existing filter instead of replacing it.
-        mongoQuery.$and = [{ $or: mongoQuery.$or }, ...textFilters];
-        delete mongoQuery.$or;
-      } else if (textFilters.length === 1) {
-        Object.assign(mongoQuery, textFilters[0] ?? {});
-      } else {
-        mongoQuery.$and = textFilters;
-      }
-    }
-  }
   if (query.min_amount !== undefined || query.max_amount !== undefined) {
     mongoQuery.amount_cents = {
       ...(query.min_amount !== undefined ? { $gte: query.min_amount } : {}),
@@ -531,12 +581,80 @@ export const listSpending: RequestHandler = async (req, res) => {
     };
   }
 
-  // The summary and breakdowns cover the whole filtered set, so load only the
-  // fields they need. The requested page is a separate Mongo skip/limit query:
-  // loading every full document into memory does not scale to 100k+ contracts.
-  const matching = await MeasureModel.find(mongoQuery)
-    .select(SUMMARY_PROJECTION)
-    .lean<SummaryMeasure[]>();
+  // `baseQuery` is the filter without q, kept so the literal regex path can be
+  // rebuilt if the text index is not available yet.
+  const baseQuery = mongoQuery;
+  let textSearchTokens: string[] | null = null;
+  if (query.q && query.q.length > 0) {
+    // Tokenised project/item text filter: every whitespace-separated word must
+    // occur in at least one of the project fields (AND across words, OR across
+    // fields). Only the descriptive project fields match: never notes or
+    // source_url, and never a total.
+    const tokens = tokenizeQuery(query.q);
+    // A MongoDB text index matches whole words, not arbitrary substrings. Use
+    // it for ordinary word tokens (the overwhelming majority of searches) and
+    // keep the literal regex path for tokens that contain punctuation, so
+    // regex metacharacters are still treated literally.
+    const textSafe = tokens.length > 0 && tokens.every((token) => /^[a-z0-9_-]+$/.test(token));
+    if (textSafe) {
+      textSearchTokens = tokens;
+      mongoQuery = applyTextSearch(baseQuery, tokens);
+    } else if (tokens.length > 0) {
+      mongoQuery = applyRegexTextFilters(baseQuery, tokens);
+    }
+  }
+
+  const start = (query.page - 1) * query.page_size;
+
+  // One pass over the filtered set. When the text index answers q, a single
+  // $facet returns the summary fields and the requested page from one
+  // index-backed match. Otherwise load the projected filtered set once and
+  // derive the page from it, instead of asking Mongo to scan and sort the whole
+  // collection a second time. Counts, pagination, response shape and sort order
+  // are unchanged by either route.
+  let matching: SummaryMeasure[];
+  let pageRows: LeanMeasure[];
+  let facets: { summary: SummaryMeasure[]; page: LeanMeasure[] } | undefined;
+  if (textSearchTokens) {
+    try {
+      [facets] = await MeasureModel.aggregate<{
+        summary: SummaryMeasure[];
+        page: LeanMeasure[];
+      }>([
+        { $match: mongoQuery },
+        {
+          $facet: {
+            summary: [{ $project: SUMMARY_PROJECTION }],
+            page: [{ $sort: SORTS[query.sort] }, { $skip: start }, { $limit: query.page_size }],
+          },
+        },
+      ]).allowDiskUse(true);
+    } catch (error) {
+      if (!isMissingTextIndex(error)) throw error;
+      // Fresh database / index still building: fall back to the literal path.
+      textSearchTokens = null;
+      mongoQuery = applyRegexTextFilters(baseQuery, tokenizeQuery(query.q ?? ''));
+    }
+  }
+
+  if (facets) {
+    matching = facets.summary ?? [];
+    pageRows = facets.page ?? [];
+  } else {
+    matching = await MeasureModel.find(mongoQuery)
+      .select(SUMMARY_PROJECTION)
+      .lean<SummaryMeasure[]>();
+    const ordered = [...matching].sort((a, b) => compareMeasures(a, b, query.sort));
+    const pageIds = ordered.slice(start, start + query.page_size).map((measure) => measure._id);
+    const pageDocs =
+      pageIds.length > 0
+        ? await MeasureModel.find({ _id: { $in: pageIds } }).lean<LeanMeasure[]>()
+        : [];
+    const pageById = new Map(pageDocs.map((measure) => [measure._id.toString(), measure]));
+    pageRows = pageIds
+      .map((id) => pageById.get(id.toString()))
+      .filter((measure): measure is LeanMeasure => Boolean(measure));
+  }
 
   const lookups = await loadLookups(matching);
 
@@ -578,13 +696,7 @@ export const listSpending: RequestHandler = async (req, res) => {
   }
 
   const total = matching.length;
-  const start = (query.page - 1) * query.page_size;
   const totalPages = total === 0 ? 0 : Math.ceil(total / query.page_size);
-  const pageRows = await MeasureModel.find(mongoQuery)
-    .sort(SORTS[query.sort])
-    .skip(start)
-    .limit(query.page_size)
-    .lean<LeanMeasure[]>();
 
   const applied_filters: SpendingAppliedFilters = {
     fiscal_year: query.fiscal_year ?? null,
