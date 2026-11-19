@@ -1,0 +1,17 @@
+import {
+  LOCKHART_GPFS_ID,
+  LOCKHART_GPFS_NAME,
+  LOCKHART_GPFS_PUBLISHER,
+  LOCKHART_GPFS_FISCAL_YEAR,
+  LOCKHART_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: LOCKHART_GPFS_ID,
+  name: LOCKHART_GPFS_NAME,
+  publisher: LOCKHART_GPFS_PUBLISHER,
+  fiscalYear: LOCKHART_GPFS_FISCAL_YEAR,
+  dataQualityFlag: LOCKHART_GPFS_DATA_QUALITY_FLAG,
+} as const;
