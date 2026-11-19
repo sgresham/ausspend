@@ -67,7 +67,9 @@ describe('Cessnock City Council annual-report discovery', () => {
     expect(selected.title).toContain('Annual Report 2024-2025');
     expect(fiscalYearFromCessnockAnnualReportLink('Annual Report 2024-2025')).toBe('2024-25');
     expect(fiscalYearFromCessnockAnnualReportLink('Annual Report 2023-2024')).toBe('2023-24');
-    expect(fiscalYearFromCessnockAnnualReportLink('Long Term Financial Plan 2023-2033.pdf')).toBeNull();
+    expect(
+      fiscalYearFromCessnockAnnualReportLink('Long Term Financial Plan 2023-2033.pdf'),
+    ).toBeNull();
   });
 
   it('never treats the separate Annual Financial Statements page as the annual report', () => {
@@ -202,9 +204,9 @@ describe('Cessnock City Council annual-report FS-section absence', () => {
   it('does not invent a council total or cross-council row', () => {
     const parsed = parsedFixture();
     expect(parsed.records).toEqual([]);
-    expect(
-      parsed.records.some((record) => record.aggregation_role !== 'agency_detail'),
-    ).toBe(false);
+    expect(parsed.records.some((record) => record.aggregation_role !== 'agency_detail')).toBe(
+      false,
+    );
     expect(
       parsed.records.some(
         (record) => record.region_id !== undefined || record.location !== undefined,

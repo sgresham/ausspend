@@ -20,8 +20,7 @@ import type { Connector, RawRecord } from '../types.js';
  * rows and records the exact gap.
  */
 export const CESSNOCK_GPFS_ID = 'cessnock-gpfs';
-export const CESSNOCK_GPFS_NAME =
-  'Cessnock City Council — Annual Report Financial Statements';
+export const CESSNOCK_GPFS_NAME = 'Cessnock City Council — Annual Report Financial Statements';
 export const CESSNOCK_GPFS_PUBLISHER = 'Cessnock City Council';
 export const CESSNOCK_GPFS_REPORTING_URL =
   'https://www.cessnock.nsw.gov.au/Council/Forms-and-documents/Community-information/Annual-Report';
@@ -113,9 +112,7 @@ export function fiscalYearFromCessnockAnnualReportLink(text: string): string | n
   const startYear = Number(match[1]);
   const endRaw = match[2]!;
   const end =
-    endRaw.length === 2
-      ? Math.floor(startYear / 100) * 100 + Number(endRaw)
-      : Number(endRaw);
+    endRaw.length === 2 ? Math.floor(startYear / 100) * 100 + Number(endRaw) : Number(endRaw);
   if (end !== startYear + 1) return null;
   return `${startYear}-${String(end).slice(-2)}`;
 }
@@ -258,10 +255,7 @@ function normalized(text: string): string {
   return text.replace(/\s+/g, ' ').trim();
 }
 
-function findPage(
-  pages: readonly PdfPage[],
-  predicate: (text: string) => boolean,
-): PdfPage | null {
+function findPage(pages: readonly PdfPage[], predicate: (text: string) => boolean): PdfPage | null {
   for (const page of pages) {
     if (predicate(normalized(page.text))) return page;
   }
@@ -295,8 +289,7 @@ export function parseCessnockGpfsExtraction(
   const functionsPage = findPage(
     extraction.pages,
     (text) =>
-      text.includes('Total functions and activities') &&
-      text.includes('Functions or activities'),
+      text.includes('Total functions and activities') && text.includes('Functions or activities'),
   );
   if (incomePage && comprehensivePage && functionsPage) {
     const reason =
@@ -310,7 +303,8 @@ export function parseCessnockGpfsExtraction(
   }
   const summaryPage = findPage(
     extraction.pages,
-    (text) => text.includes('Financial summary') && text.includes('What were our sources of income'),
+    (text) =>
+      text.includes('Financial summary') && text.includes('What were our sources of income'),
   );
   const attestationPage = findPage(extraction.pages, (text) =>
     text.includes('ATTESTATION STATEMENT'),
@@ -366,9 +360,7 @@ function documentFilename(url: string): string {
 }
 
 /** Build the live Cessnock City Council annual-report connector. */
-export function createCessnockGpfsConnector(
-  options: CessnockGpfsConnectorOptions = {},
-): Connector {
+export function createCessnockGpfsConnector(options: CessnockGpfsConnectorOptions = {}): Connector {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const metadata = {
     lastFetchedAt: null as string | null,

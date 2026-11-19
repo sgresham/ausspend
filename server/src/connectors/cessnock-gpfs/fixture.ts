@@ -19,11 +19,9 @@ export const CESSNOCK_PDF_SHA256 =
   'd111d81c727c7e65f76866487e6a470bf717d301ffbe36d84fd88bba0411a494';
 export const CESSNOCK_PDF_BYTES = 16506336;
 
-export const CESSNOCK_SUMMARY_TEXT =
-  `ANNUAL REPORT 2024–2025 | 25 24 | CESSNOCK CITY COUNCIL Community Involvement Our engagement activities are guided by the best practice International Association for Public Participation (IAP2) model. Consultation with members of our community and stakeholders through surveys, online discussions, community events, workshops and local conversations ensured that our community had the opportunity to participate in the development of our plan. Financial summary What were our sources of income? Rates and annual charges Other revenues Contributions - Non cash dedications User charges and fees Grants and contributions Interest and investment income $61.3m received in grants and contributions $26.4m non-cash dedications $4m other revenues $71.2m raised in rates and charges 15% 35% 40% 6% 2% 2%`;
+export const CESSNOCK_SUMMARY_TEXT = `ANNUAL REPORT 2024–2025 | 25 24 | CESSNOCK CITY COUNCIL Community Involvement Our engagement activities are guided by the best practice International Association for Public Participation (IAP2) model. Consultation with members of our community and stakeholders through surveys, online discussions, community events, workshops and local conversations ensured that our community had the opportunity to participate in the development of our plan. Financial summary What were our sources of income? Rates and annual charges Other revenues Contributions - Non cash dedications User charges and fees Grants and contributions Interest and investment income $61.3m received in grants and contributions $26.4m non-cash dedications $4m other revenues $71.2m raised in rates and charges 15% 35% 40% 6% 2% 2%`;
 
-export const CESSNOCK_ATTESTATION_TEXT =
-  `ANNUAL REPORT 2024–2025 | 201 200 | CESSNOCK CITY COUNCIL ATTESTATION STATEMENT`;
+export const CESSNOCK_ATTESTATION_TEXT = `ANNUAL REPORT 2024–2025 | 201 200 | CESSNOCK CITY COUNCIL ATTESTATION STATEMENT`;
 
 function pdfPage(text: string, pageNumber: number): PdfPage {
   return { page_number: pageNumber, text, items: [] };
@@ -35,10 +33,7 @@ export function cessnockExtraction(): PdfExtraction {
       sha256: CESSNOCK_PDF_SHA256,
       bytes: CESSNOCK_PDF_BYTES,
     },
-    pages: [
-      pdfPage(CESSNOCK_SUMMARY_TEXT, 13),
-      pdfPage(CESSNOCK_ATTESTATION_TEXT, 101),
-    ],
+    pages: [pdfPage(CESSNOCK_SUMMARY_TEXT, 13), pdfPage(CESSNOCK_ATTESTATION_TEXT, 101)],
     text: '',
     tables: [],
     warnings: [],
