@@ -20,6 +20,13 @@ test('data sources is scannable: section headings, glance cards and methodology 
   ).toBeVisible();
   await expect(page.getByRole('heading', { level: 3, name: 'Benchmarks' })).toBeVisible();
   await expect(page.getByText('Dubbo Regional Council only').first()).toBeVisible();
+  await expect(page.getByText('State-owned entities from NSW, QLD and WA').first()).toBeVisible();
+  await expect(
+    page.getByText(
+      /NSW SOCs, QLD government-owned corporations \(GOCs\) and WA government trading enterprises \(GTEs\)/,
+    ),
+  ).toBeVisible();
+  await expect(page.getByText('Ten NSW SOC entities')).toHaveCount(0);
 
   const methodology = page.getByRole('button', {
     name: /Entity-level statements — methodology and caveats/,
@@ -27,6 +34,8 @@ test('data sources is scannable: section headings, glance cards and methodology 
   await expect(methodology).toBeVisible();
   await expect(methodology).toHaveAttribute('aria-expanded', 'false');
   await methodology.click();
+  await expect(page.getByText(/NSW SOC methodology and caveats/)).toBeVisible();
+  await expect(page.getByText(/this list is the NSW SOC population only/)).toBeVisible();
   await expect(
     page.getByRole('heading', { level: 3, name: 'WaterNSW (Water NSW)' }),
   ).toBeVisible();

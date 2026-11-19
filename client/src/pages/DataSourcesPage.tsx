@@ -47,7 +47,7 @@ const AT_A_GLANCE = [
   },
   {
     title: 'Entity-level statements',
-    body: 'Ten NSW SOC entities report entity-level statement lines. Each annual report is discovered from the entity’s official page and SHA-256 archived; rows are provisional, unverified and never added to other data. Methodology and caveats below.',
+    body: 'State-owned entities from NSW, QLD and WA are shown separately: NSW SOCs, QLD government-owned corporations (GOCs) and WA government trading enterprises (GTEs). Each population is entity-level and is never summed with other data; rows are provisional and unverified. Methodology and caveats below.',
   },
 ];
 
@@ -576,19 +576,28 @@ export function DataSourcesPage() {
               Entity-level statements — methodology and caveats
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Ten NSW SOC entities. Open for per-entity unit, reconciliation, flag and spot-check
-              notes.
+              NSW SOC methodology and caveats. QLD GOC and WA GTE source-specific caveats are
+              recorded on their source cards.
             </Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails>
           <Typography variant="body2" sx={{ mb: 2, maxWidth: '80ch', lineHeight: 1.6 }}>
-            Each latest annual report is discovered from the entity’s official annual-report page
-            (no hard-coded PDF URL), SHA-256 archived outside the repo, and parsed as entity-level
-            statement lines (<code>jurisdiction_level: soc</code>,{' '}
-            <code>aggregation_role: agency_detail</code>) with an explicit printed unit (for
-            example $’000 for Forestry Corporation, $M for Essential Energy) or the entity’s own
-            explicit unit.
+            For the NSW SOC entities below, each latest annual report is discovered from the
+            entity’s official annual-report page (no hard-coded PDF URL), SHA-256 archived outside
+            the repo, and parsed as entity-level statement lines (
+            <code>jurisdiction_level: soc</code>, <code>aggregation_role: agency_detail</code>) with
+            an explicit printed unit (for example $’000 for Forestry Corporation, $M for Essential
+            Energy) or the entity’s own explicit unit.
+          </Typography>
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ mb: 2, maxWidth: '80ch', lineHeight: 1.6 }}
+          >
+            Coverage note: this list is the NSW SOC population only. QLD GOC and WA GTE entities
+            are separate legal populations, never summed with NSW SOC rows or each other, and their
+            source-specific caveats are recorded on their source cards and the live register.
           </Typography>
           <Stack spacing={2} divider={<Divider flexItem />}>
             {SOC_ENTITIES.map((entity) => (
@@ -606,9 +615,9 @@ export function DataSourcesPage() {
             sx={{ mt: 2, maxWidth: '80ch', lineHeight: 1.6 }}
           >
             All rows are provisional and unverified; government-named funding rows carry a
-            potential-double-count warning. SOC rows are never added to government program
-            spending, the PNFC benchmark, another SOC entity or each other, and are exposed only at{' '}
-            <code>/api/soc</code> with separate entity/source badges.
+            potential-double-count warning. State-owned entity rows are never added to government
+            program spending, the PNFC benchmark, another entity or each other, and are exposed
+            only at <code>/api/soc</code> with separate entity/source badges.
           </Typography>
         </AccordionDetails>
       </Accordion>
