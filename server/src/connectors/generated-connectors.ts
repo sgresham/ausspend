@@ -50,31 +50,32 @@ import { connectorModule as module47 } from './murrumbidgee-gpfs/index.js';
 import { connectorModule as module48 } from './newcastle-gpfs/index.js';
 import { connectorModule as module49 } from './north-sydney-gpfs/index.js';
 import { connectorModule as module50 } from './northern-beaches-gpfs/index.js';
-import { connectorModule as module51 } from './parramatta-gpfs/index.js';
-import { connectorModule as module52 } from './penrith-gpfs/index.js';
-import { connectorModule as module53 } from './port-macquarie-hastings-gpfs/index.js';
-import { connectorModule as module54 } from './queanbeyan-palerang-gpfs/index.js';
-import { connectorModule as module55 } from './randwick-gpfs/index.js';
-import { connectorModule as module56 } from './richmond-valley-gpfs/index.js';
-import { connectorModule as module57 } from './ryde-gpfs/index.js';
-import { connectorModule as module58 } from './shellharbour-gpfs/index.js';
-import { connectorModule as module59 } from './shoalhaven-gpfs/index.js';
-import { connectorModule as module60 } from './singleton-gpfs/index.js';
-import { connectorModule as module61 } from './snowy-monaro-gpfs/index.js';
-import { connectorModule as module62 } from './strathfield-gpfs/index.js';
-import { connectorModule as module63 } from './sutherland-shire-gpfs/index.js';
-import { connectorModule as module64 } from './the-hills-gpfs/index.js';
-import { connectorModule as module65 } from './tweed-shire-gpfs/index.js';
-import { connectorModule as module66 } from './uralla-gpfs/index.js';
-import { connectorModule as module67 } from './walcha-gpfs/index.js';
-import { connectorModule as module68 } from './warren-gpfs/index.js';
-import { connectorModule as module69 } from './waverley-gpfs/index.js';
-import { connectorModule as module70 } from './weddin-gpfs/index.js';
-import { connectorModule as module71 } from './willoughby-gpfs/index.js';
-import { connectorModule as module72 } from './wingecarribee-gpfs/index.js';
-import { connectorModule as module73 } from './wollondilly-gpfs/index.js';
-import { connectorModule as module74 } from './wollongong-gpfs/index.js';
-import { connectorModule as module75 } from './woollahra-gpfs/index.js';
+import { connectorModule as module51 } from './orange-gpfs/index.js';
+import { connectorModule as module52 } from './parramatta-gpfs/index.js';
+import { connectorModule as module53 } from './penrith-gpfs/index.js';
+import { connectorModule as module54 } from './port-macquarie-hastings-gpfs/index.js';
+import { connectorModule as module55 } from './queanbeyan-palerang-gpfs/index.js';
+import { connectorModule as module56 } from './randwick-gpfs/index.js';
+import { connectorModule as module57 } from './richmond-valley-gpfs/index.js';
+import { connectorModule as module58 } from './ryde-gpfs/index.js';
+import { connectorModule as module59 } from './shellharbour-gpfs/index.js';
+import { connectorModule as module60 } from './shoalhaven-gpfs/index.js';
+import { connectorModule as module61 } from './singleton-gpfs/index.js';
+import { connectorModule as module62 } from './snowy-monaro-gpfs/index.js';
+import { connectorModule as module63 } from './strathfield-gpfs/index.js';
+import { connectorModule as module64 } from './sutherland-shire-gpfs/index.js';
+import { connectorModule as module65 } from './the-hills-gpfs/index.js';
+import { connectorModule as module66 } from './tweed-shire-gpfs/index.js';
+import { connectorModule as module67 } from './uralla-gpfs/index.js';
+import { connectorModule as module68 } from './walcha-gpfs/index.js';
+import { connectorModule as module69 } from './warren-gpfs/index.js';
+import { connectorModule as module70 } from './waverley-gpfs/index.js';
+import { connectorModule as module71 } from './weddin-gpfs/index.js';
+import { connectorModule as module72 } from './willoughby-gpfs/index.js';
+import { connectorModule as module73 } from './wingecarribee-gpfs/index.js';
+import { connectorModule as module74 } from './wollondilly-gpfs/index.js';
+import { connectorModule as module75 } from './wollongong-gpfs/index.js';
+import { connectorModule as module76 } from './woollahra-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -153,6 +154,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module73,
   module74,
   module75,
+  module76,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);

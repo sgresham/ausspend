@@ -98,6 +98,7 @@ const KNOWN_SOURCE_IDS = [
   'bega-valley-gpfs',
   'snowy-monaro-gpfs',
   'singleton-gpfs',
+  'orange-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
