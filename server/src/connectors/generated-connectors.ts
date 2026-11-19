@@ -114,17 +114,18 @@ import { connectorModule as module111 } from './upper-lachlan-gpfs/index.js';
 import { connectorModule as module112 } from './uralla-gpfs/index.js';
 import { connectorModule as module113 } from './wagga-wagga-gpfs/index.js';
 import { connectorModule as module114 } from './walcha-gpfs/index.js';
-import { connectorModule as module115 } from './warren-gpfs/index.js';
-import { connectorModule as module116 } from './warrumbungle-gpfs/index.js';
-import { connectorModule as module117 } from './waverley-gpfs/index.js';
-import { connectorModule as module118 } from './weddin-gpfs/index.js';
-import { connectorModule as module119 } from './wentworth-gpfs/index.js';
-import { connectorModule as module120 } from './willoughby-gpfs/index.js';
-import { connectorModule as module121 } from './wingecarribee-gpfs/index.js';
-import { connectorModule as module122 } from './wollondilly-gpfs/index.js';
-import { connectorModule as module123 } from './wollongong-gpfs/index.js';
-import { connectorModule as module124 } from './woollahra-gpfs/index.js';
-import { connectorModule as module125 } from './yass-valley-gpfs/index.js';
+import { connectorModule as module115 } from './walgett-gpfs/index.js';
+import { connectorModule as module116 } from './warren-gpfs/index.js';
+import { connectorModule as module117 } from './warrumbungle-gpfs/index.js';
+import { connectorModule as module118 } from './waverley-gpfs/index.js';
+import { connectorModule as module119 } from './weddin-gpfs/index.js';
+import { connectorModule as module120 } from './wentworth-gpfs/index.js';
+import { connectorModule as module121 } from './willoughby-gpfs/index.js';
+import { connectorModule as module122 } from './wingecarribee-gpfs/index.js';
+import { connectorModule as module123 } from './wollondilly-gpfs/index.js';
+import { connectorModule as module124 } from './wollongong-gpfs/index.js';
+import { connectorModule as module125 } from './woollahra-gpfs/index.js';
+import { connectorModule as module126 } from './yass-valley-gpfs/index.js';
 
 export const MODULAR_CONNECTOR_MODULES = [
   module0,
@@ -253,6 +254,7 @@ export const MODULAR_CONNECTOR_MODULES = [
   module123,
   module124,
   module125,
+  module126,
 ] as const;
 export const MODULAR_CONNECTORS = MODULAR_CONNECTOR_MODULES.map((module) => module.create());
 export const MODULAR_CONNECTOR_IDS = MODULAR_CONNECTOR_MODULES.map((module) => module.id);

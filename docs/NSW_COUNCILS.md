@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 126   |
-| NSW local-government source ids     | 127   |
-| Registered spending connectors      | 188   |
-| Active spending connectors          | 186   |
+| NSW council GPFS sources            | 127   |
+| NSW local-government source ids     | 128   |
+| Registered spending connectors      | 189   |
+| Active spending connectors          | 187   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -11512,6 +11512,26 @@ planning-agreement/advertisement exclusion, the browser path with plain fallback
 unit-conflict rejection, a broken-subtotal rejection, the B1-1 bridge, exact reconciliation,
 natural-key stability and additive-only idempotent 16-row ingestion. Full evidence:
 `docs/source-discovery/nsw-councils/carrathool-gpfs.md`.
+
+### 7.124 One hundred and twenty-fourth landed council — Walgett Shire Council FY2024-25 standalone audited GPFS (landed 2026-11-20)
+
+**Access gap cured by the published CMS snapshot.** The annual-reports page is a React SPA: its
+10,141-byte shell contains no document URLs. The same-origin published CMS snapshot the SPA loads
+(`/snapshot.json`, 2,957,665 bytes, timestamp 2026-11-18) lists
+`Audited-Financial-Statements-2024-25.pdf`; headless Chromium rendered 14 PDF anchors, observed the
+snapshot request and fetched the exact 3,001,912-byte PDF. No mirror, OCR or older-year
+substitution was used.
+
+- Exact PDF: <https://www.walgett.nsw.gov.au/assets/files/e14f90d207d06a69-1776849622581_6c2e2885.pdf>
+- bytes `3,001,912`; pages `109`; SHA-256
+  `26f02f8523fe3742aa84f0998e43241b398d13f3fd158920380c77907baa9de4`.
+- Auditor-General's opinion unmodified, dated 30 October 2025.
+- `walgett-gpfs` rows: **19**, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Face/B1-1: income `$37,665,000`, total expenses `$47,042,000`, net result `($9,377,000)`;
+  grants `$20,754,000`; carrying amount `$501,502,000`; total comprehensive income
+  `$18,843,000`.
+- No council total, no cross-council or state addition. Full evidence:
+  `docs/source-discovery/nsw-councils/walgett-gpfs.md`.
 
 ## 8. Prioritised rollout (after the pilot)
 
