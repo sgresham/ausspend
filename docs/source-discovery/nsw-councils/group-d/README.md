@@ -39,7 +39,7 @@ per-council inventory is therefore still the prerequisite for the next ingestion
 5. **Bellingen** — AFS **FY2025-26**, 1.29 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
 6. **Cowra** — AFS **FY2025-26**, 3.42 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
 7. **Gunnedah** — FS **FY2025-26**, 5.73 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
-8. **Leeton** — signed audited FS FY2024-25 (plus FY2025-26).
+8. **Leeton** — signed audited FS **FY2025-26**, 2.72 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
 9. **Nambucca Valley** — audited AFS FY2024-25 (plus FY2025-26).
 10. **Narrabri** — FS FY2024-25 (plus FY2025-26).
 11. **Parkes** — audited FS **YE 30 Jun 2026**, 6.31 MB (also FY2024-25); plain fetch in this run (WAF may challenge other clients).
