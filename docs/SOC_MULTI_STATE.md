@@ -679,7 +679,8 @@ is separate from Energy Queensland; neither is added to the other and no QLD tot
   (HTTP 200). The latest linked PDF is
   <https://www.csenergy.com.au/ArticleDocuments/276/CS%20ENERGY%20ANNUAL%20REPORT%202026.pdf.aspx>
   (HTTP 200, `application/pdf`, 2,712,680 bytes, 124 pages).
-- **Archive:** exact PDF archived outside the repo; SHA-256
+- **Archive:** exact PDF archived outside the repo at
+  `~/ausspend-source-archive/qld-cs-energy/` with `SHA256SUMS` and `retrieval.json`; SHA-256
   `6fbf258f057820989a9e72096181c06c82b7d7c94c4102015b61d387c0bd12c3`.
 - **Unit:** `$'000` — the consolidated statement prints `$'000` and the Basis of Preparation rounds
   to the nearest thousand dollars.

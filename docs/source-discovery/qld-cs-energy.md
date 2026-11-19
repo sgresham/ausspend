@@ -24,9 +24,10 @@ The page is current and reachable from the ingestion host; no fallback mirror wa
 - **Bytes:** 2,712,680.
 - **Pages:** 124.
 - **SHA-256:** `6fbf258f057820989a9e72096181c06c82b7d7c94c4102015b61d387c0bd12c3`.
-- **Archive:** exact bytes copied to the operator-managed SOC archive root outside the repository
-  (not committed). The connector also archives the same bytes under `AUSSPEND_SOURCE_ARCHIVE` at
-  runtime.
+- **Archive root:** `~/ausspend-source-archive/qld-cs-energy/` (outside the repo; not committed).
+  It contains `CS-ENERGY-ANNUAL-REPORT-2026.pdf`, `SHA256SUMS` and `retrieval.json` with the URL,
+  retrieval date, bytes, pages and SHA-256. The connector also archives the same bytes under
+  `AUSSPEND_SOURCE_ARCHIVE` at runtime.
 
 ## 3. Printed unit and statement
 
@@ -124,6 +125,10 @@ curl -sS -L -o /tmp/cs-2025-26.pdf -w '%{http_code} %{size_download} %{content_t
   'https://www.csenergy.com.au/ArticleDocuments/276/CS%20ENERGY%20ANNUAL%20REPORT%202026.pdf.aspx'
 sha256sum /tmp/cs-2025-26.pdf
 # expect 6fbf258f057820989a9e72096181c06c82b7d7c94c4102015b61d387c0bd12c3
+
+# Durable archive (outside the repo)
+cat ~/ausspend-source-archive/qld-cs-energy/SHA256SUMS
+cat ~/ausspend-source-archive/qld-cs-energy/retrieval.json
 
 # Focused adapter tests
 npx vitest run server/test/qld-cs-energy.test.ts
