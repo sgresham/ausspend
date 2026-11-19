@@ -48,6 +48,18 @@ import {
   CS_ENERGY_UNIT,
   CS_ENERGY_UNIT_LABEL,
   CS_ENERGY_UNIT_TO_CENTS,
+  STANWELL_CAVEAT,
+  STANWELL_ENTITY,
+  STANWELL_ID,
+  STANWELL_JURISDICTION,
+  STANWELL_LEGAL_CLASS,
+  STANWELL_LICENSE,
+  STANWELL_NAME,
+  STANWELL_PUBLISHER,
+  STANWELL_SOURCE_URL,
+  STANWELL_UNIT,
+  STANWELL_UNIT_LABEL,
+  STANWELL_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -185,8 +197,9 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
- * Trains, then NSW TrainLink). No other SOC adapter is implemented, and the ten
- * entity adapters are never summed together.
+ * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy and
+ * Stanwell). No other SOC adapter is implemented, and the entity adapters are
+ * never summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
@@ -202,6 +215,7 @@ export const SOC_SOURCE_IDS = [
   NSW_TRAINLINK_ID,
   ENERGY_QUEENSLAND_ID,
   CS_ENERGY_ID,
+  STANWELL_ID,
 ] as const;
 
 /**
@@ -652,6 +666,40 @@ async function writeCsEnergyManifest(): Promise<void> {
   );
 }
 
+async function writeStanwellManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: STANWELL_ID });
+  const manifestPath = path.resolve(
+    process.env.STANWELL_MANIFEST ?? 'docs/source-archive/qld-stanwell-annual-report.json',
+  );
+  const manifest = {
+    entity: STANWELL_ENTITY,
+    legal_class: STANWELL_LEGAL_CLASS,
+    jurisdiction: STANWELL_JURISDICTION,
+    dataset: STANWELL_NAME,
+    publisher: STANWELL_PUBLISHER,
+    discovery_page: STANWELL_SOURCE_URL,
+    license: STANWELL_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${STANWELL_UNIT_LABEL} (${STANWELL_UNIT}; x${STANWELL_UNIT_TO_CENTS} cents per unit)`,
+    caveat: STANWELL_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: Stanwell Corporation Limited only. Latest annual report discovered from Stanwell's official publication pages (no hard-coded PDF URL; the canonical /about-us/publications page returns HTTP 404 and discovery falls back to the live official /about-us and /information-publication-scheme pages) and archived with SHA-256 outside the repo. The consolidated statement prints an explicit $’000 unit; it has no printed Total revenue or Total expenses subtotal, so total revenue is the exact sum of Revenue and other income + Finance income and total expenses is the exact sum of the printed expense lines net of the printed Expected credit loss (expense)/reversal and the nil Impairment reversal. Both are accepted only when they bridge to the printed Profit/(loss) before income tax equivalent and Profit/(loss) after income tax equivalent for the year with zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Stanwell rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -701,6 +749,7 @@ async function main(): Promise<void> {
     await writeNswTrainlinkManifest();
     await writeEnergyQueenslandManifest();
     await writeCsEnergyManifest();
+    await writeStanwellManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -974,9 +1023,32 @@ async function main(): Promise<void> {
       `[ingest:soc] ${CS_ENERGY_ID} rows=${csRows} source_documents=${csArchived.length} verified=${csVerified} potential_double_count=${csDoubleCount} deferred_documents=${csDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
     );
     for (const group of csByLine) {
-      console.log(
-        `[ingest:soc] ${CS_ENERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
-      );
+      console.log(`[ingest:soc] ${CS_ENERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const stanRows = await MeasureModel.countDocuments({ source_id: STANWELL_ID });
+    const stanVerified = await MeasureModel.countDocuments({
+      source_id: STANWELL_ID,
+      verified: true,
+    });
+    const stanDoubleCount = await MeasureModel.countDocuments({
+      source_id: STANWELL_ID,
+      potential_double_count: true,
+    });
+    const stanByLine = await MeasureModel.aggregate([
+      { $match: { source_id: STANWELL_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const stanDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: STANWELL_ID,
+      status: 'deferred',
+    });
+    const stanArchived = await listArchivedRecords({ source_id: STANWELL_ID });
+    console.log(
+      `[ingest:soc] ${STANWELL_ID} rows=${stanRows} source_documents=${stanArchived.length} verified=${stanVerified} potential_double_count=${stanDoubleCount} deferred_documents=${stanDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of stanByLine) {
+      console.log(`[ingest:soc] ${STANWELL_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
