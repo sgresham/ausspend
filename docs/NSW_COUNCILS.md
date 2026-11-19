@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 119   |
-| NSW local-government source ids     | 120   |
-| Registered spending connectors      | 181   |
-| Active spending connectors          | 179   |
+| NSW council GPFS sources            | 120   |
+| NSW local-government source ids     | 121   |
+| Registered spending connectors      | 182   |
+| Active spending connectors          | 180   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -11910,6 +11910,33 @@ migration were performed.
 - `woollahra-gpfs` rows: 29, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - DB: claim-time and immediate pre-ingest 693,148 → 693,177 (+29 only); every other per-source count
   unchanged and no rows deleted; a second run upserted the same 29 natural keys with no count change.
+
+**GPFS thirty-sixth-council checks (Balranald), 2026-11-20:**
+
+- The entire official Balranald Shire Council site is behind Cloudflare bot management: plain HTTP
+  clients (including a full Chrome-header request) get HTTP 403 for the home page, sitemaps and every
+  upload path; only `robots.txt` is served. A real headless Chromium session returns HTTP 200.
+- The official annual-reports page lists the current standalone **FY2025-26 Annual Financial
+  Statements** at
+  `https://balranald.nsw.gov.au/wp-content/uploads/2026/11/Balranald-Annual_Financial_Statements-2026-OLG.pdf`;
+  the newest combined annual report on the same page is still FY2024-25, so no narrative annual report
+  is substituted.
+- The FY2025-26 GPFS PDF (2,920,220 bytes, 108 pages) was fetched through the browser/WAF path and
+  SHA-256 archived outside the repo; SHA-256
+  `d7c10c675385d2376ddccae430b08087f25d491a34f6a3695a86e9d807b169fd` (`hash_verified: true`). It
+  embeds the signed Auditor-General section 417 opinions (PDF pages 77-78).
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1,
+  Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows; the
+  connector rejects a missing or conflicting unit.
+- Income statement, B1-1, comprehensive-income, balance-sheet and cash-flow totals reconcile exactly:
+  revenue `$32,894,000`, expenses `$24,580,000` (printed bridge of expenses excluding depreciation
+  `$17,315,000` plus depreciation/amortisation/impairment `$7,265,000`), net result `$8,314,000`;
+  B1-1 grants `$21,884,000` = operating `$16,394,000` + capital `$5,490,000`; total comprehensive
+  income `$20,807,000` (revaluation `$12,493,000` plus a printed nil impairment/revaluation
+  decrement).
+- `balranald-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Docs counts refreshed to `nsw-gpfs=120`; focused Balranald tests, golden-digest test, typecheck,
+  lint, docs-count guard and leak guard pass. No deploy.
 
 ---
 
