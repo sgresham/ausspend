@@ -99,6 +99,7 @@ const KNOWN_SOURCE_IDS = [
   'snowy-monaro-gpfs',
   'singleton-gpfs',
   'orange-gpfs',
+  'blayney-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
