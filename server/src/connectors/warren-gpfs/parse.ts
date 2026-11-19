@@ -57,8 +57,7 @@ import type { Connector, RawRecord } from '../types.js';
 export const WARREN_GPFS_ID = 'warren-gpfs';
 export const WARREN_GPFS_NAME = 'Warren Shire Council — General Purpose Financial Statements';
 export const WARREN_GPFS_PUBLISHER = 'Warren Shire Council';
-export const WARREN_GPFS_REPORTING_URL =
-  'https://www.warren.nsw.gov.au/council/financial-reports';
+export const WARREN_GPFS_REPORTING_URL = 'https://www.warren.nsw.gov.au/council/financial-reports';
 export const WARREN_GPFS_FISCAL_YEAR = '2025-26';
 export const WARREN_GPFS_TARGET_YEAR_LABEL = '2025/26';
 export const WARREN_GPFS_SOURCE_DATASET = 'Warren Shire Council GPFS 2025-26';
@@ -372,10 +371,7 @@ function anchors(html: string): Anchor[] {
  * links, the SPFS/SS documents, other plans and non-PDF anchors are ignored. The
  * `?downloadable=1` query on the official media link is preserved.
  */
-export function parseWarrenGpfsReportLinks(
-  html: string,
-  baseUrl: string,
-): WarrenGpfsDocument[] {
+export function parseWarrenGpfsReportLinks(html: string, baseUrl: string): WarrenGpfsDocument[] {
   const links: WarrenGpfsDocument[] = [];
   const seen = new Set<string>();
   const baseHost = new URL(baseUrl).host;
@@ -393,8 +389,7 @@ export function parseWarrenGpfsReportLinks(
       /\/__data\/assets\//i.test(anchor.href);
     if (!looksLikePdf) continue;
     const fiscalYear =
-      fiscalYearFromWarrenGpfsLink(haystack) ??
-      fiscalYearFromWarrenGpfsLink(anchor.href);
+      fiscalYearFromWarrenGpfsLink(haystack) ?? fiscalYearFromWarrenGpfsLink(anchor.href);
     if (!fiscalYear) continue;
     let url: URL;
     try {
@@ -453,10 +448,7 @@ export async function discoverWarrenGpfsDocument(
     html = await response.text();
     listingUrl = response.url || listingUrl;
   }
-  return selectWarrenGpfsDocument(
-    parseWarrenGpfsReportLinks(html, listingUrl),
-    fiscalYear,
-  );
+  return selectWarrenGpfsDocument(parseWarrenGpfsReportLinks(html, listingUrl), fiscalYear);
 }
 
 /** Detect the printed unit; a missing/conflicting unit is never defaulted. */
@@ -536,9 +528,7 @@ export interface WarrenGpfsFunctionsTotals {
  * 2026/2025, Carrying amount 2026/2025); the 2026 values are at indices 0, 2, 4
  * and 6.
  */
-export function parseWarrenGpfsFunctionsTotals(
-  page: PdfPage,
-): WarrenGpfsFunctionsTotals | null {
+export function parseWarrenGpfsFunctionsTotals(page: PdfPage): WarrenGpfsFunctionsTotals | null {
   const text = normalizeText(page.text);
   const label = 'Total functions and activities';
   if (!text.includes(label)) return null;
@@ -636,11 +626,7 @@ function mapLine(
     source_id: WARREN_GPFS_ID,
     source_url: context.document.url,
     verified: false,
-    natural_key: warrenGpfsNaturalKey(
-      context.document.url,
-      spec.key,
-      WARREN_GPFS_FISCAL_YEAR,
-    ),
+    natural_key: warrenGpfsNaturalKey(context.document.url, spec.key, WARREN_GPFS_FISCAL_YEAR),
     project_name: `Warren Shire Council GPFS 2025-26 — ${spec.label}`,
     description: `${spec.section === 'revenue' ? 'Revenue' : spec.section === 'expenses' ? 'Expense' : 'Result'} line item — ${spec.statement}`,
     jurisdiction_level: 'local',
@@ -766,10 +752,7 @@ export function parseWarrenGpfsExtraction(
   const materials = lineByKey(values, 'materials_and_services');
   const borrowing = lineByKey(values, 'borrowing_costs');
   const otherExpenses = lineByKey(values, 'other_expenses');
-  const netResultBeforeCapital = firstAmountAfter(
-    incomeText,
-    WARREN_GPFS_BEFORE_CAPITAL_LABEL,
-  );
+  const netResultBeforeCapital = firstAmountAfter(incomeText, WARREN_GPFS_BEFORE_CAPITAL_LABEL);
 
   const required: Array<[string, number | null]> = [
     ['total_revenue', totalRevenue],
@@ -945,9 +928,7 @@ function documentFilename(url: string): string {
 }
 
 /** Build the live Warren Shire Council GPFS connector. */
-export function createWarrenGpfsConnector(
-  options: WarrenGpfsConnectorOptions = {},
-): Connector {
+export function createWarrenGpfsConnector(options: WarrenGpfsConnectorOptions = {}): Connector {
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const metadata = {
     lastFetchedAt: null as string | null,
@@ -971,11 +952,7 @@ export function createWarrenGpfsConnector(
       metadata.errors = [];
       const discovered =
         options.document ??
-        (await discoverWarrenGpfsDocument(
-          fetchImpl,
-          WARREN_GPFS_FISCAL_YEAR,
-          options.listingHtml,
-        ));
+        (await discoverWarrenGpfsDocument(fetchImpl, WARREN_GPFS_FISCAL_YEAR, options.listingHtml));
       let bytes: Buffer;
       let resolvedUrl = discovered.resolved_url;
       if (options.pdfBytes) {
@@ -1041,9 +1018,7 @@ export function createWarrenGpfsConnector(
           typeof entry.record !== 'object' ||
           entry.record === null
         ) {
-          metadata.errors.push(
-            'raw entry is not a Warren Shire Council GPFS measure; skipped',
-          );
+          metadata.errors.push('raw entry is not a Warren Shire Council GPFS measure; skipped');
           continue;
         }
         records.push(entry.record as SpendingRecord);

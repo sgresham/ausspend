@@ -3,7 +3,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SpendingRecord } from '@ausspend/shared';
 import {
   WARREN_GPFS_DELIVERY_ENTITY,
-  WARREN_GPFS_FISCAL_YEAR,
   WARREN_GPFS_ID,
   WARREN_GPFS_LICENSE,
   WARREN_GPFS_NAME,
@@ -312,8 +311,7 @@ describe('Warren Shire Council GPFS exact reconciliation', () => {
 });
 
 const TEST_DB_URL =
-  process.env.TEST_MONGO_URL ??
-  `mongodb://localhost:27017/ausspend_test_${process.pid}_warrengpfs`;
+  process.env.TEST_MONGO_URL ?? `mongodb://localhost:27017/ausspend_test_${process.pid}_warrengpfs`;
 
 function fakeConnector(records: SpendingRecord[]): Connector {
   return {

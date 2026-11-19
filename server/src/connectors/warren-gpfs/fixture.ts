@@ -14,8 +14,7 @@ import type { PdfExtraction, PdfPage } from '../pdf-extract.js';
 // result are both positive.
 export const WARREN_PDF_URL =
   'https://www.warren.nsw.gov.au/__media_downloads/Financial%20Reports/GPFS-2026.pdf?downloadable=1';
-export const WARREN_PDF_SHA256 =
-  '9906ea67979c4c059cbd0a9ab8179c4644db9e11cd2065f16fff5cd61bd66577';
+export const WARREN_PDF_SHA256 = '9906ea67979c4c059cbd0a9ab8179c4644db9e11cd2065f16fff5cd61bd66577';
 export const WARREN_PDF_BYTES = 2_283_613;
 
 export const WARREN_INCOME_TEXT = `Warren Shire Council | Income Statement | for the year ended 30 June 2026 §Statement§  Original unaudited budget   Actual   Actual  2026   2026   2025  $ '000   Notes   $ '000   $ '000  Income from continuing operations  7,458   Rates and annual charges   B2-1   7,456   7,146 4,790   User charges and fees   B2-2   4,092   5,544 360   Other revenues   B2-3   1,384   446 17,332   Grants and contributions provided for operating purposes   B2-4   19,187   15,609 6,792   Grants and contributions provided for capital purposes   B2-4   4,788   5,794 434   Interest and investment income   B2-5   467   627 165   Other income   B2-6   217   126  37,331   Total income from continuing operations   37,591   35,292  Expenses from continuing operations  7,531   Employee benefits and on-costs   B3-1   7,533   7,553 11,967   Materials and services   B3-2   10,151   12,424 91   Borrowing costs   B3-3   86   91 258   Other expenses   B3-5   383   361 –   Net loss from the disposal of assets   B4-1   6,224   1,564  19,847  Total expenses from continuing operations excluding depreciation, amortisation and impairment of non-financial assets   24,377   21,993 17,484  Operating result from continuing operations excluding depreciation, amortisation and impairment of non-financial assets   13,214   13,299  4,237 Depreciation, amortisation and impairment of non-financial assets   B3-4   7,898   5,531  13,247   Operating result from continuing operations   5,316   7,768  13,247   Net operating result for the year attributable to Council   5,316   7,768  6,455  Net operating result for the year before grants and contributions provided for capital purposes   528   1,974  The above Income Statement should be read in conjunction with the accompanying notes.  Warren Shire Council Income Statement  for the year ended 30 June 2026 Page 5`;
@@ -56,8 +55,7 @@ export const WARREN_CONTEXT: WarrenGpfsParseContext = {
     listing_url: WARREN_GPFS_REPORTING_URL,
   },
   archive: {
-    local_path:
-      '/tmp/ausspend-source-archive/warren-gpfs/GPFS-2026.pdf',
+    local_path: '/tmp/ausspend-source-archive/warren-gpfs/GPFS-2026.pdf',
     sha256: WARREN_PDF_SHA256,
     bytes: WARREN_PDF_BYTES,
     fetched_at: '2026-11-19T00:00:00.000Z',
