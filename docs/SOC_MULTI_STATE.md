@@ -2,7 +2,7 @@
 
 **Status: inventory plus eight implemented QLD pilots (Energy Queensland, CS Energy, Stanwell,
 Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North and NQBP)
-and the first seven WA GTE pilots (Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA and Southern Ports). No other state connector,
+and the first eight WA GTE pilots (Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports and Busselton Water). No other state connector,
 no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
 were read-only page/API probes made on **2026-11-17**. The QLD pilots added on **2026-11-19** are
 entity-level adapters in the existing SOC framework; they do not create a QLD total and are never
@@ -78,7 +78,7 @@ Counts below are the counts of the _named lists at the cited source_, not an est
 | State   | Legal/reporting class                                                                                   | Official list found                                                                                                                      | Entities named at source                                                                                 | Latest annual reports                                                                                                                      | Entity-level extraction                                                          | Proposed rank |
 | ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------- |
 | **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North and NQBP 2025-26 verified (pilots; NQBP via the official Parliament tabled copy); Port of Townsville FY2025-26 deferred (printed $1 rounding gap, no rows)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
-| **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA and Southern Ports 2025-26 verified (pilots); Aqwest official annual report not resolvable 2026-11-19 (JS-only page), no rows                                                                                          | **High for the 12**; medium for tranche 2                                        | **2**         |
+| **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports and Busselton Water 2025-26 verified (pilots); Aqwest official annual report not resolvable 2026-11-19 (JS-only page), no rows                                                                                          | **High for the 12**; medium for tranche 2                                        | **2**         |
 | **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                          | Entity reports published; URLs not individually verified                                                                                   | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
 | **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                                                                                        | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
 | **ACT** | Territory-owned Corporations (legal) / PTE/PNFC (budget classification)                                 | ACT Budget 2026-27 "Classification of ACT Entities"                                                                                      | **6 PTE/PNFC entities**; legal TOC list not separately consolidated                                      | Entity reports published; URLs not individually verified                                                                                   | **Medium-low** — only Icon Water is a classic commercial utility; class mismatch | **5**         |
@@ -246,7 +246,7 @@ GTE annual reports. Archive metadata/hashes, quote with attribution, and do not 
 6. Pilbara Ports Authority — large port; standard statements.
 7. Fremantle Port Authority — port; standard statements (implemented 2026-11-19; fifth WA GTE pilot).
 8. Southern Ports — regional port authority; standard statements (implemented 2026-11-19; seventh WA GTE pilot). Kimberley/Mid West ports — later, smaller.
-9. Aqwest/Busselton Water — later, smaller (Aqwest official annual report not resolvable 2026-11-19: JS-only page; no rows).
+9. Busselton Water — water utility; standard statements (implemented 2026-11-19; eighth WA GTE pilot). Aqwest — official annual report not resolvable 2026-11-19 (JS-only page; no rows).
 10. Second tranche (Forest Products Commission, Gold Corporation, Insurance Commission, WA Treasury
     Corporation) — later; flag non-comparable.
 
@@ -1264,6 +1264,46 @@ search-engine copy was used.
   is required; the existing WA SOC pattern can then be applied with the usual printed-unit and
   zero-tolerance reconciliation gates.
 
+## WA pilot — Busselton Water (implemented 2026-11-19)
+
+The eighth WA Government Trading Enterprise pilot is **Busselton Water only** — the Busselton Water
+Corporation, a WA GTE under the Government Trading Enterprises Act 2023 (WA), not a QLD GOC or an NSW
+SOC. It is separate from Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports,
+DevelopmentWA, Southern Ports and every other WA GTE and QLD/NSW SOC; no WA total is created.
+
+- **Source id / entity:** `wa-busselton-water` / Busselton Water.
+- **Report:** Busselton Water Annual Report 2026, for the year ended 30 June 2026 (FY2025-26).
+- **Discovery page:** the official annual-reports page
+  <https://www.busseltonwater.wa.gov.au/publications/annual-reports/> lists the annual reports.
+  Discovery reads the newest annual-report link (annual water-quality reports and newsletters are
+  rejected by name); no PDF URL is hard-coded. The exact PDF is
+  <https://www.busseltonwater.wa.gov.au/wp-content/uploads/2026/10/FINAL-BW-2026-Annual-Report-digital.pdf>
+  (HTTP 200, `application/pdf`, 13,222,107 bytes, 70 PDF pages).
+- **Archive:** exact PDF archived outside the repo at `~/ausspend-source-archive/wa-busselton-water/`
+  with `SHA256SUMS` and `retrieval.json`; SHA-256
+  `332ea0978170f32b7975a4377e1745cfaa6bfdd7d2b7240647b16775dbb16415`.
+- **Unit:** `$` — the Statement of Comprehensive Income (PDF page 50, printed page 50) prints whole
+  dollars for the 2026 and 2025 columns, not `$'000`.
+- **Rows:** five entity-level SOC statement lines, from the 2026 column only:
+  total revenue **24,163,786** (exact sum of Water sales revenue 13,471,006 + Grants and
+  contributions 7,740,176 + Developer contributions - headworks 1,151,665 + Developer contributions
+  - mains 1,100,781 + Interest income 441,380 + Other revenue 258,778, checked against the unlabeled
+  printed total-income row); total expenses **16,755,718** (printed Total expenses = Employee benefit
+  expenses 2,435,979 + Cost of sales 5,894,463 + Depreciation and amortisation expenses 3,990,995 +
+  Finance costs 45,606 + Administration expenses 2,180,862 + Other expenses 2,102,281 + Loss on
+  disposal of non-current assets 105,532); employee benefits **2,435,979**; depreciation and
+  amortisation **3,990,995**; net result **a profit of 5,556,051** (`$`).
+- **Reconciliation (zero tolerance):** 24,163,786 − 16,755,718 = **7,408,068** (printed Profit before
+  income tax); 7,408,068 − 1,852,017 = **5,556,051** (printed Profit after income tax). The prior-year
+  column is never added.
+- **Implementation:** `server/src/connectors/soc/wa/busselton-water.ts`, registered in the SOC source
+  list, `/api/soc`, the SOC page and the ingestion runner. Tests:
+  `server/test/wa-busselton-water.test.ts`.
+- **Caveat:** entity-level only. Never add Busselton Water to government program spending, the PNFC
+  benchmark, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports,
+  DevelopmentWA, Southern Ports, another WA GTE, a QLD/NSW SOC, a WA total, a national total, or
+  another SOC line. Rows are provisional and unverified.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -1439,13 +1479,14 @@ that the page will be stable.
 The QLD Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited,
 Gladstone Ports Corporation Limited, Ports North and NQBP pilots described above are implemented
 and verified against their 2025-26 audited annual reports (NQBP from the official Queensland
-Parliament tabled copy because its corporate site is bot-blocked). The first three WA GTE pilots, Water Corporation,
-Synergy and Western Power, are also implemented and verified against their 2025-26 audited annual
-reports. Port of
+Parliament tabled copy because its corporate site is bot-blocked). The first eight WA GTE pilots, Water Corporation, Synergy, Western Power, Horizon Power,
+Fremantle Ports, DevelopmentWA, Southern Ports and Busselton Water, are also implemented and
+verified against their 2025-26 audited annual reports. Aqwest remains not resolvable (JS-only
+official page; no rows). Port of
 Townsville remains deferred, not merged data. They remain single-entity,
 read-only proofs: do not add another QLD GOC, a QLD total or another state until the owner confirms
 the legal class, the entity list and the intended use. Any next entity needs its own unit read and
 reconciliation; its rows must never be summed with Energy Queensland, CS Energy, Stanwell, Powerlink
 Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North, NQBP, Water
-Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports
-or government spending.
+Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports,
+Busselton Water or government spending.

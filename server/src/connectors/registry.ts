@@ -43,6 +43,7 @@ import { createHorizonPowerConnector } from './soc/wa/horizon-power.js';
 import { createFremantlePortsConnector } from './soc/wa/fremantle-ports.js';
 import { createDevelopmentWaConnector } from './soc/wa/developmentwa.js';
 import { createSouthernPortsConnector } from './soc/wa/southern-ports.js';
+import { createBusseltonWaterConnector } from './soc/wa/busselton-water.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -657,6 +658,15 @@ export const CONNECTORS: readonly Connector[] = [
   // Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports,
   // DevelopmentWA, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.
   createSouthernPortsConnector(),
+  // WA SOC: next WA Government Trading Enterprise pilot — Busselton Water
+  // (Busselton Water Corporation), a WA GTE under the Government Trading
+  // Enterprises Act 2023 (WA). Latest annual report discovered from the
+  // official annual-reports page and parsed as entity-level statement lines.
+  // Never added to government program spending, the PNFC benchmark, Water
+  // Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports,
+  // DevelopmentWA, Southern Ports, another WA GTE, a QLD/NSW SOC, a WA total, or
+  // any other SOC.
+  createBusseltonWaterConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending
