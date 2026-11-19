@@ -1,0 +1,17 @@
+import {
+  BERRIGAN_GPFS_ID,
+  BERRIGAN_GPFS_NAME,
+  BERRIGAN_GPFS_PUBLISHER,
+  BERRIGAN_GPFS_FISCAL_YEAR,
+  BERRIGAN_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: BERRIGAN_GPFS_ID,
+  name: BERRIGAN_GPFS_NAME,
+  publisher: BERRIGAN_GPFS_PUBLISHER,
+  fiscalYear: BERRIGAN_GPFS_FISCAL_YEAR,
+  dataQualityFlag: BERRIGAN_GPFS_DATA_QUALITY_FLAG,
+} as const;
