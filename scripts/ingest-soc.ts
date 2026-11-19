@@ -157,6 +157,18 @@ import {
   SYNERGY_UNIT,
   SYNERGY_UNIT_LABEL,
   SYNERGY_UNIT_TO_CENTS,
+  WESTERN_POWER_CAVEAT,
+  WESTERN_POWER_ENTITY,
+  WESTERN_POWER_ID,
+  WESTERN_POWER_JURISDICTION,
+  WESTERN_POWER_LEGAL_CLASS,
+  WESTERN_POWER_LICENSE,
+  WESTERN_POWER_NAME,
+  WESTERN_POWER_PUBLISHER,
+  WESTERN_POWER_SOURCE_URL,
+  WESTERN_POWER_UNIT,
+  WESTERN_POWER_UNIT_LABEL,
+  WESTERN_POWER_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -295,7 +307,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation and Synergy). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy and Western Power). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -321,6 +333,7 @@ export const SOC_SOURCE_IDS = [
   NQBP_ID,
   WATER_CORPORATION_ID,
   SYNERGY_ID,
+  WESTERN_POWER_ID,
 ] as const;
 
 /**
@@ -1083,6 +1096,40 @@ async function writeSynergyManifest(): Promise<void> {
   );
 }
 
+async function writeWesternPowerManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: WESTERN_POWER_ID });
+  const manifestPath = path.resolve(
+    process.env.WESTERN_POWER_MANIFEST ?? 'docs/source-archive/wa-western-power-annual-report.json',
+  );
+  const manifest = {
+    entity: WESTERN_POWER_ENTITY,
+    legal_class: WESTERN_POWER_LEGAL_CLASS,
+    jurisdiction: WESTERN_POWER_JURISDICTION,
+    dataset: WESTERN_POWER_NAME,
+    publisher: WESTERN_POWER_PUBLISHER,
+    discovery_page: WESTERN_POWER_SOURCE_URL,
+    license: WESTERN_POWER_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${WESTERN_POWER_UNIT_LABEL} (${WESTERN_POWER_UNIT}; x${WESTERN_POWER_UNIT_TO_CENTS} cents per unit)`,
+    caveat: WESTERN_POWER_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Western Power only (Electricity Networks Corporation), a WA Government Trading Enterprise (Electricity Corporations Act 2005 (WA)). Latest annual report discovered from the official annual-report page (the page embeds the PDF URLs in JSON; no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of comprehensive income prints an explicit $M unit and two reporting-year columns; the adapter reads the current 2025/26 column only. The printed income and expense components sum exactly to the printed totals and the profit-before-tax and net-result bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Western Power rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1141,6 +1188,7 @@ async function main(): Promise<void> {
     await writeNqbpManifest();
     await writeWaterCorporationManifest();
     await writeSynergyManifest();
+    await writeWesternPowerManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1638,6 +1686,33 @@ async function main(): Promise<void> {
     );
     for (const group of synergyByLine) {
       console.log(`[ingest:soc] ${SYNERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const westernPowerRows = await MeasureModel.countDocuments({ source_id: WESTERN_POWER_ID });
+    const westernPowerVerified = await MeasureModel.countDocuments({
+      source_id: WESTERN_POWER_ID,
+      verified: true,
+    });
+    const westernPowerDoubleCount = await MeasureModel.countDocuments({
+      source_id: WESTERN_POWER_ID,
+      potential_double_count: true,
+    });
+    const westernPowerByLine = await MeasureModel.aggregate([
+      { $match: { source_id: WESTERN_POWER_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const westernPowerDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: WESTERN_POWER_ID,
+      status: 'deferred',
+    });
+    const westernPowerArchived = await listArchivedRecords({ source_id: WESTERN_POWER_ID });
+    console.log(
+      `[ingest:soc] ${WESTERN_POWER_ID} rows=${westernPowerRows} source_documents=${westernPowerArchived.length} verified=${westernPowerVerified} potential_double_count=${westernPowerDoubleCount} deferred_documents=${westernPowerDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of westernPowerByLine) {
+      console.log(
+        `[ingest:soc] ${WESTERN_POWER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD and WA SOC adapters intentionally not implemented)`,
