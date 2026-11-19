@@ -129,6 +129,7 @@ const KNOWN_SOURCE_IDS = [
   'berrigan-gpfs',
   'murray-river-gpfs',
   'albury-gpfs',
+  'ballina-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
