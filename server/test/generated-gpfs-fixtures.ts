@@ -28,41 +28,42 @@ import * as fixture25 from '../src/connectors/hilltops-gpfs/fixture.js';
 import * as fixture26 from '../src/connectors/hornsby-gpfs/fixture.js';
 import * as fixture27 from '../src/connectors/inner-west-gpfs/fixture.js';
 import * as fixture28 from '../src/connectors/junee-gpfs/fixture.js';
-import * as fixture29 from '../src/connectors/ku-ring-gai-gpfs/fixture.js';
-import * as fixture30 from '../src/connectors/kyogle-gpfs/fixture.js';
-import * as fixture31 from '../src/connectors/lake-macquarie-gpfs/fixture.js';
-import * as fixture32 from '../src/connectors/lane-cove-gpfs/fixture.js';
-import * as fixture33 from '../src/connectors/liverpool-gpfs/fixture.js';
-import * as fixture34 from '../src/connectors/lockhart-gpfs/fixture.js';
-import * as fixture35 from '../src/connectors/maitland-gpfs/fixture.js';
-import * as fixture36 from '../src/connectors/mid-coast-gpfs/fixture.js';
-import * as fixture37 from '../src/connectors/moree-plains-gpfs/fixture.js';
-import * as fixture38 from '../src/connectors/mosman-gpfs/fixture.js';
-import * as fixture39 from '../src/connectors/murrumbidgee-gpfs/fixture.js';
-import * as fixture40 from '../src/connectors/newcastle-gpfs/fixture.js';
-import * as fixture41 from '../src/connectors/north-sydney-gpfs/fixture.js';
-import * as fixture42 from '../src/connectors/northern-beaches-gpfs/fixture.js';
-import * as fixture43 from '../src/connectors/parramatta-gpfs/fixture.js';
-import * as fixture44 from '../src/connectors/penrith-gpfs/fixture.js';
-import * as fixture45 from '../src/connectors/port-macquarie-hastings-gpfs/fixture.js';
-import * as fixture46 from '../src/connectors/randwick-gpfs/fixture.js';
-import * as fixture47 from '../src/connectors/richmond-valley-gpfs/fixture.js';
-import * as fixture48 from '../src/connectors/ryde-gpfs/fixture.js';
-import * as fixture49 from '../src/connectors/shellharbour-gpfs/fixture.js';
-import * as fixture50 from '../src/connectors/shoalhaven-gpfs/fixture.js';
-import * as fixture51 from '../src/connectors/strathfield-gpfs/fixture.js';
-import * as fixture52 from '../src/connectors/sutherland-shire-gpfs/fixture.js';
-import * as fixture53 from '../src/connectors/the-hills-gpfs/fixture.js';
-import * as fixture54 from '../src/connectors/tweed-shire-gpfs/fixture.js';
-import * as fixture55 from '../src/connectors/uralla-gpfs/fixture.js';
-import * as fixture56 from '../src/connectors/walcha-gpfs/fixture.js';
-import * as fixture57 from '../src/connectors/warren-gpfs/fixture.js';
-import * as fixture58 from '../src/connectors/waverley-gpfs/fixture.js';
-import * as fixture59 from '../src/connectors/weddin-gpfs/fixture.js';
-import * as fixture60 from '../src/connectors/willoughby-gpfs/fixture.js';
-import * as fixture61 from '../src/connectors/wollondilly-gpfs/fixture.js';
-import * as fixture62 from '../src/connectors/wollongong-gpfs/fixture.js';
-import * as fixture63 from '../src/connectors/woollahra-gpfs/fixture.js';
+import * as fixture29 from '../src/connectors/kempsey-gpfs/fixture.js';
+import * as fixture30 from '../src/connectors/ku-ring-gai-gpfs/fixture.js';
+import * as fixture31 from '../src/connectors/kyogle-gpfs/fixture.js';
+import * as fixture32 from '../src/connectors/lake-macquarie-gpfs/fixture.js';
+import * as fixture33 from '../src/connectors/lane-cove-gpfs/fixture.js';
+import * as fixture34 from '../src/connectors/liverpool-gpfs/fixture.js';
+import * as fixture35 from '../src/connectors/lockhart-gpfs/fixture.js';
+import * as fixture36 from '../src/connectors/maitland-gpfs/fixture.js';
+import * as fixture37 from '../src/connectors/mid-coast-gpfs/fixture.js';
+import * as fixture38 from '../src/connectors/moree-plains-gpfs/fixture.js';
+import * as fixture39 from '../src/connectors/mosman-gpfs/fixture.js';
+import * as fixture40 from '../src/connectors/murrumbidgee-gpfs/fixture.js';
+import * as fixture41 from '../src/connectors/newcastle-gpfs/fixture.js';
+import * as fixture42 from '../src/connectors/north-sydney-gpfs/fixture.js';
+import * as fixture43 from '../src/connectors/northern-beaches-gpfs/fixture.js';
+import * as fixture44 from '../src/connectors/parramatta-gpfs/fixture.js';
+import * as fixture45 from '../src/connectors/penrith-gpfs/fixture.js';
+import * as fixture46 from '../src/connectors/port-macquarie-hastings-gpfs/fixture.js';
+import * as fixture47 from '../src/connectors/randwick-gpfs/fixture.js';
+import * as fixture48 from '../src/connectors/richmond-valley-gpfs/fixture.js';
+import * as fixture49 from '../src/connectors/ryde-gpfs/fixture.js';
+import * as fixture50 from '../src/connectors/shellharbour-gpfs/fixture.js';
+import * as fixture51 from '../src/connectors/shoalhaven-gpfs/fixture.js';
+import * as fixture52 from '../src/connectors/strathfield-gpfs/fixture.js';
+import * as fixture53 from '../src/connectors/sutherland-shire-gpfs/fixture.js';
+import * as fixture54 from '../src/connectors/the-hills-gpfs/fixture.js';
+import * as fixture55 from '../src/connectors/tweed-shire-gpfs/fixture.js';
+import * as fixture56 from '../src/connectors/uralla-gpfs/fixture.js';
+import * as fixture57 from '../src/connectors/walcha-gpfs/fixture.js';
+import * as fixture58 from '../src/connectors/warren-gpfs/fixture.js';
+import * as fixture59 from '../src/connectors/waverley-gpfs/fixture.js';
+import * as fixture60 from '../src/connectors/weddin-gpfs/fixture.js';
+import * as fixture61 from '../src/connectors/willoughby-gpfs/fixture.js';
+import * as fixture62 from '../src/connectors/wollondilly-gpfs/fixture.js';
+import * as fixture63 from '../src/connectors/wollongong-gpfs/fixture.js';
+import * as fixture64 from '../src/connectors/woollahra-gpfs/fixture.js';
 
 export const GPFS_FIXTURES = [
   { id: 'armidale-gpfs', fixture: fixture0 },
@@ -94,39 +95,40 @@ export const GPFS_FIXTURES = [
   { id: 'hornsby-gpfs', fixture: fixture26 },
   { id: 'inner-west-gpfs', fixture: fixture27 },
   { id: 'junee-gpfs', fixture: fixture28 },
-  { id: 'ku-ring-gai-gpfs', fixture: fixture29 },
-  { id: 'kyogle-gpfs', fixture: fixture30 },
-  { id: 'lake-macquarie-gpfs', fixture: fixture31 },
-  { id: 'lane-cove-gpfs', fixture: fixture32 },
-  { id: 'liverpool-gpfs', fixture: fixture33 },
-  { id: 'lockhart-gpfs', fixture: fixture34 },
-  { id: 'maitland-gpfs', fixture: fixture35 },
-  { id: 'mid-coast-gpfs', fixture: fixture36 },
-  { id: 'moree-plains-gpfs', fixture: fixture37 },
-  { id: 'mosman-gpfs', fixture: fixture38 },
-  { id: 'murrumbidgee-gpfs', fixture: fixture39 },
-  { id: 'newcastle-gpfs', fixture: fixture40 },
-  { id: 'north-sydney-gpfs', fixture: fixture41 },
-  { id: 'northern-beaches-gpfs', fixture: fixture42 },
-  { id: 'parramatta-gpfs', fixture: fixture43 },
-  { id: 'penrith-gpfs', fixture: fixture44 },
-  { id: 'port-macquarie-hastings-gpfs', fixture: fixture45 },
-  { id: 'randwick-gpfs', fixture: fixture46 },
-  { id: 'richmond-valley-gpfs', fixture: fixture47 },
-  { id: 'ryde-gpfs', fixture: fixture48 },
-  { id: 'shellharbour-gpfs', fixture: fixture49 },
-  { id: 'shoalhaven-gpfs', fixture: fixture50 },
-  { id: 'strathfield-gpfs', fixture: fixture51 },
-  { id: 'sutherland-shire-gpfs', fixture: fixture52 },
-  { id: 'the-hills-gpfs', fixture: fixture53 },
-  { id: 'tweed-shire-gpfs', fixture: fixture54 },
-  { id: 'uralla-gpfs', fixture: fixture55 },
-  { id: 'walcha-gpfs', fixture: fixture56 },
-  { id: 'warren-gpfs', fixture: fixture57 },
-  { id: 'waverley-gpfs', fixture: fixture58 },
-  { id: 'weddin-gpfs', fixture: fixture59 },
-  { id: 'willoughby-gpfs', fixture: fixture60 },
-  { id: 'wollondilly-gpfs', fixture: fixture61 },
-  { id: 'wollongong-gpfs', fixture: fixture62 },
-  { id: 'woollahra-gpfs', fixture: fixture63 },
+  { id: 'kempsey-gpfs', fixture: fixture29 },
+  { id: 'ku-ring-gai-gpfs', fixture: fixture30 },
+  { id: 'kyogle-gpfs', fixture: fixture31 },
+  { id: 'lake-macquarie-gpfs', fixture: fixture32 },
+  { id: 'lane-cove-gpfs', fixture: fixture33 },
+  { id: 'liverpool-gpfs', fixture: fixture34 },
+  { id: 'lockhart-gpfs', fixture: fixture35 },
+  { id: 'maitland-gpfs', fixture: fixture36 },
+  { id: 'mid-coast-gpfs', fixture: fixture37 },
+  { id: 'moree-plains-gpfs', fixture: fixture38 },
+  { id: 'mosman-gpfs', fixture: fixture39 },
+  { id: 'murrumbidgee-gpfs', fixture: fixture40 },
+  { id: 'newcastle-gpfs', fixture: fixture41 },
+  { id: 'north-sydney-gpfs', fixture: fixture42 },
+  { id: 'northern-beaches-gpfs', fixture: fixture43 },
+  { id: 'parramatta-gpfs', fixture: fixture44 },
+  { id: 'penrith-gpfs', fixture: fixture45 },
+  { id: 'port-macquarie-hastings-gpfs', fixture: fixture46 },
+  { id: 'randwick-gpfs', fixture: fixture47 },
+  { id: 'richmond-valley-gpfs', fixture: fixture48 },
+  { id: 'ryde-gpfs', fixture: fixture49 },
+  { id: 'shellharbour-gpfs', fixture: fixture50 },
+  { id: 'shoalhaven-gpfs', fixture: fixture51 },
+  { id: 'strathfield-gpfs', fixture: fixture52 },
+  { id: 'sutherland-shire-gpfs', fixture: fixture53 },
+  { id: 'the-hills-gpfs', fixture: fixture54 },
+  { id: 'tweed-shire-gpfs', fixture: fixture55 },
+  { id: 'uralla-gpfs', fixture: fixture56 },
+  { id: 'walcha-gpfs', fixture: fixture57 },
+  { id: 'warren-gpfs', fixture: fixture58 },
+  { id: 'waverley-gpfs', fixture: fixture59 },
+  { id: 'weddin-gpfs', fixture: fixture60 },
+  { id: 'willoughby-gpfs', fixture: fixture61 },
+  { id: 'wollondilly-gpfs', fixture: fixture62 },
+  { id: 'wollongong-gpfs', fixture: fixture63 },
+  { id: 'woollahra-gpfs', fixture: fixture64 },
 ] as const;
