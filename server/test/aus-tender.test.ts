@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AUS_TENDER_LICENSE,
   ausTenderFeedUrl,
+  ausTenderSourceUrl,
   australianFinancialYear,
   createAusTenderConnector,
   defaultAusTenderWindow,
@@ -82,6 +83,23 @@ function releaseB(): RawRecord {
   };
 }
 
+describe('AusTender source URLs', () => {
+  it('builds the working CN search URL instead of the obsolete details route', () => {
+    expect(ausTenderSourceUrl('CN3840723', 'prod-4619beccb0804b6797f456488db82d6d')).toBe(
+      'https://www.tenders.gov.au/Cn/Search?CnId=CN3840723&SearchButton=true',
+    );
+    expect(ausTenderSourceUrl('CN 123/4', 'prod-x')).toBe(
+      'https://www.tenders.gov.au/Cn/Search?CnId=CN%20123%2F4&SearchButton=true',
+    );
+  });
+
+  it('keeps the OCID fallback when no contract id is present', () => {
+    expect(ausTenderSourceUrl(null, 'prod-aaaa1111')).toBe(
+      'https://www.tenders.gov.au/?ocid=prod-aaaa1111',
+    );
+  });
+});
+
 describe('AusTender mapping', () => {
   it('maps contracts[0], role-based parties and provenance fields', () => {
     const { record, skip } = mapAusTenderRelease(releaseA());
@@ -96,7 +114,7 @@ describe('AusTender mapping', () => {
       source_id: 'aus-tender',
       source_dataset: 'AusTender OCDS API',
       source_date: '2025-07-01T23:55:37Z',
-      source_url: 'https://www.tenders.gov.au/Contract/Details/CN4166097',
+      source_url: 'https://www.tenders.gov.au/Cn/Search?CnId=CN4166097&SearchButton=true',
       project_name: 'AC2594/07',
       description: 'Labour Hire Service Provider #1/7',
       // Buyer/procuringEntity, not parties[0] (the supplier).

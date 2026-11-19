@@ -218,10 +218,17 @@ function tenderDetails(release: RawRecord): Record<string, unknown> {
   return isObject(release.tender) ? release.tender : {};
 }
 
-/** Build the public AusTender contract-notice URL for a contract / ocid. */
+/**
+ * Build the public AusTender contract-notice URL for a contract / ocid.
+ *
+ * The old `/Contract/Details/CN…` route is obsolete (404). The stable public
+ * interface is the CN search URL, which resolves to the matching notice and
+ * its Full Details link. The `/Cn/Show/{GUID}` route needs the portal GUID,
+ * which the OCDS feed does not publish, so it is deliberately not invented.
+ */
 export function ausTenderSourceUrl(contractId: string | null, ocid: string): string {
   if (contractId) {
-    return `https://www.tenders.gov.au/Contract/Details/${encodeURIComponent(contractId)}`;
+    return `https://www.tenders.gov.au/Cn/Search?CnId=${encodeURIComponent(contractId)}&SearchButton=true`;
   }
   return `https://www.tenders.gov.au/?ocid=${encodeURIComponent(ocid)}`;
 }

@@ -42,25 +42,25 @@ idempotent on `ocid` rather than "new records each run".
 
 Each release maps to one `measures` document with `measure_type: "contract"`.
 
-| Target field         | Source                                                                                           |
-| -------------------- | ------------------------------------------------------------------------------------------------ |
-| `project_name`       | `contracts[0].title` (omitted when null/empty; never invented)                                   |
-| `description`        | `contracts[0].description`                                                                       |
-| `jurisdiction_level` | literal `"federal"`                                                                              |
-| `jurisdiction`       | literal `"Commonwealth"`                                                                         |
-| `funding_source`     | the `parties[]` entry whose `roles` contains **`buyer` or `procuringEntity`** (buyer)            |
-| `delivery_entity`    | the `parties[]` entry whose `roles` contains **`supplier` or `tenderer`** (supplier)             |
-| `amount_cents`       | `contracts[0].value.amount` (decimal-dollar string) × 100, rounded to a **safe integer**         |
-| `fiscal_year`        | derived from `contracts[0].dateSigned`, falling back to the release `date` (Australian FY)       |
-| `measure_type`       | literal `"contract"`                                                                             |
-| `source_dataset`     | literal `"AusTender OCDS API"`                                                                   |
-| `source_url`         | `https://www.tenders.gov.au/Contract/Details/{contracts[0].id}`                                  |
-| `source_date`        | `contracts[0].dateSigned` or the release `date` (ISO-8601)                                       |
-| `location`           | `parties[]` address `region` only (supplier first, then buyer); postcode is kept in `notes`      |
-| `data_quality_flag`  | `location_approximate` (state + postcode), `statewide_only` (state only), or `location_unknown`  |
-| `unspsc`             | `contracts[0].items[].classification.id` where `scheme == "UNSPSC"`, de-duplicated, comma-joined |
-| `natural_key`        | `ocid`                                                                                           |
-| `verified`           | `false` — no human verification step exists yet                                                  |
+| Target field         | Source                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_name`       | `contracts[0].title` (omitted when null/empty; never invented)                                                                           |
+| `description`        | `contracts[0].description`                                                                                                               |
+| `jurisdiction_level` | literal `"federal"`                                                                                                                      |
+| `jurisdiction`       | literal `"Commonwealth"`                                                                                                                 |
+| `funding_source`     | the `parties[]` entry whose `roles` contains **`buyer` or `procuringEntity`** (buyer)                                                    |
+| `delivery_entity`    | the `parties[]` entry whose `roles` contains **`supplier` or `tenderer`** (supplier)                                                     |
+| `amount_cents`       | `contracts[0].value.amount` (decimal-dollar string) × 100, rounded to a **safe integer**                                                 |
+| `fiscal_year`        | derived from `contracts[0].dateSigned`, falling back to the release `date` (Australian FY)                                               |
+| `measure_type`       | literal `"contract"`                                                                                                                     |
+| `source_dataset`     | literal `"AusTender OCDS API"`                                                                                                           |
+| `source_url`         | `https://www.tenders.gov.au/Cn/Search?CnId={contracts[0].id}&SearchButton=true` (CN fallback: `https://www.tenders.gov.au/?ocid={ocid}`) |
+| `source_date`        | `contracts[0].dateSigned` or the release `date` (ISO-8601)                                                                               |
+| `location`           | `parties[]` address `region` only (supplier first, then buyer); postcode is kept in `notes`                                              |
+| `data_quality_flag`  | `location_approximate` (state + postcode), `statewide_only` (state only), or `location_unknown`                                          |
+| `unspsc`             | `contracts[0].items[].classification.id` where `scheme == "UNSPSC"`, de-duplicated, comma-joined                                         |
+| `natural_key`        | `ocid`                                                                                                                                   |
+| `verified`           | `false` — no human verification step exists yet                                                                                          |
 
 **Never `parties[0]`.** The live feed's first party is frequently the supplier, and the top-level
 `buyer` field is `null`. The buyer _must_ be looked up by role (`buyer` / `procuringEntity`) and the
@@ -71,6 +71,15 @@ fails.
 Invalid amounts (missing, non-numeric, negative, not a safe integer) are **skipped**, not written
 with a guessed or rounded-down value; the reason is recorded on the connector run and the run is
 logged `partial` with the source marked `degraded`.
+
+**Contract links.** The older `/Contract/Details/CN…` route now returns 404. Contract notices use
+the stable CN search interface,
+`https://www.tenders.gov.au/Cn/Search?CnId=<CN>&SearchButton=true`, which resolves to the matching
+notice and its Full Details link. `/Cn/Show/{GUID}` is not used because the OCDS feed does not
+publish the portal GUID and it must not be invented. When a release has no contract id, the
+`?ocid=<ocid>` fallback is kept. On 2026-11-19 all 375,497 existing `aus-tender` rows were
+rewritten in place from the old `/Contract/Details/CN…` prefix to the CN search URL; only
+`source_url` changed (same natural keys, every other field identical).
 
 ### UNSPSC, not COFOG
 
@@ -960,4 +969,6 @@ journalctl --user -u ausspend-db-backup.service -n 20
   and ~306 MB RSS after the projection + Mongo page change; the whole-set summary pass still scans
   the matching rows. No API semantics or no-total rule changed.
 - The public `tenders.gov.au` contract page may reject automated requests at the WAF; `source_url`
-  is the canonical human-facing contract-notice URL, constructed from the contract id.
+  is the canonical human-facing contract-notice URL, constructed from the contract id via the CN
+  search interface (`/Cn/Search?CnId=<CN>&SearchButton=true`), not the obsolete
+  `/Contract/Details/CN…` route.
