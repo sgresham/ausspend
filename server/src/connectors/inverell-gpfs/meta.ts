@@ -1,0 +1,17 @@
+import {
+  INVERELL_GPFS_ID,
+  INVERELL_GPFS_NAME,
+  INVERELL_GPFS_PUBLISHER,
+  INVERELL_GPFS_FISCAL_YEAR,
+  INVERELL_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: INVERELL_GPFS_ID,
+  name: INVERELL_GPFS_NAME,
+  publisher: INVERELL_GPFS_PUBLISHER,
+  fiscalYear: INVERELL_GPFS_FISCAL_YEAR,
+  dataQualityFlag: INVERELL_GPFS_DATA_QUALITY_FLAG,
+} as const;
