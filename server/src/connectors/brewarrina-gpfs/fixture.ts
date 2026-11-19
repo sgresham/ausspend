@@ -60,7 +60,7 @@ export const BREWARRINA_CONTEXT: BrewarrinaGpfsParseContext = {
   },
   archive: {
     local_path:
-      '/tmp/ausspend-source-archive/brewarrina-gpfs/Brewarrina-Shire-Council-Financial-Statements-2025-26.pdf',
+      'brewarrina-gpfs/Brewarrina-Shire-Council-Financial-Statements-2025-26.pdf',
     sha256: BREWARRINA_PDF_SHA256,
     bytes: BREWARRINA_PDF_BYTES,
     fetched_at: '2026-11-19T00:00:00.000Z',
