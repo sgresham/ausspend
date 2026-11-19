@@ -11,8 +11,8 @@ as evidence and are not current totals. The current registry counts are:
 | ----------------------------------- | ----- |
 | NSW council GPFS sources            | 44    |
 | NSW local-government source ids     | 45    |
-| Registered spending connectors      | 84    |
-| Active spending connectors          | 82    |
+| Registered spending connectors      | 85    |
+| Active spending connectors          | 83    |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
