@@ -292,6 +292,18 @@ import {
   JACANA_ENERGY_UNIT,
   JACANA_ENERGY_UNIT_LABEL,
   JACANA_ENERGY_UNIT_TO_CENTS,
+  TERRITORY_GENERATION_CAVEAT,
+  TERRITORY_GENERATION_ENTITY,
+  TERRITORY_GENERATION_ID,
+  TERRITORY_GENERATION_JURISDICTION,
+  TERRITORY_GENERATION_LEGAL_CLASS,
+  TERRITORY_GENERATION_LICENSE,
+  TERRITORY_GENERATION_NAME,
+  TERRITORY_GENERATION_PUBLISHER,
+  TERRITORY_GENERATION_SOURCE_URL,
+  TERRITORY_GENERATION_UNIT,
+  TERRITORY_GENERATION_UNIT_LABEL,
+  TERRITORY_GENERATION_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -467,6 +479,7 @@ export const SOC_SOURCE_IDS = [
   KIMBERLEY_PORTS_ID,
   PILBARA_PORTS_ID,
   JACANA_ENERGY_ID,
+  TERRITORY_GENERATION_ID,
 ] as const;
 
 /**
@@ -1612,6 +1625,41 @@ async function writeJacanaEnergyManifest(): Promise<void> {
   );
 }
 
+async function writeTerritoryGenerationManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: TERRITORY_GENERATION_ID });
+  const manifestPath = path.resolve(
+    process.env.TERRITORY_GENERATION_MANIFEST ??
+      'docs/source-archive/nt-territory-generation-annual-report.json',
+  );
+  const manifest = {
+    entity: TERRITORY_GENERATION_ENTITY,
+    legal_class: TERRITORY_GENERATION_LEGAL_CLASS,
+    jurisdiction: TERRITORY_GENERATION_JURISDICTION,
+    dataset: TERRITORY_GENERATION_NAME,
+    publisher: TERRITORY_GENERATION_PUBLISHER,
+    discovery_page: TERRITORY_GENERATION_SOURCE_URL,
+    license: TERRITORY_GENERATION_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${TERRITORY_GENERATION_UNIT_LABEL} (${TERRITORY_GENERATION_UNIT}; x${TERRITORY_GENERATION_UNIT_TO_CENTS} cents per unit)`,
+    caveat: TERRITORY_GENERATION_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "NT SOC: Territory Generation only, a Northern Territory Government Owned Corporation and electricity generator (the second NT source after Jacana Energy). The latest annual report is discovered from the official 'Corporate publications' page (no hard-coded PDF URL) and the exact PDF is SHA-256 archived outside the repo with SHA256SUMS and retrieval.json. The audited statement and notes print an explicit $'000 unit; the adapter reads the face Revenue, Other income, Cost of energy, Administrative expenses, Other expenses, Impairment and Finance costs lines, the Note 3 revenue components, the Note 4 expense subtotals and the Note 20 depreciation reconciliation. There is no single printed Total revenue or Total expenses line, so those two rows are the exact sums of the printed face lines and are accepted only because the gross-profit, profit-before-income-tax, net-result and comprehensive-income bridges reconcile exactly at zero tolerance. The NT GOC list is not claimed to be complete. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Territory Generation rows to government program spending, the PNFC benchmark, Jacana Energy, another NT GOC, another state's SOC/GTE, an NT total, a state total, a national total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1698,6 +1746,7 @@ async function main(): Promise<void> {
       [KIMBERLEY_PORTS_ID]: writeKimberleyPortsManifest,
       [PILBARA_PORTS_ID]: writePilbaraPortsManifest,
       [JACANA_ENERGY_ID]: writeJacanaEnergyManifest,
+      [TERRITORY_GENERATION_ID]: writeTerritoryGenerationManifest,
     };
     for (const sourceId of selectedSourceIds) {
       const writer = manifestWriters[sourceId];
@@ -2496,6 +2545,35 @@ async function main(): Promise<void> {
     for (const group of jacanaByLine) {
       console.log(
         `[ingest:soc] ${JACANA_ENERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const territoryRows = await MeasureModel.countDocuments({
+      source_id: TERRITORY_GENERATION_ID,
+    });
+    const territoryVerified = await MeasureModel.countDocuments({
+      source_id: TERRITORY_GENERATION_ID,
+      verified: true,
+    });
+    const territoryDoubleCount = await MeasureModel.countDocuments({
+      source_id: TERRITORY_GENERATION_ID,
+      potential_double_count: true,
+    });
+    const territoryByLine = await MeasureModel.aggregate([
+      { $match: { source_id: TERRITORY_GENERATION_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const territoryDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: TERRITORY_GENERATION_ID,
+      status: 'deferred',
+    });
+    const territoryArchived = await listArchivedRecords({ source_id: TERRITORY_GENERATION_ID });
+    console.log(
+      `[ingest:soc] ${TERRITORY_GENERATION_ID} rows=${territoryRows} source_documents=${territoryArchived.length} verified=${territoryVerified} potential_double_count=${territoryDoubleCount} deferred_documents=${territoryDeferred} (NT entity-level SOC statement lines for Territory Generation only; the NT GOC list is not claimed to be complete and no NT/state/national total is printed or computed)`,
+    );
+    for (const group of territoryByLine) {
+      console.log(
+        `[ingest:soc] ${TERRITORY_GENERATION_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(
