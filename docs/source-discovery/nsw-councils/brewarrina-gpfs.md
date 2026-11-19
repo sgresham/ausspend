@@ -9,11 +9,11 @@ The FY2025-26 column is used; the FY2024-25 comparative inside the statement is 
 
 ## 1. Discovery and access log
 
-| Step | URL | HTTP | Result |
-| --- | --- | --- | --- |
-| Official reporting page | <https://brewarrina.nsw.gov.au/council/access-to-information/> | **200** | `text/html`; page loads but does **not** embed the financial-statements link. |
-| Official media REST endpoint | <https://brewarrina.nsw.gov.au/wp-json/wp/v2/media?search=Financial%20Statements&per_page=100> | **200** | `application/json`; lists the standalone FY2025-26 PDF and prior years. |
-| Standalone GPFS PDF | <https://brewarrina.nsw.gov.au/wp-content/uploads/2026/11/Brewarrina-Shire-Council-Financial-Statements-2025-26.pdf> | **200** | `application/pdf`, 2,817,948 bytes, 65 PDF pages. |
+| Step                         | URL                                                                                                                  | HTTP    | Result                                                                        |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------- |
+| Official reporting page      | <https://brewarrina.nsw.gov.au/council/access-to-information/>                                                       | **200** | `text/html`; page loads but does **not** embed the financial-statements link. |
+| Official media REST endpoint | <https://brewarrina.nsw.gov.au/wp-json/wp/v2/media?search=Financial%20Statements&per_page=100>                       | **200** | `application/json`; lists the standalone FY2025-26 PDF and prior years.       |
+| Standalone GPFS PDF          | <https://brewarrina.nsw.gov.au/wp-content/uploads/2026/11/Brewarrina-Shire-Council-Financial-Statements-2025-26.pdf> | **200** | `application/pdf`, 2,817,948 bytes, 65 PDF pages.                             |
 
 The Access to Information page does not link the statements, so the adapter discovers the document
 from the council's own WordPress media REST response on the same official domain (never a
@@ -107,24 +107,24 @@ deferral.
 
 ## 5. Extracted entity rows (16, non-additive)
 
-| `gpfs_line_item` | Printed/derived label | `$ '000` | `amount_cents` | Section |
-| --- | --- | ---: | ---: | --- |
-| `rates_and_annual_charges` | Rates and annual charges | 3,093 | 309,300,000 | revenue |
-| `user_charges_and_fees` | User charges and fees | 10,880 | 1,088,000,000 | revenue |
-| `other_revenues` | Other revenues | 891 | 89,100,000 | revenue |
-| `government_grants_operating` | Grants and contributions — operating | 15,818 | 1,581,800,000 | revenue |
-| `government_grants_capital` | Grants and contributions — capital | 9,041 | 904,100,000 | revenue |
-| `interest_and_investment_income` | Interest and investment income | 923 | 92,300,000 | revenue |
-| `other_income` | Other income | 152 | 15,200,000 | revenue |
-| `total_revenue` | Total income from continuing operations | 40,798 | 4,079,800,000 | revenue |
-| `employee_expenses` | Employee benefits and on-costs | 8,022 | 802,200,000 | expenses |
-| `materials_and_services` | Materials and services | 15,242 | 1,524,200,000 | expenses |
-| `other_expenses` | Other expenses | 540 | 54,000,000 | expenses |
-| `net_loss_from_disposal_of_assets` | Net loss from the disposal of assets | 247 | 24,700,000 | expenses |
-| `total_expenses_excluding_depreciation` | Total expenses excluding depreciation | 24,051 | 2,405,100,000 | expenses |
-| `depreciation_amortisation_impairment` | Depreciation, amortisation and impairment | 5,702 | 570,200,000 | expenses |
-| `total_expenses` | Total expenses (documented bridge) | 29,753 | 2,975,300,000 | expenses |
-| `net_result` | Net operating result attributable to Council | 11,045 | 1,104,500,000 | result |
+| `gpfs_line_item`                        | Printed/derived label                        | `$ '000` | `amount_cents` | Section  |
+| --------------------------------------- | -------------------------------------------- | -------: | -------------: | -------- |
+| `rates_and_annual_charges`              | Rates and annual charges                     |    3,093 |    309,300,000 | revenue  |
+| `user_charges_and_fees`                 | User charges and fees                        |   10,880 |  1,088,000,000 | revenue  |
+| `other_revenues`                        | Other revenues                               |      891 |     89,100,000 | revenue  |
+| `government_grants_operating`           | Grants and contributions — operating         |   15,818 |  1,581,800,000 | revenue  |
+| `government_grants_capital`             | Grants and contributions — capital           |    9,041 |    904,100,000 | revenue  |
+| `interest_and_investment_income`        | Interest and investment income               |      923 |     92,300,000 | revenue  |
+| `other_income`                          | Other income                                 |      152 |     15,200,000 | revenue  |
+| `total_revenue`                         | Total income from continuing operations      |   40,798 |  4,079,800,000 | revenue  |
+| `employee_expenses`                     | Employee benefits and on-costs               |    8,022 |    802,200,000 | expenses |
+| `materials_and_services`                | Materials and services                       |   15,242 |  1,524,200,000 | expenses |
+| `other_expenses`                        | Other expenses                               |      540 |     54,000,000 | expenses |
+| `net_loss_from_disposal_of_assets`      | Net loss from the disposal of assets         |      247 |     24,700,000 | expenses |
+| `total_expenses_excluding_depreciation` | Total expenses excluding depreciation        |   24,051 |  2,405,100,000 | expenses |
+| `depreciation_amortisation_impairment`  | Depreciation, amortisation and impairment    |    5,702 |    570,200,000 | expenses |
+| `total_expenses`                        | Total expenses (documented bridge)           |   29,753 |  2,975,300,000 | expenses |
+| `net_result`                            | Net operating result attributable to Council |   11,045 |  1,104,500,000 | result   |
 
 Every row is `jurisdiction_level: "local"`, `jurisdiction: "NSW"`,
 `delivery_entity: "Brewarrina Shire Council"`, `aggregation_role: "agency_detail"`,

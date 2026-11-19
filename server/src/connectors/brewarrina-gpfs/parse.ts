@@ -55,7 +55,8 @@ import type { Connector, RawRecord } from '../types.js';
  */
 
 export const BREWARRINA_GPFS_ID = 'brewarrina-gpfs';
-export const BREWARRINA_GPFS_NAME = 'Brewarrina Shire Council — General Purpose Financial Statements';
+export const BREWARRINA_GPFS_NAME =
+  'Brewarrina Shire Council — General Purpose Financial Statements';
 export const BREWARRINA_GPFS_PUBLISHER = 'Brewarrina Shire Council';
 export const BREWARRINA_GPFS_REPORTING_URL =
   'https://brewarrina.nsw.gov.au/council/access-to-information/';
@@ -435,10 +436,7 @@ export async function discoverBrewarrinaGpfsDocument(
     json = await response.text();
     listingUrl = response.url || listingUrl;
   }
-  return selectBrewarrinaGpfsDocument(
-    parseBrewarrinaGpfsMediaLinks(json, listingUrl),
-    fiscalYear,
-  );
+  return selectBrewarrinaGpfsDocument(parseBrewarrinaGpfsMediaLinks(json, listingUrl), fiscalYear);
 }
 
 /** Detect the printed unit; a missing/conflicting unit is never defaulted. */
@@ -760,10 +758,7 @@ export function parseBrewarrinaGpfsExtraction(
   const otherIncome = lineByKey(values, 'other_income');
   const materials = lineByKey(values, 'materials_and_services');
   const otherExpenses = lineByKey(values, 'other_expenses');
-  const netResultBeforeCapital = firstAmountAfter(
-    incomeText,
-    BREWARRINA_GPFS_BEFORE_CAPITAL_LABEL,
-  );
+  const netResultBeforeCapital = firstAmountAfter(incomeText, BREWARRINA_GPFS_BEFORE_CAPITAL_LABEL);
 
   const required: Array<[string, number | null]> = [
     ['total_revenue', totalRevenue],
@@ -1040,9 +1035,7 @@ export function createBrewarrinaGpfsConnector(
           typeof entry.record !== 'object' ||
           entry.record === null
         ) {
-          metadata.errors.push(
-            'raw entry is not a Brewarrina Shire Council GPFS measure; skipped',
-          );
+          metadata.errors.push('raw entry is not a Brewarrina Shire Council GPFS measure; skipped');
           continue;
         }
         records.push(entry.record as SpendingRecord);

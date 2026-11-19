@@ -3,7 +3,6 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { SpendingRecord } from '@ausspend/shared';
 import {
   BREWARRINA_GPFS_DELIVERY_ENTITY,
-  BREWARRINA_GPFS_FISCAL_YEAR,
   BREWARRINA_GPFS_ID,
   BREWARRINA_GPFS_LICENSE,
   BREWARRINA_GPFS_NAME,
@@ -75,7 +74,8 @@ describe('Brewarrina Shire Council GPFS source discovery', () => {
       media_type: 'application/pdf',
     },
     {
-      source_url: 'https://brewarrina.nsw.gov.au/wp-content/uploads/2026/11/annual-report-2025-26.pdf',
+      source_url:
+        'https://brewarrina.nsw.gov.au/wp-content/uploads/2026/11/annual-report-2025-26.pdf',
       title: { rendered: 'Annual Report 2025-26' },
       media_type: 'application/pdf',
     },
@@ -99,9 +99,7 @@ describe('Brewarrina Shire Council GPFS source discovery', () => {
     expect(fiscalYearFromBrewarrinaGpfsLink('2025/2026')).toBe('2025-26');
     expect(fiscalYearFromBrewarrinaGpfsLink('year ended 30 June 2026')).toBe('2025-26');
     expect(
-      fiscalYearFromBrewarrinaGpfsLink(
-        'Brewarrina-Shire-Council-Financial-Statements-2025-26.pdf',
-      ),
+      fiscalYearFromBrewarrinaGpfsLink('Brewarrina-Shire-Council-Financial-Statements-2025-26.pdf'),
     ).toBe('2025-26');
     expect(fiscalYearFromBrewarrinaGpfsLink('GPFS-2026.pdf')).toBeNull();
   });
@@ -134,9 +132,9 @@ describe('Brewarrina Shire Council GPFS source discovery', () => {
       },
     ]);
     expect(parseBrewarrinaGpfsMediaLinks(external, BREWARRINA_GPFS_REPORTING_URL)).toEqual([]);
-    expect(parseBrewarrinaGpfsMediaLinks('<html>blocked</html>', BREWARRINA_GPFS_REPORTING_URL)).toEqual(
-      [],
-    );
+    expect(
+      parseBrewarrinaGpfsMediaLinks('<html>blocked</html>', BREWARRINA_GPFS_REPORTING_URL),
+    ).toEqual([]);
   });
 });
 
@@ -302,7 +300,10 @@ describe('Brewarrina Shire Council GPFS exact reconciliation', () => {
       'Total functions and activities   40,798   26,519   29,753   29,654',
       'Total functions and activities   40,798   26,519   29,755   29,654',
     );
-    const parsed = parseBrewarrinaGpfsExtraction(extraction({ functions: broken }), BREWARRINA_CONTEXT);
+    const parsed = parseBrewarrinaGpfsExtraction(
+      extraction({ functions: broken }),
+      BREWARRINA_CONTEXT,
+    );
     expect(parsed.records).toEqual([]);
     expect(parsed.reconciliation).toBeNull();
     expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
@@ -327,7 +328,10 @@ describe('Brewarrina Shire Council GPFS exact reconciliation', () => {
       'Rates and annual charges   B2-1   3,093',
       'Rates and annual charges   B2-1   3,095',
     );
-    const parsed = parseBrewarrinaGpfsExtraction(extraction({ income: broken }), BREWARRINA_CONTEXT);
+    const parsed = parseBrewarrinaGpfsExtraction(
+      extraction({ income: broken }),
+      BREWARRINA_CONTEXT,
+    );
     expect(parsed.records).toEqual([]);
     expect(parsed.reconciliation).toBeNull();
     expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
