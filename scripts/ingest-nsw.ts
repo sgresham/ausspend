@@ -50,6 +50,7 @@ import { fetchWaggaWaggaGpfsViaBrowser } from './wagga-wagga-gpfs-browser.js';
 import { fetchEurobodallaGpfsViaBrowser } from './eurobodalla-gpfs-browser.js';
 import { fetchTamworthGpfsViaBrowser } from './tamworth-gpfs-browser.js';
 import { fetchBathurstGpfsViaBrowser } from './bathurst-gpfs-browser.js';
+import { fetchBalranaldGpfsViaBrowser } from './balranald-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -82,6 +83,10 @@ import {
   BATHURST_GPFS_ID,
   createBathurstGpfsConnector,
 } from '../server/src/connectors/bathurst-gpfs/index.js';
+import {
+  BALRANALD_GPFS_ID,
+  createBalranaldGpfsConnector,
+} from '../server/src/connectors/balranald-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -343,6 +348,7 @@ export const NSW_SOURCE_IDS = [
   'eurobodalla-gpfs',
   'tamworth-gpfs',
   'bathurst-gpfs',
+  'balranald-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -658,6 +664,15 @@ async function main(): Promise<void> {
           pdfBytes: fetched.pdfBytes,
         }),
       );
+      continue;
+    }
+    if (id === BALRANALD_GPFS_ID) {
+      // Balranald's official site is Cloudflare-blocked to plain clients, but
+      // headless Chromium retrieves the official pinned FY2025-26 AFS.
+      console.log('[ingest:nsw] balranald-gpfs: browser discovery/download starting');
+      const fetched = await fetchBalranaldGpfsViaBrowser();
+      console.log(`[ingest:nsw] balranald-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(createBalranaldGpfsConnector({ pdfBytes: fetched.pdfBytes }));
       continue;
     }
     if (id === BATHURST_GPFS_ID) {
