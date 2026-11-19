@@ -47,6 +47,7 @@ import { createSouthernPortsConnector } from './soc/wa/southern-ports.js';
 import { createBusseltonWaterConnector } from './soc/wa/busselton-water.js';
 import { createMidWestPortsConnector } from './soc/wa/mid-west-ports.js';
 import { createKimberleyPortsConnector } from './soc/wa/kimberley-ports.js';
+import { createPilbaraPortsConnector } from './soc/wa/pilbara-ports.js';
 import { createVicBudgetConnector } from './vic-budget.js';
 import { createVgc1Connector } from './vic-vlgc-vgc1.js';
 import { createVlgcAbsConnector } from './vic-vlgc-abs.js';
@@ -696,6 +697,16 @@ export const CONNECTORS: readonly Connector[] = [
   // program spending, the PNFC benchmark, another WA GTE, a QLD/NSW SOC, a WA
   // total, or any other SOC.
   createKimberleyPortsConnector(),
+  // WA SOC: next WA Government Trading Enterprise pilot — Pilbara Ports
+  // Authority, a WA GTE under the Government Trading Enterprises Act 2023
+  // (WA) and a port authority under the Port Authorities Act 1999 (WA). The
+  // official annual-report and publications pages answer plain fetches with an
+  // Incapsula JavaScript challenge shell, so no official current FY2025-26 PDF
+  // was obtainable. The adapter defers FY2025-26 with zero rows and records the
+  // exact access gap; no unofficial/search-engine copy and no prior-year report
+  // is ingested. Never added to government program spending, the PNFC
+  // benchmark, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.
+  createPilbaraPortsConnector(),
   // Phase 6.3: WA Budget EFO table and chart data from catalogue.data.wa.gov.au
   // CKAN. No machine-readable BP2 agency-expense dataset is published; the
   // connector ingests the strongest clean EFO tables (Chapter 5 major spending

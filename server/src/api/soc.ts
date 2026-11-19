@@ -180,6 +180,15 @@ import {
   KIMBERLEY_PORTS_UNIT,
   KIMBERLEY_PORTS_UNIT_LABEL,
   KIMBERLEY_PORTS_UNIT_TO_CENTS,
+  PILBARA_PORTS_CAVEAT,
+  PILBARA_PORTS_ENTITY,
+  PILBARA_PORTS_ID,
+  PILBARA_PORTS_JURISDICTION,
+  PILBARA_PORTS_NAME,
+  PILBARA_PORTS_SOURCE_URL,
+  PILBARA_PORTS_UNIT,
+  PILBARA_PORTS_UNIT_LABEL,
+  PILBARA_PORTS_UNIT_TO_CENTS,
   ENERGY_QUEENSLAND_CAVEAT,
   ENERGY_QUEENSLAND_ENTITY,
   ENERGY_QUEENSLAND_ID,
@@ -282,8 +291,8 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority) is a separate
- * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority are WA Government Trading Enterprises and are never combined with them.
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority) is a separate
+ * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
  * `soc_component_of`, `soc_breakdown`). They are grouped for the UI but are
@@ -623,6 +632,17 @@ const SOC_SOURCES = [
     unit_to_cents: KIMBERLEY_PORTS_UNIT_TO_CENTS,
     caveat: KIMBERLEY_PORTS_CAVEAT,
   },
+  {
+    source_id: PILBARA_PORTS_ID,
+    name: PILBARA_PORTS_NAME,
+    entity: PILBARA_PORTS_ENTITY,
+    jurisdiction: PILBARA_PORTS_JURISDICTION,
+    discovery_page: PILBARA_PORTS_SOURCE_URL,
+    unit: PILBARA_PORTS_UNIT,
+    unit_label: PILBARA_PORTS_UNIT_LABEL,
+    unit_to_cents: PILBARA_PORTS_UNIT_TO_CENTS,
+    caveat: PILBARA_PORTS_CAVEAT,
+  },
 ] as const;
 
 export const getSoc: RequestHandler = async (req, res) => {
@@ -747,6 +767,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority are WA Government Trading Enterprises and are never combined with them. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited and Ports North, NQBP and CleanCo Queensland Limited are separate QLD GOCs and are never added together. Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority are WA Government Trading Enterprises and are never combined with them. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };
