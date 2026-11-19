@@ -1,0 +1,17 @@
+import {
+  CESSNOCK_GPFS_ID,
+  CESSNOCK_GPFS_NAME,
+  CESSNOCK_GPFS_PUBLISHER,
+  CESSNOCK_GPFS_FISCAL_YEAR,
+  CESSNOCK_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: CESSNOCK_GPFS_ID,
+  name: CESSNOCK_GPFS_NAME,
+  publisher: CESSNOCK_GPFS_PUBLISHER,
+  fiscalYear: CESSNOCK_GPFS_FISCAL_YEAR,
+  dataQualityFlag: CESSNOCK_GPFS_DATA_QUALITY_FLAG,
+} as const;
