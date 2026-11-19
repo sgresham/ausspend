@@ -416,4 +416,20 @@ MeasureMongooseSchema.index({ function_code: 1, fiscal_year: 1, region_id: 1 });
 MeasureMongooseSchema.index({ region_id: 1, function_code: 1, fiscal_year: 1 });
 MeasureMongooseSchema.index({ jurisdiction_level: 1, fiscal_year: 1, measure_type: 1 });
 
+// Free-text search over the descriptive project fields. `default_language:
+// 'none'` disables stemming/stop words so a word matches itself exactly; the
+// API still accepts punctuation-only queries through the literal regex path.
+MeasureMongooseSchema.index(
+  { project_name: 'text', description: 'text', delivery_entity: 'text' },
+  { name: 'search_text', default_language: 'none' },
+);
+
+// Sort indexes for the documented /api/spending sorts, so the page facet can
+// walk an index and stop after skip+limit rows instead of blocking-sorting the
+// whole filtered set in memory.
+MeasureMongooseSchema.index({ amount_cents: -1, _id: 1 });
+MeasureMongooseSchema.index({ amount_cents: 1, _id: 1 });
+MeasureMongooseSchema.index({ fiscal_year: -1, amount_cents: -1, _id: 1 });
+MeasureMongooseSchema.index({ fiscal_year: 1, amount_cents: -1, _id: 1 });
+
 export const MeasureModel = mongoose.model<MeasureDocument>('Measure', MeasureMongooseSchema);
