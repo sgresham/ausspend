@@ -107,6 +107,7 @@ const KNOWN_SOURCE_IDS = [
   'inverell-gpfs',
   'wentworth-gpfs',
   'forbes-gpfs',
+  'bellingen-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
