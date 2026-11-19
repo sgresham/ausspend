@@ -120,6 +120,7 @@ const KNOWN_SOURCE_IDS = [
   'edward-river-gpfs',
   'temora-gpfs',
   'warrumbungle-gpfs',
+  'gwydir-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
