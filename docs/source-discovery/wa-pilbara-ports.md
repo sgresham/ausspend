@@ -69,7 +69,7 @@ reconcile. The gap is upstream of parsing:
 ## 4. Ingest proof (shared dev DB)
 
 The targeted SOC ingest ran with `SOC_ONLY_SOURCE_IDS=wa-pilbara-ports` against
-`MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev`:
+the shared `ausspend_dev` database selected by `MONGO_URL`:
 
 ```text
 [ingest:soc] target=ausspend_dev sources=wa-pilbara-ports
@@ -151,7 +151,7 @@ curl -sS -L -A 'Mozilla/5.0' 'https://www.pilbaraports.com.au/sitemap.xml' \
 npx vitest run server/test/wa-pilbara-ports.test.ts
 
 # Targeted ingest and DB invariants (MONGO_URL is the ausspend_dev database)
-MONGO_URL='mongodb://10.10.10.30:27017/ausspend_dev' SOC_ONLY_SOURCE_IDS=wa-pilbara-ports \
+MONGO_URL="$MONGO_URL" SOC_ONLY_SOURCE_IDS=wa-pilbara-ports \
   npm run ingest:soc
 mongosh "$MONGO_URL" --quiet --eval '
   const rows = db.measures.countDocuments({source_id:"wa-pilbara-ports"});
