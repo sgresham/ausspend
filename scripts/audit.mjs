@@ -124,6 +124,7 @@ const KNOWN_SOURCE_IDS = [
   'lachlan-gpfs',
   'bland-gpfs',
   'dungog-gpfs',
+  'upper-lachlan-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
