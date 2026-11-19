@@ -5,6 +5,42 @@ test.beforeEach(async ({ page }) => {
   await mockApi(page);
 });
 
+test('data sources is scannable: section headings, glance cards and methodology accordion', async ({
+  page,
+}) => {
+  await page.goto('/data-sources');
+
+  await expect(page.getByRole('heading', { level: 2, name: 'At a glance' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Registered sources' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 2, name: 'Ingestion connectors' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'Live federal sources' }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'Benchmarks' })).toBeVisible();
+  await expect(page.getByText('Dubbo Regional Council only').first()).toBeVisible();
+
+  const methodology = page.getByRole('button', {
+    name: /Entity-level statements — methodology and caveats/,
+  });
+  await expect(methodology).toBeVisible();
+  await expect(methodology).toHaveAttribute('aria-expanded', 'false');
+  await methodology.click();
+  await expect(
+    page.getByRole('heading', { level: 3, name: 'WaterNSW (Water NSW)' }),
+  ).toBeVisible();
+  await expect(page.getByText(/one-dollar printed tax\/NPAT rounding/)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'Sydney Trains' })).toBeVisible();
+
+  const connectorNotes = page.getByRole('button', { name: 'Connector coverage notes' });
+  await expect(connectorNotes).toBeVisible();
+  await connectorNotes.click();
+  await expect(
+    page.getByText(/real\/constant-price government and non-government series are non-additive/),
+  ).toBeVisible();
+});
+
 test('data sources shows the synthetic source, Unverified badge and anchor target', async ({
   page,
 }) => {
