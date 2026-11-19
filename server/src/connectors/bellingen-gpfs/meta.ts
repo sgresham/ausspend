@@ -1,0 +1,17 @@
+import {
+  BELLINGEN_GPFS_ID,
+  BELLINGEN_GPFS_NAME,
+  BELLINGEN_GPFS_PUBLISHER,
+  BELLINGEN_GPFS_FISCAL_YEAR,
+  BELLINGEN_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: BELLINGEN_GPFS_ID,
+  name: BELLINGEN_GPFS_NAME,
+  publisher: BELLINGEN_GPFS_PUBLISHER,
+  fiscalYear: BELLINGEN_GPFS_FISCAL_YEAR,
+  dataQualityFlag: BELLINGEN_GPFS_DATA_QUALITY_FLAG,
+} as const;
