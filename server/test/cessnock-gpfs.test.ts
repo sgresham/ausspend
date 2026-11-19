@@ -1,12 +1,14 @@
 import mongoose from 'mongoose';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { SpendingRecord } from '@ausspend/shared';
 import {
+  CESSNOCK_ANNUAL_REPORT_GAP,
   CESSNOCK_GPFS_AFS_PAGE_URL,
   CESSNOCK_GPFS_DOCUMENT_PIN,
   CESSNOCK_GPFS_FISCAL_YEAR,
   CESSNOCK_GPFS_ID,
   CESSNOCK_GPFS_LICENSE,
+  CESSNOCK_GPFS_LINES,
   CESSNOCK_GPFS_NAME,
   CESSNOCK_GPFS_PUBLISHER,
   CESSNOCK_GPFS_REPORTING_URL,
@@ -14,8 +16,10 @@ import {
   cessnockGpfsNaturalKey,
   cessnockPinnedDocument,
   discoverCessnockGpfsDocument,
-  fiscalYearFromCessnockAnnualReportLink,
+  fiscalYearFromCessnockFinancialStatementsLink,
+  parseCessnockAnnualReportExtraction,
   parseCessnockGpfsExtraction,
+  parseCessnockGpfsFunctionsTotals,
   parseCessnockGpfsReportLinks,
   selectCessnockGpfsDocument,
 } from '../src/connectors/cessnock-gpfs/index.js';
@@ -25,84 +29,149 @@ import { DataSourceModel, MeasureModel } from '../src/models/index.js';
 import {
   CESSNOCK_ATTESTATION_TEXT,
   CESSNOCK_CONTEXT,
+  CESSNOCK_FUNCTIONS_TEXT,
+  CESSNOCK_INCOME_TEXT,
   CESSNOCK_SUMMARY_TEXT,
+  cessnockAnnualReportExtraction,
   cessnockExtraction,
 } from '../src/connectors/cessnock-gpfs/fixture.js';
-import type { PdfExtraction } from '../src/connectors/pdf-extract.js';
 
-// Cessnock City Council's official Annual Report 2024-2025 does NOT contain the
-// audited General Purpose Financial Statements section. It is a narrative
-// report with a narrative "Financial summary" and ends at the Attestation
-// Statement. The official Annual Report page says the Annual Financial
-// Statements for the Year Ended 30 June 2025 can be viewed separately. The brief
-// limits this item to the annual report and forbids substituting the standalone
-// report, so the connector defers with 0 rows and records the exact gap.
+// Cessnock City Council's FY2024-25 annual report is narrative-only, but the
+// official Annual Financial Statements page publishes a separate standalone
+// FY2024-25 AFS with the audit opinion. The connector discovers/archives that
+// AFS through the browser/WAF-aware path and emits the printed statement slice.
+// The annual-report-only rejection is retained.
 
-const GAP_REASON =
-  'audited GPFS section not found in the FY2024-25 annual report; page 13 contains only the narrative Financial summary; the report ends at the Attestation Statement on page 101; no Income Statement/Statement of Comprehensive Income/Statement of Financial Position/B1-1 with printed subtotals was found; the official Annual Report page states the Annual Financial Statements for the Year Ended 30 June 2025 can be viewed separately, and this annual-report-only item does not substitute that standalone report; no rows ingested';
+const AFS_2026_URL =
+  'https://www.cessnock.nsw.gov.au/files/assets/public/v/1/hptrim/website-finance-budget-documents-do-not-change/annual_financial_statements-2026-final-with-audit-option.pdf';
+const AFS_2024_URL =
+  'https://www.cessnock.nsw.gov.au/files/assets/public/v/1/hptrim/website-finance-budget-documents-do-not-change/annual_financial_statements-2024-final-with-audit-opinion-_-website-doc.pdf';
+const AFS_2023_URL =
+  'https://www.cessnock.nsw.gov.au/files/assets/public/v/1/hptrim/website-finance-budget-documents-do-not-change/financial-statements-_-audited-financial-statements-30-june-2023-_-website-doc.pdf';
+
+const AFS_PAGE_HTML = `
+  <h1 class='oc-page-title '>Annual Financial Statements</h1>
+  <ul class="related-information-list">
+    <li><a href="${AFS_2026_URL}" title="Annual Financial Statements for the Year Ended 30 June 2026">Annual Financial Statements for the Year Ended 30 June&nbsp;2026(PDF,&nbsp;7MB)</a></li>
+    <li><a href="${CESSNOCK_GPFS_DOCUMENT_PIN}" title="Annual Financial Statements for the Year Ended 30 June 2025">Annual Financial Statements for the Year Ended 30 June&nbsp;2025(PDF,&nbsp;8MB)</a></li>
+    <li><a href="${AFS_2024_URL}" title="Annual Financial Statements for the Year Ended 30 June 2024">Annual Financial Statements for the Year Ended 30 June&nbsp;2024(PDF,&nbsp;5MB)</a></li>
+    <li><a href="${AFS_2023_URL}" title="Annual Financial Statements for the Year Ended 30 June 2023">Annual Financial Statements for the Year Ended 30 June&nbsp;2023(PDF,&nbsp;5MB)</a></li>
+  </ul>
+`;
+
+const { BROWSER_BYTES, BROWSER_HTML } = vi.hoisted(() => {
+  const pin =
+    'https://www.cessnock.nsw.gov.au/files/assets/public/v/2/hptrim/website-finance-budget-documents-do-not-change/ccc-_-annual_financial_statements-2024-2025-final-with-audit-opinion.pdf';
+  return {
+    BROWSER_HTML: `<a href="${pin}" title="Annual Financial Statements for the Year Ended 30 June 2025">Annual Financial Statements for the Year Ended 30 June 2025</a>`,
+    BROWSER_BYTES: Buffer.from('browser-fetched-pdf-bytes'),
+  };
+});
+
+vi.mock('playwright', () => {
+  const page = {
+    async goto() {
+      return { ok: () => true, status: () => 200 };
+    },
+    async waitForTimeout() {
+      return undefined;
+    },
+    async content() {
+      return BROWSER_HTML;
+    },
+    async evaluate() {
+      return Buffer.from('browser-fetched-pdf-bytes').toString('base64');
+    },
+  };
+  const context = {
+    async newPage() {
+      return page;
+    },
+  };
+  const browser = {
+    async newContext() {
+      return context;
+    },
+    async close() {
+      return undefined;
+    },
+  };
+  return {
+    chromium: {
+      async launch() {
+        return browser;
+      },
+    },
+  };
+});
+
+const { fetchCessnockGpfsViaBrowser } = await import('../../scripts/cessnock-gpfs-browser.js');
 
 function parsedFixture() {
   return parseCessnockGpfsExtraction(cessnockExtraction(), CESSNOCK_CONTEXT);
 }
 
-describe('Cessnock City Council annual-report discovery', () => {
-  const pageHtml = `
-    <h1 class='oc-page-title '>Annual Report</h1>
-    <p>This annual report has been prepared in accordance with Section 428 of the Local Government Act 1993.
-       The Annual Financial Statements for the Year Ended 30 June 2025
-       <a href="https://www.cessnock.nsw.gov.au/Council/Forms-and-documents/Finance-and-budget/Annual-Financial-Statements" target="_blank">can be viewed here</a>.</p>
-    <a href="/files/assets/public/v/1/hptrim/website-integrated-planning-reporting-documents-do-not-change/2025_annual-report-cessnock-city-council_2024-2025_spread.pdf" title="Annual Report 2024-2025" target="_self" class="document ext-pdf">Annual Report 2024-2025<span class="file-info">(PDF,&nbsp;16MB)</span></a>
-    <a href="/files/assets/public/v/1/hptrim/website-integrated-planning-reporting-documents-do-not-change/2024_annual-report-cessnock-city-council_2023-2024_spread.pdf" title="Annual Report 2023-2024" target="_self" class="document ext-pdf">Annual Report 2023-2024<span class="file-info">(PDF,&nbsp;15MB)</span></a>
-    <a href="/files/assets/public/v/1/hptrim/website-integrated-planning-reporting-documents-do-not-change/2026_annual-report-cessnock-city-council_2025-2026_spread.pdf" title="Annual Report 2025-2026" target="_self" class="document ext-pdf">Annual Report 2025-2026<span class="file-info">(PDF,&nbsp;17MB)</span></a>
-  `;
-
-  it('discovers the latest FY2024-25 annual report and selects it', () => {
+describe('Cessnock City Council standalone AFS discovery', () => {
+  it('discovers the latest FY2024-25 AFS and never selects the newer 2025-26 report', () => {
     expect(CESSNOCK_GPFS_FISCAL_YEAR).toBe('2024-25');
-    const links = parseCessnockGpfsReportLinks(pageHtml, CESSNOCK_GPFS_REPORTING_URL);
-    expect(links.map((link) => link.fiscal_year)).toEqual(['2024-25', '2023-24', '2025-26']);
+    const links = parseCessnockGpfsReportLinks(AFS_PAGE_HTML, CESSNOCK_GPFS_REPORTING_URL);
+    expect(links.map((link) => link.fiscal_year)).toEqual([
+      '2025-26',
+      '2024-25',
+      '2023-24',
+      '2022-23',
+    ]);
     const selected = selectCessnockGpfsDocument(links, '2024-25');
     expect(selected.url).toBe(CESSNOCK_GPFS_DOCUMENT_PIN);
     expect(selected.fiscal_year).toBe('2024-25');
     expect(selected.listing_url).toBe(CESSNOCK_GPFS_REPORTING_URL);
-    expect(selected.title).toContain('Annual Report 2024-2025');
-    expect(fiscalYearFromCessnockAnnualReportLink('Annual Report 2024-2025')).toBe('2024-25');
-    expect(fiscalYearFromCessnockAnnualReportLink('Annual Report 2023-2024')).toBe('2023-24');
+    expect(selected.title).toContain('30 June 2025');
     expect(
-      fiscalYearFromCessnockAnnualReportLink('Long Term Financial Plan 2023-2033.pdf'),
+      fiscalYearFromCessnockFinancialStatementsLink(
+        'Annual Financial Statements for the Year Ended 30 June 2025',
+      ),
+    ).toBe('2024-25');
+    expect(
+      fiscalYearFromCessnockFinancialStatementsLink(
+        'Annual Financial Statements for the Year Ended 30 June 2026',
+      ),
+    ).toBe('2025-26');
+    expect(
+      fiscalYearFromCessnockFinancialStatementsLink('Long Term Financial Plan 2023-2033.pdf'),
     ).toBeNull();
   });
 
-  it('never treats the separate Annual Financial Statements page as the annual report', () => {
-    const links = parseCessnockGpfsReportLinks(pageHtml, CESSNOCK_GPFS_REPORTING_URL);
-    expect(links.some((link) => link.url === CESSNOCK_GPFS_AFS_PAGE_URL)).toBe(false);
-    expect(CESSNOCK_GPFS_AFS_PAGE_URL).toContain('/Annual-Financial-Statements');
-    expect(links).toHaveLength(3);
+  it('does not treat the Annual Report page pointer as the AFS document', () => {
+    const annualReportHtml = `
+      <p>The Annual Financial Statements for the Year Ended 30 June 2025
+        <a href="${CESSNOCK_GPFS_AFS_PAGE_URL}" target="_blank">can be viewed here</a>.</p>
+      <a href="/files/x/2025_annual-report-cessnock-city-council_2024-2025_spread.pdf" title="Annual Report 2024-2025">Annual Report 2024-2025</a>
+    `;
+    expect(parseCessnockGpfsReportLinks(annualReportHtml, CESSNOCK_GPFS_REPORTING_URL)).toEqual([]);
+    expect(CESSNOCK_GPFS_AFS_PAGE_URL).toBe(CESSNOCK_GPFS_REPORTING_URL);
   });
 
-  it('rejects a prior year and never substitutes 2023-24 for the target 2024-25', () => {
-    const priorOnly = `
-      <a href="/files/assets/public/v/1/hptrim/x/2024_annual-report-cessnock-city-council_2023-2024_spread.pdf" title="Annual Report 2023-2024">Annual Report 2023-2024</a>
-    `;
+  it('rejects a prior year and never substitutes a 2023-24 AFS for the target 2024-25', () => {
+    const priorOnly = `<a href="${AFS_2023_URL}" title="Annual Financial Statements for the Year Ended 30 June 2023">Annual Financial Statements for the Year Ended 30 June 2023</a>`;
     const links = parseCessnockGpfsReportLinks(priorOnly, CESSNOCK_GPFS_REPORTING_URL);
-    expect(links.map((link) => link.fiscal_year)).toEqual(['2023-24']);
+    expect(links.map((link) => link.fiscal_year)).toEqual(['2022-23']);
     expect(() => selectCessnockGpfsDocument(links, '2024-25')).toThrow(/No published/);
   });
 
-  it('does not substitute a 2025-26 annual report for the FY2024-25 target', () => {
-    const futureOnly = `
-      <a href="/files/assets/public/v/1/hptrim/x/2026_annual-report-cessnock-city-council_2025-2026_spread.pdf" title="Annual Report 2025-2026">Annual Report 2025-2026</a>
-    `;
+  it('does not substitute a 2025-26 AFS for the FY2024-25 target', () => {
+    const futureOnly = `<a href="${AFS_2026_URL}" title="Annual Financial Statements for the Year Ended 30 June 2026">Annual Financial Statements for the Year Ended 30 June 2026</a>`;
     const links = parseCessnockGpfsReportLinks(futureOnly, CESSNOCK_GPFS_REPORTING_URL);
     expect(links.map((link) => link.fiscal_year)).toEqual(['2025-26']);
     expect(() => selectCessnockGpfsDocument(links, '2024-25')).toThrow(/No published/);
   });
 
   it('uses the documented official pin when the listing yields no usable anchor', async () => {
-    const links = parseCessnockGpfsReportLinks(
-      '<html><body>No document links here</body></html>',
-      CESSNOCK_GPFS_REPORTING_URL,
-    );
-    expect(links).toEqual([]);
+    expect(
+      parseCessnockGpfsReportLinks(
+        '<html><body>No document links here</body></html>',
+        CESSNOCK_GPFS_REPORTING_URL,
+      ),
+    ).toEqual([]);
     const pinned = cessnockPinnedDocument();
     expect(pinned.url).toBe(CESSNOCK_GPFS_DOCUMENT_PIN);
     expect(pinned.fiscal_year).toBe('2024-25');
@@ -123,7 +192,7 @@ describe('Cessnock City Council annual-report discovery', () => {
     expect(discovered.fiscal_year).toBe('2024-25');
   });
 
-  it('sends a plain client UA for deterministic discovery and download', async () => {
+  it('sends a plain client UA for deterministic plain-fetch discovery', async () => {
     expect(CESSNOCK_GPFS_REQUEST_HEADERS['user-agent']).toBe('curl/8.5.0');
     let seenHeaders: Record<string, string> | undefined;
     await discoverCessnockGpfsDocument(
@@ -146,75 +215,123 @@ describe('Cessnock City Council annual-report discovery', () => {
       ),
     ).rejects.toThrow(/No published/);
   });
+
+  it('fetches the AFS through the browser/WAF-aware path', async () => {
+    const fetched = await fetchCessnockGpfsViaBrowser(CESSNOCK_GPFS_REPORTING_URL, '2024-25');
+    expect(fetched.pdfUrl).toBe(CESSNOCK_GPFS_DOCUMENT_PIN);
+    expect(fetched.listingHtml).toBe(BROWSER_HTML);
+    expect(Buffer.from(fetched.pdfBytes).equals(BROWSER_BYTES)).toBe(true);
+  });
 });
 
-describe('Cessnock City Council annual-report FS-section absence', () => {
-  it('defers with 0 rows and records the exact annual-report gap', () => {
+describe('Cessnock City Council standalone AFS GPFS slice', () => {
+  it('emits 17 printed statement lines and a full exact reconciliation', () => {
     const parsed = parsedFixture();
-    expect(parsed.records).toEqual([]);
-    expect(parsed.reconciliation).toBeNull();
-    expect(parsed.rejections).toHaveLength(1);
-    expect(parsed.rejections[0]!.reason).toBe(GAP_REASON);
-    expect(CESSNOCK_SUMMARY_TEXT).toContain('Financial summary');
-    expect(CESSNOCK_SUMMARY_TEXT).toContain('What were our sources of income');
-    expect(CESSNOCK_ATTESTATION_TEXT).toContain('ATTESTATION STATEMENT');
+    expect(parsed.records).toHaveLength(17);
+    expect(parsed.rejections).toEqual([]);
+    expect(CESSNOCK_GPFS_LINES).toHaveLength(17);
+    const recon = parsed.reconciliation!;
+    expect(recon.unit).toBe('thousands');
+    expect(recon.total_revenue).toBe(176_621);
+    expect(recon.total_expenses).toBe(138_475);
+    expect(recon.employee_expenses).toBe(49_318);
+    expect(recon.materials_and_services).toBe(37_269);
+    expect(recon.borrowing_costs).toBe(922);
+    expect(recon.other_expenses).toBe(7_359);
+    expect(recon.net_loss_from_disposal_of_assets).toBe(17_405);
+    expect(recon.depreciation_amortisation_impairment).toBe(26_202);
+    expect(recon.government_grants_operating).toBe(15_706);
+    expect(recon.government_grants_capital).toBe(71_924);
+    expect(recon.net_result).toBe(38_146);
+    expect(recon.net_result_before_capital_grants).toBe(-33_778);
+    expect(recon.printed_total_expenses_excluding_depreciation).toBe(112_273);
+    expect(recon.functions_total_income).toBe(176_621);
+    expect(recon.functions_total_expenses).toBe(138_475);
+    expect(recon.functions_operating_result).toBe(38_146);
+    expect(recon.functions_grants_and_contributions).toBe(87_630);
+    expect(recon.functions_carrying_amount).toBe(1_683_382);
+    expect(recon.comprehensive_total).toBe(260_245);
+    expect(recon.total_equity).toBe(1_572_193);
+    expect(recon.cash_net_change).toBe(15_232);
+    expect(recon.checks).toHaveLength(10);
+    expect(parsed.warnings[0]).toContain('reconciled exactly');
   });
 
-  it('does not treat the narrative dollar summary as an audited GPFS slice', () => {
-    const parsed = parsedFixture();
-    expect(parsed.records).toEqual([]);
-    const text = CESSNOCK_SUMMARY_TEXT;
-    expect(text).toContain('$71.2m raised in rates and charges');
-    // A narrative percentage/amount summary has no printed statement subtotal
-    // or reconciliation bridge, so nothing is emitted.
-    expect(text).not.toContain('Total income from continuing operations');
-    expect(text).not.toContain('Operating result from continuing operations');
+  it('stores cents at the printed $’000 unit and the key statement rows', () => {
+    const byKey = new Map(parsedFixture().records.map((record) => [record.gpfs_line_item, record]));
+    expect(byKey.get('rates_and_annual_charges')!.amount_cents).toBe(7_119_300_000);
+    expect(byKey.get('total_revenue')!.amount_cents).toBe(17_662_100_000);
+    expect(byKey.get('total_expenses')!.amount_cents).toBe(13_847_500_000);
+    expect(byKey.get('net_result')!.amount_cents).toBe(3_814_600_000);
+    expect(byKey.get('government_grants_capital')!.potential_double_count).toBe(true);
+    expect(byKey.get('depreciation_amortisation_impairment')!.gpfs_component_of).toBe(
+      'total_expenses',
+    );
   });
 
-  it('still defers if a future annual report exposes GPFS-like pages', () => {
-    const extraction: PdfExtraction = {
-      source: { sha256: 'test', bytes: 1 },
-      pages: [
-        {
-          page_number: 1,
-          text: 'Income Statement Total income from continuing operations Operating result from continuing operations',
-          items: [],
-        },
-        {
-          page_number: 2,
-          text: 'Statement of Comprehensive Income from Income Statement',
-          items: [],
-        },
-        {
-          page_number: 3,
-          text: 'Total functions and activities Functions or activities',
-          items: [],
-        },
-      ],
-      text: '',
-      tables: [],
-      warnings: [],
-    };
+  it('parses B1-1 Total functions and activities', () => {
+    const totals = parseCessnockGpfsFunctionsTotals({
+      page_number: 17,
+      text: CESSNOCK_FUNCTIONS_TEXT,
+      items: [],
+    });
+    expect(totals).toEqual({
+      page_number: 17,
+      income: 176_621,
+      expenses: 138_475,
+      operating_result: 38_146,
+      grants_and_contributions: 87_630,
+      carrying_amount: 1_683_382,
+    });
+  });
+
+  it('rejects when the printed unit is missing (unit gate)', () => {
+    const extraction = cessnockExtraction();
+    extraction.pages = extraction.pages.map((page) =>
+      page.page_number === 8 ? { ...page, text: page.text.replace(/\$ '000/, 'Notes') } : page,
+    );
     const parsed = parseCessnockGpfsExtraction(extraction, CESSNOCK_CONTEXT);
     expect(parsed.records).toEqual([]);
-    expect(parsed.rejections[0]!.reason).toContain('audited GPFS section is present');
-    expect(parsed.rejections[0]!.reason).toContain('no rows ingested');
+    expect(parsed.rejections[0]!.reason).toContain('no unambiguous printed currency unit');
+    expect(parsed.reconciliation).toBeNull();
   });
 
-  it('does not invent a council total or cross-council row', () => {
-    const parsed = parsedFixture();
-    expect(parsed.records).toEqual([]);
-    expect(parsed.records.some((record) => record.aggregation_role !== 'agency_detail')).toBe(
-      false,
+  it('rejects when printed units disagree between statements', () => {
+    const extraction = cessnockExtraction();
+    extraction.pages = extraction.pages.map((page) =>
+      page.page_number === 17 ? { ...page, text: page.text.replace("$ '000", '$m') } : page,
     );
-    expect(
-      parsed.records.some(
-        (record) => record.region_id !== undefined || record.location !== undefined,
-      ),
-    ).toBe(false);
+    const parsed = parseCessnockGpfsExtraction(extraction, CESSNOCK_CONTEXT);
+    expect(parsed.records).toEqual([]);
+    expect(parsed.rejections[0]!.reason).toContain('printed units disagree');
   });
 
-  it('still derives a deterministic natural key for parity', () => {
+  it('retains the annual-report-only rejection (0 rows, exact gap)', () => {
+    const parsed = parseCessnockAnnualReportExtraction(
+      cessnockAnnualReportExtraction(),
+      CESSNOCK_CONTEXT,
+    );
+    expect(parsed.records).toEqual([]);
+    expect(parsed.reconciliation).toBeNull();
+    expect(parsed.rejections[0]!.reason).toBe(CESSNOCK_ANNUAL_REPORT_GAP);
+    expect(CESSNOCK_SUMMARY_TEXT).toContain('Financial summary');
+    expect(CESSNOCK_ATTESTATION_TEXT).toContain('ATTESTATION STATEMENT');
+    expect(CESSNOCK_INCOME_TEXT).not.toBe(CESSNOCK_SUMMARY_TEXT);
+  });
+
+  it('never produces a council total or cross-council row', () => {
+    const records = parsedFixture().records;
+    expect(records.every((record) => record.aggregation_role === 'agency_detail')).toBe(true);
+    expect(records.every((record) => record.region_id === undefined)).toBe(true);
+    expect(records.every((record) => record.location === undefined)).toBe(true);
+    expect(new Set(records.map((record) => record.delivery_entity))).toEqual(
+      new Set(['Cessnock City Council']),
+    );
+    expect(records.some((record) => record.gpfs_line_item === 'council_total')).toBe(false);
+    expect(records.every((record) => record.fiscal_year === '2024-25')).toBe(true);
+  });
+
+  it('derives a stable natural key per line and year', () => {
     const url = CESSNOCK_CONTEXT.document.url;
     const revenue = cessnockGpfsNaturalKey(url, 'total_revenue', '2024-25');
     const expenses = cessnockGpfsNaturalKey(url, 'total_expenses', '2024-25');
@@ -248,13 +365,13 @@ function fakeConnector(records: SpendingRecord[]): Connector {
     metadata: {
       lastFetchedAt: null,
       recordsIngested: 0,
-      errors: [GAP_REASON],
+      errors: [],
       warnings: [],
     },
   };
 }
 
-describe('Cessnock City Council annual-report ingestion is additive-only and emits no rows', () => {
+describe('Cessnock City Council GPFS ingestion is additive-only and idempotent', () => {
   beforeAll(async () => {
     await mongoose.connect(TEST_DB_URL, { serverSelectionTimeoutMS: 5_000 });
     await mongoose.connection.dropDatabase();
@@ -289,23 +406,23 @@ describe('Cessnock City Council annual-report ingestion is additive-only and emi
     await mongoose.disconnect();
   });
 
-  it('preserves existing rows and registers Cessnock as degraded with 0 records', async () => {
+  it('adds exactly 17 rows, preserves existing rows, and is idempotent', async () => {
     const { records } = parsedFixture();
-    expect(records).toEqual([]);
+    expect(records).toHaveLength(17);
     const connector = fakeConnector(records);
 
     await runIngestion({ connectors: [connector] });
     expect(await MeasureModel.countDocuments({ source_id: 'aus-tender' })).toBe(1);
     expect(await MeasureModel.countDocuments({ source_id: 'data-nsw-ckan' })).toBe(1);
-    expect(await MeasureModel.countDocuments({ source_id: CESSNOCK_GPFS_ID })).toBe(0);
-    expect(await MeasureModel.countDocuments({})).toBe(2);
+    expect(await MeasureModel.countDocuments({ source_id: CESSNOCK_GPFS_ID })).toBe(17);
+    expect(await MeasureModel.countDocuments({})).toBe(19);
 
     await runIngestion({ connectors: [connector] });
-    expect(await MeasureModel.countDocuments({ source_id: CESSNOCK_GPFS_ID })).toBe(0);
-    expect(await MeasureModel.countDocuments({})).toBe(2);
+    expect(await MeasureModel.countDocuments({ source_id: CESSNOCK_GPFS_ID })).toBe(17);
+    expect(await MeasureModel.countDocuments({})).toBe(19);
 
     const source = await DataSourceModel.findOne({ source_id: CESSNOCK_GPFS_ID }).lean();
-    expect(source?.status).toBe('degraded');
-    expect(source?.records_ingested).toBe(0);
+    expect(source?.status).toBe('active');
+    expect(source?.records_ingested).toBe(17);
   });
 });

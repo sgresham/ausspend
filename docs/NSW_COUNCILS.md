@@ -208,7 +208,7 @@ category is the 128.
 | Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                             In DB now |
 | --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------: |
 | OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                                     0 |
-| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **1970** (109 council GPFS source ids: 106 active, 3 degraded/deferred; FY2024-25/FY2025-26; separate non-additive sources) |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **1987** (109 council GPFS source ids: 107 active, 2 degraded/deferred; FY2024-25/FY2025-26; separate non-additive sources) |
 | LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                                     0 |
 | data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                                    3,472 rows, none council financial |
 | Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                                     0 |
@@ -348,17 +348,16 @@ for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Cou
 23 for Blue Mountains City Council FY2024-25 (`blue-mountains-gpfs`, §7.36) and 18 for Wollondilly
 Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY2024-25
 (`camden-gpfs`, §7.38), 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) and
-17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) and 16 for Gilgandra Shire Council FY2025-26 (`gilgandra-gpfs`, §7.55) and 17 for Lockhart Shire Council FY2025-26 (`lockhart-gpfs`, §7.56) and 17 for Coonamble Shire Council FY2024-25 (`coonamble-gpfs`, §7.57) and 17 for Weddin Shire Council FY2024-25 (`weddin-gpfs`, §7.58) and 17 for Walcha Council FY2024-25 (`walcha-gpfs`, §7.59) and 17 for Murrumbidgee Council FY2024-25 (`murrumbidgee-gpfs`, §7.60) and 17 for Armidale Regional Council FY2025-26 (`armidale-gpfs`, §7.62) and 17 for Byron Shire Council FY2025-26 (`byron-gpfs`, §7.63) and 17 for Clarence Valley Council FY2025-26 (`clarence-valley-gpfs`, §7.64) and 17 for Richmond Valley Council FY2025-26 (`richmond-valley-gpfs`, §7.65) and 16 for Kempsey Shire Council FY2025-26 (`kempsey-gpfs`, §7.66) and 17 for Wingecarribee Shire Council FY2025-26 (`wingecarribee-gpfs`, §7.67) and 17 for Queanbeyan-Palerang Regional Council FY2025-26 (`queanbeyan-palerang-gpfs`, §7.68) and 17 for Goulburn Mulwaree Council FY2024-25 (`goulburn-mulwaree-gpfs`, §7.69) and 17 for Broken Hill City Council FY2024-25 (`broken-hill-gpfs`, §7.70) and 17 for Griffith City Council FY2024-25 (`griffith-gpfs`, §7.71) and 17 for Lithgow City Council FY2024-25 (`lithgow-gpfs`, §7.72) and 17 for Mid-Western Regional Council FY2025-26 (`mid-western-regional-gpfs`, §7.73) and 16 for Bega Valley Shire Council FY2025-26 (`bega-valley-gpfs`, §7.74) and 17 for Snowy Monaro Regional Council FY2025-26 (`snowy-monaro-gpfs`, §7.75) and 17 for Singleton Council FY2025-26 (`singleton-gpfs`, §7.76) and 17 for Orange City Council FY2025-26 (`orange-gpfs`, §7.77) and 17 for Blayney Shire Council FY2025-26 (`blayney-gpfs`, §7.78) and 17 for Liverpool Plains Shire Council FY2025-26 (`liverpool-plains-gpfs`, §7.79) and 17 for Tenterfield Shire Council FY2025-26 (`tenterfield-gpfs`, §7.80) and 16 for Cobar Shire Council FY2025-26 (`cobar-gpfs`, §7.81) and 17 for Narromine Shire Council FY2025-26 (`narromine-gpfs`, §7.82) and 17 for Inverell Shire Council FY2025-26 (`inverell-gpfs`, §7.83) and 18 for Wentworth Shire Council FY2024-25 (`wentworth-gpfs`, §7.84) and 17 for Forbes Shire Council FY2024-25 (`forbes-gpfs`, §7.85) and 17 for Bellingen Shire Council FY2025-26 (`bellingen-gpfs`, §7.86) and 17 for Gunnedah Shire Council FY2025-26 (`gunnedah-gpfs`, §7.87) and 17 for Parkes Shire Council FY2025-26 (`parkes-gpfs`, §7.88) and 17 for Cowra Shire Council FY2025-26 (`cowra-gpfs`, §7.89) and 17 for Leeton Shire Council FY2025-26 (`leeton-gpfs`, §7.90) and 17 for Nambucca Valley Council FY2024-25 (`nambucca-valley-gpfs`, §7.91) and 17 for Narrabri Shire Council FY2025-26 (`narrabri-gpfs`, §7.92) and 17 for Upper Hunter Shire Council FY2024-25 (`upper-hunter-gpfs`, §7.94) and 17 for Yass Valley Council FY2024-25 (`yass-valley-gpfs`, §7.95) and 17 for Glen Innes Severn Council FY2024-25 (`glen-innes-severn-gpfs`, §7.96) and 15 for Edward River Council FY2024-25 (`edward-river-gpfs`, §7.97) and 17 for Temora Shire Council FY2024-25 (`temora-gpfs`, §7.98) and 17 for Warrumbungle Shire Council FY2024-25 (`warrumbungle-gpfs`, §7.99) and 17 for Gwydir Shire Council FY2024-25 (`gwydir-gpfs`, §7.100) and 17 for Lachlan Shire Council FY2024-25 (`lachlan-gpfs`, §7.101) and 17 for Bland Shire Council FY2024-25 (`bland-gpfs`, §7.102) and 17 for Dungog Shire Council FY2024-25 (`dungog-gpfs`, §7.103) and 16 for Upper Lachlan Shire Council FY2025-26 (`upper-lachlan-gpfs`, §7.104) and 17 for Narrandera Shire Council FY2025-26 (`narrandera-gpfs`, §7.105) and 0 for Berrigan Shire Council FY2025-26 (`berrigan-gpfs`, §7.106; registered but deferred because the printed B1-1/face bridge differs by $1 thousand) and 17 for Murray River Council FY2025-26 (`murray-river-gpfs`, §7.107) and 0 for Albury City Council FY2024-25 (`albury-gpfs`, §7.108; registered but deferred because the annual report has no audited GPFS section) and 17 for Ballina Shire Council FY2024-25 (`ballina-gpfs`, §7.109) and 0 for Cessnock City Council FY2024-25 (`cessnock-gpfs`, §7.110; registered but deferred because the annual report has no audited GPFS section) — all separate source ids. The
+17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) and 16 for Gilgandra Shire Council FY2025-26 (`gilgandra-gpfs`, §7.55) and 17 for Lockhart Shire Council FY2025-26 (`lockhart-gpfs`, §7.56) and 17 for Coonamble Shire Council FY2024-25 (`coonamble-gpfs`, §7.57) and 17 for Weddin Shire Council FY2024-25 (`weddin-gpfs`, §7.58) and 17 for Walcha Council FY2024-25 (`walcha-gpfs`, §7.59) and 17 for Murrumbidgee Council FY2024-25 (`murrumbidgee-gpfs`, §7.60) and 17 for Armidale Regional Council FY2025-26 (`armidale-gpfs`, §7.62) and 17 for Byron Shire Council FY2025-26 (`byron-gpfs`, §7.63) and 17 for Clarence Valley Council FY2025-26 (`clarence-valley-gpfs`, §7.64) and 17 for Richmond Valley Council FY2025-26 (`richmond-valley-gpfs`, §7.65) and 16 for Kempsey Shire Council FY2025-26 (`kempsey-gpfs`, §7.66) and 17 for Wingecarribee Shire Council FY2025-26 (`wingecarribee-gpfs`, §7.67) and 17 for Queanbeyan-Palerang Regional Council FY2025-26 (`queanbeyan-palerang-gpfs`, §7.68) and 17 for Goulburn Mulwaree Council FY2024-25 (`goulburn-mulwaree-gpfs`, §7.69) and 17 for Broken Hill City Council FY2024-25 (`broken-hill-gpfs`, §7.70) and 17 for Griffith City Council FY2024-25 (`griffith-gpfs`, §7.71) and 17 for Lithgow City Council FY2024-25 (`lithgow-gpfs`, §7.72) and 17 for Mid-Western Regional Council FY2025-26 (`mid-western-regional-gpfs`, §7.73) and 16 for Bega Valley Shire Council FY2025-26 (`bega-valley-gpfs`, §7.74) and 17 for Snowy Monaro Regional Council FY2025-26 (`snowy-monaro-gpfs`, §7.75) and 17 for Singleton Council FY2025-26 (`singleton-gpfs`, §7.76) and 17 for Orange City Council FY2025-26 (`orange-gpfs`, §7.77) and 17 for Blayney Shire Council FY2025-26 (`blayney-gpfs`, §7.78) and 17 for Liverpool Plains Shire Council FY2025-26 (`liverpool-plains-gpfs`, §7.79) and 17 for Tenterfield Shire Council FY2025-26 (`tenterfield-gpfs`, §7.80) and 16 for Cobar Shire Council FY2025-26 (`cobar-gpfs`, §7.81) and 17 for Narromine Shire Council FY2025-26 (`narromine-gpfs`, §7.82) and 17 for Inverell Shire Council FY2025-26 (`inverell-gpfs`, §7.83) and 18 for Wentworth Shire Council FY2024-25 (`wentworth-gpfs`, §7.84) and 17 for Forbes Shire Council FY2024-25 (`forbes-gpfs`, §7.85) and 17 for Bellingen Shire Council FY2025-26 (`bellingen-gpfs`, §7.86) and 17 for Gunnedah Shire Council FY2025-26 (`gunnedah-gpfs`, §7.87) and 17 for Parkes Shire Council FY2025-26 (`parkes-gpfs`, §7.88) and 17 for Cowra Shire Council FY2025-26 (`cowra-gpfs`, §7.89) and 17 for Leeton Shire Council FY2025-26 (`leeton-gpfs`, §7.90) and 17 for Nambucca Valley Council FY2024-25 (`nambucca-valley-gpfs`, §7.91) and 17 for Narrabri Shire Council FY2025-26 (`narrabri-gpfs`, §7.92) and 17 for Upper Hunter Shire Council FY2024-25 (`upper-hunter-gpfs`, §7.94) and 17 for Yass Valley Council FY2024-25 (`yass-valley-gpfs`, §7.95) and 17 for Glen Innes Severn Council FY2024-25 (`glen-innes-severn-gpfs`, §7.96) and 15 for Edward River Council FY2024-25 (`edward-river-gpfs`, §7.97) and 17 for Temora Shire Council FY2024-25 (`temora-gpfs`, §7.98) and 17 for Warrumbungle Shire Council FY2024-25 (`warrumbungle-gpfs`, §7.99) and 17 for Gwydir Shire Council FY2024-25 (`gwydir-gpfs`, §7.100) and 17 for Lachlan Shire Council FY2024-25 (`lachlan-gpfs`, §7.101) and 17 for Bland Shire Council FY2024-25 (`bland-gpfs`, §7.102) and 17 for Dungog Shire Council FY2024-25 (`dungog-gpfs`, §7.103) and 16 for Upper Lachlan Shire Council FY2025-26 (`upper-lachlan-gpfs`, §7.104) and 17 for Narrandera Shire Council FY2025-26 (`narrandera-gpfs`, §7.105) and 0 for Berrigan Shire Council FY2025-26 (`berrigan-gpfs`, §7.106; registered but deferred because the printed B1-1/face bridge differs by $1 thousand) and 17 for Murray River Council FY2025-26 (`murray-river-gpfs`, §7.107) and 0 for Albury City Council FY2024-25 (`albury-gpfs`, §7.108; registered but deferred because the annual report has no audited GPFS section) and 17 for Ballina Shire Council FY2024-25 (`ballina-gpfs`, §7.109) and 17 for Cessnock City Council FY2024-25 (`cessnock-gpfs`, §7.111; cured from the standalone Annual Financial Statements after the §7.110 annual-report deferral) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
-GPFS rows. The shared dev DB currently records **106** active `data_sources` GPFS entries and **1970**
-GPFS measures, from a fresh aggregate of `source_id` matching `/gpfs$/` (2026-11-19, after the
-§7.109 Ballina landing). `berrigan-gpfs` is registered but `degraded` with **0** rows because the
-printed B1-1/face bridge differs by $1 thousand, and `albury-gpfs` is registered but `degraded` with
-**0** rows because the annual report has no audited GPFS section, and `cessnock-gpfs` is registered
-but `degraded` with **0** rows because the annual report has no audited GPFS section either (total
-registered GPFS source ids are **109**, of which 106 are active); this is the live
-DB count, not an increment of the earlier table total.
+GPFS rows. The shared dev DB snapshot taken after the §7.109 Ballina landing recorded **106** active
+`data_sources` GPFS entries and **1970** GPFS measures. The §7.111 Cessnock standalone-AFS cure adds
+**17** `cessnock-gpfs` measures and one active source; `berrigan-gpfs` and `albury-gpfs` remain
+registered but `degraded` with **0** rows, and the §7.110 annual-report deferral remains the
+historical record (total registered GPFS source ids are **109**, of which 107 are now active). This
+is a logical increment from the recorded snapshot, not a new live re-aggregation; live totals are
+served by `GET /api/coverage`.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
 
@@ -10326,7 +10325,7 @@ SHA-256; no PDF is committed. Targeted connector tests passed (19/19). Full evid
 
 ---
 
-### 7.110 One hundred and tenth landed council — Cessnock City Council FY2024-25 annual report (registered 2026-11-20; deferred 0 rows)
+### 7.110 One hundred and tenth landed council — Cessnock City Council FY2024-25 annual report (registered 2026-11-20; deferred 0 rows; superseded by §7.111 cure)
 
 **Outcome: registered but deferred with 0 rows.** The official FY2024-25 annual report is
 annual-report-only for this item. It is a narrative report with a narrative **Financial summary** on
@@ -10336,7 +10335,8 @@ Income, Statement of Financial Position, Cash Flow Statement, notes or auditor's
 Annual Report page itself states that the Annual Financial Statements for the Year Ended 30 June 2025
 "can be viewed here", linking to a separate FY2024-25 Annual Financial Statements document. The
 connector defers with 0 rows and records the exact gap; the standalone report was not substituted and
-no figures were fabricated.
+no figures were fabricated. **This deferral was superseded on 2026-11-20 by §7.111**, which discovers,
+archives and ingests the separate standalone FY2024-25 AFS.
 
 **Stale-year check.** The work-item title said FY2024-25. The official Annual Report page was checked
 on 2026-11-20 and lists **Annual Report 2024-2025** (PDF, 16MB) as its only annual-report attachment.
@@ -10403,6 +10403,98 @@ future-year rejection, the documented-pin fallback, the plain-UA header, the FS-
 the exact page-level gap, natural-key stability, and additive-only 0-row ingestion that preserves
 existing rows and marks the source `degraded`. Full evidence:
 `docs/source-discovery/nsw-councils/cessnock-gpfs.md`.
+
+---
+
+### 7.111 One hundred and eleventh landed council — Cessnock City Council FY2024-25 standalone AFS cure (landed 2026-11-20)
+
+**Outcome: cured — 17 statement rows from the standalone audited AFS.** The §7.110 annual-report-only
+check deferred 0 rows because the annual report is narrative-only. The official Annual Report page
+separately links an **Annual Financial Statements for the Year Ended 30 June 2025** PDF with the audit
+opinion; that standalone AFS is the correct FY2024-25 source and is now discovered, archived and
+ingested. It is the current-year document, not an older prior-year substitute. The annual-report
+rejection path is retained (`parseCessnockAnnualReportExtraction`) and still returns 0 rows with the
+exact annual-report gap.
+
+**Stale-year check.** The official Annual Financial Statements page was checked on 2026-11-20 and
+lists the FY2025-26 document (year ended 30 June 2026), the FY2024-25 document (year ended
+30 June 2025) and older years. The newer FY2025-26 document was **not** substituted; the FY2024-25
+document is the target.
+
+**Source and year.** The statements are for the **year ended 30 June 2025**. The statement source is
+the standalone AFS discovered from the official Annual Financial Statements page
+<https://www.cessnock.nsw.gov.au/Council/Forms-and-documents/Finance-and-budget/Annual-Financial-Statements>,
+linked from the Annual Report page. The current upload is
+<https://www.cessnock.nsw.gov.au/files/assets/public/v/2/hptrim/website-finance-budget-documents-do-not-change/ccc-_-annual_financial_statements-2024-2025-final-with-audit-opinion.pdf>
+and is also the documented official fallback pin.
+
+**Access/fetch.** The brief warned that the official Edge/Akamai WAF can return `403 text/html` to a
+plain HTTP client. In this retrieval run both the browser path and a plain `curl/8.5.0` request
+returned the PDF, but the ingest path uses the established headless Chromium browser path
+(`scripts/cessnock-gpfs-browser.ts`): the browser loads the official page, the connector discovers the
+FY2024-25 AFS link from the cleared HTML, the browser fetches the exact bytes, and the connector
+SHA-256 verifies and re-archives them. The browser path was exercised live and returned
+**7,998,715** bytes. Exact bytes archived outside the repo at the relative path
+`cessnock-gpfs/ccc-_-annual_financial_statements-2024-2025-final-with-audit-opinion.pdf`:
+
+- bytes: **7,998,715**
+- SHA-256: `c6b4061782e9321f0b028459592bd66ecc970bfb7e5f50016c7f66332efe40b4`
+
+**Exact reconciliation ($'000).** The connector emits nothing unless the printed unit is explicit and
+every printed subtotal/result bridge agrees at zero tolerance:
+
+| Check | Printed / derived | Result |
+| --- | --- | --- |
+| Total income from continuing operations | `$176,621` thousand | printed |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) | `$71,193` + `$9,926` + `$3,339` + `$15,706` + `$71,924` + `$3,891` + `$642` = `$176,621` | = printed total |
+| Expense components sum (employee + materials + borrowing + other + net loss on disposal) | `$49,318` + `$37,269` + `$922` + `$7,359` + `$17,405` = `$112,273` | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$26,202`) | `$112,273` + `$26,202` = `$138,475` | = total expenses bridge |
+| Total revenue − total expenses | `$176,621` − `$138,475` = `$38,146` | = printed net result |
+| Net operating result before capital grants | `$38,146` − `$71,924` = `$(33,778)` | = printed negative figure (evidence only) |
+| B1-1 income / expenses / operating result | `$176,621` / `$138,475` / `$38,146` | = face statement |
+| B1-1 grants and contributions | `$87,630` | = operating `$15,706` + capital `$71,924` |
+| B1-1 carrying amount of assets | `$1,683,382` | = printed total assets |
+| Statement of Comprehensive Income net result | `$38,146` | = Income Statement net result |
+| Other comprehensive income (revaluation gain) | `$222,099` | = printed other comprehensive income |
+| Total comprehensive income | `$38,146` + `$222,099` = `$260,245` | = printed total |
+| Statement of Financial Position: total assets / total liabilities / net assets | `$1,683,382` / `$111,189` / `$1,572,193` | current + non-current subtotals and `assets − liabilities` reconcile |
+| Equity: accumulated surplus `$759,881` + revaluation surplus `$812,312` | `$1,572,193` | = net assets = total equity |
+| Statement of Changes in Equity: opening `$1,311,948` + total comprehensive income `$260,245` | `$1,572,193` | = closing equity |
+| Statement of Cash Flows: operating `$70,379` + investing `$(67,778)` + financing `$12,631` | `$15,232` | = net change in cash; closing cash `$34,226` reconciles to the SoFP |
+
+Total expenses is the documented bridge of the printed expenses-excluding-depreciation line plus the
+printed depreciation/amortisation/impairment line, and equals the printed B1-1 expense total. The
+printed net result is positive (`$38,146`); the before-capital result is negative (`-$33,778`) and is
+retained in reconciliation evidence only. The net loss on disposal (`$17,405`) is a printed expense
+component and is emitted as an expense row.
+
+**Rows.** 17 rows, source id `cessnock-gpfs`, `source_dataset` "Cessnock City Council GPFS 2024-25",
+`measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Cessnock City Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. The emitted lines are rates `$7,119,300,000`,
+user charges `$992,600,000`, other revenues `$333,900,000`, operating grants `$1,570,600,000`,
+capital grants `$7,192,400,000`, interest `$389,100,000`, other income `$64,200,000`, total revenue
+`$17,662,100,000`, employee expenses `$4,931,800,000`, materials and services `$3,726,900,000`,
+borrowing costs `$92,200,000`, other expenses `$735,900,000`, net loss on disposal `$1,740,500,000`,
+total expenses excluding depreciation `$11,227,300,000`, depreciation/amortisation/impairment
+`$2,620,200,000`, total expenses `$13,847,500,000` and net result `$3,814,600,000` (AUD cents). The
+before-capital result, the B1-1 function split, the balance-sheet components and the cash-flow lines
+are reconciliation evidence only and are not emitted.
+
+**No double count.** Every row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government
+program data; they are not added to expenditure. The pre-existing same-entity rows are preserved
+untouched and never summed.
+
+**Checks.** Focused connector tests cover AFS discovery/latest selection, prior-year and future-year
+rejection, the browser/WAF path, the retained annual-report rejection, the printed-unit gate, exact
+reconciliation, natural-key stability, and additive-only idempotent 17-row ingestion. The browser path
+was exercised live on 2026-11-20 (`fetchCessnockGpfsViaBrowser()` discovered the AFS URL and returned
+7,998,715 bytes; `createCessnockGpfsConnector({listingHtml, pdfBytes}).fetch()` returned 17 records
+with no errors). Full evidence: `docs/source-discovery/nsw-councils/cessnock-gpfs.md`.
 
 ## 8. Prioritised rollout (after the pilot)
 
