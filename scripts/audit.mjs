@@ -70,6 +70,7 @@ const KNOWN_SOURCE_IDS = [
   'brewarrina-gpfs',
   'bogan-gpfs',
   'kyogle-gpfs',
+  'junee-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
