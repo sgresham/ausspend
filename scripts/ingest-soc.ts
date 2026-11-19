@@ -133,6 +133,19 @@ import {
   NQBP_UNIT,
   NQBP_UNIT_LABEL,
   NQBP_UNIT_TO_CENTS,
+  CLEANCO_CAVEAT,
+  CLEANCO_ENTITY,
+  CLEANCO_ID,
+  CLEANCO_JURISDICTION,
+  CLEANCO_LEGAL_CLASS,
+  CLEANCO_LICENSE,
+  CLEANCO_NAME,
+  CLEANCO_PUBLICATIONS_URL,
+  CLEANCO_PUBLISHER,
+  CLEANCO_SOURCE_URL,
+  CLEANCO_UNIT,
+  CLEANCO_UNIT_LABEL,
+  CLEANCO_UNIT_TO_CENTS,
   WATER_CORPORATION_CAVEAT,
   WATER_CORPORATION_ENTITY,
   WATER_CORPORATION_ID,
@@ -392,7 +405,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP, CleanCo Queensland Limited and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -416,6 +429,7 @@ export const SOC_SOURCE_IDS = [
   PORT_OF_TOWNSVILLE_ID,
   PORTS_NORTH_ID,
   NQBP_ID,
+  CLEANCO_ID,
   WATER_CORPORATION_ID,
   SYNERGY_ID,
   WESTERN_POWER_ID,
@@ -1119,6 +1133,41 @@ async function writeNqbpManifest(): Promise<void> {
   );
 }
 
+async function writeCleancoManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: CLEANCO_ID });
+  const manifestPath = path.resolve(
+    process.env.CLEANCO_MANIFEST ?? 'docs/source-archive/qld-cleanco-annual-report.json',
+  );
+  const manifest = {
+    entity: CLEANCO_ENTITY,
+    legal_class: CLEANCO_LEGAL_CLASS,
+    jurisdiction: CLEANCO_JURISDICTION,
+    dataset: CLEANCO_NAME,
+    publisher: CLEANCO_PUBLISHER,
+    discovery_page: CLEANCO_SOURCE_URL,
+    secondary_page: CLEANCO_PUBLICATIONS_URL,
+    license: CLEANCO_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${CLEANCO_UNIT_LABEL} (${CLEANCO_UNIT}; x${CLEANCO_UNIT_TO_CENTS} cents per unit; used only for a future human-verified report)`,
+    caveat: CLEANCO_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      'QLD SOC: CleanCo Queensland Limited only, a Queensland Government Owned Corporation and one of the 11 GOC-list entities. The official publication-scheme and publications pages publish the FY2025-26 annual report only as an embedded Flipsnack flipbook with no direct PDF URL. The only direct annual-report PDF on the site, Annual_Report_2025_Accessible_PDF.pdf (3,959,915 bytes, last modified 2025-09-29), is the prior FY2024-25 report and is not ingested or presented as current. The adapter therefore defers FY2025-26 with zero rows; no stale prior-year row is created and no archived PDF is committed. Never add CleanCo rows to government program spending, the PNFC benchmark, another QLD GOC or statutory body, a WA/NSW entity, a QLD total, or any other SOC.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function writeWaterCorporationManifest(): Promise<void> {
   const records = await listArchivedRecords({ source_id: WATER_CORPORATION_ID });
   const manifestPath = path.resolve(
@@ -1540,6 +1589,7 @@ async function main(): Promise<void> {
       [PORT_OF_TOWNSVILLE_ID]: writePortOfTownsvilleManifest,
       [PORTS_NORTH_ID]: writePortsNorthManifest,
       [NQBP_ID]: writeNqbpManifest,
+      [CLEANCO_ID]: writeCleancoManifest,
       [WATER_CORPORATION_ID]: writeWaterCorporationManifest,
       [SYNERGY_ID]: writeSynergyManifest,
       [WESTERN_POWER_ID]: writeWesternPowerManifest,
@@ -2002,6 +2052,31 @@ async function main(): Promise<void> {
     );
     for (const group of nqbpByLine) {
       console.log(`[ingest:soc] ${NQBP_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const cleancoRows = await MeasureModel.countDocuments({ source_id: CLEANCO_ID });
+    const cleancoVerified = await MeasureModel.countDocuments({
+      source_id: CLEANCO_ID,
+      verified: true,
+    });
+    const cleancoDoubleCount = await MeasureModel.countDocuments({
+      source_id: CLEANCO_ID,
+      potential_double_count: true,
+    });
+    const cleancoByLine = await MeasureModel.aggregate([
+      { $match: { source_id: CLEANCO_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const cleancoDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: CLEANCO_ID,
+      status: 'deferred',
+    });
+    const cleancoArchived = await listArchivedRecords({ source_id: CLEANCO_ID });
+    console.log(
+      `[ingest:soc] ${CLEANCO_ID} rows=${cleancoRows} source_documents=${cleancoArchived.length} verified=${cleancoVerified} potential_double_count=${cleancoDoubleCount} deferred_documents=${cleancoDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed; FY2025-26 deferred 2026-11-19 because the official report is Flipsnack-only with no parseable direct PDF; the stale FY2024-25 PDF is not ingested)`,
+    );
+    for (const group of cleancoByLine) {
+      console.log(`[ingest:soc] ${CLEANCO_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     const waterCorpRows = await MeasureModel.countDocuments({ source_id: WATER_CORPORATION_ID });
     const waterCorpVerified = await MeasureModel.countDocuments({

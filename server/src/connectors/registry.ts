@@ -36,6 +36,7 @@ import { createGladstonePortsConnector } from './soc/qld/gladstone-ports.js';
 import { createPortOfTownsvilleConnector } from './soc/qld/port-of-townsville.js';
 import { createPortsNorthConnector } from './soc/qld/ports-north.js';
 import { createNqbpConnector } from './soc/qld/nqbp.js';
+import { createCleancoConnector } from './soc/qld/cleanco.js';
 import { createWaterCorporationConnector } from './soc/wa/water-corporation.js';
 import { createSynergyConnector } from './soc/wa/synergy.js';
 import { createWesternPowerConnector } from './soc/wa/western-power.js';
@@ -605,6 +606,14 @@ export const CONNECTORS: readonly Connector[] = [
   // Gladstone Ports, Port of Townsville, Ports North, another QLD GOC, a QLD
   // total, or any other SOC.
   createNqbpConnector(),
+  // QLD SOC: tenth entity — CleanCo Queensland Limited, a Queensland GOC and
+  // one of the 11 GOC-list entities. The official FY2025-26 annual report is
+  // published only as a Flipsnack flipbook with no direct PDF; the only direct
+  // annual-report PDF is the prior FY2024-25 report. The adapter defers
+  // FY2025-26 with zero rows and never ingests the stale prior year as current.
+  // Never added to government program spending, the PNFC benchmark, another QLD
+  // GOC or statutory body, a WA/NSW entity, a QLD total, or any other SOC.
+  createCleancoConnector(),
   // WA SOC: first WA Government Trading Enterprise pilot — Water Corporation,
   // a WA GTE under the Government Trading Enterprises Act 2023 (WA). Latest
   // annual report discovered from the official annual report page and parsed as
