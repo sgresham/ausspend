@@ -112,6 +112,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - murrumbidgee-gpfs  GPFS expansion: Murrumbidgee Council's audited FY2024-25 Appendix A GPFS
  *   - armidale-gpfs  GPFS expansion: Armidale Regional Council's audited FY2025-26 GPFS
  *   - byron-gpfs  GPFS expansion: Byron Shire Council's audited FY2025-26 GPFS
+ *   - clarence-valley-gpfs  GPFS expansion: Clarence Valley Council's audited FY2025-26 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -127,7 +128,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Lane Cove Council, Mosman Council, Wollondilly Shire Council, Camden
  * Council, Campbelltown City Council, Central Coast Council, Hornsby Shire
  * Council, Penrith City Council, The Hills Shire Council, Warren Shire Council
- * and Brewarrina Shire Council and Bogan Shire Council and Kyogle Council and Junee Shire Council and Uralla Shire Council and Cootamundra-Gundagai Regional Council and Moree Plains Shire Council and Hilltops Council and Bourke Shire Council and Coolamon Shire Council and Gilgandra Shire Council and Lockhart Shire Council and Coonamble Shire Council and Weddin Shire Council and Walcha Council and Murrumbidgee Council and Armidale Regional Council and Byron Shire Council. No other councils, states/territories, SOC/charity or live state
+ * and Brewarrina Shire Council and Bogan Shire Council and Kyogle Council and Junee Shire Council and Uralla Shire Council and Cootamundra-Gundagai Regional Council and Moree Plains Shire Council and Hilltops Council and Bourke Shire Council and Coolamon Shire Council and Gilgandra Shire Council and Lockhart Shire Council and Coonamble Shire Council and Weddin Shire Council and Walcha Council and Murrumbidgee Council and Armidale Regional Council and Byron Shire Council and Clarence Valley Council. No other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -197,6 +198,7 @@ export const NSW_SOURCE_IDS = [
   'murrumbidgee-gpfs',
   'armidale-gpfs',
   'byron-gpfs',
+  'clarence-valley-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
