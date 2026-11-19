@@ -23,7 +23,7 @@ export const DISCOVERY_GROUP_LABELS: Record<DiscoveryKind, string> = {
   function: 'Functions',
   region: 'Regions',
   data_source: 'Data sources',
-  soc: 'NSW SOC entities',
+  soc: 'State-owned entities',
 };
 
 export interface DiscoveryInputs {
@@ -45,7 +45,7 @@ function sourceHref(sourceId: string): string {
 
 /**
  * Build the bounded discovery index. It only contains taxonomy, the region
- * directory, the source register and the ten registered NSW SOC entities — it
+ * directory, the source register and the registered state-owned entities — it
  * never contains measure rows. `/api/soc` series and the 515k measure set are
  * deliberately not loaded here.
  */
@@ -118,7 +118,7 @@ export function buildDiscoveryItems({
       id: `soc:${entity.source_id}`,
       kind: 'soc',
       label: entity.entity,
-      secondary: `NSW SOC entity · source ${entity.source_id} · ${entity.records} row${
+      secondary: `State-owned entity · source ${entity.source_id} · ${entity.records} row${
         entity.records === 1 ? '' : 's'
       }`,
       href: `/soc?entity=${encodeURIComponent(entity.entity)}`,
@@ -126,7 +126,7 @@ export function buildDiscoveryItems({
         entity.entity,
         entity.source_id,
         entity.jurisdiction,
-        'state owned corporation soc entity statement',
+        'state owned corporation soc government owned corporation goc government trading enterprise gte entity statement',
       ].join(' '),
     });
   }

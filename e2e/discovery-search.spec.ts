@@ -114,7 +114,7 @@ test('header search keeps discovery access and SOC links deep-link the entity pa
   await soc.click();
 
   await expect(page).toHaveURL(/\/soc\?entity=WaterNSW$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'NSW SOC entities' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'State-owned entities' })).toBeVisible();
 });
 
 test('discovery search is GET-only and does not write', async ({ page }) => {

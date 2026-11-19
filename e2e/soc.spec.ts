@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 test('WaterNSW note breakdown is grouped, expandable and never totalled', async ({ page }) => {
   await page.goto('/soc');
 
-  await expect(page.getByRole('heading', { level: 1, name: 'NSW SOC entities' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'State-owned entities' })).toBeVisible();
   await expect(page.getByTestId('soc-caveat')).toContainText(
     'never add this to government program spending',
   );

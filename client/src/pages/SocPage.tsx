@@ -38,10 +38,11 @@ import {
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 
 /**
- * Entity-level SOC view (NSW SOCs and the QLD Energy Queensland/CS Energy/Stanwell/Powerlink/Sunwater/Gladstone Ports/Port of Townsville/Ports North/NQBP pilots and the first WA GTE pilots, Water Corporation, Synergy, Western Power and Horizon Power). These
- * are state-owned corporations' own published financial-statement lines, not
+ * Entity-level state-owned entity view: NSW State Owned Corporations, QLD
+ * Government Owned Corporations and WA Government Trading Enterprises. These
+ * are state-owned entities' own published financial-statement lines, not
  * project spending and not the PNFC sector benchmark. Every entity is separate
- * and NSW and QLD entities are different legal populations; they are never
+ * and NSW, QLD and WA entities are different legal populations; they are never
  * combined. The page deliberately computes no total: statement lines overlap
  * each other and government program spending.
  */
@@ -101,31 +102,28 @@ export function SocPage() {
   return (
     <Box>
       <Typography variant="h1" gutterBottom>
-        SOC entities
+        State-owned entities
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        Entity-level financial-statement lines for Australian state-owned corporations. The layer
-        currently covers New South Wales SOCs and the Queensland pilot entities Energy Queensland,
-        CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North and NQBP (all QLD Government Owned Corporations), plus Water Corporation, Synergy, Western Power and Horizon Power (WA Government Trading Enterprises). This
-        is a <strong>separate layer</strong> from Australian government program spending and from
-        the ABS GFS Public Non-Financial Corporations (PNFC) sector benchmark. Sydney Water,
-        WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port
-        Authority of NSW, TAHE, Sydney Trains, NSW TrainLink and Energy Queensland, CS Energy,
-        Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP, Water Corporation, Synergy, Western Power and Horizon Power are <strong>separate entities</strong>: their rows are
-        never added together, and NSW and QLD entities are never combined; Energy Queensland, CS
-        Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North and NQBP are separate QLD GOCs, Water Corporation, Synergy, Western Power and Horizon Power are separate WA GTEs, and they are never added
-        together. Coverage is entity-level only: no project, LGA, SA2 or coordinate is present.
-        WaterNSW is shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8 and
-        cash-flow capital expenditure), grouped and expandable; each component reconciles to its
-        printed note subtotal and is never added to the entity total.
+        Entity-level financial-statement lines for Australian state-owned entities. The layer covers
+        three separate legal populations: New South Wales State Owned Corporations (SOCs),
+        Queensland Government Owned Corporations (GOCs) and Western Australian Government Trading
+        Enterprises (GTEs). These are <strong>separate entity-level populations</strong>: every
+        entity is separate, their rows are never added together, and NSW, QLD and WA entities are
+        never combined. This is a <strong>separate layer</strong> from Australian government program
+        spending and from the ABS GFS Public Non-Financial Corporations (PNFC) sector benchmark.
+        Coverage is entity-level only: no project, LGA, SA2 or coordinate is present. WaterNSW is
+        shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital
+        expenditure), grouped and expandable; each component reconciles to its printed note subtotal
+        and is never added to the entity total.
       </Typography>
 
       <Alert severity="warning" data-testid="soc-caveat" sx={{ mb: 3 }}>
         <AlertTitle>
-          SOC entity statement — never add this to government program spending
+          State-owned entity statement — never add this to government program spending
         </AlertTitle>
         {source?.caveat ??
-          'SOC statement lines overlap each other and government program spending. Never add an SOC row to government data, to the PNFC benchmark, to another SOC entity, or to another SOC line.'}{' '}
+          'State-owned entity statement lines overlap each other and government program spending. Never add a state-owned entity row to government data, to the PNFC benchmark, to another state-owned entity, or to another state-owned entity line.'}{' '}
         This page shows published rows only; it does not calculate a combined total. Rows flagged
         &quot;potential double count&quot; name a government agency or government contribution.
       </Alert>
@@ -135,7 +133,7 @@ export function SocPage() {
           <CardContent>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <Typography variant="h6" component="h2">
-                {entity ? `${entity} — ` : 'SOC entities — '}
+                {entity ? `${entity} — ` : 'State-owned entities — '}
                 {source.name}
               </Typography>
               <Chip
@@ -143,7 +141,7 @@ export function SocPage() {
                 variant="outlined"
                 label={`jurisdiction: ${source.jurisdiction}`}
               />
-              <Chip size="small" variant="outlined" label="level: SOC entity" />
+              <Chip size="small" variant="outlined" label="level: state-owned entity" />
               <Chip
                 size="small"
                 variant="outlined"
@@ -175,14 +173,14 @@ export function SocPage() {
       <Stack direction="row" spacing={2} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
         {entities.length > 1 ? (
           <FormControl size="small" sx={{ minWidth: 220 }}>
-            <InputLabel id="soc-entity-label">SOC entity</InputLabel>
+            <InputLabel id="soc-entity-label">State-owned entity</InputLabel>
             <Select
               labelId="soc-entity-label"
-              label="SOC entity"
+              label="State-owned entity"
               value={entity}
               onChange={(event) => setEntity(event.target.value)}
             >
-              <MenuItem value="">All SOC entities</MenuItem>
+              <MenuItem value="">All state-owned entities</MenuItem>
               {entities.map((entry) => (
                 <MenuItem key={entry} value={entry}>
                   {entry}
@@ -210,25 +208,25 @@ export function SocPage() {
         ) : null}
       </Stack>
 
-      {state.loading ? <LoadingState label="Loading SOC statement lines…" /> : null}
+      {state.loading ? <LoadingState label="Loading state-owned entity statement lines…" /> : null}
       {state.error ? (
         <ApiErrorState
           error={state.error}
-          hint="The SOC endpoint needs an API process connected to the database."
+          hint="The state-owned entity endpoint needs an API process connected to the database."
         />
       ) : null}
 
       {!state.loading && !state.error ? (
         rows.length === 0 ? (
           <EmptyState
-            title="No SOC rows"
+            title="No state-owned entity rows"
             message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, and the QLD Energy Queensland, CS Energy, Stanwell, Powerlink, Sunwater, Gladstone Ports, Port of Townsville, Ports North, NQBP, Water Corporation, Synergy, Western Power and Horizon Power pilots)."
           />
         ) : (
           <Card variant="outlined" sx={{ mb: 3 }}>
             <CardContent>
               <Typography variant="h6" component="h2" gutterBottom>
-                {entity ? `${entity} statement lines` : 'SOC statement lines'} —{' '}
+                {entity ? `${entity} statement lines` : 'State-owned entity statement lines'} —{' '}
                 {rows[0]?.fiscal_year}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -249,8 +247,7 @@ export function SocPage() {
               >
                 Rows stay in published statement order and are not sortable: each group mixes
                 statement lines with note components of printed subtotals, so a generic
-                fiscal-year/amount sort would be misleading. No total is calculated from this
-                order.
+                fiscal-year/amount sort would be misleading. No total is calculated from this order.
               </Typography>
               <Box data-testid="soc-series">
                 {groups.map(([groupName, groupRows], groupIndex) => {
@@ -303,7 +300,7 @@ export function SocPage() {
                         <TableContainer>
                           <Table
                             size="small"
-                            aria-label={`SOC entity statement lines — ${groupName}`}
+                            aria-label={`State-owned entity statement lines — ${groupName}`}
                           >
                             <TableHead>
                               <TableRow>
@@ -399,7 +396,7 @@ export function SocPage() {
                   verified: entry.verified,
                   notes: entry.soc_line_label ?? undefined,
                 }))}
-                note="SOC statement lines are provisional and unverified, and each entity is separate. No total is computed: total revenue includes the separately shown grants and total expenses includes employee, depreciation/amortisation and transfer lines."
+                note="State-owned entity statement lines are provisional and unverified, and each entity is separate. No total is computed: total revenue includes the separately shown grants and total expenses includes employee, depreciation/amortisation and transfer lines."
               />
             </CardContent>
           </Card>
