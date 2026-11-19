@@ -88,6 +88,7 @@ const KNOWN_SOURCE_IDS = [
   'clarence-valley-gpfs',
   'richmond-valley-gpfs',
   'kempsey-gpfs',
+  'wingecarribee-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
