@@ -1,0 +1,17 @@
+import {
+  NARROMINE_GPFS_ID,
+  NARROMINE_GPFS_NAME,
+  NARROMINE_GPFS_PUBLISHER,
+  NARROMINE_GPFS_FISCAL_YEAR,
+  NARROMINE_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: NARROMINE_GPFS_ID,
+  name: NARROMINE_GPFS_NAME,
+  publisher: NARROMINE_GPFS_PUBLISHER,
+  fiscalYear: NARROMINE_GPFS_FISCAL_YEAR,
+  dataQualityFlag: NARROMINE_GPFS_DATA_QUALITY_FLAG,
+} as const;
