@@ -72,6 +72,18 @@ import {
   POWERLINK_UNIT,
   POWERLINK_UNIT_LABEL,
   POWERLINK_UNIT_TO_CENTS,
+  SUNWATER_CAVEAT,
+  SUNWATER_ENTITY,
+  SUNWATER_ID,
+  SUNWATER_JURISDICTION,
+  SUNWATER_LEGAL_CLASS,
+  SUNWATER_LICENSE,
+  SUNWATER_NAME,
+  SUNWATER_PUBLISHER,
+  SUNWATER_SOURCE_URL,
+  SUNWATER_UNIT,
+  SUNWATER_UNIT_LABEL,
+  SUNWATER_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -210,7 +222,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell and Powerlink Queensland). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland and Sunwater Limited). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -229,6 +241,7 @@ export const SOC_SOURCE_IDS = [
   CS_ENERGY_ID,
   STANWELL_ID,
   POWERLINK_ID,
+  SUNWATER_ID,
 ] as const;
 
 /**
@@ -747,6 +760,40 @@ async function writePowerlinkManifest(): Promise<void> {
   );
 }
 
+async function writeSunwaterManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: SUNWATER_ID });
+  const manifestPath = path.resolve(
+    process.env.SUNWATER_MANIFEST ?? 'docs/source-archive/qld-sunwater-annual-report.json',
+  );
+  const manifest = {
+    entity: SUNWATER_ENTITY,
+    legal_class: SUNWATER_LEGAL_CLASS,
+    jurisdiction: SUNWATER_JURISDICTION,
+    dataset: SUNWATER_NAME,
+    publisher: SUNWATER_PUBLISHER,
+    discovery_page: SUNWATER_SOURCE_URL,
+    license: SUNWATER_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${SUNWATER_UNIT_LABEL} (${SUNWATER_UNIT}; x${SUNWATER_UNIT_TO_CENTS} cents per unit)`,
+    caveat: SUNWATER_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: Sunwater Limited only, a Queensland Government Owned Corporation. Latest annual report discovered from Sunwater's official publications page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The consolidated statement prints an explicit $'000 unit; it prints Total revenue and other income but no Total expenses subtotal, so total expenses is the exact sum of Operating expenditure + Employee benefits + Depreciation and amortisation + Impairment of assets + Loss on disposal of assets. It is accepted only when it bridges to the printed Operating profit, Profit before income tax and Profit for the year with zero tolerance; Employee benefits also reconciles exactly to Note 3B. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Sunwater rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -798,6 +845,7 @@ async function main(): Promise<void> {
     await writeCsEnergyManifest();
     await writeStanwellManifest();
     await writePowerlinkManifest();
+    await writeSunwaterManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1122,6 +1170,31 @@ async function main(): Promise<void> {
     );
     for (const group of powerlinkByLine) {
       console.log(`[ingest:soc] ${POWERLINK_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const sunwaterRows = await MeasureModel.countDocuments({ source_id: SUNWATER_ID });
+    const sunwaterVerified = await MeasureModel.countDocuments({
+      source_id: SUNWATER_ID,
+      verified: true,
+    });
+    const sunwaterDoubleCount = await MeasureModel.countDocuments({
+      source_id: SUNWATER_ID,
+      potential_double_count: true,
+    });
+    const sunwaterByLine = await MeasureModel.aggregate([
+      { $match: { source_id: SUNWATER_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const sunwaterDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: SUNWATER_ID,
+      status: 'deferred',
+    });
+    const sunwaterArchived = await listArchivedRecords({ source_id: SUNWATER_ID });
+    console.log(
+      `[ingest:soc] ${SUNWATER_ID} rows=${sunwaterRows} source_documents=${sunwaterArchived.length} verified=${sunwaterVerified} potential_double_count=${sunwaterDoubleCount} deferred_documents=${sunwaterDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of sunwaterByLine) {
+      console.log(`[ingest:soc] ${SUNWATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,

@@ -1,7 +1,7 @@
 # Multi-state SOC inventory — VIC, QLD, WA, SA, TAS, ACT and NT
 
-**Status: inventory plus four implemented QLD pilots (Energy Queensland, CS Energy, Stanwell and
-Powerlink Queensland). No other state connector,
+**Status: inventory plus five implemented QLD pilots (Energy Queensland, CS Energy, Stanwell,
+Powerlink Queensland and Sunwater Limited). No other state connector,
 no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
 were read-only page/API probes made on **2026-11-17**. The QLD pilots added on **2026-11-19** are
 entity-level adapters in the existing SOC framework; they do not create a QLD total and are never
@@ -76,7 +76,7 @@ Counts below are the counts of the _named lists at the cited source_, not an est
 
 | State   | Legal/reporting class                                                                                   | Official list found                                                                                                                      | Entities named at source                                                                                 | Latest annual reports                                                                                                                      | Entity-level extraction                                                          | Proposed rank |
 | ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ------------- |
-| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy, Stanwell and Powerlink Queensland 2025-26 verified (pilots)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
+| **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                         | **Energy Queensland, CS Energy, Stanwell, Powerlink Queensland and Sunwater Limited 2025-26 verified (pilots)**; other GOC reports not individually verified | **High** — one current list, large entities, audited annual reports              | **1**         |
 | **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                       | GTE reports; Synergy annual-reports page verified                                                                                          | **High for the 12**; medium for tranche 2                                        | **2**         |
 | **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                          | Entity reports published; URLs not individually verified                                                                                   | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
 | **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                | Treasury links to reports; page last published 2018                                                                                        | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
@@ -165,7 +165,7 @@ data.qld budget datasets applies to GOC annual reports.
 2. CS Energy Limited — generation; standard statements (implemented).
 3. Stanwell Corporation Limited — generation; standard statements (implemented 2026-11-19).
 4. Powerlink Queensland — transmission; standard statements (implemented 2026-11-19).
-5. Sunwater Limited — water; standard statements.
+5. Sunwater Limited — water; standard statements (implemented 2026-11-19).
 6. Gladstone Ports Corporation Limited — large port; standard statements.
 7. Port of Townsville Limited; North Queensland Bulk Ports; Ports North — port group.
 8. CleanCo Queensland — smaller generation; later.
@@ -783,6 +783,44 @@ another and no QLD total is created.
   total, or another SOC line. Consolidated parent only; subsidiaries are not added separately. Rows
   are provisional and unverified.
 
+## QLD pilot — Sunwater Limited (implemented 2026-11-19)
+
+The fifth QLD pilot is **Sunwater Limited only** — a Queensland Government Owned Corporation (GOC),
+not a statutory body. It is separate from Energy Queensland, CS Energy, Stanwell and Powerlink
+Queensland; none is added to another and no QLD total is created.
+
+- **Source id / entity:** `qld-sunwater` / Sunwater Limited.
+- **Report:** Sunwater Annual Report 2025-26, for the year ended 30 June 2026 (FY2025-26).
+- **Discovery page:** the official publications page <https://www.sunwater.com.au/about/publications>
+  lists the annual-report PDFs. Discovery reads the newest annual-report link; no PDF URL is
+  hard-coded. The exact PDF is
+  <https://www.sunwater.com.au/wp-content/uploads/Home/About/Publications/Sunwater_2025-26_Annual_Report.pdf>
+  (HTTP 200, `application/pdf`, 3,667,807 bytes, 141 PDF pages).
+- **Archive:** exact PDF archived outside the repo at `~/ausspend-source-archive/qld-sunwater/`
+  with `SHA256SUMS` and `retrieval.json`; SHA-256
+  `09ab5654a76e33437b63011a5e3b53762f96d6936696f0946fb3eb46da67145e`.
+- **Unit:** `$’000` — the face statement (PDF page 53, printed page 50) and Note 3B (PDF page 63,
+  printed page 60) both print `$’000` for the 2026 and 2025 columns.
+- **Rows:** five entity-level SOC statement lines:
+  total revenue **417,834** (printed Total revenue and other income = Revenue from contracts with
+  customers 397,160 + Other income 20,674); total expenses **466,953** (derived: Operating
+  expenditure 152,458 + Employee benefits 94,136 + Depreciation and amortisation 48,176 + Impairment
+  of assets 172,098 + Loss on disposal of assets 85); employee benefits **94,136** (face line,
+  reconciled to Note 3B Total employee benefits); depreciation and amortisation **48,176** (face
+  line, Notes 10–12); net result **a loss of 67,916** (`$’000`).
+- **Reconciliation (zero tolerance):** 417,834 − 466,953 = **(49,119)**, the printed Operating
+  profit; (49,119) + (18,797) = **(67,916)**, the printed Profit before income tax; (67,916) + 0 =
+  **(67,916)**, the printed Profit for the year. Note 3B's printed Total employee benefits 94,136
+  equals the face Employee benefits line. The statement prints no Total expenses subtotal, so both
+  expense and result bridges are required before any row is emitted.
+- **Implementation:** `server/src/connectors/soc/qld/sunwater.ts`, registered in the SOC source
+  list, `/api/soc`, the SOC page and the ingestion runner. Tests:
+  `server/test/qld-sunwater.test.ts`.
+- **Caveat:** entity-level only. Never add Sunwater Limited to government program spending, the
+  PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, another QLD GOC, a
+  QLD total, a national total, or another SOC line. Consolidated parent only; subsidiaries are not
+  added separately. Rows are provisional and unverified.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -955,9 +993,9 @@ that the page will be stable.
 
 ## Recommended next action
 
-The QLD Energy Queensland, CS Energy, Stanwell and Powerlink Queensland pilots described above are
-implemented and verified against their 2025-26 audited annual reports. They remain single-entity,
+The QLD Energy Queensland, CS Energy, Stanwell, Powerlink Queensland and Sunwater Limited pilots
+described above are implemented and verified against their 2025-26 audited annual reports. They remain single-entity,
 read-only proofs: do not add another QLD GOC, a QLD total or another state until the owner confirms
 the legal class, the entity list and the intended use. Any next entity needs its own unit read and
 reconciliation; its rows must never be summed with Energy Queensland, CS Energy, Stanwell, Powerlink
-Queensland or government spending.
+Queensland, Sunwater Limited or government spending.

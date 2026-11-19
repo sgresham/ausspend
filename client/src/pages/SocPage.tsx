@@ -38,7 +38,7 @@ import {
 import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusViews';
 
 /**
- * Entity-level SOC view (NSW SOCs and the QLD Energy Queensland/CS Energy/Stanwell/Powerlink pilots). These
+ * Entity-level SOC view (NSW SOCs and the QLD Energy Queensland/CS Energy/Stanwell/Powerlink/Sunwater pilots). These
  * are state-owned corporations' own published financial-statement lines, not
  * project spending and not the PNFC sector benchmark. Every entity is separate
  * and NSW and QLD entities are different legal populations; they are never
@@ -106,14 +106,14 @@ export function SocPage() {
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         Entity-level financial-statement lines for Australian state-owned corporations. The layer
         currently covers New South Wales SOCs and the Queensland pilot entities Energy Queensland,
-        CS Energy, Stanwell and Powerlink Queensland (all QLD Government Owned Corporations). This
+        CS Energy, Stanwell, Powerlink Queensland and Sunwater Limited (all QLD Government Owned Corporations). This
         is a <strong>separate layer</strong> from Australian government program spending and from
         the ABS GFS Public Non-Financial Corporations (PNFC) sector benchmark. Sydney Water,
         WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port
         Authority of NSW, TAHE, Sydney Trains, NSW TrainLink and Energy Queensland, CS Energy,
-        Stanwell and Powerlink Queensland are <strong>separate entities</strong>: their rows are
+        Stanwell, Powerlink Queensland and Sunwater Limited are <strong>separate entities</strong>: their rows are
         never added together, and NSW and QLD entities are never combined; Energy Queensland, CS
-        Energy, Stanwell and Powerlink Queensland are separate QLD GOCs and are never added
+        Energy, Stanwell, Powerlink Queensland and Sunwater Limited are separate QLD GOCs and are never added
         together. Coverage is entity-level only: no project, LGA, SA2 or coordinate is present.
         WaterNSW is shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8 and
         cash-flow capital expenditure), grouped and expandable; each component reconciles to its
@@ -222,7 +222,7 @@ export function SocPage() {
         rows.length === 0 ? (
           <EmptyState
             title="No SOC rows"
-            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, and the QLD Energy Queensland, CS Energy, Stanwell and Powerlink pilots)."
+            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, and the QLD Energy Queensland, CS Energy, Stanwell, Powerlink and Sunwater pilots)."
           />
         ) : (
           <Card variant="outlined" sx={{ mb: 3 }}>
