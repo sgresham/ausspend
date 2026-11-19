@@ -60,6 +60,18 @@ import {
   STANWELL_UNIT,
   STANWELL_UNIT_LABEL,
   STANWELL_UNIT_TO_CENTS,
+  POWERLINK_CAVEAT,
+  POWERLINK_ENTITY,
+  POWERLINK_ID,
+  POWERLINK_JURISDICTION,
+  POWERLINK_LEGAL_CLASS,
+  POWERLINK_LICENSE,
+  POWERLINK_NAME,
+  POWERLINK_PUBLISHER,
+  POWERLINK_SOURCE_URL,
+  POWERLINK_UNIT,
+  POWERLINK_UNIT_LABEL,
+  POWERLINK_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -197,9 +209,9 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Order matters: the PNFC sector benchmark runs first, then the NSW SOC
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
- * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy and
- * Stanwell). No other SOC adapter is implemented, and the entity adapters are
- * never summed together.
+ * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
+ * Stanwell and Powerlink Queensland). No other SOC adapter is implemented, and
+ * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
   ABS_GFS_PNFC_ID,
@@ -216,6 +228,7 @@ export const SOC_SOURCE_IDS = [
   ENERGY_QUEENSLAND_ID,
   CS_ENERGY_ID,
   STANWELL_ID,
+  POWERLINK_ID,
 ] as const;
 
 /**
@@ -700,6 +713,40 @@ async function writeStanwellManifest(): Promise<void> {
   );
 }
 
+async function writePowerlinkManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: POWERLINK_ID });
+  const manifestPath = path.resolve(
+    process.env.POWERLINK_MANIFEST ?? 'docs/source-archive/qld-powerlink-annual-report.json',
+  );
+  const manifest = {
+    entity: POWERLINK_ENTITY,
+    legal_class: POWERLINK_LEGAL_CLASS,
+    jurisdiction: POWERLINK_JURISDICTION,
+    dataset: POWERLINK_NAME,
+    publisher: POWERLINK_PUBLISHER,
+    discovery_page: POWERLINK_SOURCE_URL,
+    license: POWERLINK_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${POWERLINK_UNIT_LABEL} (${POWERLINK_UNIT}; x${POWERLINK_UNIT_TO_CENTS} cents per unit)`,
+    caveat: POWERLINK_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: Powerlink Queensland only (Queensland Electricity Transmission Corporation Limited, a Queensland Government Owned Corporation). Latest annual report discovered from Powerlink's official reports page (no hard-coded PDF URL; the reports page lists annual-report landing pages and the newest page carries the PDF) and archived with SHA-256 outside the repo. The consolidated statement prints an explicit $'000 unit; it has no printed Total revenue or Total expenses subtotal, so total revenue is the exact sum of Revenue + Other gains/(losses) + Finance income and total expenses is the exact sum of Expenses from continuing operations + Impairment losses + Finance costs. Both are accepted only when they bridge to the printed PROFIT/(LOSS) BEFORE INCOME TAX EQUIVALENT and PROFIT/(LOSS) FOR THE YEAR with zero tolerance; Note 3's five components separately reconcile to the face statement. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Powerlink rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -750,6 +797,7 @@ async function main(): Promise<void> {
     await writeEnergyQueenslandManifest();
     await writeCsEnergyManifest();
     await writeStanwellManifest();
+    await writePowerlinkManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1049,6 +1097,31 @@ async function main(): Promise<void> {
     );
     for (const group of stanByLine) {
       console.log(`[ingest:soc] ${STANWELL_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const powerlinkRows = await MeasureModel.countDocuments({ source_id: POWERLINK_ID });
+    const powerlinkVerified = await MeasureModel.countDocuments({
+      source_id: POWERLINK_ID,
+      verified: true,
+    });
+    const powerlinkDoubleCount = await MeasureModel.countDocuments({
+      source_id: POWERLINK_ID,
+      potential_double_count: true,
+    });
+    const powerlinkByLine = await MeasureModel.aggregate([
+      { $match: { source_id: POWERLINK_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const powerlinkDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: POWERLINK_ID,
+      status: 'deferred',
+    });
+    const powerlinkArchived = await listArchivedRecords({ source_id: POWERLINK_ID });
+    console.log(
+      `[ingest:soc] ${POWERLINK_ID} rows=${powerlinkRows} source_documents=${powerlinkArchived.length} verified=${powerlinkVerified} potential_double_count=${powerlinkDoubleCount} deferred_documents=${powerlinkDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of powerlinkByLine) {
+      console.log(`[ingest:soc] ${POWERLINK_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
