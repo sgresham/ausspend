@@ -61,9 +61,10 @@ import * as fixture58 from '../src/connectors/warren-gpfs/fixture.js';
 import * as fixture59 from '../src/connectors/waverley-gpfs/fixture.js';
 import * as fixture60 from '../src/connectors/weddin-gpfs/fixture.js';
 import * as fixture61 from '../src/connectors/willoughby-gpfs/fixture.js';
-import * as fixture62 from '../src/connectors/wollondilly-gpfs/fixture.js';
-import * as fixture63 from '../src/connectors/wollongong-gpfs/fixture.js';
-import * as fixture64 from '../src/connectors/woollahra-gpfs/fixture.js';
+import * as fixture62 from '../src/connectors/wingecarribee-gpfs/fixture.js';
+import * as fixture63 from '../src/connectors/wollondilly-gpfs/fixture.js';
+import * as fixture64 from '../src/connectors/wollongong-gpfs/fixture.js';
+import * as fixture65 from '../src/connectors/woollahra-gpfs/fixture.js';
 
 export const GPFS_FIXTURES = [
   { id: 'armidale-gpfs', fixture: fixture0 },
@@ -128,7 +129,8 @@ export const GPFS_FIXTURES = [
   { id: 'waverley-gpfs', fixture: fixture59 },
   { id: 'weddin-gpfs', fixture: fixture60 },
   { id: 'willoughby-gpfs', fixture: fixture61 },
-  { id: 'wollondilly-gpfs', fixture: fixture62 },
-  { id: 'wollongong-gpfs', fixture: fixture63 },
-  { id: 'woollahra-gpfs', fixture: fixture64 },
+  { id: 'wingecarribee-gpfs', fixture: fixture62 },
+  { id: 'wollondilly-gpfs', fixture: fixture63 },
+  { id: 'wollongong-gpfs', fixture: fixture64 },
+  { id: 'woollahra-gpfs', fixture: fixture65 },
 ] as const;
