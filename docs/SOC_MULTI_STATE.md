@@ -3,7 +3,7 @@
 **Status: inventory plus nine QLD pilots (Energy Queensland, CS Energy, Stanwell,
 Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North, NQBP and
 CleanCo Queensland Limited — CleanCo deferred 2026-11-19: FY2025-26 is Flipsnack-only with no
-parseable official PDF, so no rows) the first nine WA GTE pilots (Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Ports) plus Kimberley Ports Authority (deferred 2026-11-19: no printed total employee benefits expense; no rows) and Pilbara Ports Authority (deferred 2026-11-19: official annual-report and publications pages are Incapsula JavaScript shells; no rows), and the first two NT GOC pilots (Jacana Energy and Territory Generation, both implemented 2026-11-19: five entity-level rows each; the NT GOC list is not claimed to be complete and no NT total is created). No other state connector,
+parseable official PDF, so no rows) the first nine WA GTE pilots (Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Ports) plus Kimberley Ports Authority (deferred 2026-11-19: no printed total employee benefits expense; no rows) and Pilbara Ports Authority (deferred 2026-11-19: official annual-report and publications pages are Incapsula JavaScript shells; no rows), and the first two NT GOC pilots (Jacana Energy and Territory Generation, both implemented 2026-11-19: five entity-level rows each; the NT GOC list is not claimed to be complete and no NT total is created), and the first Victorian water-corporation pilot (Melbourne Water, implemented 2026-11-19: five entity-level rows; a statutory water corporation under the Water Act 1989 (Vic), not a GBE; no VIC total or water-corporation set total is created). No other state connector,
 no cross-entity/state total, and no ingestion into government spending.** The inventory checks below
 were read-only page/API probes made on **2026-11-17**. The QLD pilots added on **2026-11-19** are
 entity-level adapters in the existing SOC framework; they do not create a QLD total and are never
@@ -11,8 +11,10 @@ added to government spending, the PNFC benchmark or each other. The inventory it
 read-only; the separate NT Jacana Energy targeted ingest on 2026-11-19 added 5 entity-level rows
 (measures **998,429 → 998,434**; SOC rows **190 → 195**) and the separate NT Territory Generation
 targeted ingest on 2026-11-19 added a further 5 entity-level rows (measures **998,434 → 998,439**;
-SOC rows **195 → 200**); neither run created an NT/state/national aggregate row. No 3001/5173 or
-production nginx change was made.
+SOC rows **195 → 200**); neither run created an NT/state/national aggregate row. The separate
+Melbourne Water targeted ingest on the same day added 5 further entity-level rows (measures
+**998,439 → 998,444**; SOC rows **200 → 205**) and created no VIC/water-sector/state/national
+aggregate row. No 3001/5173 or production nginx change was made.
 
 This document inventories the _entity-level_ state-owned commercial sector in the seven
 jurisdictions the owner asked about. It deliberately does **not** call every regime "NSW SOC".
@@ -82,7 +84,7 @@ Counts below are the counts of the _named lists at the cited source_, not an est
 | ------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------- |
 | **QLD** | Government Owned Corporations (GOCs) + 2 commercial statutory bodies                                    | QLD Treasury GOC page, current                                                                                                           | **11 GOCs + 2 statutory bodies**                                                                                                           | **Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports Corporation Limited, Ports North and NQBP 2025-26 verified (pilots; NQBP via the official Parliament tabled copy); Port of Townsville FY2025-26 deferred (printed $1 rounding gap, no rows); CleanCo Queensland FY2025-26 deferred 2026-11-19 (official report Flipsnack-only, no parseable direct PDF; no rows)**; other GOC reports not individually verified                                                                      | **High** — one current list, large entities, audited annual reports              | **1**         |
 | **WA**  | Government Trading Enterprises (GTEs)                                                                   | WA Treasury GTE governance page, current                                                                                                 | **12 in-scope GTEs + 4 second-tranche entities; Treasury says 27 "possible GTEs"**                                                         | GTE reports; Synergy annual-reports page verified; Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Ports 2025-26 verified (pilots); Kimberley Ports Authority 2025-26 deferred 2026-11-19 (no printed total employee benefits expense; no rows); Pilbara Ports Authority 2025-26 deferred 2026-11-19 (official pages are Incapsula JavaScript shells; no rows); Aqwest official annual report not resolvable 2026-11-19 (JS-only page), no rows | **High for the 12**; medium for tranche 2                                        | **2**         |
-| **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list                                                            | Entity reports published; URLs not individually verified                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | **Medium** — large water entities are feasible; GBE list must be confirmed       | **3**         |
+| **VIC** | State business corporations / State bodies + statutory water corporations + other statutory authorities | DataVic controlled-entities _changes_ list (CC BY 4.0); non-exhaustive statutory-corporations dataset; official water-corporation finder | **16 water corporations named on the finder page**; no single complete GBE list | **Melbourne Water FY2025-26 implemented 2026-11-19** (official accessible PDF, 26,868,975 bytes, explicit `($ thousands)`; five printed entity-level rows); other VIC entities not individually verified, and no complete VIC water-corporation set is claimed | **Medium** — Melbourne Water implemented (every printed subtotal and result bridge reconciles); no VIC total or water-corporation set total; other VIC entities not verified | **3**         |
 | **TAS** | Government Business Enterprises (GBEs) + State-owned Companies                                          | Tas Treasury "Tasmanian Government Businesses" page                                                                                      | **6 GBEs + 8 State-owned Companies (14)**                                                                                                  | Treasury links to reports; page last published 2018                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **Medium** — clear list but stale; several non-comparable entities               | **4**         |
 | **ACT** | Territory-owned Corporations (legal) / PTE/PNFC (budget classification)                                 | ACT Budget 2026-27 "Classification of ACT Entities"                                                                                      | **6 PTE/PNFC entities**; legal TOC list not separately consolidated                                                                        | Entity reports published; URLs not individually verified                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | **Medium-low** — only Icon Water is a classic commercial utility; class mismatch | **5**         |
 | **SA**  | Public corporations + statutory corporations                                                            | _Public Corporations Act 1993_ (SA); no single consolidated public list found                                                            | **No reliable count**; 3 examples verified from enabling Acts                                                                              | Entity reports published; no consolidated list                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | **Low-medium** — entity-by-entity; list must be confirmed first                  | **6**         |
@@ -298,17 +300,22 @@ checked. The best official sources are:
 
 **Latest annual report availability.** Water corporations and GBEs/state-owned companies are
 expected to publish annual reports; DTF also publishes the whole-of-state Financial Report and state
-financial data sets. The 2025-26 cycle is current in November 2026, but this inventory did not open
-each entity's report or verify each URL. Extraction must verify the entity's current annual-report
-page and record the financial year.
+financial data sets. The 2025-26 cycle is current in November 2026. **Melbourne Water's FY2025-26
+annual report was verified and implemented on 2026-11-19** (official accessible PDF, 26,868,975
+bytes). The other entities' current reports were not individually opened or verified in this
+inventory pass; extraction must verify each entity's current annual-report page and record the
+financial year.
 
 **Financial statement/unit.** Audited general-purpose financial statements. The unit varies; read it
 from the report. Do not assume that because NSW water SOCs use `$'000`, Victorian water corporations
-do too.
+do too. Melbourne Water's FY2025-26 statement prints `($ thousands)`.
 
 **Entity-level extraction feasibility.** **Medium.** The 16 named water corporations are a coherent,
-large group and the most feasible Victorian starting point. The GBE side is less feasible because
-there is no single complete list; the controlled-entities document is a changes list and the
+large group and the most feasible Victorian starting point; **Melbourne Water is the first
+implemented VIC entity** (five printed entity-level statement lines, explicit `($ thousands)`, every
+printed subtotal and result bridge reconciled at zero tolerance), and it is one entity only — no VIC
+total or water-corporation set total is created. The GBE side is less feasible because there is no
+single complete list; the controlled-entities document is a changes list and the
 statutory-corporations dataset is non-exhaustive. Do not start GBE extraction until a human confirms
 the list from the whole-of-state Financial Report note or a DTF register.
 
@@ -332,7 +339,8 @@ research material, not an open-data grant.
 
 **Priority entities (proposed).**
 
-1. Melbourne Water — largest metropolitan water utility; standard statements.
+1. Melbourne Water — largest metropolitan water utility; standard statements; **implemented
+   2026-11-19** (FY2025-26, five entity-level rows).
 2. Yarra Valley Water — large metropolitan retailer.
 3. South East Water — large metropolitan retailer.
 4. Greater Western Water — large metropolitan retailer.
@@ -1591,6 +1599,67 @@ national total is created, and the two implemented NT entities are never added t
   SOC/GTE, an NT total, a state total, a national total, or another SOC line. The NT GOC list is not
   claimed complete; the source is one entity, not the Territory.
 
+## VIC pilot — Melbourne Water (implemented 2026-11-19)
+
+This is the **first Victorian water-corporation source** and the first VIC entity in the SOC layer.
+It is **Melbourne Water only** — Melbourne Water Corporation, a **statutory water corporation**
+established under the **Water Act 1989 (Vic)**. It is **not** a Government Business Enterprise or
+State business corporation under the State Owned Enterprises Act 1992 (Vic). The Victorian
+water-corporation list is **not** consolidated here: this adapter ingests one self-identifying,
+report-verifiable entity and does not claim or invent a VIC water-corporation set. It is separate
+from every other VIC entity and from every NSW/QLD/WA/NT SOC/GTE. No VIC total, water-sector total,
+state total or national total is created, and Melbourne Water is never added to another entity.
+
+- **Source id / entity:** `vic-melbourne-water` / Melbourne Water.
+- **Report:** Melbourne Water Annual Report 2025-26 (Accessible version), for the year ended 30 June
+  2026 (FY2025-26).
+- **Discovery page:** <https://www.melbournewater.com.au/about/publications/annual-report> (HTTP 200,
+  131,789 bytes on 2026-11-19). The page lists the current report and exposes official
+  `/media/<encoded>/downloads` links; the PDF URL is discovered from that page and is not
+  hard-coded. The discovered FY2025-26 accessible PDF is
+  <https://www.melbournewater.com.au/media/eyJtZWRpYSI6IjMxNTg2In0%3D/downloads> (HTTP 200,
+  `application/pdf`, **26,868,975 bytes**). Where a year has both a standard and an accessible PDF,
+  the accessible version is preferred.
+- **Archive:** `~/ausspend-source-archive/vic-melbourne-water/` (outside the repo; not committed).
+  It contains the exact PDF, `SHA256SUMS` and `retrieval.json` with the URL, discovery page,
+  retrieval date, bytes, PDF page count (220) and SHA-256. The connector re-verifies the hash before
+  parsing. **SHA-256:** `a272cff4933d81e4f73ee683d245e1e3389c4e295cdf4309aa206ecb977081e1`.
+- **Printed unit and statement:** the audited Statement of Profit or Loss and Other Comprehensive
+  Income prints an explicit **`($ thousands)`** unit. The face statement is PDF page 111 (printed
+  page 109); Note 3.2 Employee benefits is PDF page 122 (printed page 120); Note 4.1.3 Depreciation,
+  amortisation and impairment is PDF page 138 (printed page 136). The 2026 column prints Revenue
+  from contracts with customers **2,205,314**, Other revenue **17,816**, Total revenue
+  **2,223,130**, Depreciation and amortisation **538,676**, Operational expenses **343,146**,
+  Employee benefits **189,952**, Repairs and maintenance **119,023**, Administrative expenses
+  **74,214**, Finance expenses **605,577**, Government rates and taxes **86,526**, Asset transfers
+  to Councils **61,188**, Other expenses **12,340**, Net loss on revaluation of non-financial assets
+  **13,619**, Total expenses **2,044,261**, Net profit from operations before tax **178,869**, Tax
+  expense **83,393**, Net profit for the period after tax **95,476**, Other comprehensive income
+  **1,969,192** and Total comprehensive income **2,064,668**.
+- **Rows:** exactly five **printed** entity-level statement lines — `total_revenue`,
+  `total_expenses`, `employee_expenses`, `depreciation_amortisation`, `net_result` — with
+  jurisdiction `VIC`, jurisdiction_level `soc`, aggregation_role `agency_detail`, measure_type
+  `actual`, `verified:false`, `potential_double_count:false` and a deterministic natural key. All
+  five are printed face lines; no total is derived.
+- **Reconciliation (zero tolerance):** Revenue components (2,205,314 + 17,816 = 2,223,130); expense
+  components (538,676 + 343,146 + 189,952 + 119,023 + 74,214 + 605,577 + 86,526 + 61,188 + 12,340 +
+  13,619 = 2,044,261); result bridge 1 (2,223,130 − 2,044,261 = 178,869); result bridge 2
+  (178,869 − 83,393 = 95,476); Note 3.2 employee components (145,830 + 18,285 + 18,058 + 7,779 =
+  189,952 = face Employee benefits); Note 4.1.3 depreciation components (1,399 + 55 + 7,166 + 2,487 +
+  420,924 + 90,050 + 8,071 = 530,152) plus total amortisation 8,524 = 538,676 = face Depreciation
+  and amortisation; and comprehensive income (95,476 + 1,969,192 = 2,064,668). Any mismatch defers
+  the whole document with 0 rows.
+- **Implementation:** `server/src/connectors/soc/vic/melbourne-water.ts`, registered in
+  `server/src/connectors/registry.ts`, exported from `server/src/connectors/index.ts`, listed in
+  `/api/soc`, the SOC page and the ingestion runner (`scripts/ingest-soc.ts`). Tests:
+  `server/test/vic-melbourne-water.test.ts` (discovery/latest accessible selection, year
+  conversion, unit gate, ambiguous-unit gate, zero-tolerance note/subtotal/result-bridge failures,
+  natural-key/idempotency and no-cross-entity/VIC aggregate).
+- **Caveat:** entity-level only. Melbourne Water is a statutory water corporation under the Water
+  Act 1989 (Vic), not a GBE. Never add Melbourne Water to government program spending, the PNFC
+  benchmark, another water corporation or state-owned entity, a VIC total, a water-corporation set
+  total, a state total, a national total, or another SOC line.
+
 ## Non-comparable or not feasible entities
 
 These are the entities/classes that should **not** be put into a single comparable state-owned
@@ -1695,8 +1764,9 @@ These rules follow the existing NSW SOC discipline in `SOC_INGESTION.md` and
 The inventory itself adds zero rows. The separate NT Jacana Energy targeted ingest on 2026-11-19
 added 5 entity-level rows (measures **998,429 → 998,434**; SOC rows **190 → 195**) and the separate
 NT Territory Generation targeted ingest on the same day added a further 5 entity-level rows
-(measures **998,434 → 998,439**; SOC rows **195 → 200**). Neither run created an NT/state/national
-aggregate row.
+(measures **998,434 → 998,439**; SOC rows **195 → 200**). The separate Melbourne Water targeted
+ingest on the same day added a further 5 entity-level rows (measures **998,439 → 998,444**; SOC rows
+**200 → 205**). None of these runs created an NT/VIC/state/national aggregate row.
 
 ## Ambiguities and questions for the owner
 

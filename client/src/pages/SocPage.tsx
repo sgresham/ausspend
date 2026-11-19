@@ -39,15 +39,18 @@ import { ApiErrorState, EmptyState, LoadingState } from '../components/StatusVie
 
 /**
  * Entity-level state-owned entity view: NSW State Owned Corporations, QLD
- * Government Owned Corporations, WA Government Trading Enterprises and the
- * first two Northern Territory Government Owned Corporations (Jacana Energy and
- * Territory Generation only).
+ * Government Owned Corporations, WA Government Trading Enterprises, the first
+ * two Northern Territory Government Owned Corporations (Jacana Energy and
+ * Territory Generation only) and the first Victorian water-corporation source
+ * (Melbourne Water only).
  * These are state-owned entities' own published financial-statement lines, not
  * project spending and not the PNFC sector benchmark. Every entity is separate
- * and NSW, QLD, WA and NT entities are different legal populations; they are
- * never combined. The page deliberately computes no total: statement lines
+ * and NSW, QLD, WA, NT and VIC entities are different legal populations; they
+ * are never combined. The page deliberately computes no total: statement lines
  * overlap each other and government program spending. The NT GOC list is not
- * claimed to be complete and no NT total is created.
+ * claimed to be complete and no NT total is created. Melbourne Water is a
+ * statutory water corporation under the Water Act 1989 (Vic), not a GBE, and
+ * there is no VIC total or water-corporation set total.
  */
 export function SocPage() {
   const [year, setYear] = useState<string>('');
@@ -109,17 +112,19 @@ export function SocPage() {
       </Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
         Entity-level financial-statement lines for Australian state-owned entities. The layer covers
-        four separate legal populations: New South Wales State Owned Corporations (SOCs), Queensland
+        five separate legal populations: New South Wales State Owned Corporations (SOCs), Queensland
         Government Owned Corporations (GOCs), Western Australian Government Trading Enterprises
-        (GTEs) and the first two Northern Territory Government Owned Corporation sources (Jacana
-        Energy and Territory Generation only; the NT GOC list is not claimed to be complete and no
-        NT total is created). These are <strong>separate entity-level populations</strong>: every
-        entity is separate, their rows are never added together, and NSW, QLD, WA and NT entities
-        are never combined. This is a <strong>separate layer</strong> from Australian government
-        program spending and from the ABS GFS Public Non-Financial Corporations (PNFC) sector
-        benchmark. Coverage is entity-level only: no project, LGA, SA2 or coordinate is present.
-        WaterNSW is shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8 and
-        cash-flow capital expenditure), grouped and expandable; each component reconciles to its
+        (GTEs), the first two Northern Territory Government Owned Corporation sources (Jacana Energy
+        and Territory Generation only; the NT GOC list is not claimed to be complete and no NT total
+        is created) and the first Victorian water-corporation source (Melbourne Water only, a
+        statutory water corporation under the Water Act 1989 (Vic), not a GBE; there is no VIC total
+        or water-corporation set total). These are <strong>separate entity-level populations</strong>:
+        every entity is separate, their rows are never added together, and NSW, QLD, WA, NT and VIC
+        entities are never combined. This is a <strong>separate layer</strong> from Australian
+        government program spending and from the ABS GFS Public Non-Financial Corporations (PNFC)
+        sector benchmark. Coverage is entity-level only: no project, LGA, SA2 or coordinate is
+        present. WaterNSW is shown with its published note-level breakdown (Notes 2, 4, 5, 6, 7, 8
+        and cash-flow capital expenditure), grouped and expandable; each component reconciles to its
         printed note subtotal and is never added to the entity total.
       </Typography>
 
@@ -225,7 +230,7 @@ export function SocPage() {
         rows.length === 0 ? (
           <EmptyState
             title="No state-owned entity rows"
-            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, and the QLD Energy Queensland, CS Energy, Stanwell, Powerlink, Sunwater, Gladstone Ports, Port of Townsville, Ports North, NQBP, CleanCo Queensland, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports and DevelopmentWA and Southern Ports and Busselton Water and Mid West Ports and Kimberley Ports Authority and Pilbara Ports Authority pilots, plus the first two NT pilots, Jacana Energy and Territory Generation only — the NT GOC list is not claimed to be complete and no NT total is created)."
+            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, and the QLD Energy Queensland, CS Energy, Stanwell, Powerlink, Sunwater, Gladstone Ports, Port of Townsville, Ports North, NQBP, CleanCo Queensland, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports and DevelopmentWA and Southern Ports and Busselton Water and Mid West Ports and Kimberley Ports Authority and Pilbara Ports Authority pilots, plus the first two NT pilots, Jacana Energy and Territory Generation only — the NT GOC list is not claimed to be complete and no NT total is created, plus the first Victorian water-corporation source, Melbourne Water only — a statutory water corporation under the Water Act 1989 (Vic), not a GBE, with no VIC total or water-corporation set total)."
           />
         ) : (
           <Card variant="outlined" sx={{ mb: 3 }}>

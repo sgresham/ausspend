@@ -304,6 +304,18 @@ import {
   TERRITORY_GENERATION_UNIT,
   TERRITORY_GENERATION_UNIT_LABEL,
   TERRITORY_GENERATION_UNIT_TO_CENTS,
+  MELBOURNE_WATER_CAVEAT,
+  MELBOURNE_WATER_ENTITY,
+  MELBOURNE_WATER_ID,
+  MELBOURNE_WATER_JURISDICTION,
+  MELBOURNE_WATER_LEGAL_CLASS,
+  MELBOURNE_WATER_LICENSE,
+  MELBOURNE_WATER_NAME,
+  MELBOURNE_WATER_PUBLISHER,
+  MELBOURNE_WATER_SOURCE_URL,
+  MELBOURNE_WATER_UNIT,
+  MELBOURNE_WATER_UNIT_LABEL,
+  MELBOURNE_WATER_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -480,6 +492,7 @@ export const SOC_SOURCE_IDS = [
   PILBARA_PORTS_ID,
   JACANA_ENERGY_ID,
   TERRITORY_GENERATION_ID,
+  MELBOURNE_WATER_ID,
 ] as const;
 
 /**
@@ -1660,6 +1673,41 @@ async function writeTerritoryGenerationManifest(): Promise<void> {
   );
 }
 
+async function writeMelbourneWaterManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: MELBOURNE_WATER_ID });
+  const manifestPath = path.resolve(
+    process.env.MELBOURNE_WATER_MANIFEST ??
+      'docs/source-archive/vic-melbourne-water-annual-report.json',
+  );
+  const manifest = {
+    entity: MELBOURNE_WATER_ENTITY,
+    legal_class: MELBOURNE_WATER_LEGAL_CLASS,
+    jurisdiction: MELBOURNE_WATER_JURISDICTION,
+    dataset: MELBOURNE_WATER_NAME,
+    publisher: MELBOURNE_WATER_PUBLISHER,
+    discovery_page: MELBOURNE_WATER_SOURCE_URL,
+    license: MELBOURNE_WATER_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${MELBOURNE_WATER_UNIT_LABEL} (${MELBOURNE_WATER_UNIT}; x${MELBOURNE_WATER_UNIT_TO_CENTS} cents per unit)`,
+    caveat: MELBOURNE_WATER_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "VIC SOC: Melbourne Water only, a statutory water corporation under the Water Act 1989 (Vic) — not a Government Business Enterprise or State business corporation under the State Owned Enterprises Act 1992 (the first Victorian water-corporation source). The latest annual report is discovered from the official annual-report page (no hard-coded PDF URL) and the exact PDF is SHA-256 archived outside the repo with SHA256SUMS and retrieval.json. The audited statement prints an explicit '($ thousands)' unit; the adapter reads the printed Total revenue, Total expenses, Employee benefits, Depreciation and amortisation and Net profit for the period after tax lines and cross-checks Employee benefits to Note 3.2 and Depreciation and amortisation to Note 4.1.3. Every printed component sum, printed subtotal and result bridge reconciles exactly at zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail). No VIC total, water-corporation set total, state total or national total is created; never add Melbourne Water rows to government program spending, the PNFC benchmark, another water corporation or state-owned entity, a VIC total, a state total, a national total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1747,6 +1795,7 @@ async function main(): Promise<void> {
       [PILBARA_PORTS_ID]: writePilbaraPortsManifest,
       [JACANA_ENERGY_ID]: writeJacanaEnergyManifest,
       [TERRITORY_GENERATION_ID]: writeTerritoryGenerationManifest,
+      [MELBOURNE_WATER_ID]: writeMelbourneWaterManifest,
     };
     for (const sourceId of selectedSourceIds) {
       const writer = manifestWriters[sourceId];
@@ -2576,8 +2625,37 @@ async function main(): Promise<void> {
         `[ingest:soc] ${TERRITORY_GENERATION_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
+    const melbourneRows = await MeasureModel.countDocuments({
+      source_id: MELBOURNE_WATER_ID,
+    });
+    const melbourneVerified = await MeasureModel.countDocuments({
+      source_id: MELBOURNE_WATER_ID,
+      verified: true,
+    });
+    const melbourneDoubleCount = await MeasureModel.countDocuments({
+      source_id: MELBOURNE_WATER_ID,
+      potential_double_count: true,
+    });
+    const melbourneByLine = await MeasureModel.aggregate([
+      { $match: { source_id: MELBOURNE_WATER_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const melbourneDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: MELBOURNE_WATER_ID,
+      status: 'deferred',
+    });
+    const melbourneArchived = await listArchivedRecords({ source_id: MELBOURNE_WATER_ID });
     console.log(
-      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD, WA and NT SOC adapters intentionally not implemented)`,
+      `[ingest:soc] ${MELBOURNE_WATER_ID} rows=${melbourneRows} source_documents=${melbourneArchived.length} verified=${melbourneVerified} potential_double_count=${melbourneDoubleCount} deferred_documents=${melbourneDeferred} (VIC entity-level SOC statement lines for Melbourne Water only, a statutory water corporation under the Water Act 1989, not a GBE; no VIC/water-sector/state/national total is printed or computed)`,
+    );
+    for (const group of melbourneByLine) {
+      console.log(
+        `[ingest:soc] ${MELBOURNE_WATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    console.log(
+      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD, WA, NT and VIC SOC/water adapters intentionally not implemented)`,
     );
 
     const failed = result.results.filter((entry) => entry.log_status === 'error').length;
