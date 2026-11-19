@@ -182,6 +182,18 @@ import {
   HORIZON_POWER_UNIT,
   HORIZON_POWER_UNIT_LABEL,
   HORIZON_POWER_UNIT_TO_CENTS,
+  FREMANTLE_PORTS_CAVEAT,
+  FREMANTLE_PORTS_ENTITY,
+  FREMANTLE_PORTS_ID,
+  FREMANTLE_PORTS_JURISDICTION,
+  FREMANTLE_PORTS_LEGAL_CLASS,
+  FREMANTLE_PORTS_LICENSE,
+  FREMANTLE_PORTS_NAME,
+  FREMANTLE_PORTS_PUBLISHER,
+  FREMANTLE_PORTS_SOURCE_URL,
+  FREMANTLE_PORTS_UNIT,
+  FREMANTLE_PORTS_UNIT_LABEL,
+  FREMANTLE_PORTS_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -320,7 +332,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power and Horizon Power). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power and Fremantle Ports). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -348,6 +360,7 @@ export const SOC_SOURCE_IDS = [
   SYNERGY_ID,
   WESTERN_POWER_ID,
   HORIZON_POWER_ID,
+  FREMANTLE_PORTS_ID,
 ] as const;
 
 /**
@@ -1180,6 +1193,41 @@ async function writeHorizonPowerManifest(): Promise<void> {
   );
 }
 
+async function writeFremantlePortsManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: FREMANTLE_PORTS_ID });
+  const manifestPath = path.resolve(
+    process.env.FREMANTLE_PORTS_MANIFEST ??
+      'docs/source-archive/wa-fremantle-ports-annual-report.json',
+  );
+  const manifest = {
+    entity: FREMANTLE_PORTS_ENTITY,
+    legal_class: FREMANTLE_PORTS_LEGAL_CLASS,
+    jurisdiction: FREMANTLE_PORTS_JURISDICTION,
+    dataset: FREMANTLE_PORTS_NAME,
+    publisher: FREMANTLE_PORTS_PUBLISHER,
+    discovery_page: FREMANTLE_PORTS_SOURCE_URL,
+    license: FREMANTLE_PORTS_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${FREMANTLE_PORTS_UNIT_LABEL} (${FREMANTLE_PORTS_UNIT}; x${FREMANTLE_PORTS_UNIT_TO_CENTS} cents per unit)`,
+    caveat: FREMANTLE_PORTS_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Fremantle Ports only (Fremantle Port Authority), a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). Latest annual report discovered from the official publications page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $'000 unit and two reporting-year columns; the adapter reads the 2026 column only. It has no printed Total income or Total expenses subtotal, so total income is the exact sum of Revenue + Interest income and total expenses is the exact sum of the printed expense lines, accepted only when they bridge to the printed Profit before income tax and Profit after income tax at zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Fremantle Ports rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, Western Power, Horizon Power, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1240,6 +1288,7 @@ async function main(): Promise<void> {
     await writeSynergyManifest();
     await writeWesternPowerManifest();
     await writeHorizonPowerManifest();
+    await writeFremantlePortsManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1790,6 +1839,33 @@ async function main(): Promise<void> {
     for (const group of horizonPowerByLine) {
       console.log(
         `[ingest:soc] ${HORIZON_POWER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const fremantleRows = await MeasureModel.countDocuments({ source_id: FREMANTLE_PORTS_ID });
+    const fremantleVerified = await MeasureModel.countDocuments({
+      source_id: FREMANTLE_PORTS_ID,
+      verified: true,
+    });
+    const fremantleDoubleCount = await MeasureModel.countDocuments({
+      source_id: FREMANTLE_PORTS_ID,
+      potential_double_count: true,
+    });
+    const fremantleByLine = await MeasureModel.aggregate([
+      { $match: { source_id: FREMANTLE_PORTS_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const fremantleDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: FREMANTLE_PORTS_ID,
+      status: 'deferred',
+    });
+    const fremantleArchived = await listArchivedRecords({ source_id: FREMANTLE_PORTS_ID });
+    console.log(
+      `[ingest:soc] ${FREMANTLE_PORTS_ID} rows=${fremantleRows} source_documents=${fremantleArchived.length} verified=${fremantleVerified} potential_double_count=${fremantleDoubleCount} deferred_documents=${fremantleDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of fremantleByLine) {
+      console.log(
+        `[ingest:soc] ${FREMANTLE_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(

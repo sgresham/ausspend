@@ -220,7 +220,7 @@ export function SocPage() {
         rows.length === 0 ? (
           <EmptyState
             title="No state-owned entity rows"
-            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, and the QLD Energy Queensland, CS Energy, Stanwell, Powerlink, Sunwater, Gladstone Ports, Port of Townsville, Ports North, NQBP, Water Corporation, Synergy, Western Power and Horizon Power pilots)."
+            message="Run npm run ingest:soc to load the latest annual reports (PNFC first, then Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, and the QLD Energy Queensland, CS Energy, Stanwell, Powerlink, Sunwater, Gladstone Ports, Port of Townsville, Ports North, NQBP, Water Corporation, Synergy, Western Power, Horizon Power and Fremantle Ports pilots)."
           />
         ) : (
           <Card variant="outlined" sx={{ mb: 3 }}>
