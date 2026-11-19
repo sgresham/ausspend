@@ -96,6 +96,18 @@ import {
   GLADSTONE_PORTS_UNIT,
   GLADSTONE_PORTS_UNIT_LABEL,
   GLADSTONE_PORTS_UNIT_TO_CENTS,
+  PORT_OF_TOWNSVILLE_CAVEAT,
+  PORT_OF_TOWNSVILLE_ENTITY,
+  PORT_OF_TOWNSVILLE_ID,
+  PORT_OF_TOWNSVILLE_JURISDICTION,
+  PORT_OF_TOWNSVILLE_LEGAL_CLASS,
+  PORT_OF_TOWNSVILLE_LICENSE,
+  PORT_OF_TOWNSVILLE_NAME,
+  PORT_OF_TOWNSVILLE_PUBLISHER,
+  PORT_OF_TOWNSVILLE_SOURCE_URL,
+  PORT_OF_TOWNSVILLE_UNIT,
+  PORT_OF_TOWNSVILLE_UNIT_LABEL,
+  PORT_OF_TOWNSVILLE_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -234,7 +246,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited and Port of Townsville Limited). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -255,6 +267,7 @@ export const SOC_SOURCE_IDS = [
   POWERLINK_ID,
   SUNWATER_ID,
   GLADSTONE_PORTS_ID,
+  PORT_OF_TOWNSVILLE_ID,
 ] as const;
 
 /**
@@ -842,6 +855,42 @@ async function writeGladstonePortsManifest(): Promise<void> {
   );
 }
 
+async function writePortOfTownsvilleManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: PORT_OF_TOWNSVILLE_ID });
+  const manifestPath = path.resolve(
+    process.env.PORT_OF_TOWNSVILLE_MANIFEST ??
+      'docs/source-archive/qld-port-of-townsville-annual-report.json',
+  );
+  const manifest = {
+    entity: PORT_OF_TOWNSVILLE_ENTITY,
+    legal_class: PORT_OF_TOWNSVILLE_LEGAL_CLASS,
+    jurisdiction: PORT_OF_TOWNSVILLE_JURISDICTION,
+    dataset: PORT_OF_TOWNSVILLE_NAME,
+    publisher: PORT_OF_TOWNSVILLE_PUBLISHER,
+    discovery_page: PORT_OF_TOWNSVILLE_SOURCE_URL,
+    license: PORT_OF_TOWNSVILLE_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${PORT_OF_TOWNSVILLE_UNIT_LABEL} (${PORT_OF_TOWNSVILLE_UNIT}; x${PORT_OF_TOWNSVILLE_UNIT_TO_CENTS} cents per unit)`,
+    caveat: PORT_OF_TOWNSVILLE_CAVEAT,
+    extraction_status: 'deferred',
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: Port of Townsville Limited only, a Queensland Government Owned Corporation. Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The FY2025-26 statement of profit or loss prints an explicit '$' (whole-dollar) unit but does not reconcile at zero tolerance: revenue components sum to 108,063,772 vs printed Total Revenue 108,063,771; expense components sum to 85,474,654 vs printed Total Expenses 85,474,655; net result 15,797,043 vs printed 15,797,044. The adapter therefore defers the document and ingests no rows. Every row, when a future report reconciles, is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Port of Townsville rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, Gladstone Ports, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -895,6 +944,7 @@ async function main(): Promise<void> {
     await writePowerlinkManifest();
     await writeSunwaterManifest();
     await writeGladstonePortsManifest();
+    await writePortOfTownsvilleManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1272,6 +1322,25 @@ async function main(): Promise<void> {
         `[ingest:soc] ${GLADSTONE_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
+    const townsvilleRows = await MeasureModel.countDocuments({
+      source_id: PORT_OF_TOWNSVILLE_ID,
+    });
+    const townsvilleVerified = await MeasureModel.countDocuments({
+      source_id: PORT_OF_TOWNSVILLE_ID,
+      verified: true,
+    });
+    const townsvilleDoubleCount = await MeasureModel.countDocuments({
+      source_id: PORT_OF_TOWNSVILLE_ID,
+      potential_double_count: true,
+    });
+    const townsvilleDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: PORT_OF_TOWNSVILLE_ID,
+      status: 'deferred',
+    });
+    const townsvilleArchived = await listArchivedRecords({ source_id: PORT_OF_TOWNSVILLE_ID });
+    console.log(
+      `[ingest:soc] ${PORT_OF_TOWNSVILLE_ID} rows=${townsvilleRows} source_documents=${townsvilleArchived.length} verified=${townsvilleVerified} potential_double_count=${townsvilleDoubleCount} deferred_documents=${townsvilleDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
     );
