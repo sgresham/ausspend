@@ -19,7 +19,7 @@ import type { Connector, RawRecord } from '../types.js';
 
 /**
  * NSW council GPFS adapter: Bega Valley Shire Council's audited General Purpose
- * Financial Statements for FY2024-25.
+ * Financial Statements for FY2025-26.
  *
  * This follows the reference council implementations in docs/NSW_COUNCILS.md
  * with a Bega Valley Shire Council-specific layout adapter. It is a separate
@@ -30,10 +30,9 @@ import type { Connector, RawRecord } from '../types.js';
  * school rows that merely mention Bega Valley and use different delivery_entity
  * strings, or any other council.
  *
- * FY2024-25 is the accepted current-available year for this source. The official
- * page also lists a 2026 AFS (FY2025-26), but this item is scoped to FY2024-25;
- * the connector targets 2024-25 only and never substitutes a 2025-26 or 2023-24
- * document. The statement source is the council's standalone annual financial
+ * FY2025-26 is the current year for this source (the official page's 2026 AFS);
+ * the connector targets 2025-26 only and never substitutes a prior-year
+ * (2024-25 or 2023-24) document. The statement source is the council's standalone annual financial
  * statements PDF (not the narrative annual report), discovered from the official
  * Financial Statements page. A documented official fallback pin is
  * used only if the page yields no usable anchor. SHA-256 re-verifies and
@@ -50,18 +49,17 @@ import type { Connector, RawRecord } from '../types.js';
  * The Income Statement does not print a "Total expenses" line. Total expenses is
  * therefore the documented bridge of two printed lines — "Total expenses from
  * continuing operations excluding depreciation, amortisation and impairment of
- * non-financial assets" ($105,071 thousand) plus the printed "Depreciation,
- * amortisation and impairment of non-financial assets" line ($40,316 thousand),
- * giving $145,387 thousand. B1-1's printed expense total equals that face bridge
+ * non-financial assets" ($102,493 thousand) plus the printed "Depreciation,
+ * amortisation and impairment of non-financial assets" line ($43,409 thousand),
+ * giving $145,902 thousand. B1-1's printed expense total equals that face bridge
  * exactly. The printed net loss on disposal of assets is a real expense line
- * ($9,018 thousand), emitted as an expense row; the 2024 comparative is never
- * read. The net operating result is positive ($26,465 thousand) while the result
- * before capital grants is negative (-$9,966 thousand): only the net result is
- * emitted as a result row, and the before-capital result is kept in the
- * reconciliation evidence only. Other comprehensive income has two printed
- * components — revaluation ($39,360 thousand) and other movements (-$466
- * thousand) — whose sum ($38,894 thousand) equals the printed other
- * comprehensive income.
+ * ($8,213 thousand), emitted as an expense row; the 2025 comparative is never
+ * read. The net operating result is positive ($23,135 thousand) and so is the
+ * result before capital grants ($2,638 thousand): only the net result is emitted
+ * as a result row, and the before-capital result is kept in the reconciliation
+ * evidence only. Other comprehensive income has two printed components —
+ * revaluation ($69,153 thousand) and other reserve movements ($123 thousand) —
+ * whose sum ($69,276 thousand) equals the printed other comprehensive income.
  */
 
 export const BEGA_VALLEY_GPFS_ID = 'bega-valley-gpfs';
@@ -72,9 +70,9 @@ export const BEGA_VALLEY_GPFS_REPORTING_URL =
   'https://www.begavalley.nsw.gov.au/About-Council/Plans-and-Reporting/Financial-Statements';
 /** Documented official fallback pin for the audited current-available statements. */
 export const BEGA_VALLEY_GPFS_DOCUMENT_PIN =
-  'https://www.begavalley.nsw.gov.au/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/bega-valley-shire-council-annual_financial_statements-2025.pdf';
-export const BEGA_VALLEY_GPFS_FISCAL_YEAR = '2024-25';
-export const BEGA_VALLEY_GPFS_SOURCE_DATASET = 'Bega Valley Shire Council GPFS 2024-25';
+  'https://www.begavalley.nsw.gov.au/files/assets/public/v/2/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/annual_financial_statements-2026.pdf';
+export const BEGA_VALLEY_GPFS_FISCAL_YEAR = '2025-26';
+export const BEGA_VALLEY_GPFS_SOURCE_DATASET = 'Bega Valley Shire Council GPFS 2025-26';
 export const BEGA_VALLEY_GPFS_LICENSE =
   '© Bega Valley Shire Council. Published council documents used here for public-interest research; not an open-data licence grant.';
 export const BEGA_VALLEY_GPFS_DATA_QUALITY_FLAG = 'provisional/local_government';
@@ -329,9 +327,9 @@ function decodeHtml(text: string): string {
 /**
  * Convert a Bega Valley Shire Council financial-statements name or URL to a
  * fiscal year. The listing labels the audited PDF by its June year-end (for
- * example "year ended 30 June 2025"), which maps to FY2024-25; the file name
- * carries "2024-25" directly. Explicit ranges (2024/25, 2024-2025, "2024 to
- * 2025") are handled first; a bare end year after the words "financial
+ * example "year ended 30 June 2026"), which maps to FY2025-26; the file name
+ * carries "2025-26" directly. Explicit ranges (2025/26, 2025-2026, "2025 to
+ * 2026") are handled first; a bare end year after the words "financial
  * statements" maps back to the previous year. Anything that is not a consecutive
  * year pair plus June year-end is rejected.
  */
@@ -348,7 +346,7 @@ export function fiscalYearFromBegaValleyGpfsLink(text: string): string | null {
     .replace(/\s*[-/]+\s*/g, '-')
     .replace(/\s+/g, ' ');
   // Use the LAST year range: current URLs carry the publication folder
-  // (e.g. /2025-26/) before the document file name (2024-25), so the file's
+  // (e.g. /2026-27/) before the document file name (2025-26), so the file's
   // own range is the later match.
   const matches = [
     ...normalized.matchAll(/((?:19|20)\d{2})-((?:19|20)?\d{2})/g),
@@ -463,7 +461,7 @@ export function selectBegaValleyGpfsDocument(
 export function begaValleyPinnedDocument(): BegaValleyGpfsDocument {
   return {
     id: `gpfs-${BEGA_VALLEY_GPFS_FISCAL_YEAR}`,
-    title: 'Financial Statements 2024-25',
+    title: 'Financial Statements 2025-26',
     url: BEGA_VALLEY_GPFS_DOCUMENT_PIN,
     fiscal_year: BEGA_VALLEY_GPFS_FISCAL_YEAR,
     listing_url: BEGA_VALLEY_GPFS_REPORTING_URL,
@@ -472,7 +470,7 @@ export function begaValleyPinnedDocument(): BegaValleyGpfsDocument {
 
 /**
  * Discover the standalone financial-statements document. The connector fetches
- * the official Financial Statements page and parses any FY2024-25
+ * the official Financial Statements page and parses any FY2025-26
  * financial-statements anchor; if the page yields no usable anchor it uses
  * the documented official pin. The exact bytes are still SHA-256 re-verified.
  * Requests use an explicit plain client UA because the host's Akamai WAF returns
@@ -688,7 +686,7 @@ function mapLine(
     source_url: context.document.url,
     verified: false,
     natural_key: begaValleyGpfsNaturalKey(context.document.url, spec.key, BEGA_VALLEY_GPFS_FISCAL_YEAR),
-    project_name: `Bega Valley Shire Council GPFS 2024-25 — ${spec.label}`,
+    project_name: `Bega Valley Shire Council GPFS 2025-26 — ${spec.label}`,
     description: `${spec.section === 'revenue' ? 'Revenue' : spec.section === 'expenses' ? 'Expense' : 'Result'} line item — ${spec.statement}`,
     jurisdiction_level: 'local',
     jurisdiction: 'NSW',
@@ -790,7 +788,7 @@ export function parseBegaValleyGpfsExtraction(
     );
     comprehensiveOtherMovements = firstAmountAfter(
       comprehensiveText,
-      'Other movements',
+      'Other reserve movements - remeasurement of remediation/restoration provision',
     );
   } catch (error) {
     return reject(error instanceof Error ? error.message : String(error));
@@ -992,7 +990,7 @@ export function parseBegaValleyGpfsExtraction(
       'B1-1 operating result, grants, income and expenses reconcile to the face statement',
       'Statement of Comprehensive Income net result equals the Income Statement net result',
       'printed net result + printed other comprehensive income equals printed total comprehensive income',
-      'the printed other-comprehensive-income components (revaluation, impairment reversal and other movements when printed) sum to the printed other comprehensive income',
+      'the printed other-comprehensive-income components (revaluation, impairment reversal and other reserve movements when printed) sum to the printed other comprehensive income',
       'the printed net result is stored with a magnitude and a negative sign marker only when printed negative; the before-capital result is retained in reconciliation evidence only',
     ],
   };
@@ -1058,7 +1056,7 @@ export function createBegaValleyGpfsConnector(options: BegaValleyGpfsConnectorOp
     jurisdiction_level: 'local',
     license: BEGA_VALLEY_GPFS_LICENSE,
     notes:
-      "NSW council GPFS adapter: one council only (Bega Valley Shire Council), audited FY2024-25 General Purpose Financial Statements — the statement source is the official standalone annual financial statements (not the narrative annual report); FY2024-25 is the accepted year for this source, and the connector rejects other years (the page also lists a 2025-26 document but this item does not substitute it). The PDF is discovered from the official Financial Statements page (latest FY2024-25 financial statements upload), with a documented official fallback pin only when the page yields no usable anchor; the exact bytes are SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, B1-1 Total functions and activities and Statement of Comprehensive Income reconcile exactly. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id; no region/LGA allocation and no other council is ingested. Total expenses is the documented bridge of the printed expenses-excluding-depreciation line plus the printed depreciation line, reconciled against the printed B1-1 totals.",
+      "NSW council GPFS adapter: one council only (Bega Valley Shire Council), audited FY2025-26 General Purpose Financial Statements — the statement source is the official standalone annual financial statements (not the narrative annual report); FY2025-26 is the current year for this source, and the connector rejects prior-year (2024-25/2023-24) documents. The PDF is discovered from the official Financial Statements page (latest FY2025-26 financial statements upload), with a documented official fallback pin only when the page yields no usable anchor; the exact bytes are SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, B1-1 Total functions and activities and Statement of Comprehensive Income reconcile exactly. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id; no region/LGA allocation and no other council is ingested. Total expenses is the documented bridge of the printed expenses-excluding-depreciation line plus the printed depreciation line, reconciled against the printed B1-1 totals.",
     async fetch(): Promise<RawRecord[]> {
       metadata.warnings = [];
       metadata.errors = [];
@@ -1101,7 +1099,7 @@ export function createBegaValleyGpfsConnector(options: BegaValleyGpfsConnectorOp
         data: bytes,
         root: options.archiveRoot,
         notes:
-          'Audited Bega Valley Shire Council FY2024-25 General Purpose Financial Statements; archived for the GPFS reconciliation.',
+          'Audited Bega Valley Shire Council FY2025-26 General Purpose Financial Statements; archived for the GPFS reconciliation.',
       });
       await verifySourceDocument(archived);
       const extraction = await extractArchivedPdf(archived);

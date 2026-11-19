@@ -34,18 +34,17 @@ import {
   begaValleyExtraction,
 } from '../src/connectors/bega-valley-gpfs/fixture.js';
 
-// Bega Valley Shire Council's audited FY2024-25 standalone financial statements.
-// FY2024-25 is the accepted current-available year for this source. The official
-// page also lists a 2026 AFS (FY2025-26), but this item is scoped to FY2024-25;
-// the connector targets 2024-25 only and never substitutes a 2025-26 or 2023-24
-// document. The statement source is the standalone annual financial statements
-// (not the narrative annual report). The Income Statement prints the Original
-// unaudited budget column before the line label, with Actual 2025 and Actual
-// 2024 after it. A parser that took the first number in the line would read the
-// budget; the expected values are all Actual 2025. Bega Valley prints six revenue
-// lines (no separate Other income line) and five expense lines (including a real
-// net loss on disposal of 9,018). The net result is positive; the before-capital
-// result is negative.
+// Bega Valley Shire Council's audited FY2025-26 standalone financial statements.
+// FY2025-26 is the current year for this source; the connector targets 2025-26
+// only and never substitutes the prior 2024-25 or 2023-24 documents. The
+// statement source is the standalone annual financial statements (not the
+// narrative annual report). The Income Statement prints the Original unaudited
+// budget column before the line label, with Actual 2026 and Actual 2025 after
+// it. A parser that took the first number in the line would read the budget; the
+// expected values are all Actual 2026. Bega Valley prints six revenue lines (no
+// separate Other income line) and five expense lines (including a real net loss
+// on disposal of 8,213). The net result and the printed before-capital result are
+// both positive.
 
 function parsedFixture() {
   return parseBegaValleyGpfsExtraction(begaValleyExtraction(), BEGA_VALLEY_CONTEXT);
@@ -59,40 +58,40 @@ function recordByLine(records: SpendingRecord[], lineItem: string): SpendingReco
 
 describe('Bega Valley Shire Council GPFS source discovery', () => {
   const pageHtml = `
-    <a href="/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/bega-valley-shire-council-annual_financial_statements-2025.pdf" title="2025 Annual Financial Statements for the year ended 30 June 2025" class="document ext-pdf">2025 Annual Financial Statements for the year ended 30 June 2025 (PDF, 3MB)</a>
     <a href="/files/assets/public/v/2/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/annual_financial_statements-2026.pdf" title="2026 Annual Financial Statements for the year ended 30 June 2026" class="document ext-pdf">2026 Annual Financial Statements for the year ended 30 June 2026 (PDF, 3MB)</a>
+    <a href="/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/bega-valley-shire-council-annual_financial_statements-2025.pdf" title="2025 Annual Financial Statements for the year ended 30 June 2025" class="document ext-pdf">2025 Annual Financial Statements for the year ended 30 June 2025 (PDF, 3MB)</a>
     <a href="/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/2023-2024-bvsc-financial-statements.pdf" title="2024 Annual Financial Statements for the year ended 30 June 2024" class="document ext-pdf">2024 Annual Financial Statements for the year ended 30 June 2024 (PDF, 6MB)</a>
-    <a href="https://example.com/bega-valley-shire-council-annual_financial_statements-2025.pdf">2025 Annual Financial Statements for the year ended 30 June 2025</a>
+    <a href="https://example.com/annual_financial_statements-2026.pdf">2026 Annual Financial Statements for the year ended 30 June 2026</a>
   `;
 
-  it('discovers the FY2024-25 statements and never substitutes the 2025-26 or 2023-24 documents', () => {
-    expect(BEGA_VALLEY_GPFS_FISCAL_YEAR).toBe('2024-25');
+  it('discovers the FY2025-26 statements and never substitutes the 2024-25 or 2023-24 documents', () => {
+    expect(BEGA_VALLEY_GPFS_FISCAL_YEAR).toBe('2025-26');
     const links = parseBegaValleyGpfsReportLinks(pageHtml, BEGA_VALLEY_GPFS_REPORTING_URL);
-    expect(links.map((link) => link.fiscal_year)).toEqual(['2024-25', '2025-26', '2023-24']);
+    expect(links.map((link) => link.fiscal_year)).toEqual(['2025-26', '2024-25', '2023-24']);
     expect(links.map((link) => link.url)).toEqual([
       BEGA_VALLEY_PDF_URL,
-      'https://www.begavalley.nsw.gov.au/files/assets/public/v/2/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/annual_financial_statements-2026.pdf',
+      'https://www.begavalley.nsw.gov.au/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/bega-valley-shire-council-annual_financial_statements-2025.pdf',
       'https://www.begavalley.nsw.gov.au/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/2023-2024-bvsc-financial-statements.pdf',
     ]);
-    const selected = selectBegaValleyGpfsDocument(links, '2024-25');
+    const selected = selectBegaValleyGpfsDocument(links, '2025-26');
     expect(selected.url).toBe(BEGA_VALLEY_PDF_URL);
-    expect(selected.fiscal_year).toBe('2024-25');
+    expect(selected.fiscal_year).toBe('2025-26');
     expect(selected.listing_url).toBe(BEGA_VALLEY_GPFS_REPORTING_URL);
     expect(
       fiscalYearFromBegaValleyGpfsLink(
-        '2025 Annual Financial Statements for the year ended 30 June 2025',
+        '2026 Annual Financial Statements for the year ended 30 June 2026',
       ),
-    ).toBe('2024-25');
-    expect(
-      fiscalYearFromBegaValleyGpfsLink(
-        'https://www.begavalley.nsw.gov.au/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/bega-valley-shire-council-annual_financial_statements-2025.pdf',
-      ),
-    ).toBe('2024-25');
+    ).toBe('2025-26');
     expect(
       fiscalYearFromBegaValleyGpfsLink(
         'https://www.begavalley.nsw.gov.au/files/assets/public/v/2/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/annual_financial_statements-2026.pdf',
       ),
     ).toBe('2025-26');
+    expect(
+      fiscalYearFromBegaValleyGpfsLink(
+        '2025 Annual Financial Statements for the year ended 30 June 2025',
+      ),
+    ).toBe('2024-25');
     expect(
       fiscalYearFromBegaValleyGpfsLink(
         '2024 Annual Financial Statements for the year ended 30 June 2024',
@@ -101,22 +100,22 @@ describe('Bega Valley Shire Council GPFS source discovery', () => {
     expect(fiscalYearFromBegaValleyGpfsLink('Long Term Financial Plan 2021-2034.pdf')).toBeNull();
   });
 
-  it('rejects a stale prior year and never substitutes 2023-24 for the target 2024-25', () => {
+  it('rejects a stale prior year and never substitutes 2024-25 for the target 2025-26', () => {
     const priorOnly = `
-      <a href="/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/2023-2024-bvsc-financial-statements.pdf" title="2024 Annual Financial Statements for the year ended 30 June 2024">2024 Annual Financial Statements</a>
+      <a href="/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/bega-valley-shire-council-annual_financial_statements-2025.pdf" title="2025 Annual Financial Statements for the year ended 30 June 2025">2025 Annual Financial Statements</a>
     `;
     const links = parseBegaValleyGpfsReportLinks(priorOnly, BEGA_VALLEY_GPFS_REPORTING_URL);
-    expect(links.map((link) => link.fiscal_year)).toEqual(['2023-24']);
-    expect(() => selectBegaValleyGpfsDocument(links, '2024-25')).toThrow(/No published/);
+    expect(links.map((link) => link.fiscal_year)).toEqual(['2024-25']);
+    expect(() => selectBegaValleyGpfsDocument(links, '2025-26')).toThrow(/No published/);
   });
 
-  it('does not substitute the 2025-26 document for the FY2024-25 target', () => {
+  it('does not substitute a 2026-27 link for the FY2025-26 target', () => {
     const futureOnly = `
-      <a href="/files/assets/public/v/2/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/annual_financial_statements-2026.pdf" title="2026 Annual Financial Statements for the year ended 30 June 2026">2026 Annual Financial Statements</a>
+      <a href="/files/assets/public/v/3/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/annual_financial_statements-2027.pdf" title="2027 Annual Financial Statements for the year ended 30 June 2027">2027 Annual Financial Statements</a>
     `;
     const links = parseBegaValleyGpfsReportLinks(futureOnly, BEGA_VALLEY_GPFS_REPORTING_URL);
-    expect(links.map((link) => link.fiscal_year)).toEqual(['2025-26']);
-    expect(() => selectBegaValleyGpfsDocument(links, '2024-25')).toThrow(/No published/);
+    expect(links.map((link) => link.fiscal_year)).toEqual(['2026-27']);
+    expect(() => selectBegaValleyGpfsDocument(links, '2025-26')).toThrow(/No published/);
   });
 
   it('uses the documented official pin when the listing yields no current anchor', async () => {
@@ -127,11 +126,11 @@ describe('Bega Valley Shire Council GPFS source discovery', () => {
     expect(links).toEqual([]);
     const pinned = begaValleyPinnedDocument();
     expect(pinned.url).toBe(BEGA_VALLEY_GPFS_DOCUMENT_PIN);
-    expect(pinned.fiscal_year).toBe('2024-25');
-    expect(pinned.url).toContain('annual_financial_statements-2025.pdf');
+    expect(pinned.fiscal_year).toBe('2025-26');
+    expect(pinned.url).toContain('annual_financial_statements-2026.pdf');
     const discovered = await discoverBegaValleyGpfsDocument(
       (async () => new Response('<html>no links</html>', { status: 200 })) as typeof fetch,
-      '2024-25',
+      '2025-26',
       '<html>no links</html>',
     );
     expect(discovered.url).toBe(BEGA_VALLEY_GPFS_DOCUMENT_PIN);
@@ -145,7 +144,7 @@ describe('Bega Valley Shire Council GPFS source discovery', () => {
         seenHeaders = init?.headers as Record<string, string>;
         return new Response('<html>no links</html>', { status: 200 });
       }) as typeof fetch,
-      '2024-25',
+      '2025-26',
     );
     expect(seenHeaders?.['user-agent']).toBe('curl/8.5.0');
     expect(seenHeaders?.['user-agent']).not.toContain('Chrome');
@@ -155,7 +154,7 @@ describe('Bega Valley Shire Council GPFS source discovery', () => {
     await expect(
       discoverBegaValleyGpfsDocument(
         (async () => new Response('<html>no links</html>', { status: 200 })) as typeof fetch,
-        '2025-26',
+        '2024-25',
         '<html>no links</html>',
       ),
     ).rejects.toThrow(/No published/);
@@ -213,49 +212,49 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
     expect(parsed.rejections).toEqual([]);
     expect(parsed.warnings[0]).toMatch(/reconciled exactly/);
     const reconciliation = parsed.reconciliation!;
-    expect(reconciliation.fiscal_year).toBe('2024-25');
+    expect(reconciliation.fiscal_year).toBe('2025-26');
     expect(reconciliation.unit).toBe('thousands');
-    expect(reconciliation.total_revenue).toBe(171_852);
-    expect(reconciliation.total_expenses).toBe(145_387);
-    expect(reconciliation.employee_expenses).toBe(44_067);
-    expect(reconciliation.depreciation_amortisation_impairment).toBe(40_316);
-    expect(reconciliation.government_grants_operating).toBe(24_964);
-    expect(reconciliation.government_grants_capital).toBe(36_431);
-    expect(reconciliation.net_loss_from_disposal_of_assets).toBe(9_018);
-    expect(reconciliation.net_result).toBe(26_465);
-    expect(reconciliation.net_result_before_capital_grants).toBe(-9_966);
-    expect(reconciliation.printed_total_expenses_excluding_depreciation).toBe(105_071);
-    expect(reconciliation.face_expense_bridge).toBe(145_387);
-    expect(reconciliation.functions_total_income).toBe(171_852);
-    expect(reconciliation.functions_total_expenses).toBe(145_387);
-    expect(reconciliation.functions_operating_result).toBe(26_465);
-    expect(reconciliation.functions_grants_and_contributions).toBe(61_395);
-    expect(reconciliation.comprehensive_income_net_result).toBe(26_465);
-    expect(reconciliation.comprehensive_other_income).toBe(38_894);
-    expect(reconciliation.comprehensive_total).toBe(65_359);
-    expect(reconciliation.comprehensive_revaluation).toBe(39_360);
+    expect(reconciliation.total_revenue).toBe(169_037);
+    expect(reconciliation.total_expenses).toBe(145_902);
+    expect(reconciliation.employee_expenses).toBe(47_460);
+    expect(reconciliation.depreciation_amortisation_impairment).toBe(43_409);
+    expect(reconciliation.government_grants_operating).toBe(33_458);
+    expect(reconciliation.government_grants_capital).toBe(20_497);
+    expect(reconciliation.net_loss_from_disposal_of_assets).toBe(8_213);
+    expect(reconciliation.net_result).toBe(23_135);
+    expect(reconciliation.net_result_before_capital_grants).toBe(2_638);
+    expect(reconciliation.printed_total_expenses_excluding_depreciation).toBe(102_493);
+    expect(reconciliation.face_expense_bridge).toBe(145_902);
+    expect(reconciliation.functions_total_income).toBe(169_037);
+    expect(reconciliation.functions_total_expenses).toBe(145_902);
+    expect(reconciliation.functions_operating_result).toBe(23_135);
+    expect(reconciliation.functions_grants_and_contributions).toBe(53_955);
+    expect(reconciliation.comprehensive_income_net_result).toBe(23_135);
+    expect(reconciliation.comprehensive_other_income).toBe(69_276);
+    expect(reconciliation.comprehensive_total).toBe(92_411);
+    expect(reconciliation.comprehensive_revaluation).toBe(69_153);
     expect(reconciliation.comprehensive_impairment).toBeNull();
-    expect(reconciliation.comprehensive_other_movements).toBe(-466);
-    expect(reconciliation.revenue_components_sum).toBe(171_852);
-    expect(reconciliation.expense_components_sum).toBe(105_071);
+    expect(reconciliation.comprehensive_other_movements).toBe(123);
+    expect(reconciliation.revenue_components_sum).toBe(169_037);
+    expect(reconciliation.expense_components_sum).toBe(102_493);
 
     const records = parsed.records;
-    expect(recordByLine(records, 'total_revenue').amount_cents).toBe(17_185_200_000);
-    expect(recordByLine(records, 'total_expenses').amount_cents).toBe(14_538_700_000);
-    expect(recordByLine(records, 'employee_expenses').amount_cents).toBe(4_406_700_000);
+    expect(recordByLine(records, 'total_revenue').amount_cents).toBe(16_903_700_000);
+    expect(recordByLine(records, 'total_expenses').amount_cents).toBe(14_590_200_000);
+    expect(recordByLine(records, 'employee_expenses').amount_cents).toBe(4_746_000_000);
     expect(recordByLine(records, 'depreciation_amortisation_impairment').amount_cents).toBe(
-      4_031_600_000,
+      4_340_900_000,
     );
-    expect(recordByLine(records, 'government_grants_operating').amount_cents).toBe(2_496_400_000);
-    expect(recordByLine(records, 'government_grants_capital').amount_cents).toBe(3_643_100_000);
+    expect(recordByLine(records, 'government_grants_operating').amount_cents).toBe(3_345_800_000);
+    expect(recordByLine(records, 'government_grants_capital').amount_cents).toBe(2_049_700_000);
     expect(recordByLine(records, 'net_loss_from_disposal_of_assets').amount_cents).toBe(
-      901_800_000,
+      821_300_000,
     );
-    expect(recordByLine(records, 'borrowing_costs').amount_cents).toBe(122_900_000);
-    expect(recordByLine(records, 'rates_and_annual_charges').amount_cents).toBe(7_762_000_000);
-    expect(recordByLine(records, 'other_revenues').amount_cents).toBe(140_000_000);
+    expect(recordByLine(records, 'borrowing_costs').amount_cents).toBe(62_100_000);
+    expect(recordByLine(records, 'rates_and_annual_charges').amount_cents).toBe(8_146_600_000);
+    expect(recordByLine(records, 'other_revenues').amount_cents).toBe(129_500_000);
     const netResult = recordByLine(records, 'net_result');
-    expect(netResult.amount_cents).toBe(2_646_500_000);
+    expect(netResult.amount_cents).toBe(2_313_500_000);
     expect(netResult.gpfs_printed_sign).toBeUndefined();
     expect(
       records.some((record) => record.gpfs_line_item === 'other_income'),
@@ -274,11 +273,11 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
       expect(record).toMatchObject({
         source_id: BEGA_VALLEY_GPFS_ID,
         measure_type: 'actual',
-        fiscal_year: '2024-25',
+        fiscal_year: '2025-26',
         jurisdiction_level: 'local',
         jurisdiction: 'NSW',
         delivery_entity: BEGA_VALLEY_GPFS_DELIVERY_ENTITY,
-        source_dataset: 'Bega Valley Shire Council GPFS 2024-25',
+        source_dataset: 'Bega Valley Shire Council GPFS 2025-26',
         data_quality_flag: 'provisional/local_government',
         aggregation_role: 'agency_detail',
         verified: false,
@@ -291,7 +290,7 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
       expect(record.region_id).toBeUndefined();
       expect(record.location).toBeUndefined();
       expect(record.natural_key).toMatch(/^bega-valley-gpfs:/);
-      expect(record.source_url).toContain('annual_financial_statements-2025.pdf');
+      expect(record.source_url).toContain('annual_financial_statements-2026.pdf');
       expect(record.notes).not.toContain('document_resolved_url: ');
     }
     expect(recordByLine(records, 'government_grants_operating').potential_double_count).toBe(true);
@@ -340,8 +339,8 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
 
   it('rejects the whole extraction when the printed B1-1 expense total disagrees', () => {
     const broken = BEGA_VALLEY_FUNCTIONS_TEXT.replace(
-      'Total functions and activities 171,852 167,852 145,387 134,916',
-      'Total functions and activities 171,852 167,852 145,389 134,916',
+      'Total functions and activities 169,037 171,852 145,902 145,387',
+      'Total functions and activities 169,037 171,852 145,904 145,387',
     );
     const parsed = parseBegaValleyGpfsExtraction(
       extraction({ functions: broken }),
@@ -354,8 +353,8 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
 
   it('rejects the whole extraction when the comprehensive-income total disagrees', () => {
     const broken = BEGA_VALLEY_COMPREHENSIVE_TEXT.replace(
-      'Total comprehensive income for the year attributable to Council 65,359',
-      'Total comprehensive income for the year attributable to Council 65,361',
+      'Total comprehensive income for the year attributable to Council 92,411',
+      'Total comprehensive income for the year attributable to Council 92,413',
     );
     const parsed = parseBegaValleyGpfsExtraction(
       extraction({ comprehensive: broken }),
@@ -368,8 +367,8 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
 
   it('rejects the whole extraction when a face revenue component is altered', () => {
     const broken = BEGA_VALLEY_INCOME_TEXT.replace(
-      'Rates and annual charges B2-1 77,620',
-      'Rates and annual charges B2-1 77,622',
+      'Rates and annual charges B2-1 81,466',
+      'Rates and annual charges B2-1 81,468',
     );
     const parsed = parseBegaValleyGpfsExtraction(extraction({ income: broken }), BEGA_VALLEY_CONTEXT);
     expect(parsed.records).toEqual([]);
@@ -379,8 +378,8 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
 
   it('rejects the whole extraction when the revaluation other comprehensive income is altered', () => {
     const broken = BEGA_VALLEY_COMPREHENSIVE_TEXT.replace(
-      'Gain (loss) on revaluation of infrastructure, property, plant and equipment C1-7 39,360',
-      'Gain (loss) on revaluation of infrastructure, property, plant and equipment C1-7 39,362',
+      'Gain (loss) on revaluation of infrastructure, property, plant and equipment C1-7 69,153',
+      'Gain (loss) on revaluation of infrastructure, property, plant and equipment C1-7 69,155',
     );
     const parsed = parseBegaValleyGpfsExtraction(
       extraction({ comprehensive: broken }),
@@ -391,10 +390,10 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
     expect(parsed.rejections[0]!.reason).toMatch(/reconciliation failed/);
   });
 
-  it('rejects the whole extraction when the other-movements OCI component is altered', () => {
+  it('rejects the whole extraction when the other-reserve-movements OCI component is altered', () => {
     const broken = BEGA_VALLEY_COMPREHENSIVE_TEXT.replace(
-      'Other movements C2-5 (466)',
-      'Other movements C2-5 (468)',
+      'Other reserve movements - remeasurement of remediation/restoration provision C2-5 123',
+      'Other reserve movements - remeasurement of remediation/restoration provision C2-5 125',
     );
     const parsed = parseBegaValleyGpfsExtraction(
       extraction({ comprehensive: broken }),
@@ -415,12 +414,12 @@ describe('Bega Valley Shire Council GPFS exact reconciliation', () => {
       second.records.map((record) => record.amount_cents),
     );
     const url = BEGA_VALLEY_CONTEXT.document.url;
-    const revenue = begaValleyGpfsNaturalKey(url, 'total_revenue', '2024-25');
-    const expenses = begaValleyGpfsNaturalKey(url, 'total_expenses', '2024-25');
+    const revenue = begaValleyGpfsNaturalKey(url, 'total_revenue', '2025-26');
+    const expenses = begaValleyGpfsNaturalKey(url, 'total_expenses', '2025-26');
     expect(revenue).toMatch(/^bega-valley-gpfs:[a-f0-9]{40}$/);
     expect(revenue).not.toBe(expenses);
-    expect(revenue).toBe(begaValleyGpfsNaturalKey(url, 'total_revenue', '2024-25'));
-    expect(revenue).not.toBe(begaValleyGpfsNaturalKey(url, 'total_revenue', '2023-24'));
+    expect(revenue).toBe(begaValleyGpfsNaturalKey(url, 'total_revenue', '2025-26'));
+    expect(revenue).not.toBe(begaValleyGpfsNaturalKey(url, 'total_revenue', '2024-25'));
   });
 });
 

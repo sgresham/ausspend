@@ -348,7 +348,7 @@ for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Cou
 23 for Blue Mountains City Council FY2024-25 (`blue-mountains-gpfs`, §7.36) and 18 for Wollondilly
 Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY2024-25
 (`camden-gpfs`, §7.38), 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) and
-17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) and 16 for Gilgandra Shire Council FY2025-26 (`gilgandra-gpfs`, §7.55) and 17 for Lockhart Shire Council FY2025-26 (`lockhart-gpfs`, §7.56) and 17 for Coonamble Shire Council FY2024-25 (`coonamble-gpfs`, §7.57) and 17 for Weddin Shire Council FY2024-25 (`weddin-gpfs`, §7.58) and 17 for Walcha Council FY2024-25 (`walcha-gpfs`, §7.59) and 17 for Murrumbidgee Council FY2024-25 (`murrumbidgee-gpfs`, §7.60) and 17 for Armidale Regional Council FY2025-26 (`armidale-gpfs`, §7.62) and 17 for Byron Shire Council FY2025-26 (`byron-gpfs`, §7.63) and 17 for Clarence Valley Council FY2025-26 (`clarence-valley-gpfs`, §7.64) and 17 for Richmond Valley Council FY2025-26 (`richmond-valley-gpfs`, §7.65) and 16 for Kempsey Shire Council FY2025-26 (`kempsey-gpfs`, §7.66) and 17 for Wingecarribee Shire Council FY2025-26 (`wingecarribee-gpfs`, §7.67) and 17 for Queanbeyan-Palerang Regional Council FY2025-26 (`queanbeyan-palerang-gpfs`, §7.68) and 17 for Goulburn Mulwaree Council FY2024-25 (`goulburn-mulwaree-gpfs`, §7.69) and 17 for Broken Hill City Council FY2024-25 (`broken-hill-gpfs`, §7.70) and 17 for Griffith City Council FY2024-25 (`griffith-gpfs`, §7.71) and 17 for Lithgow City Council FY2024-25 (`lithgow-gpfs`, §7.72) and 17 for Mid-Western Regional Council FY2025-26 (`mid-western-regional-gpfs`, §7.73) and 16 for Bega Valley Shire Council FY2024-25 (`bega-valley-gpfs`, §7.74) — all separate source ids. The
+17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) and 16 for Gilgandra Shire Council FY2025-26 (`gilgandra-gpfs`, §7.55) and 17 for Lockhart Shire Council FY2025-26 (`lockhart-gpfs`, §7.56) and 17 for Coonamble Shire Council FY2024-25 (`coonamble-gpfs`, §7.57) and 17 for Weddin Shire Council FY2024-25 (`weddin-gpfs`, §7.58) and 17 for Walcha Council FY2024-25 (`walcha-gpfs`, §7.59) and 17 for Murrumbidgee Council FY2024-25 (`murrumbidgee-gpfs`, §7.60) and 17 for Armidale Regional Council FY2025-26 (`armidale-gpfs`, §7.62) and 17 for Byron Shire Council FY2025-26 (`byron-gpfs`, §7.63) and 17 for Clarence Valley Council FY2025-26 (`clarence-valley-gpfs`, §7.64) and 17 for Richmond Valley Council FY2025-26 (`richmond-valley-gpfs`, §7.65) and 16 for Kempsey Shire Council FY2025-26 (`kempsey-gpfs`, §7.66) and 17 for Wingecarribee Shire Council FY2025-26 (`wingecarribee-gpfs`, §7.67) and 17 for Queanbeyan-Palerang Regional Council FY2025-26 (`queanbeyan-palerang-gpfs`, §7.68) and 17 for Goulburn Mulwaree Council FY2024-25 (`goulburn-mulwaree-gpfs`, §7.69) and 17 for Broken Hill City Council FY2024-25 (`broken-hill-gpfs`, §7.70) and 17 for Griffith City Council FY2024-25 (`griffith-gpfs`, §7.71) and 17 for Lithgow City Council FY2024-25 (`lithgow-gpfs`, §7.72) and 17 for Mid-Western Regional Council FY2025-26 (`mid-western-regional-gpfs`, §7.73) and 16 for Bega Valley Shire Council FY2025-26 (`bega-valley-gpfs`, §7.74) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
 GPFS rows. The shared dev DB currently records **74** active `data_sources` GPFS entries and **1429**
@@ -6988,70 +6988,70 @@ tests passed (18/18). Full evidence:
 
 ---
 
-### 7.74 Seventy-fourth landed council — Bega Valley Shire Council FY2024-25 GPFS (landed 2026-11-19)
+### 7.74 Seventy-fourth landed council — Bega Valley Shire Council FY2025-26 GPFS (landed 2026-11-19)
 
-**Source and year.** FY2024-25 is the accepted current-available year for this source: the statements
-are for the **year ended 30 June 2025**. At 2026-11-19 the official page also lists a **2026 AFS**
-(FY2025-26); this item is explicitly scoped to FY2024-25, so the connector targets `2024-25` only and
-rejects every other year — including 2025-26 — rather than substituting it. The statement source is the
-council's **standalone annual financial statements** (not the narrative annual report), discovered
-from the official Financial Statements page
+**Source and year.** FY2025-26 is the **current audited standalone financial statements** published by
+the council at 2026-11-19: the statements are for the **year ended 30 June 2026**. The connector
+targets `2025-26` and never substitutes a prior-year (2024-25 or 2023-24) document; the superseded
+FY2024-25 upload is no longer ingested. The statement source is the council's **standalone annual
+financial statements** (not the narrative annual report), discovered from the official Financial
+Statements page
 <https://www.begavalley.nsw.gov.au/About-Council/Plans-and-Reporting/Financial-Statements>. The
-FY2024-25 upload is
-<https://www.begavalley.nsw.gov.au/files/assets/public/v/1/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/bega-valley-shire-council-annual_financial_statements-2025.pdf>.
+FY2025-26 upload is
+<https://www.begavalley.nsw.gov.au/files/assets/public/v/2/adopted-plans-and-strategies/01-integrated-planning-and-reporting/financial-statements/annual_financial_statements-2026.pdf>.
 A documented official fallback pin is used only if the page yields no usable anchor.
 
-**Akamai UA method.** The host's WAF returns **200** `application/pdf` (3,293,163 bytes) to a plain
+**Akamai UA method.** The host's WAF returns **200** `application/pdf` (3,371,024 bytes) to a plain
 client UA and **403** to a bare Chrome UA. The connector sends an explicit plain `curl/8.5.0`
 User-Agent (plus a broad PDF/HTML `Accept`) for both the listing and the PDF, and a focused test
 asserts that header is used.
 
-The 100-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p5,
+The 101-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p5,
 Statement of Comprehensive Income p6 and B1-1 "Functions or activities" p14 — plus the notes and the
 independent auditor's reports. The printed unit is explicit `$ '000`; a missing or conflicting unit
 rejects the whole extraction. Exact bytes archived outside the repo:
 
-- bytes: **3,293,163**
-- SHA-256: `d64606d2e274e11f61d253095ca89624c7773a5544aefbbcdcc7394b168a180b`
+- bytes: **3,371,024**
+- SHA-256: `647575d7038f30c303cfe59e67d7011ca117db24c9f35d10dec68416230e26b2`
 
 **Exact reconciliation.** The connector emits nothing unless all of these agree:
 
 | Check | Printed / derived | Result |
 | --- | --- | --- |
-| Total income from continuing operations (Income Statement) | `$171,852` thousand | = `$171,852,000` |
-| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest) | `$77,620` + `$24,074` + `$1,400` + `$24,964` + `$36,431` + `$7,363` = `$171,852` thousand | = printed total |
-| Expense components sum (employee + materials + borrowing costs + other expenses + net loss on disposal) | `$44,067` + `$49,235` + `$1,229` + `$1,522` + `$9,018` = `$105,071` thousand | = printed expenses excluding depreciation |
-| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$40,316`) | `$105,071` + `$40,316` = `$145,387` thousand | = printed B1-1 total expenses |
-| B1-1 Total functions and activities — income | `$171,852` thousand | = face statement |
-| B1-1 Total functions and activities — expenses | `$145,387` thousand | = face bridge |
-| B1-1 Total functions and activities — operating result | `$26,465` thousand | = face operating result |
-| B1-1 grants and contributions | `$61,395` thousand | = operating `$24,964` + capital `$36,431` |
-| Operating result from continuing operations | `$171,852` − `$145,387` = `$26,465` thousand | = printed operating result |
-| Net operating result for the year attributable to Council | `$26,465` thousand | = printed net result |
-| Net operating result before grants and contributions provided for capital purposes | `$26,465` − `$36,431` = `−$9,966` thousand | = printed figure (evidence only) |
-| Statement of Comprehensive Income net result | `$26,465` thousand | = Income Statement net result |
-| Other comprehensive income components (revaluation `$39,360` + other movements `−$466`) | `$38,894` thousand | = printed total other comprehensive income for the year |
-| Statement of Comprehensive Income total (`$26,465` + `$38,894` other comprehensive income) | `$65,359` thousand | = printed total comprehensive income |
+| Total income from continuing operations (Income Statement) | `$169,037` thousand | = `$169,037,000` |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest) | `$81,466` + `$25,191` + `$1,295` + `$33,458` + `$20,497` + `$7,130` = `$169,037` thousand | = printed total |
+| Expense components sum (employee + materials + borrowing costs + other expenses + net loss on disposal) | `$47,460` + `$44,373` + `$621` + `$1,826` + `$8,213` = `$102,493` thousand | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$43,409`) | `$102,493` + `$43,409` = `$145,902` thousand | = printed B1-1 total expenses |
+| B1-1 Total functions and activities — income | `$169,037` thousand | = face statement |
+| B1-1 Total functions and activities — expenses | `$145,902` thousand | = face bridge |
+| B1-1 Total functions and activities — operating result | `$23,135` thousand | = face operating result |
+| B1-1 grants and contributions | `$53,955` thousand | = operating `$33,458` + capital `$20,497` |
+| Operating result from continuing operations | `$169,037` − `$145,902` = `$23,135` thousand | = printed operating result |
+| Net operating result for the year attributable to Council | `$23,135` thousand | = printed net result |
+| Net operating result before grants and contributions provided for capital purposes | `$23,135` − `$20,497` = `$2,638` thousand | = printed figure (evidence only) |
+| Statement of Comprehensive Income net result | `$23,135` thousand | = Income Statement net result |
+| Other comprehensive income components (revaluation `$69,153` + other reserve movements `$123`) | `$69,276` thousand | = printed total other comprehensive income for the year |
+| Statement of Comprehensive Income total (`$23,135` + `$69,276` other comprehensive income) | `$92,411` thousand | = printed total comprehensive income |
 
-Total expenses is the printed face-statement bridge of expenses-excluding-depreciation (`$105,071`
-thousand) plus printed depreciation/amortisation/impairment (`$40,316` thousand), and equals the B1-1
-"Total functions and activities" expense total (`$145,387` thousand). B1-1 income, expenses, operating
+Total expenses is the printed face-statement bridge of expenses-excluding-depreciation (`$102,493`
+thousand) plus printed depreciation/amortisation/impairment (`$43,409` thousand), and equals the B1-1
+"Total functions and activities" expense total (`$145,902` thousand). B1-1 income, expenses, operating
 result and grants reconcile exactly to the face statement — there is **no face-vs-B1-1 discrepancy**.
 Bega Valley prints six revenue lines (no separate "Other income" line) and five expense lines,
-including a real printed **net loss on the disposal of assets** (`$9,018` thousand), which is emitted
-as an expense row. Its before-capital result is negative (`−$9,966` thousand) and is retained in
+including a real printed **net loss on the disposal of assets** (`$8,213` thousand), which is emitted
+as an expense row. Its before-capital result is positive (`$2,638` thousand) and is retained in
 reconciliation evidence only. Other comprehensive income has two printed components (revaluation gain
-and other movements); the adapter sums them and checks the sum against the printed OCI (`$38,894`
-thousand).
+and other reserve movements); the adapter sums them and checks the sum against the printed OCI
+(`$69,276` thousand).
 
 **Rows.** 16 rows, source id `bega-valley-gpfs`, `source_dataset` "Bega Valley Shire Council GPFS
-2024-25", `measure_type: "actual"`, `fiscal_year: "2024-25"`, `jurisdiction_level: "local"`,
+2025-26", `measure_type: "actual"`, `fiscal_year: "2025-26"`, `jurisdiction_level: "local"`,
 `jurisdiction: "NSW"`, `delivery_entity: "Bega Valley Shire Council"`, `data_quality_flag:
 "provisional/local_government"`, `verified: false`. The minimum lines are total revenue
-`$17,185,200,000`, total expenses `$14,538,700,000`, employee expenses `$4,406,700,000`,
-depreciation/amortisation/impairment `$4,031,600,000`, operating government grants `$2,496,400,000`,
-capital government grants `$3,643,100,000`, borrowing costs `$122,900,000`, net loss on disposal of
-assets `$901,800,000` and net result `$2,646,500,000`. The printed before-capital result is retained in
+`$16,903,700,000`, total expenses `$14,590,200,000`, employee expenses `$4,746,000,000`,
+depreciation/amortisation/impairment `$4,340,900,000`, operating government grants `$3,345,800,000`,
+capital government grants `$2,049,700,000`, borrowing costs `$62,100,000`, net loss on disposal of
+assets `$821,300,000` and net result `$2,313,500,000`. The printed before-capital result is retained in
 reconciliation evidence only and is not emitted as a row. The B1-1 function split is used only for the
 reconciliation checks and is not emitted as rows.
 
@@ -7064,20 +7064,19 @@ program data; they are not added to expenditure. The pre-existing same-entity ro
 untouched and never summed. A DB check confirms **0** non-`agency_detail` rows, **0** rows with
 `region_id`/`location` and a single `delivery_entity` for the source.
 
-**Database ingest proof (2026-11-19, shared dev DB `ausspend_dev`).** Ingesting only
-`bega-valley-gpfs` took the shared dev DB from **998,931** to **998,947** measures — exactly **+16**
-rows. GPFS rows moved **1413 → 1429** and active GPFS `data_sources` **73 → 74**; the SOC measure
-count (rows with `jurisdiction_level: "soc"`) stayed at **205** and every other per-source count was
-unchanged. A second ingest fetched/upserted the same 16 SHA-anchored natural keys, left the total at
-**998,947** and created no duplicate (idempotent). `data_sources` records the source `active` with
-`records_ingested: 16`; the latest `ingestion_logs` entry is `status: "success"`,
-`records_fetched: 16`, `records_upserted: 16`. All 16 measures carry `fiscal_year: "2024-25"`. The
-exact PDF is archived outside the repo under the configured source-archive root at
-`bega-valley-gpfs/bega-valley-shire-council-annual_financial_statements-2025.pdf` with its SHA-256
-and retrieval metadata; no PDF is committed. The focused connector test also proves idempotency
-against a dedicated test Mongo (seeded 5 rows → 21 with 16 rows; a second ingest leaves it at 21).
-Targeted connector tests passed (18/18). Full evidence:
-`docs/source-discovery/nsw-councils/bega-valley-gpfs.md`.
+**Database retarget proof (2026-11-19, shared dev DB `ausspend_dev`).** The stale FY2024-25 rows were
+deleted first: **16** rows removed, total **998,947 → 998,931**, GPFS rows **1429 → 1413**. The
+targeted FY2025-26 ingest then took the DB from **998,931** to **998,947** — exactly **+16** rows.
+GPFS rows returned to **1429** and the active GPFS `data_sources` count remains **74** (same source
+id); the SOC measure count stayed at **205** and every other per-source count was unchanged. The
+source now has **16** rows, **all `fiscal_year: "2025-26"`**; **0** stale FY2024-25 rows remain.
+`data_sources` records the source `active` with `records_ingested: 16`; the latest `ingestion_logs`
+entry is `status: "success"`, `records_fetched: 16`, `records_upserted: 16`. The exact PDF is archived
+outside the repo under the configured source-archive root at
+`bega-valley-gpfs/annual_financial_statements-2026.pdf` with its SHA-256 and retrieval metadata; no
+PDF is committed. The focused connector test also proves idempotency against a dedicated test Mongo
+(seeded 5 rows → 21 with 16 rows; a second ingest leaves it at 21). Targeted connector tests passed
+(18/18). Full evidence: `docs/source-discovery/nsw-councils/bega-valley-gpfs.md`.
 
 ---
 
