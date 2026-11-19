@@ -49,7 +49,7 @@ export const CESSNOCK_CONTEXT: CessnockGpfsParseContext = {
     listing_url: CESSNOCK_GPFS_REPORTING_URL,
   },
   archive: {
-    local_path: 'cessnock-gpfs/cessnock-annual-report-2024-25.pdf',
+    local_path: 'cessnock-gpfs/2025_annual-report-cessnock-city-council_2024-2025_spread.pdf',
     sha256: CESSNOCK_PDF_SHA256,
     bytes: CESSNOCK_PDF_BYTES,
     fetched_at: '2026-11-20T00:00:00.000Z',

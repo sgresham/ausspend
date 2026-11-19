@@ -10357,7 +10357,7 @@ ingest-ready; the item areas did not include a browser script, so the connector 
 plain fetch/archive path. In this retrieval run both the Annual Report page and the PDF returned
 `200` to `curl/8.5.0` (PDF `application/pdf`, 16,506,336 bytes, 103 spread pages / printed pp. 2-203).
 Exact bytes archived outside the repo at the relative path
-`cessnock-gpfs/cessnock-annual-report-2024-25.pdf`:
+`cessnock-gpfs/2025_annual-report-cessnock-city-council_2024-2025_spread.pdf`:
 
 - bytes: **16,506,336**
 - SHA-256: `d111d81c727c7e65f76866487e6a470bf717d301ffbe36d84fd88bba0411a494`

@@ -53,7 +53,8 @@ PDF, so it is never selected as the annual report.
 ## 3. Archive (outside the repo)
 
 The exact downloaded bytes are archived outside the repository under the configured source-archive
-root, with the relative archive path `cessnock-gpfs/cessnock-annual-report-2024-25.pdf`:
+root, with the relative archive path
+`cessnock-gpfs/2025_annual-report-cessnock-city-council_2024-2025_spread.pdf`:
 
 - URL: `https://www.cessnock.nsw.gov.au/files/assets/public/v/1/hptrim/website-integrated-planning-reporting-documents-do-not-change/2025_annual-report-cessnock-city-council_2024-2025_spread.pdf`
 - retrieval date: 2026-11-20
