@@ -95,6 +95,7 @@ const KNOWN_SOURCE_IDS = [
   'griffith-gpfs',
   'lithgow-gpfs',
   'mid-western-regional-gpfs',
+  'bega-valley-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

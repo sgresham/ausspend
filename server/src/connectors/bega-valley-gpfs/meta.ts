@@ -1,0 +1,17 @@
+import {
+  BEGA_VALLEY_GPFS_ID,
+  BEGA_VALLEY_GPFS_NAME,
+  BEGA_VALLEY_GPFS_PUBLISHER,
+  BEGA_VALLEY_GPFS_FISCAL_YEAR,
+  BEGA_VALLEY_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: BEGA_VALLEY_GPFS_ID,
+  name: BEGA_VALLEY_GPFS_NAME,
+  publisher: BEGA_VALLEY_GPFS_PUBLISHER,
+  fiscalYear: BEGA_VALLEY_GPFS_FISCAL_YEAR,
+  dataQualityFlag: BEGA_VALLEY_GPFS_DATA_QUALITY_FLAG,
+} as const;
