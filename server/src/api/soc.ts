@@ -9,6 +9,15 @@ import {
   ESSENTIAL_ENERGY_UNIT,
   ESSENTIAL_ENERGY_UNIT_LABEL,
   ESSENTIAL_ENERGY_UNIT_TO_CENTS,
+  CS_ENERGY_CAVEAT,
+  CS_ENERGY_ENTITY,
+  CS_ENERGY_ID,
+  CS_ENERGY_JURISDICTION,
+  CS_ENERGY_NAME,
+  CS_ENERGY_SOURCE_URL,
+  CS_ENERGY_UNIT,
+  CS_ENERGY_UNIT_LABEL,
+  CS_ENERGY_UNIT_TO_CENTS,
   ENERGY_QUEENSLAND_CAVEAT,
   ENERGY_QUEENSLAND_ENTITY,
   ENERGY_QUEENSLAND_ID,
@@ -111,8 +120,8 @@ import { DeferredSocDocumentModel, MeasureModel } from '../models/index.js';
  * total expenses includes employee/depreciation/transfer lines), so summing
  * them is invalid. Rows flagged `potential_double_count` name a government
  * agency or a government contribution and must never be added to government
- * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink and, in the QLD pilot, Energy Queensland) is a separate
- * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined.
+ * program spending. Each SOC entity (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland and CS Energy) is a separate
+ * source and is never summed with the others. NSW and QLD entities are different legal populations and are never combined; Energy Queensland and CS Energy are separate QLD GOCs and are never added together.
  *
  * WaterNSW deep detail adds note-level components (`soc_note`,
  * `soc_component_of`, `soc_breakdown`). They are grouped for the UI but are
@@ -243,6 +252,17 @@ const SOC_SOURCES = [
     unit_to_cents: ENERGY_QUEENSLAND_UNIT_TO_CENTS,
     caveat: ENERGY_QUEENSLAND_CAVEAT,
   },
+  {
+    source_id: CS_ENERGY_ID,
+    name: CS_ENERGY_NAME,
+    entity: CS_ENERGY_ENTITY,
+    jurisdiction: CS_ENERGY_JURISDICTION,
+    discovery_page: CS_ENERGY_SOURCE_URL,
+    unit: CS_ENERGY_UNIT,
+    unit_label: CS_ENERGY_UNIT_LABEL,
+    unit_to_cents: CS_ENERGY_UNIT_TO_CENTS,
+    caveat: CS_ENERGY_CAVEAT,
+  },
 ] as const;
 
 export const getSoc: RequestHandler = async (req, res) => {
@@ -367,6 +387,6 @@ export const getSoc: RequestHandler = async (req, res) => {
       potential_double_count: doubleCountRows,
       deferred_documents: deferred.length,
     },
-    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink and, in the QLD pilot, Energy Queensland). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
+    note: 'Entity-level SOC statement lines for separate state-owned corporations (Sydney Water, WaterNSW, Hunter Water, Essential Energy, Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney Trains, NSW TrainLink, Energy Queensland and CS Energy). No total is computed here and the entities are never summed with each other: total revenue already includes the separately shown government grants, total expenses already includes employee, depreciation/amortisation and transfer lines, and no SOC value may be added to government program spending, the PNFC benchmark, another QLD GOC, a QLD total, or another SOC line. NSW and QLD entities are different legal populations; Energy Queensland and CS Energy are separate QLD GOCs and are never added together. WaterNSW note-level rows (Notes 2, 4, 5, 6, 7, 8 and cash-flow capital expenditure) are components of their printed subtotals, never additional spending; `soc_component_of` names the subtotal and `soc_printed_sign` preserves a printed deduction. Every row is provisional and unverified until a human spot-check.',
   });
 };
