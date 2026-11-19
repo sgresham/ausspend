@@ -267,6 +267,19 @@ import {
   KIMBERLEY_PORTS_UNIT,
   KIMBERLEY_PORTS_UNIT_LABEL,
   KIMBERLEY_PORTS_UNIT_TO_CENTS,
+  PILBARA_PORTS_CAVEAT,
+  PILBARA_PORTS_ENTITY,
+  PILBARA_PORTS_ID,
+  PILBARA_PORTS_JURISDICTION,
+  PILBARA_PORTS_LEGAL_CLASS,
+  PILBARA_PORTS_LICENSE,
+  PILBARA_PORTS_NAME,
+  PILBARA_PORTS_PUBLICATIONS_URL,
+  PILBARA_PORTS_PUBLISHER,
+  PILBARA_PORTS_SOURCE_URL,
+  PILBARA_PORTS_UNIT,
+  PILBARA_PORTS_UNIT_LABEL,
+  PILBARA_PORTS_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -405,7 +418,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP, CleanCo Queensland Limited and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP, CleanCo Queensland Limited and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports, Kimberley Ports Authority and Pilbara Ports Authority). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -440,6 +453,7 @@ export const SOC_SOURCE_IDS = [
   BUSSELTON_WATER_ID,
   MID_WEST_PORTS_ID,
   KIMBERLEY_PORTS_ID,
+  PILBARA_PORTS_ID,
 ] as const;
 
 /**
@@ -1516,6 +1530,42 @@ async function writeKimberleyPortsManifest(): Promise<void> {
   );
 }
 
+async function writePilbaraPortsManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: PILBARA_PORTS_ID });
+  const manifestPath = path.resolve(
+    process.env.PILBARA_PORTS_MANIFEST ??
+      'docs/source-archive/wa-pilbara-ports-annual-report.json',
+  );
+  const manifest = {
+    entity: PILBARA_PORTS_ENTITY,
+    legal_class: PILBARA_PORTS_LEGAL_CLASS,
+    jurisdiction: PILBARA_PORTS_JURISDICTION,
+    dataset: PILBARA_PORTS_NAME,
+    publisher: PILBARA_PORTS_PUBLISHER,
+    discovery_page: PILBARA_PORTS_SOURCE_URL,
+    secondary_page: PILBARA_PORTS_PUBLICATIONS_URL,
+    license: PILBARA_PORTS_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${PILBARA_PORTS_UNIT_LABEL} (${PILBARA_PORTS_UNIT}; x${PILBARA_PORTS_UNIT_TO_CENTS} cents per unit; used only for a future human-verified report)`,
+    caveat: PILBARA_PORTS_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      'WA SOC: Pilbara Ports Authority only, a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)) and port authority (Port Authorities Act 1999 (WA)). The official annual-report and publications pages answer plain fetches with an Incapsula JavaScript challenge shell; the official sitemap lists no PDF document and the WA Parliament tabled-papers route is behind an Azure WAF JavaScript challenge. The adapter therefore defers FY2025-26 with zero rows; no stale prior-year row is created, no unofficial/search-engine copy is used and no archived PDF is committed. Never add Pilbara Ports Authority rows to government program spending, the PNFC benchmark, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.',
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1600,6 +1650,7 @@ async function main(): Promise<void> {
       [BUSSELTON_WATER_ID]: writeBusseltonWaterManifest,
       [MID_WEST_PORTS_ID]: writeMidWestPortsManifest,
       [KIMBERLEY_PORTS_ID]: writeKimberleyPortsManifest,
+      [PILBARA_PORTS_ID]: writePilbaraPortsManifest,
     };
     for (const sourceId of selectedSourceIds) {
       const writer = manifestWriters[sourceId];
@@ -2345,6 +2396,31 @@ async function main(): Promise<void> {
       console.log(
         `[ingest:soc] ${KIMBERLEY_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
+    }
+    const pilbaraPortsRows = await MeasureModel.countDocuments({ source_id: PILBARA_PORTS_ID });
+    const pilbaraPortsVerified = await MeasureModel.countDocuments({
+      source_id: PILBARA_PORTS_ID,
+      verified: true,
+    });
+    const pilbaraPortsDoubleCount = await MeasureModel.countDocuments({
+      source_id: PILBARA_PORTS_ID,
+      potential_double_count: true,
+    });
+    const pilbaraPortsByLine = await MeasureModel.aggregate([
+      { $match: { source_id: PILBARA_PORTS_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const pilbaraPortsDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: PILBARA_PORTS_ID,
+      status: 'deferred',
+    });
+    const pilbaraPortsArchived = await listArchivedRecords({ source_id: PILBARA_PORTS_ID });
+    console.log(
+      `[ingest:soc] ${PILBARA_PORTS_ID} rows=${pilbaraPortsRows} source_documents=${pilbaraPortsArchived.length} verified=${pilbaraPortsVerified} potential_double_count=${pilbaraPortsDoubleCount} deferred_documents=${pilbaraPortsDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed; FY2025-26 deferred 2026-11-19 because the official annual-report and publications pages are Incapsula JavaScript shells and no official current PDF was obtainable; no prior-year or unofficial copy is ingested)`,
+    );
+    for (const group of pilbaraPortsByLine) {
+      console.log(`[ingest:soc] ${PILBARA_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD and WA SOC adapters intentionally not implemented)`,
