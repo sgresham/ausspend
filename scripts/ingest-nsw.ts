@@ -53,6 +53,7 @@ import { fetchBathurstGpfsViaBrowser } from './bathurst-gpfs-browser.js';
 import { fetchBalranaldGpfsViaBrowser } from './balranald-gpfs-browser.js';
 import { fetchCabonneGpfsViaBrowser } from './cabonne-gpfs-browser.js';
 import { fetchFederationGpfsViaBrowser } from './federation-gpfs-browser.js';
+import { fetchGreaterHumeGpfsViaBrowser } from './greater-hume-gpfs-browser.js';
 import {
   CESSNOCK_GPFS_ID,
   createCessnockGpfsConnector,
@@ -97,6 +98,10 @@ import {
   FEDERATION_GPFS_ID,
   createFederationGpfsConnector,
 } from '../server/src/connectors/federation-gpfs/index.js';
+import {
+  GREATER_HUME_GPFS_ID,
+  createGreaterHumeGpfsConnector,
+} from '../server/src/connectors/greater-hume-gpfs/index.js';
 import { assertSeedTarget } from '../server/src/seed/guard.js';
 
 /**
@@ -361,6 +366,7 @@ export const NSW_SOURCE_IDS = [
   'balranald-gpfs',
   'cabonne-gpfs',
   'federation-gpfs',
+  'greater-hume-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
@@ -704,6 +710,15 @@ async function main(): Promise<void> {
       const fetched = await fetchFederationGpfsViaBrowser();
       console.log(`[ingest:nsw] federation-gpfs: discovered ${fetched.pdfUrl}`);
       connectors.push(createFederationGpfsConnector({ pdfBytes: fetched.pdfBytes }));
+      continue;
+    }
+    if (id === GREATER_HUME_GPFS_ID) {
+      // Greater Hume's official site is Akamai-blocked to plain clients, but
+      // headless Chromium retrieves the current audited FY2025-26 AFS.
+      console.log('[ingest:nsw] greater-hume-gpfs: browser discovery/download starting');
+      const fetched = await fetchGreaterHumeGpfsViaBrowser();
+      console.log(`[ingest:nsw] greater-hume-gpfs: discovered ${fetched.pdfUrl}`);
+      connectors.push(createGreaterHumeGpfsConnector({ pdfBytes: fetched.pdfBytes }));
       continue;
     }
     if (id === BATHURST_GPFS_ID) {

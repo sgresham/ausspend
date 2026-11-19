@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 122   |
-| NSW local-government source ids     | 123   |
-| Registered spending connectors      | 184   |
-| Active spending connectors          | 182   |
+| NSW council GPFS sources            | 123   |
+| NSW local-government source ids     | 124   |
+| Registered spending connectors      | 185   |
+| Active spending connectors          | 183   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -11990,6 +11990,34 @@ migration were performed.
   comprehensive income `$62,731,000` (single IPPE revaluation component `$60,273,000`).
 - `federation-gpfs` rows: 17, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
 - Docs counts refreshed to `nsw-gpfs=122`; focused Federation tests, golden-digest test, typecheck,
+  lint, docs-count guard and leak guard pass. No deploy.
+
+**GPFS thirty-ninth-council checks (Greater Hume), 2026-11-20:**
+
+- The entire official Greater Hume Shire Council site is behind Akamai: plain HTTP clients get HTTP
+  403 ("Access Denied", Akamai reference `#18.…`) for the home page, `robots.txt`, sitemaps and every
+  `/files` path. A real headless Chromium session gets HTTP 200 and the `/files` PDFs.
+- The current audited FY2025-26 Annual Financial Statements are linked from the official Financial
+  Statements exhibition page; the page records the 18 November 2026 Council presentation of the
+  audited statements and Auditor's Reports for the year ended 30 June 2026 (submissions to 25
+  November 2026). The older FY2024-25 statements on Documents and Policies are not substituted.
+- The FY2025-26 AFS PDF
+  (`https://www.greaterhume.nsw.gov.au/files/sharedassets/public/v/1/have-your-say/2026/greater-hume-council-financial-statements-2025-2026-final.pdf`)
+  (26,114,412 bytes, 122 pages) was fetched through the browser/WAF path and SHA-256 archived outside
+  the repo; SHA-256
+  `f181da5b9a70f33ec4c2a2ee5fbac7b0eae5ebd4162e91624226c675fefe9db5` (`hash_verified: true`). It
+  embeds the Auditor-General's unmodified GPFS opinion (PDF pages 88-89) and SPFS opinion (page
+  108).
+- Printed `$ '000` unit detected on the Income Statement, Statement of Comprehensive Income, B1-1,
+  Statement of Financial Position, Statement of Changes in Equity and Statement of Cash Flows; the
+  connector rejects a missing or conflicting unit.
+- Income statement, B1-1, comprehensive-income, balance-sheet and cash-flow totals reconcile
+  exactly: revenue `$51,700,000`, expenses `$52,015,000` (printed bridge of expenses excluding
+  depreciation `$33,909,000` plus depreciation/amortisation/impairment `$18,106,000`), net result
+  `$-315,000`; B1-1 grants `$21,116,000` = operating `$19,622,000` + capital `$1,494,000`; total
+  comprehensive income `$30,970,000` (single IPPE revaluation component `$31,285,000`).
+- `greater-hume-gpfs` rows: 18, all `aggregation_role: "agency_detail"`, no `region_id`/LGA.
+- Docs counts refreshed to `nsw-gpfs=123`; focused Greater Hume tests, golden-digest test, typecheck,
   lint, docs-count guard and leak guard pass. No deploy.
 
 ---
