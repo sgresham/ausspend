@@ -153,14 +153,18 @@ row, no state/federal addition.
 
 ## 8. Database ingest proof (2026-11-20, isolated scratch DB)
 
-Targeted ingest of **only `walgett-gpfs`** against an isolated scratch database:
+Targeted live run of **only `walgett-gpfs`** (browser-equivalent snapshot discovery + exact PDF
+fetch + archive + parse) against an isolated scratch database:
 
-- total measures **2 → 21** (exactly **+19**, preserving the two pre-existing non-Walgett rows);
-- `walgett-gpfs` measures **0 → 19**;
-- a second targeted run leaves **19** Walgett rows and total **21** unchanged (idempotent);
+- `walgett-gpfs` measures **0 → 19**; total measures **0 → 19**;
+- ingestion log: `status: "success"`, `records_fetched: 19`, `records_upserted: 19`, no errors;
 - **0** non-`agency_detail` rows, **0** rows with `region_id`/`location`, one `delivery_entity`
   (`Walgett Shire Council`), all rows `fiscal_year: "2024-25"`, and no council-total/aggregate row;
 - `data_sources` records the source `active` with `records_ingested: 19`.
+
+The focused test additionally seeds two unrelated non-Walgett rows, proves total measures
+**2 → 21** (exactly **+19**, preserving both), and proves a second targeted run leaves **19**
+Walgett rows and total **21** unchanged (idempotent).
 
 The exact PDF is archived outside the repo at the relative path
 `walgett-gpfs/e14f90d207d06a69-1776849622581_6c2e2885.pdf` with the SHA-256 above; no PDF is
