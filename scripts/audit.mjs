@@ -112,6 +112,7 @@ const KNOWN_SOURCE_IDS = [
   'parkes-gpfs',
   'cowra-gpfs',
   'leeton-gpfs',
+  'nambucca-valley-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
