@@ -96,6 +96,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  *   - warren-gpfs  GPFS expansion: Warren Shire Council's audited FY2025-26 GPFS
  *   - brewarrina-gpfs  GPFS expansion: Brewarrina Shire Council's audited FY2025-26 GPFS
  *   - bogan-gpfs  GPFS expansion: Bogan Shire Council's audited FY2025-26 GPFS
+ *   - kyogle-gpfs  GPFS expansion: Kyogle Council's audited FY2025-26 GPFS
  *
  * S3 deliberately covers only Dubbo Regional Council, and the GPFS expansion
  * adds only the City of Sydney, Blacktown City Council, the City of Parramatta,
@@ -111,7 +112,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * Lane Cove Council, Mosman Council, Wollondilly Shire Council, Camden
  * Council, Campbelltown City Council, Central Coast Council, Hornsby Shire
  * Council, Penrith City Council, The Hills Shire Council, Warren Shire Council
- * and Brewarrina Shire Council and Bogan Shire Council. No other councils, states/territories, SOC/charity or live state
+ * and Brewarrina Shire Council and Bogan Shire Council and Kyogle Council. No other councils, states/territories, SOC/charity or live state
  * connectors are touched. The runner upserts on natural_key, so re-running is
  * idempotent and never deletes existing federal/synthetic rows.
  */
@@ -165,6 +166,7 @@ export const NSW_SOURCE_IDS = [
   'warren-gpfs',
   'brewarrina-gpfs',
   'bogan-gpfs',
+  'kyogle-gpfs',
 ] as const;
 
 function requestedSource(argv: readonly string[]): string | null {
