@@ -75,7 +75,7 @@ export const COBAR_CONTEXT: CobarGpfsParseContext = {
 /** Golden fixture for the cobar-gpfs module: 16 rows. */
 export const COBAR_GPFS_ROW_COUNT = 16;
 export const COBAR_GPFS_GOLDEN_DIGEST =
-  'b39c03e2b9986bacfd2eb233684439e4011ac607490d9b44ee2e7596eb1f5ceb';
+  '76ebbe262c2683c5c5aaeb1940505a1ac9b395d3fa02b38cdecb4540ad1ad496';
 export const ROW_COUNT = COBAR_GPFS_ROW_COUNT;
 export const GOLDEN_DIGEST = COBAR_GPFS_GOLDEN_DIGEST;
 
