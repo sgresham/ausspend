@@ -1,5 +1,14 @@
 # Burwood Council GPFS — DEFERRED
 
+> **Superseded 2026-11-20.** The FY2025-26 audited Annual Financial Statements (year ended 30 June
+> 2026) were found on the official consultation host
+> <https://participate.burwood.nsw.gov.au/annual-financial-statement-year-ended-30-june-2026>
+> (PDF <https://participate.burwood.nsw.gov.au/download_file/2459/1036>, SHA-256
+> `9b6e3f8725e47823038329b269d955ef263d7cc6680aacea9b944320919f2e13`). They are now ingested by
+> `burwood-gpfs` as 18 non-additive statement rows; see
+> `docs/source-discovery/nsw-councils/burwood-gpfs.md`. The deferral below applies only to the
+> FY2024-25 narrative annual report, which remains summary-only.
+
 Item: `w-mwleet0n-czhk`. Decision: **defer, do not ingest or invent rows**,
 per the brief's premise falsifier.
 
