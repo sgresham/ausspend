@@ -1779,11 +1779,12 @@ Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Por
 verified against their 2025-26 audited annual reports. Kimberley Ports Authority is implemented but
 deferred 2026-11-19 (no printed total employee benefits expense; no rows). Pilbara Ports Authority is
 implemented but deferred 2026-11-19 because its official annual-report and publications pages are
-Incapsula JavaScript shells and no official current PDF was obtainable (no rows). The first NT
-pilot, Jacana Energy, is implemented and verified against its FY2025-26 audited annual report
-(five entity-level rows); it is one NT GOC only and the NT GOC list is not claimed complete, so
-do not add Power and Water, Territory Generation, another NT GOC or an NT total until the owner
-confirms the list and intended use. Aqwest remains not resolvable (JS-only
+Incapsula JavaScript shells and no official current PDF was obtainable (no rows). The first two NT
+pilots, Jacana Energy and Territory Generation, are implemented and verified against their
+FY2025-26 audited annual reports (five entity-level rows each); they are two NT GOCs only and the
+NT GOC list is not claimed complete, so do not add Power and Water, another NT GOC, an NT total, or
+either implemented entity to the other until the owner confirms the list and intended use. Aqwest
+remains not resolvable (JS-only
 official page; no rows). Port of
 Townsville remains deferred, not merged data. They remain single-entity,
 read-only proofs: do not add another QLD GOC, a QLD total or another state until the owner confirms
