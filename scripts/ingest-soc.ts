@@ -242,6 +242,18 @@ import {
   MID_WEST_PORTS_UNIT,
   MID_WEST_PORTS_UNIT_LABEL,
   MID_WEST_PORTS_UNIT_TO_CENTS,
+  KIMBERLEY_PORTS_CAVEAT,
+  KIMBERLEY_PORTS_ENTITY,
+  KIMBERLEY_PORTS_ID,
+  KIMBERLEY_PORTS_JURISDICTION,
+  KIMBERLEY_PORTS_LEGAL_CLASS,
+  KIMBERLEY_PORTS_LICENSE,
+  KIMBERLEY_PORTS_NAME,
+  KIMBERLEY_PORTS_PUBLISHER,
+  KIMBERLEY_PORTS_SOURCE_URL,
+  KIMBERLEY_PORTS_UNIT,
+  KIMBERLEY_PORTS_UNIT_LABEL,
+  KIMBERLEY_PORTS_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -380,7 +392,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water and Mid West Ports). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, Busselton Water, Mid West Ports and Kimberley Ports Authority). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -413,6 +425,7 @@ export const SOC_SOURCE_IDS = [
   SOUTHERN_PORTS_ID,
   BUSSELTON_WATER_ID,
   MID_WEST_PORTS_ID,
+  KIMBERLEY_PORTS_ID,
 ] as const;
 
 /**
@@ -1419,14 +1432,63 @@ async function writeMidWestPortsManifest(): Promise<void> {
   );
 }
 
+async function writeKimberleyPortsManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: KIMBERLEY_PORTS_ID });
+  const manifestPath = path.resolve(
+    process.env.KIMBERLEY_PORTS_MANIFEST ??
+      'docs/source-archive/wa-kimberley-ports-annual-report.json',
+  );
+  const manifest = {
+    entity: KIMBERLEY_PORTS_ENTITY,
+    legal_class: KIMBERLEY_PORTS_LEGAL_CLASS,
+    jurisdiction: KIMBERLEY_PORTS_JURISDICTION,
+    dataset: KIMBERLEY_PORTS_NAME,
+    publisher: KIMBERLEY_PORTS_PUBLISHER,
+    discovery_page: KIMBERLEY_PORTS_SOURCE_URL,
+    license: KIMBERLEY_PORTS_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${KIMBERLEY_PORTS_UNIT_LABEL} (${KIMBERLEY_PORTS_UNIT}; x${KIMBERLEY_PORTS_UNIT_TO_CENTS} cents per unit)`,
+    caveat: KIMBERLEY_PORTS_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Kimberley Ports Authority only, a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). Latest annual report discovered from the official publications page (no hard-coded PDF URL; documented WordPress-search fallback) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $'000 unit and two reporting-year columns; the adapter reads the 2026 column only. It has no printed Total revenue or Total expenses subtotal, so total revenue is the exact sum of Revenue + Other Income and total expenses is the exact sum of the printed expense lines; both bridge to the printed Profit before income tax and Net Profit after tax at zero tolerance. The 2025-26 document is deferred with no rows because it does not print a total employee benefits expense (Note 1 allocates employee benefits across port operations, general administration and asset maintenance; asset maintenance has no note split). Every future row would be a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Kimberley Ports Authority rows to government program spending, the PNFC benchmark, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
+  const onlySourceIds = (process.env.SOC_ONLY_SOURCE_IDS ?? '')
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  const selectedSourceIds =
+    onlySourceIds.length > 0
+      ? (SOC_SOURCE_IDS as readonly string[]).filter((id) => onlySourceIds.includes(id))
+      : SOC_SOURCE_IDS;
+  const unknownOnly = onlySourceIds.filter(
+    (id) => !(SOC_SOURCE_IDS as readonly string[]).includes(id),
+  );
+  if (unknownOnly.length > 0) {
+    throw new Error(`SOC_ONLY_SOURCE_IDS contains unknown source id(s): ${unknownOnly.join(', ')}`);
+  }
 
-  const connectors = SOC_SOURCE_IDS.map((id, index) => {
+  const connectors = selectedSourceIds.map((id) => {
     const connector = getConnector(id);
     if (!connector) throw new Error(`unknown SOC source "${id}"`);
-    const expected = index === 0 ? 'pnfc' : 'soc';
+    const expected = id === ABS_GFS_PNFC_ID ? 'pnfc' : 'soc';
     if (connector.jurisdiction_level !== expected) {
       throw new Error(
         `${id} is ${connector.jurisdiction_level}-level; expected ${expected} in SOC_SOURCE_IDS order`,
@@ -1451,39 +1513,48 @@ async function main(): Promise<void> {
     }
 
     // Persist archive metadata (never bytes) and refresh the committed manifests.
-    for (const sourceId of SOC_SOURCE_IDS) {
+    // A SOC_ONLY_SOURCE_IDS run only touches the selected source's manifest so a
+    // targeted ingest cannot churn every other committed retrieval timestamp.
+    for (const sourceId of selectedSourceIds) {
       const archived = await listArchivedRecords({ source_id: sourceId });
       for (const record of archived) await persistArchivedRecord(record);
     }
-    await writePnfcManifest();
-    await writeSydneyWaterManifest();
-    await writeWaterNswManifest();
-    await writeHunterWaterManifest();
-    await writeEssentialEnergyManifest();
-    await writeForestryCorporationManifest();
-    await writeLandcomManifest();
-    await writePortAuthorityManifest();
-    await writeTaheManifest();
-    await writeSydneyTrainsManifest();
-    await writeNswTrainlinkManifest();
-    await writeEnergyQueenslandManifest();
-    await writeCsEnergyManifest();
-    await writeStanwellManifest();
-    await writePowerlinkManifest();
-    await writeSunwaterManifest();
-    await writeGladstonePortsManifest();
-    await writePortOfTownsvilleManifest();
-    await writePortsNorthManifest();
-    await writeNqbpManifest();
-    await writeWaterCorporationManifest();
-    await writeSynergyManifest();
-    await writeWesternPowerManifest();
-    await writeHorizonPowerManifest();
-    await writeFremantlePortsManifest();
-    await writeDevelopmentWaManifest();
-    await writeSouthernPortsManifest();
-    await writeBusseltonWaterManifest();
-    await writeMidWestPortsManifest();
+    const manifestWriters: Partial<Record<string, () => Promise<void>>> = {
+      [ABS_GFS_PNFC_ID]: writePnfcManifest,
+      [SYDNEY_WATER_ID]: writeSydneyWaterManifest,
+      [WATERNSW_ID]: writeWaterNswManifest,
+      [HUNTER_WATER_ID]: writeHunterWaterManifest,
+      [ESSENTIAL_ENERGY_ID]: writeEssentialEnergyManifest,
+      [FORESTRY_CORPORATION_ID]: writeForestryCorporationManifest,
+      [LANDCOM_ID]: writeLandcomManifest,
+      [PORT_AUTHORITY_ID]: writePortAuthorityManifest,
+      [TAHE_ID]: writeTaheManifest,
+      [SYDNEY_TRAINS_ID]: writeSydneyTrainsManifest,
+      [NSW_TRAINLINK_ID]: writeNswTrainlinkManifest,
+      [ENERGY_QUEENSLAND_ID]: writeEnergyQueenslandManifest,
+      [CS_ENERGY_ID]: writeCsEnergyManifest,
+      [STANWELL_ID]: writeStanwellManifest,
+      [POWERLINK_ID]: writePowerlinkManifest,
+      [SUNWATER_ID]: writeSunwaterManifest,
+      [GLADSTONE_PORTS_ID]: writeGladstonePortsManifest,
+      [PORT_OF_TOWNSVILLE_ID]: writePortOfTownsvilleManifest,
+      [PORTS_NORTH_ID]: writePortsNorthManifest,
+      [NQBP_ID]: writeNqbpManifest,
+      [WATER_CORPORATION_ID]: writeWaterCorporationManifest,
+      [SYNERGY_ID]: writeSynergyManifest,
+      [WESTERN_POWER_ID]: writeWesternPowerManifest,
+      [HORIZON_POWER_ID]: writeHorizonPowerManifest,
+      [FREMANTLE_PORTS_ID]: writeFremantlePortsManifest,
+      [DEVELOPMENTWA_ID]: writeDevelopmentWaManifest,
+      [SOUTHERN_PORTS_ID]: writeSouthernPortsManifest,
+      [BUSSELTON_WATER_ID]: writeBusseltonWaterManifest,
+      [MID_WEST_PORTS_ID]: writeMidWestPortsManifest,
+      [KIMBERLEY_PORTS_ID]: writeKimberleyPortsManifest,
+    };
+    for (const sourceId of selectedSourceIds) {
+      const writer = manifestWriters[sourceId];
+      if (writer) await writer();
+    }
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -2171,6 +2242,33 @@ async function main(): Promise<void> {
     for (const group of midWestPortsByLine) {
       console.log(
         `[ingest:soc] ${MID_WEST_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const kimberleyPortsRows = await MeasureModel.countDocuments({ source_id: KIMBERLEY_PORTS_ID });
+    const kimberleyPortsVerified = await MeasureModel.countDocuments({
+      source_id: KIMBERLEY_PORTS_ID,
+      verified: true,
+    });
+    const kimberleyPortsDoubleCount = await MeasureModel.countDocuments({
+      source_id: KIMBERLEY_PORTS_ID,
+      potential_double_count: true,
+    });
+    const kimberleyPortsByLine = await MeasureModel.aggregate([
+      { $match: { source_id: KIMBERLEY_PORTS_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const kimberleyPortsDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: KIMBERLEY_PORTS_ID,
+      status: 'deferred',
+    });
+    const kimberleyPortsArchived = await listArchivedRecords({ source_id: KIMBERLEY_PORTS_ID });
+    console.log(
+      `[ingest:soc] ${KIMBERLEY_PORTS_ID} rows=${kimberleyPortsRows} source_documents=${kimberleyPortsArchived.length} verified=${kimberleyPortsVerified} potential_double_count=${kimberleyPortsDoubleCount} deferred_documents=${kimberleyPortsDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed; 2025-26 deferred for the missing printed employee-benefits expense)`,
+    );
+    for (const group of kimberleyPortsByLine) {
+      console.log(
+        `[ingest:soc] ${KIMBERLEY_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(
