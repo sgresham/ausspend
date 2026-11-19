@@ -23,6 +23,31 @@ test('spending explorer shows mixed warning and per-type totals, never a headlin
   await expect(page.getByText('Provenance:').first()).toBeVisible();
 });
 
+test('spending row headers sort the visible page and expose aria-sort', async ({ page }) => {
+  await page.goto('/search?measure_type=actual&fiscal_year=2024-25');
+
+  const table = page.getByTestId('spending-rows');
+  const rows = table.locator('tbody tr');
+  const fiscalYearHeader = table.locator('thead th').filter({ hasText: 'Fiscal year' });
+  const amountHeader = table.locator('thead th').filter({ hasText: 'Amount' });
+
+  await expect(fiscalYearHeader).toHaveAttribute('aria-sort', 'descending');
+  await expect(amountHeader).toHaveAttribute('aria-sort', 'none');
+  await expect(rows.first()).toContainText('2,000,000,000');
+
+  await amountHeader.getByText('Amount', { exact: true }).click();
+
+  await expect(amountHeader).toHaveAttribute('aria-sort', 'descending');
+  await expect(fiscalYearHeader).toHaveAttribute('aria-sort', 'none');
+  await expect(rows.first()).toContainText('2,000,000,000');
+
+  await amountHeader.getByText('Amount', { exact: true }).click();
+
+  await expect(amountHeader).toHaveAttribute('aria-sort', 'ascending');
+  await expect(rows.first()).toContainText('800,000,000');
+  await expect(rows.last()).toContainText('2,000,000,000');
+});
+
 test('a single measure-type filter shows the headline total', async ({ page }) => {
   await page.goto('/search?measure_type=actual&fiscal_year=2024-25');
 

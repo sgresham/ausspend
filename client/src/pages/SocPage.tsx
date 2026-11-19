@@ -234,6 +234,24 @@ export function SocPage() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 {soc?.note}
               </Typography>
+              {/*
+                Sorting is intentionally not offered here. Each accordion group mixes
+                published statement lines with note components of printed subtotals
+                (soc_component_of), so a generic fiscal-year/amount sort would reorder
+                components away from the subtotal they belong to and imply a comparison
+                the source does not support. Published statement order is kept.
+              */}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mb: 2 }}
+                data-testid="soc-not-sortable"
+              >
+                Rows stay in published statement order and are not sortable: each group mixes
+                statement lines with note components of printed subtotals, so a generic
+                fiscal-year/amount sort would be misleading. No total is calculated from this
+                order.
+              </Typography>
               <Box data-testid="soc-series">
                 {groups.map(([groupName, groupRows], groupIndex) => {
                   const isFace = groupName === 'Face statement';
