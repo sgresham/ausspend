@@ -1,0 +1,17 @@
+import {
+  ARMIDALE_GPFS_ID,
+  ARMIDALE_GPFS_NAME,
+  ARMIDALE_GPFS_PUBLISHER,
+  ARMIDALE_GPFS_FISCAL_YEAR,
+  ARMIDALE_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: ARMIDALE_GPFS_ID,
+  name: ARMIDALE_GPFS_NAME,
+  publisher: ARMIDALE_GPFS_PUBLISHER,
+  fiscalYear: ARMIDALE_GPFS_FISCAL_YEAR,
+  dataQualityFlag: ARMIDALE_GPFS_DATA_QUALITY_FLAG,
+} as const;
