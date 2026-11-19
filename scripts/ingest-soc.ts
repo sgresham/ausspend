@@ -36,6 +36,18 @@ import {
   ENERGY_QUEENSLAND_UNIT,
   ENERGY_QUEENSLAND_UNIT_LABEL,
   ENERGY_QUEENSLAND_UNIT_TO_CENTS,
+  CS_ENERGY_CAVEAT,
+  CS_ENERGY_ENTITY,
+  CS_ENERGY_ID,
+  CS_ENERGY_JURISDICTION,
+  CS_ENERGY_LEGAL_CLASS,
+  CS_ENERGY_LICENSE,
+  CS_ENERGY_NAME,
+  CS_ENERGY_PUBLISHER,
+  CS_ENERGY_SOURCE_URL,
+  CS_ENERGY_UNIT,
+  CS_ENERGY_UNIT_LABEL,
+  CS_ENERGY_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -189,6 +201,7 @@ export const SOC_SOURCE_IDS = [
   SYDNEY_TRAINS_ID,
   NSW_TRAINLINK_ID,
   ENERGY_QUEENSLAND_ID,
+  CS_ENERGY_ID,
 ] as const;
 
 /**
@@ -605,6 +618,40 @@ async function writeEnergyQueenslandManifest(): Promise<void> {
   );
 }
 
+async function writeCsEnergyManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: CS_ENERGY_ID });
+  const manifestPath = path.resolve(
+    process.env.CS_ENERGY_MANIFEST ?? 'docs/source-archive/qld-cs-energy-annual-report.json',
+  );
+  const manifest = {
+    entity: CS_ENERGY_ENTITY,
+    legal_class: CS_ENERGY_LEGAL_CLASS,
+    jurisdiction: CS_ENERGY_JURISDICTION,
+    dataset: CS_ENERGY_NAME,
+    publisher: CS_ENERGY_PUBLISHER,
+    discovery_page: CS_ENERGY_SOURCE_URL,
+    license: CS_ENERGY_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${CS_ENERGY_UNIT_LABEL} (${CS_ENERGY_UNIT}; x${CS_ENERGY_UNIT_TO_CENTS} cents per unit)`,
+    caveat: CS_ENERGY_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: CS Energy Limited only. Latest annual report discovered from CS Energy's official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The consolidated statement prints an explicit $'000 unit; it has no printed Total revenue or Total expenses subtotal, so total revenue is the exact sum of Revenue + Interest income + Other income and total expenses is the exact sum of the printed expense lines plus Loss on disposed assets. Both are accepted only when they bridge to the printed Loss before income tax expense and Loss after income tax expense for the year with zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add CS Energy rows to government program spending, the PNFC benchmark, Energy Queensland, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -653,6 +700,7 @@ async function main(): Promise<void> {
     await writeSydneyTrainsManifest();
     await writeNswTrainlinkManifest();
     await writeEnergyQueenslandManifest();
+    await writeCsEnergyManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -901,6 +949,33 @@ async function main(): Promise<void> {
     for (const group of eqByLine) {
       console.log(
         `[ingest:soc] ${ENERGY_QUEENSLAND_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const csRows = await MeasureModel.countDocuments({ source_id: CS_ENERGY_ID });
+    const csVerified = await MeasureModel.countDocuments({
+      source_id: CS_ENERGY_ID,
+      verified: true,
+    });
+    const csDoubleCount = await MeasureModel.countDocuments({
+      source_id: CS_ENERGY_ID,
+      potential_double_count: true,
+    });
+    const csByLine = await MeasureModel.aggregate([
+      { $match: { source_id: CS_ENERGY_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const csDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: CS_ENERGY_ID,
+      status: 'deferred',
+    });
+    const csArchived = await listArchivedRecords({ source_id: CS_ENERGY_ID });
+    console.log(
+      `[ingest:soc] ${CS_ENERGY_ID} rows=${csRows} source_documents=${csArchived.length} verified=${csVerified} potential_double_count=${csDoubleCount} deferred_documents=${csDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of csByLine) {
+      console.log(
+        `[ingest:soc] ${CS_ENERGY_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(
