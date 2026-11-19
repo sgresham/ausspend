@@ -1,0 +1,17 @@
+import {
+  HILLTOPS_GPFS_ID,
+  HILLTOPS_GPFS_NAME,
+  HILLTOPS_GPFS_PUBLISHER,
+  HILLTOPS_GPFS_FISCAL_YEAR,
+  HILLTOPS_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: HILLTOPS_GPFS_ID,
+  name: HILLTOPS_GPFS_NAME,
+  publisher: HILLTOPS_GPFS_PUBLISHER,
+  fiscalYear: HILLTOPS_GPFS_FISCAL_YEAR,
+  dataQualityFlag: HILLTOPS_GPFS_DATA_QUALITY_FLAG,
+} as const;
