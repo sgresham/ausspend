@@ -133,6 +133,18 @@ import {
   NQBP_UNIT,
   NQBP_UNIT_LABEL,
   NQBP_UNIT_TO_CENTS,
+  WATER_CORPORATION_CAVEAT,
+  WATER_CORPORATION_ENTITY,
+  WATER_CORPORATION_ID,
+  WATER_CORPORATION_JURISDICTION,
+  WATER_CORPORATION_LEGAL_CLASS,
+  WATER_CORPORATION_LICENSE,
+  WATER_CORPORATION_NAME,
+  WATER_CORPORATION_PUBLISHER,
+  WATER_CORPORATION_SOURCE_URL,
+  WATER_CORPORATION_UNIT,
+  WATER_CORPORATION_UNIT_LABEL,
+  WATER_CORPORATION_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -271,7 +283,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North and NQBP). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTE, Water Corporation). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -295,6 +307,7 @@ export const SOC_SOURCE_IDS = [
   PORT_OF_TOWNSVILLE_ID,
   PORTS_NORTH_ID,
   NQBP_ID,
+  WATER_CORPORATION_ID,
 ] as const;
 
 /**
@@ -988,6 +1001,41 @@ async function writeNqbpManifest(): Promise<void> {
   );
 }
 
+async function writeWaterCorporationManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: WATER_CORPORATION_ID });
+  const manifestPath = path.resolve(
+    process.env.WATER_CORPORATION_MANIFEST ??
+      'docs/source-archive/wa-water-corporation-annual-report.json',
+  );
+  const manifest = {
+    entity: WATER_CORPORATION_ENTITY,
+    legal_class: WATER_CORPORATION_LEGAL_CLASS,
+    jurisdiction: WATER_CORPORATION_JURISDICTION,
+    dataset: WATER_CORPORATION_NAME,
+    publisher: WATER_CORPORATION_PUBLISHER,
+    discovery_page: WATER_CORPORATION_SOURCE_URL,
+    license: WATER_CORPORATION_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${WATER_CORPORATION_UNIT_LABEL} (${WATER_CORPORATION_UNIT}; x${WATER_CORPORATION_UNIT_TO_CENTS} cents per unit)`,
+    caveat: WATER_CORPORATION_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Water Corporation only, a WA Government Trading Enterprise under the Government Trading Enterprises Act 2023 (WA). Latest annual report discovered from the official annual report page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $M unit and both Group and Corporation columns; the adapter reads the Group 2026 column only. The printed revenue and expense components sum exactly to the printed subtotals and the operating-activities, profit-before-tax, net-result, OCI and total-comprehensive-income bridges agree at zero tolerance on the 2025-26 report. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Water Corporation rows to government program spending, the PNFC benchmark, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1044,6 +1092,7 @@ async function main(): Promise<void> {
     await writePortOfTownsvilleManifest();
     await writePortsNorthManifest();
     await writeNqbpManifest();
+    await writeWaterCorporationManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1490,8 +1539,35 @@ async function main(): Promise<void> {
     for (const group of nqbpByLine) {
       console.log(`[ingest:soc] ${NQBP_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
     }
+    const waterCorpRows = await MeasureModel.countDocuments({ source_id: WATER_CORPORATION_ID });
+    const waterCorpVerified = await MeasureModel.countDocuments({
+      source_id: WATER_CORPORATION_ID,
+      verified: true,
+    });
+    const waterCorpDoubleCount = await MeasureModel.countDocuments({
+      source_id: WATER_CORPORATION_ID,
+      potential_double_count: true,
+    });
+    const waterCorpByLine = await MeasureModel.aggregate([
+      { $match: { source_id: WATER_CORPORATION_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const waterCorpDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: WATER_CORPORATION_ID,
+      status: 'deferred',
+    });
+    const waterCorpArchived = await listArchivedRecords({ source_id: WATER_CORPORATION_ID });
     console.log(
-      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
+      `[ingest:soc] ${WATER_CORPORATION_ID} rows=${waterCorpRows} source_documents=${waterCorpArchived.length} verified=${waterCorpVerified} potential_double_count=${waterCorpDoubleCount} deferred_documents=${waterCorpDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of waterCorpByLine) {
+      console.log(
+        `[ingest:soc] ${WATER_CORPORATION_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    console.log(
+      `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW, QLD and WA SOC adapters intentionally not implemented)`,
     );
 
     const failed = result.results.filter((entry) => entry.log_status === 'error').length;
