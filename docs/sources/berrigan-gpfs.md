@@ -1,0 +1,10 @@
+# Berrigan Shire Council — General Purpose Financial Statements
+
+- id: `berrigan-gpfs`
+- publisher: Berrigan Shire Council
+- source: <https://www.berriganshire.nsw.gov.au/Council/Governance-Transparency/Policies-Plans-Documents/Reports/Financial-Statements>
+- jurisdiction: local
+- status: active
+- licence: © Berrigan Shire Council. Published council documents used here for public-interest research; not an open-data licence grant.
+
+NSW council GPFS adapter: one council only (Berrigan Shire Council), audited FY2025-26 General Purpose Financial Statements — the statement source is the official standalone annual financial statements (not the narrative annual report); FY2025-26 is the current audited year available (no later audited standalone statements published as at 2026-11-19), and the connector rejects the earlier 2024-25 and 2023-24 documents. The face statement reconciles internally, but the printed B1-1 Total functions and activities row reports expenses 32,741 and operating result 1,314 against the face total expenses 32,742 and net result 1,313 (a $1 thousand difference); the connector therefore defers the document with 0 rows and records the exact gap rather than adjusting or fabricating figures. The PDF is discovered from the official Berrigan Shire Council Financial Statements page (the direct FY2025-26 Financial Statements PDF), with a documented official fallback pin only when the page yields no usable anchor; the exact bytes are SHA-256 archived outside the repo, and parsed only when the printed $'000 unit is explicit and the income statement, B1-1 Total functions and activities and Statement of Comprehensive Income reconcile exactly. Every row is a non-additive agency_detail line (provisional/local_government, unverified) with a distinct source id; no region/LGA allocation and no other council is ingested. Total expenses is the documented bridge of the printed expenses-excluding-depreciation line plus the printed depreciation line, reconciled against the printed B1-1 totals.
