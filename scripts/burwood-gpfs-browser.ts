@@ -170,4 +170,5 @@ if (isMain) {
     await writeFile(out, fetched.pdfBytes);
     console.log(`[burwood-gpfs-browser] wrote ${out}`);
   }
+  process.exit(0);
 }
