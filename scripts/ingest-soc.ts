@@ -84,6 +84,18 @@ import {
   SUNWATER_UNIT,
   SUNWATER_UNIT_LABEL,
   SUNWATER_UNIT_TO_CENTS,
+  GLADSTONE_PORTS_CAVEAT,
+  GLADSTONE_PORTS_ENTITY,
+  GLADSTONE_PORTS_ID,
+  GLADSTONE_PORTS_JURISDICTION,
+  GLADSTONE_PORTS_LEGAL_CLASS,
+  GLADSTONE_PORTS_LICENSE,
+  GLADSTONE_PORTS_NAME,
+  GLADSTONE_PORTS_PUBLISHER,
+  GLADSTONE_PORTS_SOURCE_URL,
+  GLADSTONE_PORTS_UNIT,
+  GLADSTONE_PORTS_UNIT_LABEL,
+  GLADSTONE_PORTS_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -222,7 +234,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland and Sunwater Limited). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -242,6 +254,7 @@ export const SOC_SOURCE_IDS = [
   STANWELL_ID,
   POWERLINK_ID,
   SUNWATER_ID,
+  GLADSTONE_PORTS_ID,
 ] as const;
 
 /**
@@ -794,6 +807,41 @@ async function writeSunwaterManifest(): Promise<void> {
   );
 }
 
+async function writeGladstonePortsManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: GLADSTONE_PORTS_ID });
+  const manifestPath = path.resolve(
+    process.env.GLADSTONE_PORTS_MANIFEST ??
+      'docs/source-archive/qld-gladstone-ports-annual-report.json',
+  );
+  const manifest = {
+    entity: GLADSTONE_PORTS_ENTITY,
+    legal_class: GLADSTONE_PORTS_LEGAL_CLASS,
+    jurisdiction: GLADSTONE_PORTS_JURISDICTION,
+    dataset: GLADSTONE_PORTS_NAME,
+    publisher: GLADSTONE_PORTS_PUBLISHER,
+    discovery_page: GLADSTONE_PORTS_SOURCE_URL,
+    license: GLADSTONE_PORTS_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${GLADSTONE_PORTS_UNIT_LABEL} (${GLADSTONE_PORTS_UNIT}; x${GLADSTONE_PORTS_UNIT_TO_CENTS} cents per unit)`,
+    caveat: GLADSTONE_PORTS_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "QLD SOC: Gladstone Ports Corporation Limited only, a Queensland Government Owned Corporation. Latest annual report discovered from the official reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The consolidated statement prints an explicit $'000 unit; it prints Total revenue and other income but no Total expenses subtotal, so total expenses is the exact sum of Employee benefits expenses + Operational expenses + Depreciation/amortisation expenses + Finance costs + Impairment + Net profit/(loss) on disposal of non-current assets. It is accepted only when it bridges to the printed Profit before income tax (after the printed Reversal of prior impairment and revaluation gains) and Profit for the year with zero tolerance; Employee benefits also reconciles exactly to Note 6(d). Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Gladstone Ports rows to government program spending, the PNFC benchmark, Energy Queensland, CS Energy, Stanwell, Powerlink Queensland, Sunwater Limited, another QLD GOC, a QLD total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -846,6 +894,7 @@ async function main(): Promise<void> {
     await writeStanwellManifest();
     await writePowerlinkManifest();
     await writeSunwaterManifest();
+    await writeGladstonePortsManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -1195,6 +1244,33 @@ async function main(): Promise<void> {
     );
     for (const group of sunwaterByLine) {
       console.log(`[ingest:soc] ${SUNWATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`);
+    }
+    const gladstoneRows = await MeasureModel.countDocuments({ source_id: GLADSTONE_PORTS_ID });
+    const gladstoneVerified = await MeasureModel.countDocuments({
+      source_id: GLADSTONE_PORTS_ID,
+      verified: true,
+    });
+    const gladstoneDoubleCount = await MeasureModel.countDocuments({
+      source_id: GLADSTONE_PORTS_ID,
+      potential_double_count: true,
+    });
+    const gladstoneByLine = await MeasureModel.aggregate([
+      { $match: { source_id: GLADSTONE_PORTS_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const gladstoneDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: GLADSTONE_PORTS_ID,
+      status: 'deferred',
+    });
+    const gladstoneArchived = await listArchivedRecords({ source_id: GLADSTONE_PORTS_ID });
+    console.log(
+      `[ingest:soc] ${GLADSTONE_PORTS_ID} rows=${gladstoneRows} source_documents=${gladstoneArchived.length} verified=${gladstoneVerified} potential_double_count=${gladstoneDoubleCount} deferred_documents=${gladstoneDeferred} (QLD entity-level SOC statement lines; no QLD total and no combined total is printed or computed)`,
+    );
+    for (const group of gladstoneByLine) {
+      console.log(
+        `[ingest:soc] ${GLADSTONE_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
     }
     console.log(
       `[ingest:soc] future_soc_adapters=${FUTURE_SOC_SOURCE_IDS.length} (other NSW and QLD SOC adapters intentionally not implemented)`,
