@@ -218,6 +218,18 @@ import {
   SOUTHERN_PORTS_UNIT,
   SOUTHERN_PORTS_UNIT_LABEL,
   SOUTHERN_PORTS_UNIT_TO_CENTS,
+  BUSSELTON_WATER_CAVEAT,
+  BUSSELTON_WATER_ENTITY,
+  BUSSELTON_WATER_ID,
+  BUSSELTON_WATER_JURISDICTION,
+  BUSSELTON_WATER_LEGAL_CLASS,
+  BUSSELTON_WATER_LICENSE,
+  BUSSELTON_WATER_NAME,
+  BUSSELTON_WATER_PUBLISHER,
+  BUSSELTON_WATER_SOURCE_URL,
+  BUSSELTON_WATER_UNIT,
+  BUSSELTON_WATER_UNIT_LABEL,
+  BUSSELTON_WATER_UNIT_TO_CENTS,
   FORESTRY_CORPORATION_CAVEAT,
   FORESTRY_CORPORATION_ENTITY,
   FORESTRY_CORPORATION_ID,
@@ -356,7 +368,7 @@ import { assertSeedTarget } from '../server/src/seed/guard.js';
  * per-entity adapters (Sydney Water, WaterNSW, Hunter Water, Essential Energy,
  * Forestry Corporation of NSW, Landcom, Port Authority of NSW, TAHE, Sydney
  * Trains, then NSW TrainLink, then the QLD GOCs Energy Queensland, CS Energy,
- * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA and Southern Ports). No other SOC adapter is implemented, and
+ * Stanwell, Powerlink Queensland, Sunwater Limited and Gladstone Ports Corporation Limited, Port of Townsville Limited, Ports North, NQBP and the first WA GTEs, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports and Busselton Water). No other SOC adapter is implemented, and
  * the entity adapters are never summed together.
  */
 export const SOC_SOURCE_IDS = [
@@ -387,6 +399,7 @@ export const SOC_SOURCE_IDS = [
   FREMANTLE_PORTS_ID,
   DEVELOPMENTWA_ID,
   SOUTHERN_PORTS_ID,
+  BUSSELTON_WATER_ID,
 ] as const;
 
 /**
@@ -1324,6 +1337,41 @@ async function writeSouthernPortsManifest(): Promise<void> {
   );
 }
 
+async function writeBusseltonWaterManifest(): Promise<void> {
+  const records = await listArchivedRecords({ source_id: BUSSELTON_WATER_ID });
+  const manifestPath = path.resolve(
+    process.env.BUSSELTON_WATER_MANIFEST ??
+      'docs/source-archive/wa-busselton-water-annual-report.json',
+  );
+  const manifest = {
+    entity: BUSSELTON_WATER_ENTITY,
+    legal_class: BUSSELTON_WATER_LEGAL_CLASS,
+    jurisdiction: BUSSELTON_WATER_JURISDICTION,
+    dataset: BUSSELTON_WATER_NAME,
+    publisher: BUSSELTON_WATER_PUBLISHER,
+    discovery_page: BUSSELTON_WATER_SOURCE_URL,
+    license: BUSSELTON_WATER_LICENSE,
+    retrieved_at: new Date().toISOString(),
+    unit: `${BUSSELTON_WATER_UNIT_LABEL} (${BUSSELTON_WATER_UNIT}; x${BUSSELTON_WATER_UNIT_TO_CENTS} cents per unit)`,
+    caveat: BUSSELTON_WATER_CAVEAT,
+    files: records.map((record) => ({
+      title: record.title,
+      filename: path.basename(record.local_path),
+      url: record.original_url,
+      sha256: record.sha256,
+      bytes: record.bytes,
+      archived_from: record.archived_from,
+    })),
+    notes:
+      "WA SOC: Busselton Water only (Busselton Water Corporation), a WA Government Trading Enterprise (Government Trading Enterprises Act 2023 (WA)). Latest annual report discovered from the official annual-reports page (no hard-coded PDF URL) and archived with SHA-256 outside the repo. The Statement of Comprehensive Income prints an explicit $ (whole-dollar) unit and two reporting-year columns; the adapter reads the 2026 column only. Total revenue is the exact sum of the printed income lines checked against the unlabeled printed total, and total expenses is the exact sum of the printed expense lines checked against the printed Total expenses subtotal; both are accepted only when the Profit before income tax and Profit after income tax bridges agree at zero tolerance. Every row is a provisional, unverified entity-level SOC statement line (jurisdiction_level=soc, aggregation_role=agency_detail); never add Busselton Water rows to government program spending, the PNFC benchmark, Water Corporation, Synergy, Western Power, Horizon Power, Fremantle Ports, DevelopmentWA, Southern Ports, another WA GTE, a QLD/NSW SOC, a WA total, or any other SOC.",
+  };
+  await mkdir(path.dirname(manifestPath), { recursive: true });
+  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  console.log(
+    `[ingest:soc] manifest=${path.relative(process.cwd(), manifestPath)} files=${manifest.files.length}`,
+  );
+}
+
 async function main(): Promise<void> {
   const mongoUrl = process.env.MONGO_URL;
   const databaseName = assertSeedTarget(mongoUrl);
@@ -1387,6 +1435,7 @@ async function main(): Promise<void> {
     await writeFremantlePortsManifest();
     await writeDevelopmentWaManifest();
     await writeSouthernPortsManifest();
+    await writeBusseltonWaterManifest();
 
     const archived = await listArchivedRecords({ source_id: ABS_GFS_PNFC_ID });
     const total = await MeasureModel.countDocuments({ source_id: ABS_GFS_PNFC_ID });
@@ -2018,6 +2067,33 @@ async function main(): Promise<void> {
     for (const group of southernPortsByLine) {
       console.log(
         `[ingest:soc] ${SOUTHERN_PORTS_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
+      );
+    }
+    const busseltonRows = await MeasureModel.countDocuments({ source_id: BUSSELTON_WATER_ID });
+    const busseltonVerified = await MeasureModel.countDocuments({
+      source_id: BUSSELTON_WATER_ID,
+      verified: true,
+    });
+    const busseltonDoubleCount = await MeasureModel.countDocuments({
+      source_id: BUSSELTON_WATER_ID,
+      potential_double_count: true,
+    });
+    const busseltonByLine = await MeasureModel.aggregate([
+      { $match: { source_id: BUSSELTON_WATER_ID } },
+      { $group: { _id: '$soc_line_item', rows: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    const busseltonDeferred = await DeferredSocDocumentModel.countDocuments({
+      source_id: BUSSELTON_WATER_ID,
+      status: 'deferred',
+    });
+    const busseltonArchived = await listArchivedRecords({ source_id: BUSSELTON_WATER_ID });
+    console.log(
+      `[ingest:soc] ${BUSSELTON_WATER_ID} rows=${busseltonRows} source_documents=${busseltonArchived.length} verified=${busseltonVerified} potential_double_count=${busseltonDoubleCount} deferred_documents=${busseltonDeferred} (WA entity-level SOC statement lines; no WA total and no combined total is printed or computed)`,
+    );
+    for (const group of busseltonByLine) {
+      console.log(
+        `[ingest:soc] ${BUSSELTON_WATER_ID} line=${group._id ?? '(none)'} rows=${group.rows}`,
       );
     }
     console.log(
