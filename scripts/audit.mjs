@@ -103,6 +103,7 @@ const KNOWN_SOURCE_IDS = [
   'liverpool-plains-gpfs',
   'tenterfield-gpfs',
   'cobar-gpfs',
+  'narromine-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
