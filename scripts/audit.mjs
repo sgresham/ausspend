@@ -101,6 +101,7 @@ const KNOWN_SOURCE_IDS = [
   'orange-gpfs',
   'blayney-gpfs',
   'liverpool-plains-gpfs',
+  'tenterfield-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
