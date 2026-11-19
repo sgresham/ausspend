@@ -77,6 +77,7 @@ const KNOWN_SOURCE_IDS = [
   'hilltops-gpfs',
   'bourke-gpfs',
   'coolamon-gpfs',
+  'gilgandra-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

@@ -9,10 +9,10 @@ as evidence and are not current totals. The current registry counts are:
 
 | Current-state count                 | Value |
 | ----------------------------------- | ----- |
-| NSW council GPFS sources            | 55    |
-| NSW local-government source ids     | 56    |
-| Registered spending connectors      | 117   |
-| Active spending connectors          | 115   |
+| NSW council GPFS sources            | 56    |
+| NSW local-government source ids     | 57    |
+| Registered spending connectors      | 118   |
+| Active spending connectors          | 116   |
 | Stub spending connectors            | 2     |
 | Trade connectors (separate subtree) | 2     |
 
@@ -208,7 +208,7 @@ category is the 128.
 | Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                             In DB now |
 | --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------: |
 | OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                                     0 |
-| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **1109** (55 council GPFS sources, FY2024-25/FY2025-26; separate non-additive sources) |
+| Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **1125** (56 council GPFS sources, FY2024-25/FY2025-26; separate non-additive sources) |
 | LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                                     0 |
 | data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                                    3,472 rows, none council financial |
 | Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                                     0 |
@@ -319,7 +319,7 @@ The 2025-26 Section 1 PDF is linked from
 <https://www.olg.nsw.gov.au/councils/finance/financial-reporting> (link only, not fetched this pass).
 
 **Current rows at source.** 128 councils × one GPFS per financial year (plus prior-year
-comparatives inside each report). **In DB: 1109 GPFS rows** — 18 for Dubbo FY2024-25
+comparatives inside each report). **In DB: 1125 GPFS rows** — 18 for Dubbo FY2024-25
 (`dubbo-council-gpfs`, §7.1), 18 for the City of Sydney FY2024-25 (`city-of-sydney-gpfs`, §7.2), 17
 for Blacktown City Council FY2024-25 (`blacktown-gpfs`, §7.3), 17 for City of Parramatta FY2024-25
 (`parramatta-gpfs`, §7.4), 18 for Northern Beaches Council FY2024-25 (`northern-beaches-gpfs`,
@@ -348,12 +348,12 @@ for Mosman Council FY2024-25 (`mosman-gpfs`, §7.33), 19 for Hawkesbury City Cou
 23 for Blue Mountains City Council FY2024-25 (`blue-mountains-gpfs`, §7.36) and 18 for Wollondilly
 Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY2024-25
 (`camden-gpfs`, §7.38), 22 for Campbelltown City Council FY2024-25 (`campbelltown-gpfs`, §7.39) and
-17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) — all separate source ids. The
+17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) and 16 for Brewarrina Shire Council FY2025-26 (`brewarrina-gpfs`, §7.45) and 17 for Bogan Shire Council FY2025-26 (`bogan-gpfs`, §7.46) and 16 for Kyogle Council FY2025-26 (`kyogle-gpfs`, §7.47) and 17 for Junee Shire Council FY2025-26 (`junee-gpfs`, §7.48) and 16 for Uralla Shire Council FY2025-26 (`uralla-gpfs`, §7.49) and 17 for Cootamundra-Gundagai Regional Council FY2024-25 (`cootamundra-gundagai-gpfs`, §7.50) and 16 for Moree Plains Shire Council FY2024-25 (`moree-plains-gpfs`, §7.51) and 17 for Hilltops Council FY2024-25 (`hilltops-gpfs`, §7.52) and 17 for Bourke Shire Council FY2025-26 (`bourke-gpfs`, §7.53) and 17 for Coolamon Shire Council FY2025-26 (`coolamon-gpfs`, §7.54) and 16 for Gilgandra Shire Council FY2025-26 (`gilgandra-gpfs`, §7.55) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
-GPFS rows. The shared dev DB currently records **55** active `data_sources` GPFS entries and **1109**
+GPFS rows. The shared dev DB currently records **56** active `data_sources` GPFS entries and **1125**
 GPFS measures, from a fresh aggregate of `source_id` matching `/gpfs$/` (2026-11-19, after the
-§7.54 Coolamon landing); this is the live
+§7.55 Gilgandra landing); this is the live
 DB count, not an increment of the earlier table total.
 
 **Verified example (Dubbo Regional Council, FY2024-25).**
@@ -5334,6 +5334,95 @@ it at 22). Targeted connector tests passed (15/15).
 
 ---
 
+### 7.55 Fifty-sixth council — Gilgandra Shire Council FY2025-26 GPFS (landed 2026-11-19)
+
+**Source and year.** FY2025-26 is the latest audited standalone General Purpose Financial Statements
+published by Gilgandra Shire Council at 2026-11-19, for the year ended 30 June 2026 (auditor's report
+dated 29 October 2026). The statements are linked from the council's Financial Statements page
+<https://www.gilgandra.nsw.gov.au/Your-Council/About-Council/Financial-information/Financial-Statements>;
+the connector selects the FY2025-26 statements upload and ignores annual reports, budget documents and
+prior years. The current upload is
+<https://www.gilgandra.nsw.gov.au/files/assets/public/v/1/economic-development/inland-rail/submissions/annual_financial_statements-2026.pdf>.
+A documented official fallback pin is used only if the page yields no usable anchor.
+
+**Akamai UA method.** The host's WAF returns **403** (`text/html`, 545 bytes) to a bare Chrome UA and
+**200** `application/pdf` (1,365,525 bytes) to a plain client UA. The connector sends an explicit plain
+`curl/8.5.0` User-Agent (plus a broad PDF/HTML `Accept`) for both the listing and the PDF, and a
+focused test asserts that header is used and contains no `Chrome` token.
+
+The 98-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p6,
+Statement of Comprehensive Income p7 and B1-1 "Functions or activities" p15 — plus the independent
+auditor's reports. The printed unit is explicit `$ '000`; a missing or conflicting unit rejects the
+whole extraction. Exact bytes archived outside the repo:
+
+- bytes: **1,365,525**
+- SHA-256: `e7929405861b2e9d6e5da1422016eb96c44b437c8dba0a5999f4dbe748236ab0`
+
+**Exact reconciliation.** The connector emits nothing unless all of these agree:
+
+| Check | Printed / derived | Result |
+| --- | --- | --- |
+| Total income from continuing operations (Income Statement) | `$52,061` thousand | = `$52,061,000` |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + net gain on disposal) | `$7,931` + `$23,542` + `$1,072` + `$13,408` + `$4,067` + `$1,854` + `$187` = `$52,061` thousand | = printed total |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses) | `$23,744` + `$12,688` + `$182` + `$680` = `$37,294` thousand | = printed expenses excluding depreciation |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$10,275`) | `$37,294` + `$10,275` = `$47,569` thousand | = printed B1-1 total expenses |
+| B1-1 Total functions and activities — income | `$52,061` thousand | = face statement |
+| B1-1 Total functions and activities — expenses | `$47,569` thousand | = face bridge |
+| B1-1 Total functions and activities — operating result | `$4,492` thousand | = face operating result |
+| B1-1 grants and contributions | `$17,475` thousand | = operating `$13,408` + capital `$4,067` |
+| Operating result from continuing operations | `$52,061` − `$47,569` = `$4,492` thousand | = printed operating result |
+| Net operating result for the year attributable to Council | `$4,492` thousand | = printed net result |
+| Net operating result before grants and contributions provided for capital purposes | `$4,492` − `$4,067` = `$425` thousand | = printed figure (evidence only) |
+| Statement of Comprehensive Income net result | `$4,492` thousand | = Income Statement net result |
+| Other comprehensive income (revaluation) | `$5,955` thousand | = printed total other comprehensive income and total items not reclassified |
+| Statement of Comprehensive Income total (`$4,492` + `$5,955` other comprehensive income) | `$10,447` thousand | = printed total comprehensive income |
+
+Total expenses is the printed face-statement bridge of expenses-excluding-depreciation (`$37,294`
+thousand) plus printed depreciation/amortisation/impairment (`$10,275` thousand), and equals the B1-1
+"Total functions and activities" expense total (`$47,569` thousand). B1-1 income, expenses, operating
+result and grants reconcile exactly to the face statement — there is **no face-vs-B1-1 discrepancy**
+for 2026. The B1-1 2025 operating-result comparative is printed as `$1,932` thousand against the
+face `$1,920` thousand; only the 2026 column is used and checked. Gilgandra prints seven non-zero
+revenue lines (no other-income line, plus a net gain on disposal `$187` thousand) and four expense
+lines; it prints no net loss on disposal. The printed net result and before-capital result are both
+positive.
+
+**Rows.** 16 rows, source id `gilgandra-gpfs`, `source_dataset` "Gilgandra Shire Council GPFS
+2025-26", `measure_type: "actual"`, `fiscal_year: "2025-26"`, `jurisdiction_level: "local"`,
+`jurisdiction: "NSW"`, `delivery_entity: "Gilgandra Shire Council"`, `data_quality_flag:
+"provisional/local_government"`, `verified: false`. The minimum lines are total revenue
+`$52,061,000`, total expenses `$47,569,000`, employee expenses `$23,744,000`,
+depreciation/amortisation/impairment `$10,275,000`, operating government grants `$13,408,000`,
+capital government grants `$4,067,000`, borrowing costs `$182,000`, net gain on disposal of assets
+`$187,000` and net result `$4,492,000`. The printed before-capital result is retained in
+reconciliation evidence only and is not emitted as a row. The B1-1 function split is used only for the
+reconciliation checks and is not emitted as rows.
+
+**No double count.** Every GPFS row is `aggregation_role: "agency_detail"` and carries
+`gpfs_line_item`/`gpfs_component_of`; the generic additive API and any area panel therefore exclude
+them. The rows have **no `region_id` and no `location`/LGA allocation**, so they cannot be summed into
+the existing `dubbo-council` budget/estimate rows, any other council, or the LGA-tagged state rows.
+Government grant rows carry `potential_double_count: true` because they may overlap government
+program data; they are not added to expenditure. The pre-existing same-entity rows are preserved
+untouched and never summed. A DB check confirms **0** non-`agency_detail` rows, **0** rows with
+`region_id`/`location` and a single `delivery_entity` for the source.
+
+**Database ingest proof (2026-11-19, shared dev DB `ausspend_dev`).** Ingesting only `gilgandra-gpfs`
+took the shared dev DB from **998,627** to **998,643** measures — exactly **+16** rows. GPFS rows
+moved **1109 → 1125** and active GPFS `data_sources` **55 → 56**; the SOC measure count (rows with
+`jurisdiction_level: "soc"`) stayed at **205** and every other per-source count was unchanged. A
+second ingest fetched/upserted the same 16 SHA-anchored natural keys, left the total at **998,643**
+and created no duplicate (idempotent). `data_sources` records the source `active` with
+`records_ingested: 16`; the latest `ingestion_logs` entry is `status: "success"`,
+`records_fetched: 16`, `records_upserted: 16`. All 16 measures carry `fiscal_year: "2025-26"`. The
+exact PDF is archived outside the repo under the configured source-archive root at
+`gilgandra-gpfs/annual_financial_statements-2026.pdf` with its SHA-256 and retrieval metadata; no PDF
+is committed. The focused connector test also proves idempotency against a dedicated test Mongo
+(seeded 5 rows → 21 with 16 rows; a second ingest leaves it at 21). Targeted connector tests passed
+(16/16).
+
+---
+
 ## 8. Prioritised rollout (after the pilot)
 
 1. **P0 — Dubbo FY2024-25 GPFS (pilot).** **Landed 2026-11-17:** 18 non-additive rows, exact OLG reconciliation, no double count (§7.1).
@@ -5784,6 +5873,6 @@ The inventory and planning sections §1–§8 remain research/plan (except the l
 do not create a cross-council or state-plus-council total, do not assert a licence for the OLG or
 council documents beyond the quoted terms, and do not claim the 128 list is frozen: boundary changes,
 amalgamations and administrators can change the population, so re-read the OLG workbook each year.
-The only ingestions are the §7.1–§7.54 GPFS sources: fifty-five councils, one audited year
+The only ingestions are the §7.1–§7.55 GPFS sources: fifty-six councils, one audited year
 each, non-additive rows with no region/LGA allocation, and the existing budget/estimate and
 federal/state/charity rows left untouched. No cross-council total is created or implied.

@@ -1,0 +1,17 @@
+import {
+  GILGANDRA_GPFS_ID,
+  GILGANDRA_GPFS_NAME,
+  GILGANDRA_GPFS_PUBLISHER,
+  GILGANDRA_GPFS_FISCAL_YEAR,
+  GILGANDRA_GPFS_DATA_QUALITY_FLAG,
+} from './parse.js';
+
+export * from './parse.js';
+
+export const MODULE_META = {
+  id: GILGANDRA_GPFS_ID,
+  name: GILGANDRA_GPFS_NAME,
+  publisher: GILGANDRA_GPFS_PUBLISHER,
+  fiscalYear: GILGANDRA_GPFS_FISCAL_YEAR,
+  dataQualityFlag: GILGANDRA_GPFS_DATA_QUALITY_FLAG,
+} as const;
