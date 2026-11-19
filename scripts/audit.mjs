@@ -104,6 +104,7 @@ const KNOWN_SOURCE_IDS = [
   'tenterfield-gpfs',
   'cobar-gpfs',
   'narromine-gpfs',
+  'inverell-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',

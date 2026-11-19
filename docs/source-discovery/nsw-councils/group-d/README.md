@@ -33,7 +33,7 @@ per-council inventory is therefore still the prerequisite for the next ingestion
 1. **Cootamundra-Gundagai Regional** — audited FS FY2024-25, `200 application/pdf`, 2.57 MB.
 2. **Moree Plains** — FS FY2024-25, `200 application/pdf`, 2.00 MB.
 3. **Hilltops** — AFS FY2024-25, `200 application/pdf`, 5.07 MB.
-4. **Inverell** — FS FY2024-25, `200 application/pdf`, 19.5 MB (also FY2025-26).
+4. **Inverell** — FS **FY2025-26**, `200 application/pdf`, 6.37 MB (also FY2024-25); the HTML publications page returns a Cloudflare challenge to plain fetch, but the direct PDF is `200`.
 
 ### Tier 2 — standalone FS present, WAF needs browser/JS (high value)
 5. **Bellingen** — AFS FY2024-25 (plus FY2025-26 on site).
