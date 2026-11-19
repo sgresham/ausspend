@@ -205,15 +205,15 @@ category is the 128.
 
 ## 3. Source coverage at a glance
 
-| Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                   In DB now |
-| --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | --------------------------------------------------------------------------: |
-| OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                           0 |
+| Source                                        | All 128 councils?               | Statement-line GPFS? | Service/program split?                              | Capital $?                 | Grants $?                                 | Open licence?                 |                                                                             In DB now |
+| --------------------------------------------- | ------------------------------- | -------------------- | --------------------------------------------------- | -------------------------- | ----------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------: |
+| OLG _Your Council_ time-series (2024-25 XLSX) | **Yes** (128 + 8 county)        | **No**               | 9 service-expenditure categories                    | **No** (asset ratios only) | **No** (grants % of revenue only)         | **No** (all rights reserved)  |                                                                                     0 |
 | Individual council GPFS / annual reports      | Yes, one PDF per council        | **Yes**              | Yes (function and nature, notes, special schedules) | Yes                        | Yes (grant revenue and special schedules) | Per council; usually not open | **943** (45 council GPFS sources, FY2024-25/FY2025-26; separate non-additive sources) |
-| LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                           0 |
-| data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                          3,472 rows, none council financial |
-| Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                           0 |
-| ABS GFS (benchmark)                           | No (local government aggregate) | No                   | COFOG aggregate                                     | No                         | No                                        | CC BY                         |                                                         169 rows, aggregate |
-| NSW Budget LGA-tagged projects                | No (state projects)             | No                   | Project-level state capital                         | Yes (state)                | No                                        | CC BY 3.0 AU                  |                                                     1,115 rows, not council |
+| LGGC Financial Assistance Grants              | Yes (general purpose councils)  | No                   | No (grant allocation)                               | No                         | **Yes** (FAG entitlement)                 | No (OLG all rights reserved)  |                                                                                     0 |
+| data.nsw.gov.au CKAN                          | No                              | No                   | No                                                  | No                         | No                                        | Per dataset (usually CC BY)   |                                                    3,472 rows, none council financial |
+| Audit Office of NSW local government reports  | No (selected audits)            | No                   | Narrative/aggregate                                 | Occasionally               | Occasionally                              | Audit Office terms            |                                                                                     0 |
+| ABS GFS (benchmark)                           | No (local government aggregate) | No                   | COFOG aggregate                                     | No                         | No                                        | CC BY                         |                                                                   169 rows, aggregate |
+| NSW Budget LGA-tagged projects                | No (state projects)             | No                   | Project-level state capital                         | Yes (state)                | No                                        | CC BY 3.0 AU                  |                                                               1,115 rows, not council |
 
 ---
 
@@ -4488,28 +4488,30 @@ to Node's fetch; there is no hard-coded document URL.
 The 81-page PDF contains the signed General Purpose Financial Statements — Income Statement PDF p5,
 Statement of Comprehensive Income p6 and B1-1 "Functions or activities" p14 — plus the independent
 auditor's reports. The printed unit is explicit `$ '000`; a missing or conflicting unit rejects the
-whole extraction. Exact bytes archived outside the repo:
+whole extraction. Exact bytes archived outside the repo at
+`~/ausspend-source-archive/warren-gpfs/GPFS-2026.pdf` (connector `archiveSourceDocument` output,
+with its `.meta.json` retrieval sidecar and SHA-named record under `records/`):
 
 - bytes: **2,283,613**
 - SHA-256: `9906ea67979c4c059cbd0a9ab8179c4644db9e11cd2065f16fff5cd61bd66577`
 
 **Exact reconciliation.** The connector emits nothing unless all of these agree:
 
-| Check | Printed / derived | Result |
-| --- | --- | --- |
-| Total income from continuing operations (Income Statement) | `$37,591` thousand | = `$37,591,000` |
-| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) | `$7,456` + `$4,092` + `$1,384` + `$19,187` + `$4,788` + `$467` + `$217` = `$37,591` thousand | = printed total |
-| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses + net loss on disposal) | `$7,533` + `$10,151` + `$86` + `$383` + `$6,224` = `$24,377` thousand | = printed expenses excluding depreciation |
-| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$7,898`) | `$24,377` + `$7,898` = `$32,275` thousand | = printed B1-1 total expenses |
-| B1-1 Total functions and activities — income | `$37,591` thousand | = face statement |
-| B1-1 Total functions and activities — expenses | `$32,275` thousand | = face bridge |
-| B1-1 Total functions and activities — operating result | `$5,316` thousand | = face operating result |
-| B1-1 grants and contributions | `$23,975` thousand | = operating `$19,187` + capital `$4,788` |
-| Operating result from continuing operations | `$37,591` − `$32,275` = `$5,316` thousand | = printed operating result |
-| Net operating result for the year attributable to Council | `$5,316` thousand | = printed net result (no discontinued operation) |
-| Net operating result before grants and contributions provided for capital purposes | `$5,316` − `$4,788` = `$528` thousand | = printed figure (evidence only) |
-| Statement of Comprehensive Income net result | `$5,316` thousand | = Income Statement net result |
-| Statement of Comprehensive Income total (`$5,316` + `$20,887` other comprehensive income) | `$26,203` thousand | = printed total comprehensive income |
+| Check                                                                                                                        | Printed / derived                                                                            | Result                                           |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Total income from continuing operations (Income Statement)                                                                   | `$37,591` thousand                                                                           | = `$37,591,000`                                  |
+| Revenue components sum (rates + user charges + other revenues + operating grants + capital grants + interest + other income) | `$7,456` + `$4,092` + `$1,384` + `$19,187` + `$4,788` + `$467` + `$217` = `$37,591` thousand | = printed total                                  |
+| Expense-by-nature components sum (employee + materials + borrowing costs + other expenses + net loss on disposal)            | `$7,533` + `$10,151` + `$86` + `$383` + `$6,224` = `$24,377` thousand                        | = printed expenses excluding depreciation        |
+| Printed expenses excluding depreciation + printed depreciation/amortisation/impairment (`$7,898`)                            | `$24,377` + `$7,898` = `$32,275` thousand                                                    | = printed B1-1 total expenses                    |
+| B1-1 Total functions and activities — income                                                                                 | `$37,591` thousand                                                                           | = face statement                                 |
+| B1-1 Total functions and activities — expenses                                                                               | `$32,275` thousand                                                                           | = face bridge                                    |
+| B1-1 Total functions and activities — operating result                                                                       | `$5,316` thousand                                                                            | = face operating result                          |
+| B1-1 grants and contributions                                                                                                | `$23,975` thousand                                                                           | = operating `$19,187` + capital `$4,788`         |
+| Operating result from continuing operations                                                                                  | `$37,591` − `$32,275` = `$5,316` thousand                                                    | = printed operating result                       |
+| Net operating result for the year attributable to Council                                                                    | `$5,316` thousand                                                                            | = printed net result (no discontinued operation) |
+| Net operating result before grants and contributions provided for capital purposes                                           | `$5,316` − `$4,788` = `$528` thousand                                                        | = printed figure (evidence only)                 |
+| Statement of Comprehensive Income net result                                                                                 | `$5,316` thousand                                                                            | = Income Statement net result                    |
+| Statement of Comprehensive Income total (`$5,316` + `$20,887` other comprehensive income)                                    | `$26,203` thousand                                                                           | = printed total comprehensive income             |
 
 Total expenses is the printed face-statement bridge of expenses-excluding-depreciation (`$24,377`
 thousand) plus printed depreciation/amortisation/impairment (`$7,898` thousand), and equals the B1-1
@@ -4535,14 +4537,20 @@ Government grant rows carry `potential_double_count: true` because they may over
 data; they are not added to expenditure. The pre-existing same-entity rows are preserved untouched and
 never summed.
 
-**Database ingest proof (2026-11-19, isolated test MongoDB).** The focused connector test runs
-`runIngestion` with the parsed 17 records against a dedicated test database seeded with five
-non-council rows (`aus-tender`, `grantconnect`, `data-nsw-ckan`, `acnc-charity` and another council's
-`the-hills-gpfs`). Ingest 1 leaves every seeded row intact and inserts exactly **17** `warren-gpfs`
-rows (5 → 22 total); a second ingest upserts the same 17 SHA-anchored natural keys and leaves the
-total at **22** (idempotent). Every `warren-gpfs` row is `agency_detail` with no `region_id`/
-`location`, `delivery_entity: "Warren Shire Council"`, and `data_sources` records the source `active`
-with `records_ingested: 17`. Targeted connector tests passed (14/14).
+**Database ingest proof (2026-11-19, shared dev DB `ausspend_dev`).** The council ingest was run for
+this source only:
+`MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npx tsx scripts/ingest-nsw.ts --source warren-gpfs`.
+Pre-ingest aggregate: total measures **998,444**, `warren-gpfs` **0**, `jurisdiction_level: "soc"`
+**205**, GPFS sources **926**. The run logged `warren-gpfs: success fetched=17 upserted=17`. Post-run
+aggregate: total **998,461** (+17), `warren-gpfs` **17**, SOC still **205** (unchanged), GPFS **943**
+(+17). No other source count changed and no rows were deleted. Every `warren-gpfs` row is
+`agency_detail` (`warren-gpfs` rows with any other role: 0) with no `region_id`/`location`
+(`warren-gpfs` rows carrying either: 0), and `delivery_entity: "Warren Shire Council"`.
+`data_sources` records the source `active` with `records_ingested: 17`, `errors: []`; the latest
+`ingestion_logs` entry is `status: "success"`, `records_fetched: 17`, `records_upserted: 17`,
+`errors: []`. No council total or cross-council aggregate is created. The focused connector test also
+proves idempotency against a dedicated test Mongo (seeded 5 rows → 22 with 17 `warren-gpfs`; a second
+ingest leaves it at 22). Targeted connector tests passed (14/14).
 
 ---
 

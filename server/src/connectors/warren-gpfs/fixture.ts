@@ -55,7 +55,7 @@ export const WARREN_CONTEXT: WarrenGpfsParseContext = {
     listing_url: WARREN_GPFS_REPORTING_URL,
   },
   archive: {
-    local_path: '/tmp/ausspend-source-archive/warren-gpfs/GPFS-2026.pdf',
+    local_path: 'warren-gpfs/GPFS-2026.pdf',
     sha256: WARREN_PDF_SHA256,
     bytes: WARREN_PDF_BYTES,
     fetched_at: '2026-11-19T00:00:00.000Z',
