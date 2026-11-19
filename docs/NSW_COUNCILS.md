@@ -351,7 +351,7 @@ Shire Council FY2024-25 (`wollondilly-gpfs`, §7.37), 23 for Camden Council FY20
 17 for Central Coast Council FY2024-25 (`central-coast-gpfs`, §7.40) and 17 for The Hills Shire Council FY2024-25 (`the-hills-gpfs`, §7.43) and 17 for Warren Shire Council FY2025-26 (`warren-gpfs`, §7.44) — all separate source ids. The
 existing `dubbo-council` 245 rows
 are 2026/27 budget/forward-estimate lines, not GPFS actuals, and are not touched or summed with the
-GPFS rows. The shared dev DB currently records **44** active `data_sources` GPFS entries and **926**
+GPFS rows. The shared dev DB currently records **45** active `data_sources` GPFS entries and **943**
 GPFS measures, from a fresh aggregate of `source_id` matching `/gpfs$/` (2026-11-18, after the
 §7.43 The Hills landing and the §7.1.7 Dubbo FY2018-19 historical addition); this is the live
 DB count, not an increment of the earlier table total.
@@ -4539,9 +4539,9 @@ never summed.
 
 **Database ingest proof (2026-11-19, shared dev DB `ausspend_dev`).** The council ingest was run for
 this source only:
-`MONGO_URL=mongodb://10.10.10.30:27017/ausspend_dev npx tsx scripts/ingest-nsw.ts --source warren-gpfs`.
+`MONGO_URL=mongodb://<dev-db-host>:27017/ausspend_dev npx tsx scripts/ingest-nsw.ts --source warren-gpfs`.
 Pre-ingest aggregate: total measures **998,444**, `warren-gpfs` **0**, `jurisdiction_level: "soc"`
-**205**, GPFS sources **926**. The run logged `warren-gpfs: success fetched=17 upserted=17`. Post-run
+**205**, GPFS measures **926**. The run logged `warren-gpfs: success fetched=17 upserted=17`. Post-run
 aggregate: total **998,461** (+17), `warren-gpfs` **17**, SOC still **205** (unchanged), GPFS **943**
 (+17). No other source count changed and no rows were deleted. Every `warren-gpfs` row is
 `agency_detail` (`warren-gpfs` rows with any other role: 0) with no `region_id`/`location`
