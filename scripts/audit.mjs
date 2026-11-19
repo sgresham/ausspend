@@ -117,6 +117,7 @@ const KNOWN_SOURCE_IDS = [
   'upper-hunter-gpfs',
   'yass-valley-gpfs',
   'glen-innes-severn-gpfs',
+  'edward-river-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
