@@ -132,6 +132,7 @@ const KNOWN_SOURCE_IDS = [
   'ballina-gpfs',
   'cessnock-gpfs',
   'kiama-gpfs',
+  'lismore-gpfs',
   'strathfield-gpfs',
   'grantconnect',
   'vic-budget',
